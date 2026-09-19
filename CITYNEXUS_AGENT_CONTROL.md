@@ -38,7 +38,28 @@ RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_ga
 自然丢掉，有约束时保留、改坏后不保留，必须形成差异）；验收仍锁 3 collected / 3 passed + 四处逐个突变
 ≥1 真实断言失败；宁可交 0/4 加详细诊断，也不许交假绿。
 
-**当前状态：RX-4 未收口，16 突变矩阵中 C4 generate 项 = 0/4 KILLED，Mission 002 保持红色。**
+### A 节复核结论（更正版，02:5x）—— 我撤回上一条判定
+上一条（Issue 评论 5744347094，"0/4 KILLED、门不具区分力"）是**我的测量错误**：我按字串在 `main.py` 找到四处
+`CommitmentModel.level == "C4_Anchored",` 就逐个突变，但 `/plans/generate` 不经过那四处（trip-studio / replan 路径）。
+撤回说明已发 Issue 评论 5744421977。
+
+沙箱实测（worktree @ `9759633`，`CityNexus\.venv`，清空 AI key），对象为 Worker 的
+`candidate_tests/test_rx4_protected_commitment_generate_gate.py`：干净态 **7 collected / 7 passed**。
+
+| 突变对象 | RX-4 门 | 98 条真值门禁 |
+|---|---|---|
+| `app/services.py:91` C4 约束装配 | 1 failed / 6 passed → **KILLED** | 98 passed → **全盲** |
+| `app/planning/anchor_schedule.py:90` | 2 failed → KILLED | 5 failed → 已有覆盖 |
+
+**真正的盲点**：已付费但地点不可解析的锚（确认的外部预订 / 结构性 ARRIVAL，无匹配 Place）只靠 `services.py`
+一个守卫；改坏后 `/plans/generate` 返回 201 并给出三个不含该付费锚的候选且不作任何说明，98/98 门禁全绿。
+该缺陷现在有了门，**A 节判定为通过**，仅剩两处形式偏差待仲裁裁定（文件名与"恰好 3 collected"）。
+
+另记一条该 Worker 的自证坑：demo 巡航是 `locked=True` 且零承诺，任何"付费巡航在 generate 后仍存活"的断言天生为空；
+它用 `test_cruise_protection_is_not_discriminating` 把这条钉住，改用 arrival 场景做哨兵。
+
+**当前状态：RX-4 成立；Mission 002 仍红，剩余为 B（吸收）、C（16 突变矩阵按修正后的守卫地图重跑）、D（Verifier 重做）、E（集成后全量）。**
+
 
 ## 监督轮次记录（02:2x–02:4x）
 
