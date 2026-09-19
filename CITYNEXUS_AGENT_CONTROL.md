@@ -4,6 +4,23 @@ Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window (Issue #1 = message bus)
 Refreshed: 2026-09-20 01:55 (+08:00) — every number below was measured by the commander in its own sandbox, not reported by a worker.
 
+## MISSION 002 执行中（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）
+仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
+禁止 force-push，`53b0362` 作历史快照，本地 `integration/frontend-apple-pass1` 为开发权威，
+全绿后再建新分支 `integration/qoder-authoritative-20260920`；RX-4 保持独立 Worker 不改派。
+
+| 节 | 派给 | 状态 | 验收 |
+|---|---|---|---|
+| A RX-4 候选门 | `1fb26149` | 运行中 | `tests/test_rx4_c4_generate_gate.py` 3 collected / 3 passed；C4→C3 突变下仍 3 collected 且≥1 真实断言失败 |
+| B RX-1/2/3 吸收 | `8c66aa92` | 已排队（queuedTurnCount 1） | 先重录基线，再 RX 专集 9 passed、全量 P+9；节点归并须给对应表 |
+| C 突变矩阵重建 | `1fb26149`（A 之后） | 待启 | 16 attempted / 16 collected≥1 / 0 HARNESS_INVALID / 0 SURVIVED / 16 KILLED |
+| D Verifier 红队 | `dc19d662`（只读） | 已建，仅做只读侦察，E 节攻击等 checkpoint 放行 | 并发/两条 C4 路径/陈旧游标/幂等重放，逐条报 collected 数 |
+| 发布卫生 | `6af4cf53` | 已下发 | 排除 Commander 沙箱与验证克隆、`*.db`/`.venv`/`node_modules`/缓存；推新分支前先交清单给我 |
+
+时序偏差已如实向仲裁报备：Verifier 建立早于"稳定 checkpoint 之后"的要求，已限定其只读、暂不放行攻击性任务。
+Commander 回报见 Issue 评论 5744238367。
+
+
 ## CURRENT_HEAD（权威本地树）
 ```
 path    D:\moodle\_qoder_integration_20260919
