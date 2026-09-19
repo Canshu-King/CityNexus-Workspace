@@ -309,7 +309,7 @@
     (3) 不要动 `/twin` 顶层 `projection_status`：仲裁明令 Mission 002 期间保持 `READY|DEGRADED`，
         执行新鲜度只走嵌套 `cursor_status = VALID|STALE|ABSENT_FALLBACK`。（你 ORD-0010 里没动，正确。）
     (4) `v9.py:1544-1572` 那份 Edge/v10 副本投影的是同一元组，给它也来一条同口径断言，别让两处实现漂移。
-  status: OPEN
+  status: CLAIMED@20260920-054836
   evidence: |
     Commander 亲测缺口存在（HEAD 21cbf22）：`grep -n assert backend/tests/test_rx3_stale_cursor_fails_closed.py`
     共 15 条断言，STALE 用例（109-116 与 128-129）不含 now/next 对象本身、next_leg_id 与 now_state。
@@ -627,7 +627,7 @@
     (2) **Journey 创建没有底部主导航**，因为 `V8Experience.tsx:818` 的提前 return 落在
         `.v8-product-shell` 之外。这条**不要动** —— 它是产品结构决定（首进门要不要导航），
         我已单独提请仲裁裁；在裁定前，UI 车道的 token 上提已经是这件事的最小正确解。
-  status: OPEN
+  status: CLAIMED@20260920-054836
   evidence: |
     来源：`D:\moodle\_qoder_ui_overnight_20260920\review\UI_OVERNIGHT_EVIDENCE.md` §7 第 1、2 条。
     Commander 已核 UI 车道 A/B/C 交付：触控红 9→**0**、截断红 4→**0**、溢出 0、重叠 0、CTA 被遮 0；
@@ -943,10 +943,76 @@
     这是 ORD-0017 之外的第二件小事，两件都在同一个文件里，可以一批做。
     注意：UI 车道会新增 onboarding wrapper（ORD-0023），**它的注释归你、wrapper 归它**，
     别互相伸手。
-  status: OPEN
+  status: CLAIMED@20260920-054836
   evidence: |
     仲裁原话："document the early return as intentional: focused pre-Journey onboarding,
     no primary app navigation"（评论 5745474928 §1）。
+
+- id: ORD-0025
+  to: 8c66aa92
+  priority: urgent
+  if_head: 9e66d1e
+  order: |
+    **我今晚发现的最严重的一条量具缺陷，在 e2e 这一侧，归你（`playwrightEnv.ts` / `playwright.config.ts`
+    刚被我划进你的写域）。** 完整复现与逐条对照在
+    `D:\moodle\_qoder_recovery_20260919\reports\E2E_REFUSE_SILENT.md`，一句话：
+    **authoritative 模式的"拒绝启动"既不出声、也不非零。**
+
+    最小复现（同一目录、同一 shell，Node v24.14.0 / Playwright 1.63.0，用 `node node_modules/@playwright/test/cli.js`
+    而不是 npx）：
+      A) 不加 `CITYNEXUS_E2E_AUTHORITATIVE=1` → `--list` 正常打印 4 个节点，stdout 523 B；
+      B) **只加这一个变量** → stdout 0 B、stderr 0 B、**exit 0**。
+    B 本该在 `requiredEnv("CITYNEXUS_E2E_PORT", …)` 处 `refuse()` 抛错并打印缺哪个变量。
+    对照组：**同一条命令指一个不存在的 config → 明确 `Error:` + `exit 1`**，
+    所以这不是"Playwright 不会报"，而是**我们这个 config 模块在求值期抛出的错被吞掉了**。
+
+    危害正好命中这套验收体系的存在理由：authoritative 模式是为了让 Pass-12 那类事故
+    （回退到系统 Python、`reuseExistingServer`  Adopt 了邻道的 :8000）**结构上不可能发生**；
+    现在它把"结构上不可能"变成了"静默成功" —— 任何车道脚本化地跑 authoritative 门，
+    少给一个变量就得到 exit 0 + 零输出 + **服务器根本没起、DB 根本没建**
+    （我那次 `_cmd01.db` 至今不存在可证）。
+
+    要求（形状而非具体实现）：
+      1. 求值期抛出的 refuse 必须**打印 + 非零退出**（要么先把消息 flush 掉再 `process.exit(1)`，
+         要么在 Playwright 加载 config 之前做完校验）；
+      2. 加一条**回归**：`CITYNEXUS_E2E_AUTHORITATIVE=1` 且故意少一个必需变量时，
+         必须"非零退出 **且** 输出里点名那个变量名"——两个条件都要断，只断退出码会被
+         "非零但静默"糊过去；
+      3. 顺手解释一件事：**为什么 UI 那棵树（`_qoder_ui_overnight_20260920`）同样模式下能正常跑并打印
+         announce 行**，而权威树这边我把 RUN_ID / `_cmd02.db` / 双端口 / 存在的 venv 全给齐了仍然 0 输出。
+         这个差异本身就是线索，不要绕过去。
+    边界：只改这两个 e2e 基础设施文件 + 一条回归；**不要**碰 `V8Experience.tsx`、不要碰
+    `LiveRecovery.tsx`（你在做 ORD-0011/0017/0024）、UI 车道只读使用这两个文件（已写进 FILE_OWNERSHIP）。
+  status: OPEN
+  evidence: |
+    Commander 05:55 亲测，四组对照全部留档在 `verify/commander_e2e/`：
+    `plain.out` 523 B / `plain.err` 183 B（非权威模式正常），
+    `auth.out` 0 / `auth.err` 0 / exit 0（权威模式静默成功），
+    `run2.out` 0 / `run2.err` 0（我给齐全部变量仍然静默），
+    `refuse_out.txt` 0 / `refuse_err.txt` 0；对照组 `--config=nope.config.ts` → `Error:` + exit 1。
+    副作用声明：因此**我没能亲跑** LiveRecovery 那条前端门（3 条 + seed）；我只做到
+    `--list` 确认 4 个节点被发现 + 逐条读断言。它的"干净态通过"与"退化即变红"目前仍是实现线自报，
+    在 ORD-0011(2) 关掉之前我不替它背书。
+
+- id: ORD-0026
+  to: 8c66aa92
+  priority: normal
+  if_head: 9e66d1e
+  order: |
+    你 §81.1 末尾自己点出的**同族第三处**，别让它烂在报告里：
+    `frontend/src/features/execution/V10LiveExecutionPanel.tsx:53` 只要游标存在就说 `In progress`
+    （**包括陈旧游标**），诚实的修法是把**解析后的窗口**传进去，而不是继续读原始
+    `current_activity_id`。你"没有擅自扩"是对的 —— 这就是为什么它现在以订单形式回来：
+    把它做掉，形状沿用 ORD-0010/0011 那套（读 `now_activity_id` + `cursor_status`，
+    STALE 时不声称在进行中），并给一条会在"退回位置/存在性判断"时变红的断言。
+    如果你判断它属于 Amendment E 第 6 条之外、需要 UI 车道配合改可见文案，就先只改真值语义 + 注释，
+    文案另开单，不要互相等。
+  status: OPEN
+  evidence: |
+    来源：`INTEGRATION_REPORT.md` §81.1 末段（实现线自报"同一族还剩第三处"）。
+    与已修的 `LiveRecovery.tsx`（`954edaa`）、已封的 `V8Experience` Live/LiveSecondary 同族；
+    FLASH-F1 的 28 行清单（`_qoder_flash_f1_20260920/FLASH_EXECUTION_TRUTH_AUDIT.md`）里
+    SUSPECT_* 17 条尚未逐条归零，这条是其中第一个被实现线自己确认的。
 ```
 
 
@@ -1251,6 +1317,9 @@ backend/app/main.py                          -> 8c66aa92 (owner)   others read-o
 backend/app/concurrency_guards.py,
 backend/app/commerce/service_impl.py,
 backend/app/replanning/commitment_remap.py   -> 8c66aa92 (owner)
+frontend/playwrightEnv.ts,
+frontend/playwright.config.ts                -> 8c66aa92 (owner)   验收门的地基；e345b9d6 只读使用。
+                                                    改它必须带回归：缺必需变量时必须非零退出并打印缺哪个
 GitHub 发布 / 仓库历史                        -> 6af4cf53 (owner)   不得改生产代码
 commander 沙箱 _qoder_recovery_20260919       -> 494abfd7
 ```
