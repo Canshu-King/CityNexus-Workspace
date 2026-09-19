@@ -197,7 +197,12 @@
          （FILE_OWNERSHIP 未列，但请与 8c66aa92 显式对齐）；(2) Wallet 刻意不在 mobileRoutes 主导航内
          （v8Routes.ts:15-17），本轮只打磨界面、不改导航拓扑，是否接受该边界；
          (3) 既有 5 条 TypeScript 错误本轮不顺手修，是否要清账。
-  status: OPEN
+  status: SUPERSEDED@20260920-074000（UI 车道已按 Amendment C/E/F 完成并合入权威线 `5a33eaf`，
+          合并态实测：前端 54 passed / 5 skipped / 0 failed，`vite build` exit 0；
+          三点请求全部按仲裁裁定落地：不碰 `V8Experience.tsx` 的壳层结构、Wallet 导航拓扑不改、
+          TypeScript 账按 ORD-0031 记为"不可比"而非顺手修。
+          警告：本请求里"node_modules 用 junction 指向 `CityNexus\frontend\node_modules`"的做法
+          已被事故纪律 **D-7** 禁止（`git worktree remove --force` 会顺着 junction 删掉共享目标）。）
   evidence: 审计全部为 00dfd62 干净树实测，非推断。摘要：
             (1) 【BLOCKER】--v8-accent 与 --v8-surface 全仓从未定义（只有 --v8-indigo #4658d9），
                 18 处声明静默走 fallback：--v8-accent→teal #0f766e 共 14 处
@@ -347,6 +352,41 @@
     回报请附：新断言各自的失败信息（在一次性突变下）、collected 条数、以及 `?? activities[0]` 复原突变
     下变红的那条测试 node id。
             [8c66aa92 DONE@20260920-061922] HEAD fd1151c。按 05:36 收缩版做：不抄四项断言（test_sol_execution_cursor.py:499-515 已用整字典相等钉住九项并含 Edge 视图，抄进去是 0 新增覆盖）。补的是结构不变式 next_leg_id is None <=> (next_mode,next_eta_min)==("NONE",0)：tests/test_qoder_next_leg_binding.py +4 collected（3 个形状参数化：0 腿 / 每跳一腿 / activities=9·legs=10 的合法 SET NULL 态，每形状扫 pending/completed/前缀完成 × 游标状态，带 checked>=8 防参数化空转；1 条正向：给了 mode/eta 就必须给本计划内真实存在的腿 id）。(4) 另加 test_the_edge_copy_honours_the_same_leg_rule_as_the_projection（1 collected，5 个游标状态：mid / final / 已完成游标带后续 pending / STALE+长腿 / 全完成），两侧各自满足规则且彼此相等。突变实测（一次性、compile 前检、字节还原+sha256、两文件共 21 collected）：eta 在腿为 null 时留 17 -> 11 failed / 10 passed，killer 含三条结构节点与 Edge 节点；Edge mode 写死 WALK 不再读投影 -> 5 failed / 16 passed，killer 含 Edge 结构与 ORD-0007 两条；clean control 21 passed。(2) LiveRecovery 门扩到 4 collected（VALID 精确 id / STALE 不回退 / 空列表不造 current / 游标落在已完成步骤）；把 ?? activities[0] 加回去的突变下 3 failed / 2 passed，node id：spec:96 the recovery card follows the cursor…（期望 61e3096d=activities[2]，实到 3a58c470=activities[0]）、spec:258 an unresolvable cursor…（实到 "Next: Old Town Gate"）；spec:134 空列表那例只在其拦截计数上变红——契约断言没红，所以击杀由前两例承担，我已把那条依赖 /plans route 命中的计数断言删掉（这个 PWA 的 service worker 会用缓存答计划列表，会让"假数据没生效"和"产品出错"在报表里长得一样）。(3) 未动 /twin 顶层 projection_status。全量 912 passed / 15 skipped / 0 failed（907+4+1）；权威 E2E 51 expected / 0 unexpected / 0 flaky / 0 skipped；同一 HEAD 更早一次全量是 50/1/0/0，红的是 product-v8 最重的多日旅程在满负载下 60s 超时（webserver 自己记了 database is locked），单独复跑 3 passed / 16.0s——两个数都进报告 §82，不擦红。typecheck / typecheck:all / build 退出码 0。
+            [8c66aa92 重放复核@20260920-074200，不改本单 DONE 状态] 07:2x 收到转达"账本新增 ORD-0011
+    （urgent，if_head 21cbf22）"，但本单在第 288 行早已 `DONE@20260920-061922` 且有你的 commander_check，
+    账本最后一笔是 ORD-0031、没有新单，所以这是一次重放。转达要点 (1)（把四项断言补进 rx3）与账本原文里
+    **05:36 你自己写的更正**（收缩为多形状结构不变式，抄 rx3 是零新增覆盖）冲突；按长期协议我以账本为准，没有抄。
+    值得重做的是**重新证明它有鉴别力**：ORD-0026 把游标解析收进共享 `src/lib/executionWindow.ts`、
+    ORD-0029 换掉 `"ABSENT"` 词表，两笔正压在这套断言下面。合并树 `bf0869b` 实测：整字典钉仍在
+    `test_sol_execution_cursor.py:499-510`（九项含 `now_state="STALE_CURSOR"` 与哨兵对 `("NONE",0)`）+511 行；
+    collected = next_leg_binding **8** / rx3 **5** / sol **13**，三文件连跑 **26 passed / 0 failed（2.58s，AI 关）**；
+    前端 4+1 例全绿（含在 `ord30-full` 的 54 expected 内）。突变归属（唯一 anchor + 读回校验 + 字节还原 SHA-256；
+    每具突变体 `tsc --noEmit` 均 exit 0，证明红的是契约不是语法）：
+      M1 `LiveRecovery.tsx:217` 纯列表回退（游标仍读对）→ **1/5** 红：`qoder-live-recovery-cursor.spec.ts:267`；
+      M2 历史缺陷原样（幽灵键 `current_activity_id` ⇒ 游标恒 null ⇒ 回退首项）→ **2/5** 红：
+         `spec:96`（`data-now-activity-id` 期望 `61e3096d…`=activities[2]，实到 `3a58c470…`=activities[0]）、
+         `spec:267`（期望 "Execution position unresolved"，实到 "Next: Old Town Gate"）；
+      M3 共享解析器 STALE 分支按列表顺序造 Now → **2/5** 红：`spec:267` 与 `qoder-stale-cursor.spec.ts:36`，
+         均红在标题 `live-journey-current`（"Old Town Gate"）；
+      M4 撤后端 trustworthy-Now 守卫（退回 `legs[current_index]`）→ **6/26** 红：结构不变式
+         `[more legs than activities]`、`[one leg per hop]`、`test_no_trustworthy_now_projects_no_next_leg` 两例、
+         整元组例、"完成旅程多出出发腿"例。
+    三条口径要写清：**M1 只杀 1 条不是门钝**——游标解析成功时回退分支不可达，空计划下 `activities[0]` 本就是
+    undefined；本单当年报的"3 failed"里第三条是 `spec:134` 的**拦截计数**（结案时已写明"契约断言没红，击杀由
+    前两例承担"，ORD-0029 已删该计数），计数消失后红也没了，本来就不该计入。**畸形突变体会伪造鉴别力**：
+    我第一版 M2 漏了可选链，组件渲染抛错、`live-next` 整个消失，**4/5 齐红且全红在 `openLive()` 的
+    `toBeAttached()`**——只看"红几条"会以为它比正确版本更强，加回 `?.` 真实答案是 2。这与你在量具里加的
+    `KILLED_UNVERIFIED` 是同一条规矩：击杀必须点名拥有它的那条契约断言。另：我怀疑过"M3 之下 V10 面板没人管"，
+    查后**撤销**——`spec:331-334` 已断言 STALE 时它不得为 "in progress"，只是同一例子内标题（328 行）先失败
+    没跑到；写下来是为下一辆车道不必重查：**同一测试内多条断言时，报表只反映最先红的那条**。
+    顺带一条**静态读到、未做端到端实测**的同类问题（本轮没测也没改）：`V8Experience.tsx:1479-1480`
+    Today 的 `nextStop = activities.find(end_at >= now) ?? activities[0]` 喂 1501/1590 行的 "Next / 接下来"，
+    所有活动都早于 now 时会把已结束的第一站说成"接下来"，而 1495-1496 行注释写着 "No empty current slot is
+    ever fabricated"（那句只对 `currentStop` 成立）。它墙钟派生、不在游标链上，`qoder-today-hero.spec.ts`
+    现有 2 例不覆盖此态；**要修请另开单**，并配一条"全部活动已结束时 Today 不得说 Next"的门。
+    细节与表格见 `INTEGRATION_REPORT.md` §86（提交 `14afb84`）。三次突变跑完，权威树 `git status` 仍只余
+    别人家两份，被突变的三个文件与 HEAD 逐字节相同（`f527d929…` / `4280bbe8…` / `56da6ea4…`）。
+
 - id: ORD-0012
   to: 6af4cf53
   priority: normal
@@ -1291,7 +1331,45 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       4. 报合并前后**同一命令同一口径**的数字对照。
     合并会触发我一次矩阵重跑的判断：只有当 10 个 `source=` 目标文件或 owner 节点被碰到才重跑
     （Amendment E 1b），纯前端合入不触发。
-  status: CLAIMED@20260920-065313
+  status: DONE@20260920-071416 by 8c66aa92（合并 `5a33eaf`，文档收口 `5d3eff1`）
+  commander_measurements: |
+    **合并态读数我自己跑了**（不代车道背书、也不等车道）：
+    - 后端全量（`verify/wt_c2` detach @ `5a33eaf`，清 AI key、`-p no:cacheprovider`）：
+      **913 passed / 15 skipped / 0 failed / 0 error（70.43s）**；合并前 `94295e5` 我测的是 913/15/0
+      （68.27s）⇒ 纯前端合入不动后端计数，符合预期。
+    - 前端全套门（**就在合并后的权威树上**，自有端口 4391/8391、一次性库 `_m0030.db`、
+      `CITYNEXUS_AI_ENABLED=false`、`reuseExistingServer=false`）：
+      **54 passed / 5 skipped / 0 failed，exit 0（2.6m）**。车道在 `19d842a` 那份是 50/5，
+      多出的 4 条正是真值线并入的 recovery / 游标词表门 ⇒ 合并态是第一手数据。
+    - `vite build` **exit 0**；`tsc -p tsconfig.check.json --noEmit` **exit 0**
+      （typecheck 依 ORD-0031 记"不可比"，我不拿它当门）。
+    - 卫生：跑完 `git status --porcelain` 仍只有我已知的两条改动 + 原有未跟踪脚手架；
+      `test-results/`、`playwright-report/`、`dist/` 均在 `.gitignore` 内
+      ⇒ 我这次跑门没有变成往别人树上写文件。
+    - 唯一还不肯按自报入账的一件：把 `?? activities[0]` 复原后前端门必须变红。
+      权威树（别人正在写）与 UI 树（带 junction，D-7 禁止在可被 remove 的树里留链）我都不能改，
+      所以我在 `verify/front_copy/` 建**无链接的真实副本**自己复现，跑完再定状态字。
+
+  commander_discrimination: |
+    **07:28 我已独立复现，不再依赖车道自报。** 做法：`verify/front_copy/` = `frontend/` 真实复制
+    （含 409 MB `node_modules`）+ 最小 `backend/`（app/data/db，2.1 MB）+ 仓库根 `data/`（124 KB）；
+    先 `Get-ChildItem -Recurse | Where LinkType` 证明**零链接**（不重演 ORD-0016）。
+    沙箱缺 `data/v9/city_operations.json` 时 seed 会 500 —— 那是**副本不完整**，不是产品缺陷，
+    补上后才得到可比基线。
+      - 基线（未改）：`5 passed / exit 0`（12.0s，run `sb02`，自有端口 4397/8397、一次性库）。
+      - 突变：把第 217 行改回 **`activities.find(a => a.id === nowId) ?? activities[0] ?? null`**
+        （即恢复"按位置兜底"这个原始失效形状）。
+      - 结果：**`exit=1`，1 failed / 4 passed**，红的正是
+        `e2e\qoder-live-recovery-cursor.spec.ts:267 › an unresolvable cursor makes the recovery
+        card name nothing`，报 **Expected: "Execution position unresolved" /
+        Received: "Next: Old Town Gate"** —— 首站被复活成 Now，一字不差就是 CX-SOL-001 那一类。
+      - **另外三条在突变下保持绿**，其中"activities 为空"那条**按设计就该绿**：
+        空数组下 `activities[0]` 本来就是 undefined，它守的是"从无有中造出现在"，
+        不是位置回退。这条与我在 ORD-0011 里预先写的口径一致，现在两边都有实测。
+    副本用完即删（`rm -rf`，非 worktree、无链接）；权威树该文件我**一个字没改**
+    （`git diff` 该文件无内容差异；工作区那条 `M` 是真值线自己的行尾/搬运痕迹，见 `bf0869b` 自报的
+    "一个 glob 卷走了两个已跟踪文件"，内容与 HEAD 全等）。
+    ⇒ **Amendment E 第 3 条的"有鉴别力才许关单"这条，现在是我自己的测量，不是转述。**
   evidence: |
     UI 侧证据我已独立核过：`agent/ui-overnight-20260920` tip `19d842a`、工作树 `git status` 干净、
     提交态全套 `50 passed / 0 failed / 5 skipped`（`review/gates-committed-state-f.log`，日志 05:59
@@ -1302,6 +1380,72 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     而 `package-lock.json` **根本没有锁这个包**，于是三个报错点的源文件虽与 `00dfd62` 逐字节相同，
     类型检查结果却不可比。**我那次 0 errors 同样不可比**，不该拿去覆盖谁的基线。
     → 新增待决：在任何人再拿 typecheck 数字当门之前，得先回答"依赖集以哪棵树为准"（见 ORD-0031）。
+
+            [8c66aa92 DONE@20260920-071416] **合入完成**：合并提交 `5a33eaf`（第二父 = `19d842a`，
+    分支之后未再前进，`git log 5a33eaf..agent/ui-overnight-20260920` 为空），文档收口 `5d3eff1`
+    （INTEGRATION_REPORT §85，+81/−0，LF 未翻）。真树合并与你的试合一致：`merge --no-ff --no-commit`
+    → "Automatic merge went well"、`--diff-filter=U` 零文件。`git show --stat`：**11 文件 / +1628 / −25**，
+    路径为 UI_OVERNIGHT_PLAN.md、frontend/{index.html,src/design-tokens.css,src/styles.css,src/v10.css,
+    src/features/setup/JourneyTrialSetup.tsx}、frontend/e2e/{_qoderMobileScan.ts,
+    qoder-mobile-ui-overnight.spec.ts,qoder-ui-overnight-shots.spec.ts}、review/UI_OVERNIGHT_{BASELINE,EVIDENCE}.md。
+    **零个 backend/ 路径**，所以 Amendment E 1b 的矩阵重跑条件不成立（未碰到 10 个 `source=` 目标或 owner 节点）。
+    合并后 `git status --porcelain` 只剩你我的两份别人家文件（`tools/verification/mutation_campaign.py`、
+    `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`），门跑完没有新增任何跟踪文件。
+
+    同一命令同一口径的前后对照（前 = `a98babb`）：
+      1. 全量后端 `pytest -q -p no:cacheprovider --no-header`（解释器 `D:\moodle\CityNexus\.venv`）
+         前 913 passed / 15 skipped / 0 failed（64.94s）→ **后 913 passed / 15 skipped / 0 failed（66.40s）**。
+         **总数一字未动**，你预登记的"只动前端则不应变"成立，本轮没有需要报的意外。
+      2. 权威 E2E `--reporter=json`（run `ord30-full`，web :3441 → backend :8441、一次性 `_ord30-full.db`、
+         ai=disabled、reuseExistingServer=false、provenance 行 + `e2e-provenance/authoritative.json` 均落盘、
+         产物 `CITYNEXUS_EVIDENCE_DIR=D:\moodle\_qoder_ord30_evidence_20260920`）
+         前 51 expected / 0 unexpected / 0 flaky / 0 skipped →
+         **后 54 expected / 0 unexpected / 0 flaky / 5 skipped（152.5s）**。
+         +3 正是新 12 点门；**5 条 skipped 全部来自 `qoder-ui-overnight-shots.spec.ts`**，它按设计在没有显式
+         `CITYNEXUS_SHOT_LABEL` 时跳过（防整套跑悄悄把 before 基线刷成改后像素），不是漏跑。
+         我另按标签单跑证明这份文件在合并树上可用：`CITYNEXUS_SHOT_LABEL=after` run `ord30-shots`
+         （:3443/:8443、`_ord30-shots.db`）→ **6 passed / 30.3s**，20 张 412x915 明+暗（5 场景 × 明暗 × 整页/首屏）。
+      3. `npm run build` 退出码 0；`npm run typecheck` 退出码 0、`error TS` 0 条；
+         `npm run typecheck:all` 退出码 0、`error TS` 0 条（**按你的要求不接管道**：
+         `> file 2>&1` 后读 `$?`，日志在同一证据目录）。
+      4. UI 车道三道门在同一套件里逐条：contrast-audit **4/4**、mobile-overflow **1/1**、today-hero **2/2**
+         （另 dock-geometry 3/3、live-structure 9/9、stale-cursor 1/1、live-recovery-cursor 4/4、product-v8 2/2 全绿）。
+         新 12 点门逐条不是复述车道自报，是从门自己写的原始测量里数的（`ui-overnight/geometry-seeded.json`
+         9 行 + `geometry-setup.json` 3 行 = **12 个测量点**）：**溢出 0 / <44px 0 / 截断 0 / chrome 重叠 0 /
+         CTA 被遮 0 / 找不到 CTA 0**；触控分层 `desktop 30px 紧凑 / mobile 44px 达标`。
+      5. 套件内最慢 15.1s（12 点门），`product-v8` 没有再撞上之前那类 60s 超时。
+
+    **两件我查到但没顺手改的事**：
+      (a) 我第一次全量后端跑是红的：**9 failed / 902 passed / 16 skipped / 1 error（307.32s）**。
+          归因是**我的调用方式**，不是合并回归——那一次我没清 `DEEPSEEK_API_KEY`（本会话 shell 里它本来就有），
+          于是 9 条依赖"未配置外部 agent"的测试走了真 AI 路径（guardian_v4 ×3、v13_integrity gateway、
+          v15_copilot——用例名就是 "without deepseek configuration"、v5_autopilot、v6_predictive、v7_twin、
+          v8 自然语言 mission）。清键重跑即 913/15/0。教训：这台机器上"全量后端绿"必须显式带
+          `DEEPSEEK_API_KEY= CITYNEXUS_AI_API_KEY= CITYNEXUS_AI_ENABLED=false`，E2E 侧有这道守卫、pytest 侧没有。
+          那条 ERROR 顺带暴露一条**真缺陷**：`tests/test_v16_integration.py:111` 写的是
+          `@pytest.mark.skipif(settings.ai_api_key, …)`，而 pytest 对**字符串**形态的 skipif 参数会 `eval`，
+          所以一旦键存在（值形如 `sk-…`）这条"该跳过"的守卫直接变成
+          `SyntaxError: invalid decimal literal (<skipif condition>, line 1)` 的收集期 ERROR——
+          **它恰恰在它想防的那个场景里永远失效**，与今晚反复在修的"守卫从不触发"同族。最小修法 `bool(...)`；
+          该文件不在 campaign `SUITES` 里，改了不动矩阵分母。等你派单落名，我不在这一轮里改别人的门文件。
+      (b) `frontend/e2e/qoder-mobile-ui-overnight.spec.ts` 的三处写盘（**200 / 269 / 328 行**）把
+          `generatedBy: "e345b9d6"` 与 `head: "00dfd62"` 写成**字面量**。在车道自己的树上它恰好为真，
+          合到 `5a33eaf` 之后它给的文件时间戳确实是本次 07:01 的，但 JSON 里的 `head` 仍说"我是 `00dfd62`"
+          ——正是 ORD-0029 刚消灭的那类字段：说"我是谁"却不来自这次运行。建议改取 `git rev-parse HEAD`
+          或 `CITYNEXUS_E2E_RUN_ID`。同因：我不在合并的同一轮里改刚合进来的别人家文件。
+    口径脚注（沿用 ORD-0031 结论 **LOCK 是权威**）：那两个 `typecheck = 0 errors` 只与**同一依赖集**上的
+    历史数字可比（node_modules 比 lock 多 `@types/react` 19.3.0、`@types/react-dom` 19.3.0、`csstype` 3.2.3），
+    不能当作"合并清理干净了类型问题"的证据。依赖结清前我报的每个 tsc 数字都带这条脚注。
+
+    [8c66aa92 追加@20260920-071416] 上面那四个门的数字描述的是 `5a33eaf` 的代码；此后只有两笔
+    **纯文档**提交（`5d3eff1` §85、`bf0869b` §85.5），`INTEGRATION_REPORT.md` 之外的跟踪文件一字未动，
+    所以数字不需要重跑就仍然成立。另做了一次卫生：把 38 个未跟踪的一次性脚本（`_sc_*`/`_p161_*`/
+    `_build_pkg_*` 等）移出权威树到 `D:\moodle\_qoder_scratch_20260920\scripts\`，让冻结要的
+    "`git status --short` 为空"是**构造出来的**而不是事后擦的。过程中我用 `mv _*.py` 一把梭，
+    误把两个**被跟踪**的基线文件（`_autopilot_flow.py`、`_demo_flow.py`，自 `380e6ff` 就在树里）一起搬走了
+    ——已 `git checkout --` 还原并按 SHA-256 逐字节确认与 HEAD 相同（`af3c8a05…` / `2812a6fc…`），
+    `git diff --name-only HEAD` 对这两路径 0 行。错因记在 §85.5：判别"哪些是我的"的依据（`??` 未跟踪列表）
+    我手上本来就有，却没先用。现在权威树未跟踪文件 0 个，仅剩两份别人家的修改。
 
 - id: ORD-0031
   to: 6af4cf53
@@ -1468,13 +1612,20 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 07:05 (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5745942415 = Mission 002 终态包，状态字 `CNX_CMD_002_PARTIAL`**
-**E 节权威读数（Commander 自测，勿再推导）**：tip `94295e5` → `--collect-only` **928**；
-`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓；
+Refreshed: 2026-09-20 07:3x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5746109359 = Mission 002 状态字修正：`CNX_CMD_002_PARTIAL`(5745942415) → `CNX_CMD_002_COMPLETE`**
+修正理由（三条 PARTIAL 阻塞项全部关闭，均经 Commander 亲测）：UI 分支已合入 `5a33eaf`；ORD-0027 F 行机制已改；ORD-0031 依赖权威结论已定（LOCK 为权威，离线重装被 registry/CDN 域名不一致系统性阻断，typecheck 记为"不可比"）。
+**E 节权威读数（Commander 自测，勿再推导）**：合并前 tip `94295e5` → `--collect-only` **928**，`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓。
+合并后 tip `5a33eaf` 复测：**后端 913 passed / 15 skipped / 0 failed / 0 error（70.43s）**；**前端 e2e 54 passed / 5 skipped / 0 failed（exit 0）**；`vite build` **exit 0**。
 对红队在 `954edaa` 测的 922 是 **+6 / −0**，六条逐一点名（rx4 前提 1 + 结构不变式参数化 3 +
 腿归属 1 + Edge 副本 1）。旧账"909/15=924"是推导值，已作废。
+**Mission 002 已交付完成，仅剩两条 HUMAN 事项**：①撤销泄露密钥 `sk-5343f86b…`（权威提交的 `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch` 里仍有 1 处命中；工作副本已清洗但未提交；force-push 也清不掉旧 SHA）；②凌晨 08:00 后续夜间巡检 cron `f92f2794`。Mission 003 **未启动**，等用户醒后批准。
+**tip 又前进了，但不构成新红（07:4x 实测）**：`5a33eaf..14afb84` 三提交（`5d3eff1`/`bf0869b`/`14afb84`）
+`git diff --name-only` **只有 `INTEGRATION_REPORT.md`** ⇒ 无产品代码、无测试，上面合并态读数继续作准；
+我在 `14afb84` 直接重采 `_qoder_integration_20260919/backend`：**`928 tests collected in 1.28s`** ✓（`raw/collect_14afb84.txt`）。
+该树 `git status --porcelain`：未跟踪 **0 条**，3 行修改分别是该车道正在写的报告、另一车道的 handoff patch、**我的** `tools/verification/mutation_campaign.py`（`killed_by`/`restore_everything`/F 行新 reason 均逐条 grep 命中，未被覆盖）。
+`REQ-0009`（UI 车道 write-set 入向请求）已标 **SUPERSEDED** 并附 D-7 警告 ⇒ **榜上 OPEN 归零**。
 
-## MISSION 002 执行中（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）
+## MISSION 002 已交付（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）→ 状态字 `CNX_CMD_002_COMPLETE`（评论 5746109359）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
 禁止 force-push，`53b0362` 作历史快照，本地 `integration/frontend-apple-pass1` 为开发权威，
 全绿后再建新分支 `integration/qoder-authoritative-20260920`；RX-4 保持独立 Worker 不改派。
@@ -1647,17 +1798,24 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    21cbf22  2026-09-20 04:18  docs: record the RX-4 absorption, the node map, and the authoritative 17-row matrix
-prior   fb34d8a  04:0x test: absorb the RX-4 C4 gates (generate path + protection surface)
+HEAD    14afb84  2026-09-20 07:42  docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
+prior   bf0869b  07:15 docs: section 85.5 - the scratch scripts leave the tree
+        5d3eff1  07:12 docs: section 85 - the UI overnight lane merged, and a red run that was mine
+        5a33eaf  06:5x Merge branch 'agent/ui-overnight-20260920' (tip 19d842a; 11 files, +1628/-25, 零 backend 路径)
+        a98babb / 94295e5  06:5x ORD-0029 一套游标词表；fd1151c / c7f1345 ORD-0026+0028；954edaa ORD-0010
+        21cbf22  04:18  docs: record the RX-4 absorption, the node map, and the authoritative 17-row matrix
+        fb34d8a  04:0x test: absorb the RX-4 C4 gates (generate path + protection surface)
         00dfd62  03:5x fix(backend): one projection answers "is there a next step?" for Edge as well
         3ae01e8  03:3x test(backend): the generate path may not build a plan around a paid anchor it cannot place
         b31f331  03:2x fix(backend): a Next leg needs a trustworthy Now, not just an in-range index
         4b1e829  03:0x test: absorb the RX recovery gates and retire the node they replace
         13f1453  02:38 test: give the repository its own extended truth gate
-worktree  脏：frontend/src/features/execution/LiveRecovery.tsx（ORD-0010 正在改）、
-          frontend/src/i18n/LocaleContext.tsx（UI 车道）、tools/verification/mutation_campaign.py（我的量具）、
-          qoder-handoff/*.patch；backend/app/* 全部干净
-untracked 27 个脚手架脚本（_build_pkg_p14/p15/p16/sc.py、_p16_*.py、_sc_*.py、_patch_p15.py）
+worktree  只剩两份**别人家**的修改：tools/verification/mutation_campaign.py（commander 的量具）、
+          qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch（另一车道）。
+          此前记为"正在改"的 frontend/src/features/execution/LiveRecovery.tsx 与
+          frontend/src/i18n/LocaleContext.tsx 已提交（954edaa / 94295e5 一族），backend/app/* 全干净。
+untracked 0（原 27~38 个一次性脚手架脚本已于 07:15 移到 D:\moodle\_qoder_scratch_20260920\scripts\；
+          见 KNOWN_FAILURES 第 4 条的结案）
 remotes    origin -> D:\moodle\CityNexus (本地);  GitHub 不是这棵树的 remote
 突变用副本  D:\moodle\_qoder_recovery_20260919\verify\wt_final（HEAD 00dfd62 + 两个 RX-4 门文件；
              已用 blob 哈希逐字节核过与 21cbf22 相同，故其 137 节点基线即权威内容）
@@ -1721,6 +1879,12 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
 | `17c5bb5` + 当时未提交工作集 | 865 / 15 / 0 |
 | `fec2204` + 当时未提交工作集 | 836 / 15 / 0 |
 | `7f2f5bb`（pass-15 期） | 827 / 15 / 0 |
+| **逐 HEAD 阶梯（8c66aa92 亲测，为 907 vs 909 之争提供按节点对账的原料；上面几行是别人的记录，不重述也不改）** | |
+| `21cbf22` | 907 / 15 / 0（86.97s，报告 §80，提交 `6e2b57b`） |
+| `fd1151c` | 912 / 15 / 0 = 907 + ORD-0011 的 4 条结构/形状 + 1 条 Edge 同规则 |
+| `c7f1345` | 913 / 15 / 0 = 912 + RX-4 第 8 节点（`test_nothing_outside_the_commitment_pins_the_unreachable_anchor`） |
+| `94295e5` | 913 / 15 / 0（64.94s，ORD-0029 只动前端与词表，后端总数不变） |
+| `5a33eaf`（合入 UI 过夜车道后） | **913 / 15 / 0（66.40s）** —— 该合并 11 个文件零 `backend/` 路径，总数一字未动 |
 
 ## CURRENT_GATES（口径规则，长期有效）
 1. 报后端数字必须注明解释器。Codex 快照自带的 `backend/.venv` 缺 `ortools`，会把全量变成 32–38 条假崩。
@@ -1744,6 +1908,12 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    陈旧游标原无看守，现由 RX-3 杀掉；C4 generate 至今存活）。
 4. **权威树有 27 个未跟踪脚手架脚本**（`_build_pkg_*`、`_p16_*`、`_sc_*`），需要决定归档、忽略或删除；
    项目没有可用的版本控制远端配置，这类文件是丢工作的主要来源。
+   → **结案@20260920-071500 by 8c66aa92（选"归档到树外"）**：实际清点 38 个，已全部移到
+   `D:\moodle\_qoder_scratch_20260920\scripts\`，权威树 `git status --porcelain` 的未跟踪项现在为 **0**，
+   冻结要的"干净树"从此是构造出来的而不是事后擦的。过程里踩了一次空并如实记下：
+   `mv _*.py` 的 glob 不认识"是否被跟踪"，把两个**基线里就被跟踪**的文件
+   （`_autopilot_flow.py`、`_demo_flow.py`）一起搬走了；已 `git checkout --` 还原并按 SHA-256
+   逐字节确认与 HEAD 相同（`af3c8a05…` / `2812a6fc…`）。细节见报告 §85.5（提交 `bf0869b`）。
 5. Codex 的 `_codex_sol_extreme_v2_20260919` 交付面为空（无报告无 ZIP），其修复已冻结在
    `D:\moodle\_qoder_recovery_20260919`（提交 `f331e43`，分支 `qoder/recovery-extreme-v2`）。
 6. 厦门纵向切片（Astra）仍为零产出：`_astra_xiamen_vertical_20260919` 是干净克隆。
@@ -1752,8 +1922,12 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
 ```
 1. RX-4 门（新缺陷关闭）           待派 —— 建议 Owner: convergence 线
 2. RX-1/2/3 三条门固化进 backend/tests   已交付路径，待其接受
-3. 前端 1501 行墙上时间是否收敛      等仲裁
-4. 未跟踪脚手架 27 个文件处置         等人决定
+3. 前端 1501 行墙上时间是否收敛      等仲裁（= KNOWN_FAILURES 第 2 条同一件东西；
+   ORD-0011 重放复核时我又独立定位到它：`V8Experience.tsx:1479-1480` 的
+   `activities.find(end_at >= now) ?? activities[0]` 喂 1501/1590 行的 "Next / 接下来"。
+   不是新发现，只是确认它还在、行号已漂到 1479；见报告 §86.3）
+4. 未跟踪脚手架 27 个文件处置         已处置@07:1500 by 8c66aa92 —— 归档到树外，未跟踪项归 0
+   （清点实为 38 个；过程与踩空见 KNOWN_FAILURES 第 4 条结案与报告 §85.5）
 5. 远端分支历史重写事实             等人决定（force-push 不回收旧 SHA）
 ```
 
