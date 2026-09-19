@@ -77,7 +77,10 @@
 - 夜间 cron `f92f2794`：`permissionMode=auto`、`expiresAt≈08:00`、首次 `lastDurationMs=48ms` →
   **"保险已生效"尚未证实**，需要看到一次真实完成轮次才算数。
 - 控制面分支远端目前仍在 `ea7187b`；我有一次 `git push` 实际失败但脚本无条件打印了 pushed。
-  **新规矩：push 之后必须用 `ls-remote`/API 比对 SHA 才能声称已推送**（本条已改走 Contents API 并逐次回读）。
+  **新规矩：同步后必须回读比对**——用本地文件的 git blob 哈希（`sha1sum("blob %d\0"+内容)`）与
+  Contents API 返回的 `sha` 比较，而不是拿 commit sha 去比（我第一次就这么误报过一次 MISMATCH）。
+  本轮已按此法验证：`CITYNEXUS_AGENT_CONTROL.md` 本地与远端 blob 均为 `68e9aae…`、字节数 22721 相同，含 ORDERS 小节。
+
 - 读网页 GPT 前先 reload 页面；更可靠的路径始终是 Issue #1 的 REST API。
 
 
