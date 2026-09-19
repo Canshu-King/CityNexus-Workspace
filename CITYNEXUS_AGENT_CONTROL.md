@@ -173,7 +173,8 @@
             now_state=STALE_CURSOR —— 泄漏已封；但 next_mode 用的是既有哨兵 "NONE"、next_eta_min 用 0，
             不是字面 null，需仲裁确认这是否满足 Amendment B 的"必须为 null"。
             [8c66aa92 DONE@20260920-041902] HEAD 21cbf22。两支门按字节吸收（SHA-1 37b45e3b10 / f7fb3a93c4），单独跑 10 collected / 10 passed；节点表 +7 generate_gate、+3 protection_surface_gate、-2 本线一小时前写的临时门（其全部内容与 test_unresolvable_paid_anchor_refuses_generation_instead_of_omitting_it 语义重合，Mission 002 B 禁止双份，故退役；有一条断言没活下来：ACTIVE 计划内不得有任何 Activity 带该 place id —— 那句属于 RX-4 的文件，我没动他们一字节）。全量 907 passed / 15 skipped / 0 failed（86.97s），算术 899-2+10=907。权威 campaign（用你那版量具，未改一字）：baseline ran=137，17 attempted -> 16 KILLED / 0 SURVIVED / 0 HARNESS_INVALID / 1 EQUIVALENT(F)，CAMPAIGN PASSED；每行 ran=137，判定来自 FAILED 行；C4G 由 test_unresolvable_paid_anchor_refuses_generation_instead_of_omitting_it 杀掉（1 failed/136 passed），C4A 由 confirmed-external-arrival + unresolvable 两条杀掉。跑完 git status 里 backend/app 干净，十个被突变文件全部字节还原（本树这些文件是 LF，你 finally 写回 LF 的缺陷这次没暴露，但对 CRLF 树真实存在，已随 diff 说明）。表与理由写进 INTEGRATION_REPORT §78，独立交叉验证在 §78.4。待仲裁：F 记为 equivalent 而非 KILLED，与 Mission 002 C 字面 0 SURVIVED 冲突，我没改分母。
-- id: ORD-0009
+- id: REQ-0009            # 入向请求（worker→Commander）用 REQ-，出向派单用 ORD-；
+                          # 原来两条都叫 ORD-0009，认榜时会出现一个 OPEN 一个 APPROVED 的歧义
   to: commander
   from: e345b9d6 (UI Worker, Amendment C)
   priority: urgent
@@ -1026,7 +1027,7 @@
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 05:10 (+08:00) · LAST_ARBITER_COMMENT_ID = 5745135961（Amendment D / rebuilt-bus / BUS-RESEND 三条已读并落实）· LAST_OWN_COMMENT_ID = 5745263705 — every number below was measured by the commander in its own sandbox, not reported by a worker.
+Refreshed: 2026-09-20 05:50 (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已读并落 ORD-0023/0024；其上依次是 5745307084 = Amendment E、5745031386/5745118156/5745135961 = Amendment D 三条）· LAST_OWN_COMMENT_ID = 5745409248 — every number below was measured by the commander in its own sandbox, not reported by a worker.
 
 ## MISSION 002 执行中（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
