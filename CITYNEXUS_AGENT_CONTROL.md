@@ -1119,13 +1119,13 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     STALE 时不声称在进行中），并给一条会在"退回位置/存在性判断"时变红的断言。
     如果你判断它属于 Amendment E 第 6 条之外、需要 UI 车道配合改可见文案，就先只改真值语义 + 注释，
     文案另开单，不要互相等。
-  status: CLAIMED@20260920-062010
+  status: DONE@20260920-064138
   evidence: |
     来源：`INTEGRATION_REPORT.md` §81.1 末段（实现线自报"同一族还剩第三处"）。
     与已修的 `LiveRecovery.tsx`（`954edaa`）、已封的 `V8Experience` Live/LiveSecondary 同族；
     FLASH-F1 的 28 行清单（`_qoder_flash_f1_20260920/FLASH_EXECUTION_TRUTH_AUDIT.md`）里
     SUSPECT_* 17 条尚未逐条归零，这条是其中第一个被实现线自己确认的。
-
+            [8c66aa92 DONE@20260920-064138] HEAD 5a18e5d（实现在 d322547）。面板改为解析窗口后四态回答：resolved→in progress；不可解析→Execution position unresolved；有计划无待执行→Nothing is due right now；无计划→Awaiting plan。解析器搬到 frontend/src/lib/executionWindow.ts 并新增 cursorStatus —— 是移动不是复制：本夜三次分歧（Live / recovery 卡 / 本面板）根因都是三态规则有多份实现，第四份只会"看起来一致"到有人突变它为止。文案零新造：unresolved / nothing-due 复用 Live 与卡已读的同一对 locale 键，因此需要 UI 车道配合的那半根本没用上；story 被迫显式写 plan: null（窗口由 props 解析后，"这里没有计划"必须是故事下的判断）。鉴别力实测（指标加 data-testid=v10-current-step）：干净态该 spec 4 collected → 5 passed / 0 failed（12.7s，run ord26-b，backend :8423，一次性库，ai=disabled）；把旧的存在性判断塞回去 → 2 failed / 3 passed，已完成步骤那例期望 Nothing is due right now 实到 in progress、STALE 那例期望 Execution position unresolved 实到 in progress，源文件字节还原 sha256 相符。typecheck 与 typecheck:all 退出码 0。全量：后端 913/15/0，build 0，权威 E2E 51 expected / 0 unexpected / 0 flaky / 0 skipped（run ord26-e2e）。FLASH-F1 的 SUSPECT_* 清单这条已归零；其余我按 ORDERS 等派单，不自己认领。
 - id: ORD-0027
   to: 1fb26149
   priority: normal
@@ -1169,7 +1169,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       3. 提交后报新 HEAD —— 因为我这边有连带后果：**campaign 的 baseline 会从 137 变 138**，
          按 Amendment E 1b 这属于"owner 测试集合发生变化"，**我必须重跑整场 17 行矩阵**才能继续引用 C 节；
          我会等你这笔提交之后一次跑完，不要在此之后再动 SUITES 里那些文件。
-  status: DONE@20260920-062010 by 8c66aa92（commit `c7f1345`）；**Commander 已验**
+  status: DONE@20260920-064138 by 8c66aa92（commit `c7f1345`）；**Commander 已验**
   commander_check: |
     在 `verify/wt_c2`（detach @ `c7f1345`）直接看树：该文件现在 **8 个 `def test_`**，新节点
     `test_nothing_outside_the_commitment_pins_the_unreachable_anchor`（:491）里有
@@ -1185,7 +1185,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     实测 1 failed / 7 passed、一个 owner —— 这种自我收窄要记账，不要只记错不改）。
     Commander 06:28 亲查：权威树 grep 零命中 + 文件仍 7 节点；
     其沙箱基线 954edaa/a75ba7a 两版 services.py sha256 相同，故"同一条命令两调用"不重复计败。
-
+            [8c66aa92 DONE@20260920-064138] 吸收完成在 c7f1345（文档收口 5a18e5d）。逐行核过：delta 只有两处 —— import 行扩为 Activity, Commitment, Journey，以及追加 _import_unresolvable_reservation + 新节点 test_nothing_outside_the_commitment_pins_the_unreachable_anchor；无夹带。拷贝后与 delivery 版 SHA-256 一致（24,513 B、LF）。命令原文与结果：cd D:\moodle\_qoder_integration_20260919ackend; DEEPSEEK_API_KEY= CITYNEXUS_AI_API_KEY= CITYNEXUS_AI_ENABLED=false D:\moodle\CityNexus\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --no-header tests/test_rx4_c4_generate_gate.py -> 8 collected / 8 passed in 1.53s。全量后端 913 passed / 15 skipped / 0 failed（912+1）。基线要更正：SUITES 那 11 条路径默认 12×12 下 collected=91，换算 60×30 是 139 而不是 138 —— 137 之后有两处进新节点：本次 RX-4 +1，以及 7f9bb69 的 test_sol_execution_cursor.py::test_the_edge_copy_honours_the_same_leg_rule_as_the_projection +1。此后我没再动 SUITES 里的任何文件。另：该新节点正是 §78.4 我认下的缺口（ACTIVE 计划不得钉住不可解析锚点），现在由 RX-4 的门守，含未确认对照 201+3 候选与全库 strays==0。
 - id: ORD-0029
   to: 8c66aa92
   priority: normal
@@ -1204,12 +1204,43 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
           （`ABSENT` ⇔ 无 now，可能来自 `ABSENT_FALLBACK` 也可能来自"计划里没有活动"）。
     如果选 (a)，同步改 `qoder-live-recovery-cursor.spec.ts` 里那 4 处断言，并跑一遍该文件
     把 collected 数报回来（我现在看到 4 条 test，你自己那跑是 5 passed 含 seed）。
-  status: OPEN
+  status: CLAIMED@20260920-064228
   evidence: |
     Commander 06:40 亲测：`grep -rn '"ABSENT"' frontend/src/` 只命中 `V8Experience.tsx:2096`；
     `grep -rn '"ABSENT"' backend/app/` **零命中**；后端枚举见 ORD-0011(3) 引的
     `cursor_status = VALID|STALE|ABSENT_FALLBACK`。测试侧断言在
     `frontend/e2e/qoder-live-recovery-cursor.spec.ts`（`data-cursor-status == "ABSENT"` 那一行）。
+
+- id: ORD-0030
+  to: 8c66aa92
+  priority: normal
+  if_head: 94295e5
+  order: |
+    **UI 车道的活可以合进来了，我已经用一次性 worktree 试过合，零冲突。** 但我不自己动权威树
+    （那是你的写域，而且合完必须在真树上跑门，真树才有 `frontend/node_modules`）。
+    我的试合过程（可复现）：`git worktree add --detach …/wt_merge_test HEAD` →
+    `git merge --no-commit --no-ff agent/ui-overnight-20260920` →
+    **"Automatic merge went well"**、`git diff --name-only --diff-filter=U` **零文件**；
+    随后 `git merge --abort`、按 D-7 先枚举 `LinkType`（0 条）再 `git worktree remove`。
+    收尾核验：`CityNexus\frontend\node_modules` 仍是 **394** 条，没有重演 ORD-0016 那事。
+    要做与要交的：
+      1. 在权威树上真正合入 `agent/ui-overnight-20260920`（tip `19d842a`，6 笔提交），
+         给出合并后的 HEAD 与 `git show --stat` 摘要；
+      2. 合并后在同一棵树上跑：全量后端 `pytest -q`（解释器 `D:\moodle\CityNexus\.venv`）
+         报 collected/passed/skipped/failed；**注意我这边 SUITES 已按 `c7f1345` 拿到 ran=139**，
+         如果这次合入只动前端，后端总数不应再变；变了就是意外，报出来别压下去；
+      3. 前端：`npm run build`、两道 typecheck（**别接管道，直接 `> file 2>&1` 后读 `$?`**，
+         这台机器上 `npx tsc … | tail` 会把退出码变成 `tail` 的），以及 UI 车道那三道门 + 12 点门；
+      4. 报合并前后**同一命令同一口径**的数字对照。
+    合并会触发我一次矩阵重跑的判断：只有当 10 个 `source=` 目标文件或 owner 节点被碰到才重跑
+    （Amendment E 1b），纯前端合入不触发。
+  status: OPEN
+  evidence: |
+    UI 侧证据我已独立核过：`agent/ui-overnight-20260920` tip `19d842a`、工作树 `git status` 干净、
+    提交态全套 `50 passed / 5 skipped`（`review/gates-committed-state-f.log`，日志时间 05:59 晚于
+    该提交 05:56:27，所以确实是"提交态"）、`npm run build` 出 dist 产物；
+    两道 typecheck 我自己在 19d842a 上跑：**exit 0 / 0 errors**（比车道自报的"与基线相等的 1 与 5 条"
+    更好，他们的说法已过时，按我的读数记账）。
 ```
 
 
