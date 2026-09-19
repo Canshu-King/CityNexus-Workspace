@@ -1992,6 +1992,9 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
 | `c7f1345` | 913 / 15 / 0 = 912 + RX-4 第 8 节点（`test_nothing_outside_the_commitment_pins_the_unreachable_anchor`） |
 | `94295e5` | 913 / 15 / 0（64.94s，ORD-0029 只动前端与词表，后端总数不变） |
 | `5a33eaf`（合入 UI 过夜车道后） | **913 / 15 / 0（66.40s）** —— 该合并 11 个文件零 `backend/` 路径，总数一字未动 |
+| `14afb84` 收集数（Commander 07:3x 亲测） | **`928 tests collected in 1.28s`**（`pytest tests --collect-only -q -p no:cacheprovider`，`_qoder_integration_20260919/backend`；`raw/collect_14afb84.txt`）。`14afb84`/`8579cbb`/`ee6a93e` 对 `5a33eaf` 全是 docs-only（`git diff --name-only` 只 `INTEGRATION_REPORT.md`） |
+| 合并态前端（Commander 07:1x 亲测，权威模式） | **54 passed / 5 skipped / 0 failed（2.6m，exit=0）**；`:4391`/`:8391`、DB `verify/commander_e2e/_m0030.db`、`ai=disabled`、`reuseExistingServer=false`（头行在 `verify/commander_e2e/merged_gates.out`）。`vite build` **exit 0**（`raw/build_5a33eaf.txt`） |
+| 发布暂存包 ↔ HEAD（Commander 07:3x/07:5x 亲测，逐文件 git blob） | `698 文件 / 10,100,098 B`：**681 与 HEAD 相同 / 15 不一致 / 2 仅包内**；禁路径 0、真实 key 包内 0 而 HEAD 恰 1 个文件。缺 `frontend/src/lib/executionWindow.ts`（包内两份源 import 它 ⇒ 包内 build 必挂）+ 缺 3 份 e2e spec ⇒ **ORD-0032**。读数 `raw/stage_vs_head_8579cbb.txt`、`raw/stage_vs_head_ee6a93e.txt` |
 
 ## CURRENT_GATES（口径规则，长期有效）
 1. 报后端数字必须注明解释器。Codex 快照自带的 `backend/.venv` 缺 `ortools`，会把全量变成 32–38 条假崩。
