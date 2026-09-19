@@ -16,7 +16,7 @@
          把腿的绑定条件从索引改成"存在可信 Now"：next_leg = legs[current_index] if now_item is not None and 0 <= current_index < len(legs) else None
          并补两条回归：(a) legs 多于 activities 且游标 STALE → next_leg_id/next_mode/next_eta_min 全空；
          (b) cursor_status=VALID 且 next_activity_id 非空 → next_state 不得为空（v9 与 Edge/v10 一致）。
-  status: OPEN
+  status: CLAIMED@20260920-031544
   evidence: Commander 沙箱独立重现（HEAD 4d2f0c8 + 未提交文件，指纹稳定）：
             {"cursor_status":"STALE","now":null,"next":null,"next_leg_id":"80e9018e…","next_mode":"AUTO","next_eta_min":29}
             违反 Mission 002 A 节 stale 投影要求（Now/Next/NextLeg 必须全空）。
@@ -31,9 +31,19 @@
          (2) verdict 仍是 "KILLED" if 退出码 else "SURVIVED"。改为必须有 FAILED 行且 collected>0 才判 KILLED；
              no tests ran / 收集错 / 导入错 / 无 FAILED 的非零退出 → HARNESS_INVALID（独立一类，计入失败但不算杀）。
              并逐行输出 collected 条数与杀它的测试 node id。
-  status: OPEN
+  status: DONE@20260920-032x by commander（仲裁 Amendment B 授权修 QA harness；8c66aa92 曾于 03:15:44 CLAIMED，已通知停手以免双写覆盖）
   evidence: 我沙箱实测 `--only RX1 RX2`：baseline 102 passed；RX1 anchor missing(skip)；RX2 KILLED(1 failed/101 passed)。
-            另 11 个 anchor 的对应关系：多行→字节精确 False/LF 归一 True；单行→两者 True。仲裁已授权修此 harness（仅限 QA）。
+            另 11 个 anchor 的对应关系：多行→字节精确 False/LF 归一 True；单行→两者 True。
+            已落地改动（`tools/verification/mutation_campaign.py`，py_compile exit 0，diff 148/30）：
+            LF 归一匹配 + 按原行尾写回；四类判定 KILLED / SURVIVED / HARNESS_INVALID / EQUIVALENT_OR_NON_ACTIONABLE；
+            preflight 在 anchor 缺失时 return 2 并打印 PREFLIGHT FAILED（不再静默 skip）；
+            逐突变输出 ran/passed/failed/skipped/error 与杀它的测试名；新增 3 个可执行突变
+            C4G(`app/services.py`)、C4A(`app/planning/anchor_schedule.py`)、RX3NEXT(`operations/v9.py` 陈旧游标回退首活动)。
+            我自己引入并被自己抓到的两个 bug（记录以免有人重走）：
+            ① 用 `Path.write_text` 写回把 LF 文件翻成 CRLF，diff 一度变成 398/315 全文件抖动 —— 已归一回 LF；
+            ② `pytest -q --no-header` 根本不打印 "N collected" 行，导致我的 collected 解析恒为 0 而拒绝跑突变
+            —— 改为从 summary 解析 passed/failed/skipped/error 并以此判定"是否真的执行过"。
+
 
 - id: ORD-0003
   to: 1fb26149
@@ -42,7 +52,7 @@
   order: 交付可吸收形态的 RX-4 门：D:\moodle\_qoder_rx4_20260920\delivery\test_rx4_c4_generate_gate.py（7 条，按仲裁新裁定不删成 3 条）
          + RX4_GATE.md（基线 SHA、干净态 7/7、两组突变结果、空转陷阱自证：demo 巡航 locked=True 且零承诺）。
          之后独立复核 ORD-0002 修好的 campaign：逐行核 collected>0 与是否真有 FAILED 行。
-  status: OPEN
+  status: CLAIMED@20260920-031950（已在更新 HEAD `4b1e829` 上复核：`app/services.py:91` 谓词仍在，订单成立）
   evidence: Commander 实测：干净态 7 collected/7 passed；突变 app/services.py 的 C4_Anchored → 1 failed/6 passed = KILLED，
             而 98 条真值门禁全绿（该守卫此前无人看守）。
 
@@ -53,7 +63,7 @@
   order: 在你自己的原始目录（不要复制到其他路径）把 test_v3_concurrency.py 连跑 5 次，逐次报每条用例的 PASS/FAIL；
          特别是 test_three_way_race_one_winner_and_the_canonical_state 在你改写断言后是否仍会偶发失败。
          若仍偶发，给出最小调度重现与它违反哪条不变式；若 5/5 全过，就把它标为已闭合并说明原因。
-  status: OPEN
+  status: CLAIMED@2026-09-20T03:15+08:00
   evidence: 你的 raw 日志：full_run 该用例 FAILED（旧断言 statuses.count(200)==2），repeat_1/2 PASSED；
             现在文件里断言已改成 schedule-blind（恰好一个赢家 + 第三方重放跟随赢家）。
             另注：Commander 把 harness 复制到别处跑时 test_restart_then_retry… 报 NotADirectoryError(WinError 267)，
@@ -67,8 +77,36 @@
          排除至少含 _qoder_recovery_20260919 / _qoder_rx4_20260920 / _qoder_verifier_20260920 / _codex_sol_* / _astra_* /
          各类一次性克隆与 *.db / .venv / node_modules / __pycache__ / test-results / playwright-report。
          不得访问 github.com 的 git 协议（会弹登录框）。
-  status: OPEN
+  status: CLAIMED@20260920-034500
   evidence: 仲裁禁令 + GCM 凭据被 401 抹除会导致无人可点的交互弹窗（已发生过一次）。
+            CLAIM 时动作：已停止进行中的分批推送脚本，并 kill 掉 git-remote-https.exe
+            （唯一会触发凭据弹窗的进程）；此后本会话不再访问 github.com 的 git 协议。
+
+- id: ORD-0006
+  to: 8c66aa92
+  priority: urgent
+  if_head: 4b1e829
+  order: 按仲裁 Mission 002 Amendment B 落地 STALE 投影硬门。cursor_status == "STALE" 时权威投影必须
+         now / now_activity_id / next / next_activity_id / next_leg_id / next_mode / next_eta_min 全为 null，
+         now_state == "STALE_CURSOR"（即 ORD-0001 的修法：NextLeg 只在存在可信 Now 时才投影）。
+         新增权威回归：ACTIVE 计划 + 存在但不可解析的 current_activity_id + len(legs) > len(activities)
+         （腿端点可空，属合法持久态），断言整个元组；该回归必须在"移除 trustworthy-Now 守卫"的一次性突变下失败。
+         此门独立于 16 突变分母，不得塞进分母凑数。
+  status: OPEN
+  evidence: Commander 沙箱重现（HEAD 4d2f0c8 + 未提交文件，指纹稳定）：
+            {"cursor_status":"STALE","now":null,"next":null,"next_leg_id":"80e9018e…","next_mode":"AUTO","next_eta_min":29}
+
+- id: ORD-0007
+  to: 8c66aa92
+  priority: urgent
+  if_head: 4b1e829
+  order: 新增跨消费者差分不变式：v9 暴露非空 next_activity_id 时 Edge/V10 必须对同一活动给出非空 next state；
+         若语义上确实没有下一步，则 v9 也必须给 next_activity_id = null。不允许两个消费者对"是否存在 Next"意见不一致。
+  status: OPEN
+  evidence: 重现用例 test_v1_cursor.py::test_terminal_cursor_with_pending_steps_keeps_next_consistent_across_consumers
+            （cursor_status=VALID、next_activity_id 非空、Edge next_state=None）。
+            三向竞态按仲裁指示保持 UNCONFIRMED，不计入产品缺陷与账面。
+
 ```
 
 ### 控制面校正（来自侧边会话 `50fd7edb` 的实测，已并入规则）
