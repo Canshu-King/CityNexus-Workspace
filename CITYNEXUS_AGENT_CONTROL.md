@@ -628,7 +628,14 @@
     (2) **Journey 创建没有底部主导航**，因为 `V8Experience.tsx:818` 的提前 return 落在
         `.v8-product-shell` 之外。这条**不要动** —— 它是产品结构决定（首进门要不要导航），
         我已单独提请仲裁裁；在裁定前，UI 车道的 token 上提已经是这件事的最小正确解。
-  status: CLAIMED@20260920-054836
+  status: DONE@20260920-062000 by 8c66aa92（commit `1187ce6`）；**Commander 已验**
+  commander_check: |
+    新文案（zh 2498 / en 2499）："结构化导入在这里：展开下方「高级」粘贴 JSON 确认单。
+    确认单文本与截图走行程收件箱。" 我核了它指的**东西真的在**：
+    紧接着的 2501-2502 行就是
+    `<details className="v8-advanced" data-testid="bookings-advanced">` +
+    `<summary>Advanced: structured data</summary>`。
+    ⇒ 不再是"叫用户去别处做本页正在做的事"。这条撤谎只动措辞、没动结构，符合订单边界。
   evidence: |
     来源：`D:\moodle\_qoder_ui_overnight_20260920\review\UI_OVERNIGHT_EVIDENCE.md` §7 第 1、2 条。
     Commander 已核 UI 车道 A/B/C 交付：触控红 9→**0**、截断红 4→**0**、溢出 0、重叠 0、CTA 被遮 0；
@@ -995,7 +1002,12 @@
     这是 ORD-0017 之外的第二件小事，两件都在同一个文件里，可以一批做。
     注意：UI 车道会新增 onboarding wrapper（ORD-0023），**它的注释归你、wrapper 归它**，
     别互相伸手。
-  status: CLAIMED@20260920-054836
+  status: DONE@20260920-062000 by 8c66aa92（同一笔 `1187ce6`）；**Commander 已验**
+  commander_check: |
+    注释原文已读（`V8Experience.tsx` 该 return 上方 6 行）：写明"Intentional, and ruled so
+    (Amendment F #1)"、没有行程就没有可导航的目标、**不要**为了文案把 return 搬进壳层、
+    视觉地基归 onboarding wrapper。正是仲裁要的那种"读起来是决定而不是 bug"的注释。
+    边界也守住了：只 +8/−2、只动这一个文件，没碰 UI 车道的 wrapper。
   evidence: |
     仲裁原话："document the early return as intentional: focused pre-Journey onboarding,
     no primary app navigation"（评论 5745474928 §1）。
