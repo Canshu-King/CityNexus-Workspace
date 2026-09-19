@@ -926,8 +926,56 @@
     顺序仍按 Amendment E 第 6 条：先修已量出的红，再复核 token 上提，最后才是四界面润色；
     **`V8Experience.tsx` 还是不许你直接改**（要注释/锚点就走 ORD-0024 与 ORD-0017 的转交通道）。
     ORD-0020（把你已验收的批次真正提交、并证明提交态==验收态）继续有效，先做它。
-  status: CLAIMED@20260920-072000 by e345b9d6
+  status: DONE@20260920-075000 by e345b9d6
   evidence: |
+    [e345b9d6 交付] commit `19d842a`（分支 tip；前四批 `e00838e / 23b7f7b / e4a1258 / 9bdb5a8 / a425ad0` 不变）。
+    ORD-0020 先复核过：tip 已不再是 00dfd62，工作区只剩 `?? review/patches/`。
+
+    F-1（不做结构性壳层迁移，改为把视觉地基与导航 chrome 分开）
+      - `.cn-onboarding` 显式挂在向导根上（`JourneyTrialSetup.tsx` 在我 write-set 内），
+        自己声明 background / color / font / 左右留白 / 顶部状态栏 inset / 底部安全区，
+        并给出与 `.v8-content` 一致的 1370px 内容列与三档断点留白。
+      - **删掉**了我上一版那条通用兜底 `.v8-page { padding: … }` 与 `.v8-content .v8-page { padding: 0 }`
+        —— 那对规则正是"因为在壳层那套类里所以继承得到"的模式。`body` 的地基声明保留，
+        理由是文档根应当自陈颜色，而不是从自己并不所在的容器里继承。
+      - 向导内**不渲染** `.v8-mobile-nav`（原本就没有，现在由门钉住）。
+      - 仲裁五条逐条对应实测（run id `uiaf03`/`uiaf04`，`review/evidence/ui-overnight/geometry-setup.json`）：
+          1) 首跑可见底部主导航项 = **0 / 0 / 0**（360・390・412）
+          2) 同一套 Apple token 与明暗调色板：`after/setup-step1-dark-412x915.png` 与
+             `after/setup-step3-light-412x915.png` 两侧都跟 `--cn-canvas` / `--cn-surface`
+          3) 360/390/412 左右裁切 = **0 个 offender**（含我补的左边界检查；
+             改前 eyebrow "TRY CITYNEXUS…" 首词被屏幕左缘切掉，现完整）
+          4) 吸底 CTA：`stickyCtaVisible=true`，底边 616/800、660/844、731/915 全在视口内，
+             且 authored 声明含 `env(safe-area-inset-bottom)` = true
+          5) 暗色标签可读：见暗色截图，`Destination / Arrive at / Depart from / Arrival time /
+             Departure time` 五条全部可读（改前是暗底暗字）
+
+    F-2（44px 归触屏，30px 留细指针桌面）
+      - ≥44 移进既有 680px 移动断点，且用**同样的 0,2,0 选择器**覆盖 —— 否则 styles.css 里
+        0,1,0 的地板压不过 `.v8-hub-actions .v8-quiet-button`，这正是我上一批为什么必须在原地改。
+      - 桌面恢复：`.v8-hub-actions .v8-quiet-button` 与 `.cn-live-toolbar .v8-quiet-button` 回到 30px；
+        `v10.css` 里我无条件加的 4 处 min-height 全部移进移动断点，桌面回到原尺寸。
+      - 仲裁原话已逐字写在这两处 30px 规则旁边。
+      - `pointer:coarse` **没有**作为唯一判据（自动化移动视口不保证模拟 coarse pointer），
+        宽度断点是确定性可测路径。
+      - 双向证明（`review/evidence/ui-overnight/touch-contract-layering.json`）：
+        桌面 1280x800 = `30,30,30` 与 `30,30`；移动 390x844 = `44,44,44` 与 `44,44`。
+        没有桌面这一半，"我们把触控提到 44" 与 "我们把全局控件吹大了" 会给出**完全相同的移动数字**。
+
+    提交态 == 验收态：`uiaf04`（工作区干净时）全套 **50 passed / 0 failed / 5 skipped**，
+    `SUITE_EXIT=0`；`npm run build` exit 0。截图 `after/` 已按 F 态重采 20 张，`before/` 20 张不动。
+
+    ⚑ 一条量具发现，值得给所有写 CSS 门的车道：Chromium 的 CSSOM **不会**把含
+      `calc(… env(…))` 的 `padding` 简写暴露成 `padding-bottom` 长链 ——
+      `rule.style.getPropertyValue("padding-bottom")` 返回空串。我第一版只查长链，于是
+      "吸底 CTA 未声明 safe-area" 三连假红（`uiaf01`）。现改为读该规则的 `cssText`，
+      并把匹配规则数、长链原值、规则原文一起写进证据 JSON，这样下次失败能区分
+      "确实没声明"（F-1 第 4 条要抓的产品缺陷）与"查法不对"（量具缺陷）。
+    ⚠ 另：本批 `typecheck` 报 0/0，但这条**不可用作证据** —— 起因见 ORD-0016 我补的
+      【后续发现】：恢复动作换了依赖集（`@types/react` 19.3.0，lock 未锁该包），
+      而三个报错点源文件与 00dfd62 逐字节相同。裁定前我不把 0/0 记成任何一条成果。
+
+    [Commander 原文，未改动]
     仲裁原文：`Canshu-King/CityNexus-Workspace` Issue #1 评论 5745474928（Amendment F，
     §1 导航、§2 触控契约、末尾 Integration ruling 解冻）。
     背景：你 ORD-0014 交付 §7 第 1/2/5 条与 ORD-0021 侧的两条产品疑问，我在 5745409248 转交，
@@ -982,9 +1030,12 @@
       2. 加一条**回归**：`CITYNEXUS_E2E_AUTHORITATIVE=1` 且故意少一个必需变量时，
          必须"非零退出 **且** 输出里点名那个变量名"——两个条件都要断，只断退出码会被
          "非零但静默"糊过去；
-      3. 顺手解释一件事：**为什么 UI 那棵树（`_qoder_ui_overnight_20260920`）同样模式下能正常跑并打印
-         announce 行**，而权威树这边我把 RUN_ID / `_cmd02.db` / 双端口 / 存在的 venv 全给齐了仍然 0 输出。
-         这个差异本身就是线索，不要绕过去。
+      3. **[06:06 已替你排掉一个假说]** 我原以为"UI 那棵树能跑、权威树静默"是差异线索 ——
+         **不成立，已撤回**：在 `_qoder_ui_overnight_20260920\frontend`（分支 `19d842a`）做同一条
+         实验，`AUTHORITATIVE=1` 单变量 → 同样 0 输出 / exit 0。**两棵树都会吞掉 config 求值期的抛错。**
+         真正剩下的问题是：**把我那条"看起来很完整"的命令（RUN_ID=cmd02、`_cmd02.db`、
+         4377/8377、存在的 venv、自己的 evidence dir）跑通到底还缺什么** —— 现在无法回答，
+         因为吞掉原因就是缺陷本身。修好后请先回答这一问，再交回归。
     边界：只改这两个 e2e 基础设施文件 + 一条回归；**不要**碰 `V8Experience.tsx`、不要碰
     `LiveRecovery.tsx`（你在做 ORD-0011/0017/0024）、UI 车道只读使用这两个文件（已写进 FILE_OWNERSHIP）。
   status: OPEN
