@@ -1141,7 +1141,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       请求体 / 响应码 / 错误码 / **是否进入该分支**，并明确哪一种形状最先响。
     结论仍只许三种：FALSIFIED / NOT_REACHABLE（这时整句等价声明才算测完）/ PARTIAL（写清还差什么）。
     预算 30 分钟；到点交 PARTIAL + 已有穷举。写域不变：你自己的目录 + 只读权威树。
-  status: OPEN
+  status: CLAIMED@20260920-061210 by 1fb26149（现 HEAD a98babb 比 if_head 9e66d1e 新；已复核 409 文案仍在 main.py:9019、RemapConflict 分支未变，订单成立）
   evidence: |
     来源：`D:\moodle\_qoder_rx4_20260920\ORD19_F_REACHABILITY.md`（05:28，10 类穷举表 +
     "覆盖不全，故不能判 NOT_REACHABLE"一节）。Commander 复核：409 文案与 `RemapConflict`
@@ -1204,13 +1204,28 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
           （`ABSENT` ⇔ 无 now，可能来自 `ABSENT_FALLBACK` 也可能来自"计划里没有活动"）。
     如果选 (a)，同步改 `qoder-live-recovery-cursor.spec.ts` 里那 4 处断言，并跑一遍该文件
     把 collected 数报回来（我现在看到 4 条 test，你自己那跑是 5 passed 含 seed）。
-  status: CLAIMED@20260920-064228
+  status: DONE@20260920-065118 by 8c66aa92（commit `94295e5`）；**Commander 已验，比我给的两个选项都好**
+  commander_check: |
+    我没预料到的第三种做法：不是改名也不是加注释，而是**取消前端自造的那套词表** ——
+    `V8Experience.tsx` 现在 `data-cursor-status={cursorStatus ?? "UNKNOWN"}`，
+    直接把后端投影的 `cursor_status` 透传出来，"第四个值"从根上不存在了。
+    两条断言相应改成真枚举，其中一条从 `"ABSENT"` 改成 **`"VALID"`**，
+    注释写得很准："有游标但状态是 VALID 而没有 Now，正是原来那个 'ABSENT' 所掩盖的东西"
+    —— 也就是说这次改名**顺带暴露了一个之前被假值藏住的真状态**，价值比我想的大。
+    另一条 `"ABSENT"` → `"ABSENT_FALLBACK"`（"完全没有游标"就是后端自己的 ABSENT_FALLBACK，不是第四态）。
+    卫生：提交说明写了两次实跑（`ord29-c` / `ord29-d`，自有端口 8433/3433 与 8435/3435、
+    一次性库、`ai=disabled`、`reuseExistingServer=false`），并说这两道门**每次都失败过**
+    —— 说明他们先把门改严、再让它在假值下变红，顺序对。
+    diff 面：2 文件 / +19 −23，只动 `V8Experience.tsx` 与该 spec，没越写域。
+    **连带：ORD-0030 合并后的前端门必须在合并树上重跑**，因为这条断言变了，
+    UI 车道在 `19d842a` 上那份 `50 passed / 5 skipped` 已不再等价于合并态。
   evidence: |
     Commander 06:40 亲测：`grep -rn '"ABSENT"' frontend/src/` 只命中 `V8Experience.tsx:2096`；
     `grep -rn '"ABSENT"' backend/app/` **零命中**；后端枚举见 ORD-0011(3) 引的
     `cursor_status = VALID|STALE|ABSENT_FALLBACK`。测试侧断言在
     `frontend/e2e/qoder-live-recovery-cursor.spec.ts`（`data-cursor-status == "ABSENT"` 那一行）。
-
+            [8c66aa92 DONE@20260920-065118] HEAD 96c?（文档收口见 git log；实现 94295e5）。两条候选都没选：改名或加注都留下两套取值域；共享解析器（src/lib/executionWindow.ts，ORD-0026 建）本就产出与后端同域的 cursorStatus，标题直接发布它 → VALID|STALE|ABSENT_FALLBACK（外加 UNKNOWN=还没拿到计划，是取数态不是执行态），人造的 ABSENT 消失。原先断 ABSENT 两处各自说出真实事实：无游标=ABSENT_FALLBACK；游标指向已完成活动=VALID 且无 Now（正是 ABSENT 抹掉的区别，方向与 ORD-0007/0026 一致）。另删掉全部拦截计数断言：配对跑实测出现过一次 Expected >= 1 / Received 0、同命令重跑即过——最脆的那行是 handler 命中次数；service worker 可用缓存答复请求，而每例实质断言都只有在注入真正到达页面时才可能成立，所以"拦截没生效"本就会让真断言变红，计数只多提供一种为错误理由变红的途径。你要的 collected：qoder-live-recovery-cursor.spec.ts = 4 tests collected（与 qoder-stale-cursor 的 1 条合跑为 Running 5 + real-seed setup 1 = 6 passed，连跑两次 ord29-c/ord29-d 各 6 passed / 0 failed，独立端口与一次性库）。收口复跑：typecheck/typecheck:all/build 退出码 0；后端全量 913 passed / 15 skipped / 0 failed（64.94s）；权威 E2E（run ord29-full，web :3437 → backend :8437）51 expected / 0 unexpected / 0 flaky / 0 skipped。SUITES 里的文件本轮之后未再改动，矩阵可以一次跑完。
+            [8c66aa92 DONE@20260920-065118] 实现 94295e5，文档收口 a98babb（上一条 evidence 开头我写了个残缺的 HEAD 占位，以本条为准）。
 - id: ORD-0030
   to: 8c66aa92
   priority: normal
@@ -1234,13 +1249,92 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       4. 报合并前后**同一命令同一口径**的数字对照。
     合并会触发我一次矩阵重跑的判断：只有当 10 个 `source=` 目标文件或 owner 节点被碰到才重跑
     （Amendment E 1b），纯前端合入不触发。
-  status: OPEN
+  status: CLAIMED@20260920-065313
   evidence: |
     UI 侧证据我已独立核过：`agent/ui-overnight-20260920` tip `19d842a`、工作树 `git status` 干净、
-    提交态全套 `50 passed / 5 skipped`（`review/gates-committed-state-f.log`，日志时间 05:59 晚于
-    该提交 05:56:27，所以确实是"提交态"）、`npm run build` 出 dist 产物；
-    两道 typecheck 我自己在 19d842a 上跑：**exit 0 / 0 errors**（比车道自报的"与基线相等的 1 与 5 条"
-    更好，他们的说法已过时，按我的读数记账）。
+    提交态全套 `50 passed / 0 failed / 5 skipped`（`review/gates-committed-state-f.log`，日志 05:59
+    晚于该提交 05:56:27，所以确实是"提交态"）、`npm run build` exit 0。
+    **[06:52 更正我自己]** 我先前写"两道 typecheck 我跑出 0/0，比车道自报的 1 与 5 条更好、
+    他们的说法过时"——**这个判断收回**。车道自己已经拒绝把 0/0 当证据，理由是对的：
+    ORD-0016 的恢复动作是从另一棵树复制依赖进来的，`@types/react` 实际装到的是 19.3.0，
+    而 `package-lock.json` **根本没有锁这个包**，于是三个报错点的源文件虽与 `00dfd62` 逐字节相同，
+    类型检查结果却不可比。**我那次 0 errors 同样不可比**，不该拿去覆盖谁的基线。
+    → 新增待决：在任何人再拿 typecheck 数字当门之前，得先回答"依赖集以哪棵树为准"（见 ORD-0031）。
+
+- id: ORD-0031
+  to: 6af4cf53
+  priority: normal
+  if_head: 94295e5
+  order: |
+    ORD-0016 那次依赖恢复留下一个**没人认领的后果**，归你（你本就是管依赖与发布卫生的车道）：
+    恢复用的源树与 `package-lock.json` 并不严格一致 —— `@types/react` 实际是 **19.3.0**，
+    而 lock 文件里**没有锁这个包**。于是 UI 车道与我各自跑出来的 `tsc` 数字都**不可比**，
+    他们已经明确拒绝把 0/0 当证据（这个判断我跟着认，见 ORD-0030 的更正）。
+    请回答三件事，不要动手修权威树：
+      1. **以哪棵树为准**：`CityNexus\frontend\node_modules`（被恢复过）、
+         `_qoder_integration_20260919\frontend\node_modules`（恢复源）、
+         还是 `package-lock.json` 本身？给出三者的 `@types/react` 实际版本与
+         `npm ls @types/react` 或 lock 里的条目为证。
+      2. **一次性目录里离线重装修正不确定度**：`npm ci --offline`（不许联网；缓存里没有就直说装不上，
+         别退化成 `npm install`），装完只跑 `tsc --noEmit` 两道，报"错误条数与文件名列表"。
+         **重跑目录必须是你自己的**，不许拿权威树或 UI 树当试验田。
+      3. 结论只允许三种：`LOCK 是权威（则现有 node_modules 有偏移，列偏移清单）` /
+         `某棵树的树是权威（则 lock 需要更新，但**今晚不提交**）` /
+         `离线装不出来（说明缺什么，写进 HUMAN 待办）`。
+    为什么现在做：终态包里"前端 build/E2E 绿"这一条如果建立在不可比的类型检查上，
+    我宁可写成"未证"，也不要写成一个好看的数字。
+  status: CLAIMED@20260920-062000
+  evidence: |
+    来源：UI 车道在 ORD-0023 交付里主动写的"仍然没解的一件事"（`@types/react` 19.3.0 未锁、
+    三个报错点源文件与 `00dfd62` 逐字节相同、所以 0/0 不可比）；
+    Commander 复测：`CityNexus\frontend\node_modules` 恢复后顶层 394 条与恢复源逐条同名，
+    但同名不等于同版本 —— 版本面未核，正是本单要做的事。
+    CLAIM 时复核：if_head 94295e5 存在且为当前 HEAD（a98babb）的祖先，订单成立。
+    注：tip 已从 94295e5 前进到 a98babb，按你已采纳的收口步骤，最终同步比对留到冻结后做。
+  status: DONE@20260920-064000
+  evidence: |
+    交付 D:\moodle\_qoder_publish_manifest_20260920\ord31_dependency_authority.md。
+    **结论：LOCK 是权威**，两棵 node_modules 有同一处偏移（仅 3 条，两棵树完全一致）：
+      @types/react      安装 19.3.0 / lock 无条目
+      @types/react-dom  安装 19.3.0 / lock 无条目
+      csstype           安装 3.2.3  / lock 无条目（@types/react 的依赖）
+    安装树顶层 664 vs lock 顶层 711，逐条比对 drift = 3，其余全对齐。
+
+    (1) 三处证据：
+      - @types/react：CityNexus/node_modules = 19.3.0；_qoder_integration/node_modules = 19.3.0；
+        两边的 lock 条目**都是 null（不存在）**。
+      - `npm ls @types/react`：权威树报 19.3.0（正常），**CityNexus 树报 19.3.0 extraneous**
+        —— extraneous 正是"存在于 node_modules 但不在依赖树中"的直接体现。
+      - lock 根声明：权威树 package.json 25 条 vs lock 23 条，差集恰为
+        @types/react + @types/react-dom；CityNexus 树 23/23 同步（因为它压根没声明这两个包）。
+        两棵树 package.json 内容不同（cmp 确认）。
+      - 该包**必需**而非可选：tsc --listFiles 显示 @types/react 被实际加载
+        （check 4 个文件 / typecheck 5 个），且 react@19.2.8 无 types 字段、不自带类型。
+
+    (2) 离线重装（我自己的目录，未碰权威树/UI 树）：
+      - 权威树 lock 原样跑 `npm ci --offline` → **直接拒绝**：
+        "Missing: @types/react@19.3.0 / @types/react-dom@19.3.0 / csstype@3.2.3 from lock file"。
+      - 补全这 3 条后重试 → 越过同步检查，但报 ENOTCACHED（csstype）。
+      - 对照实验：用**完全同步**的 CityNexus lock 跑 → **依然 ENOTCACHED**（zod）。
+      - **根因（系统性，非这三个包特有）**：lock 里 783 条 resolved 全部指向
+        registry.npmmirror.com，而 npm 缓存里 302 个 tarball 全部来自 cdn.npmmirror.com，
+        缓存中 registry 域名的 tarball = **0**。域名不匹配 → --offline 下任何包都命中不了。
+        那三个 tarball **确实在缓存里**（cdn 域名），但因域名不符无法被 ci 使用。
+        未退化成 npm install；未联网。
+
+    (3) tsc 两道（我自己的一次性目录 _qoder_tsc_probe_20260920，
+        node_modules 用 junction 指向权威树、只读；已确认权威树未被写入）：
+      - `tsc -p tsconfig.check.json --noEmit`     → **0 errors**（处理 480 个 ts/tsx）
+      - `tsc -p tsconfig.typecheck.json --noEmit` → **0 errors**
+      - 错误文件列表：空（无错误即无文件）
+      **可比性边界（必须连同数字引用）**：跑在未锁的 @types/react@19.3.0 上、
+      与 lock 不一致；两配置 types 范围不同（[] vs ["vite/client"]）。
+      故这两个 0 与其它车道的 0 **不可比** —— 印证 UI 车道拒绝 0/0 当证据是对的。
+
+    建议（未执行，遵"今晚不提交"）：联网跑一次 npm install 让 lock 补上这 3 条；
+    或在 lock 修复前，所有 tsc 数字标注"基于手工恢复的 node_modules，不可比"。
+    合规：权威树与 CityNexus 树的 package.json/package-lock.json **均未改动**
+    （mtime 与 git status 均为证）；未提交；未对 github.com 做任何 git 操作。
 ```
 
 
@@ -1321,7 +1415,11 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 05:50 (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已读并落 ORD-0023/0024；其上依次是 5745307084 = Amendment E、5745031386/5745118156/5745135961 = Amendment D 三条）· LAST_OWN_COMMENT_ID = 5745409248 — every number below was measured by the commander in its own sandbox, not reported by a worker.
+Refreshed: 2026-09-20 07:05 (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5745942415 = Mission 002 终态包，状态字 `CNX_CMD_002_PARTIAL`**
+**E 节权威读数（Commander 自测，勿再推导）**：tip `94295e5` → `--collect-only` **928**；
+`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓；
+对红队在 `954edaa` 测的 922 是 **+6 / −0**，六条逐一点名（rx4 前提 1 + 结构不变式参数化 3 +
+腿归属 1 + Edge 副本 1）。旧账"909/15=924"是推导值，已作废。
 
 ## MISSION 002 执行中（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
