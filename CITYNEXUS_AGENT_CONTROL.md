@@ -16,11 +16,11 @@
          把腿的绑定条件从索引改成"存在可信 Now"：next_leg = legs[current_index] if now_item is not None and 0 <= current_index < len(legs) else None
          并补两条回归：(a) legs 多于 activities 且游标 STALE → next_leg_id/next_mode/next_eta_min 全空；
          (b) cursor_status=VALID 且 next_activity_id 非空 → next_state 不得为空（v9 与 Edge/v10 一致）。
-  status: CLAIMED@20260920-031544
+  status: DONE@20260920-034901
   evidence: Commander 沙箱独立重现（HEAD 4d2f0c8 + 未提交文件，指纹稳定）：
             {"cursor_status":"STALE","now":null,"next":null,"next_leg_id":"80e9018e…","next_mode":"AUTO","next_eta_min":29}
             违反 Mission 002 A 节 stale 投影要求（Now/Next/NextLeg 必须全空）。
-
+            [8c66aa92 DONE@20260920-034901] HEAD 00dfd62；修法照你给的语义：next_leg 只在 now_item is not None 时在界内取。新增 tests/test_qoder_next_leg_binding.py 4 collected / 4 passed（parametrized 两个 id：[act-from-superseded-plan-STALE]、[None-ABSENT_FALLBACK]，第二条腿泄漏是你没点名的 ABSENT_FALLBACK 完成态）。突变验证（唯一 anchor+compile+字节还原 sha256 校验）：把守卫退回索引式 -> 4 failed / 12 passed，killer 含本文件 2 条与权威层 2 条。全量 899 passed / 15 skipped / 0 failed（895+4）。
 - id: ORD-0002
   to: 8c66aa92
   priority: urgent
@@ -52,9 +52,25 @@
   order: 交付可吸收形态的 RX-4 门：D:\moodle\_qoder_rx4_20260920\delivery\test_rx4_c4_generate_gate.py（7 条，按仲裁新裁定不删成 3 条）
          + RX4_GATE.md（基线 SHA、干净态 7/7、两组突变结果、空转陷阱自证：demo 巡航 locked=True 且零承诺）。
          之后独立复核 ORD-0002 修好的 campaign：逐行核 collected>0 与是否真有 FAILED 行。
-  status: CLAIMED@20260920-031950（已在更新 HEAD `4b1e829` 上复核：`app/services.py:91` 谓词仍在，订单成立）
+  status: DONE@20260920-033700 by 1fb26149
   evidence: Commander 实测：干净态 7 collected/7 passed；突变 app/services.py 的 C4_Anchored → 1 failed/6 passed = KILLED，
             而 98 条真值门禁全绿（该守卫此前无人看守）。
+            RX-4 自测（基线 9759633 与当前 HEAD 4b1e829 数字相同；deselected 均 0；解释器 CityNexus\.venv）：
+            交付 D:\moodle\_qoder_rx4_20260920\delivery\test_rx4_c4_generate_gate.py = 7 collected / 7 passed；
+              突变 app/services.py:91 → 1 failed/6 passed = KILLED；突变 app/planning/anchor_schedule.py:90 → 2 failed/5 passed = KILLED。
+            交付 D:\moodle\_qoder_rx4_20260920\delivery\test_rx4_c4_protection_surface_gate.py = 3 collected / 3 passed；
+              突变 main.py journey_route_evidence → 2 failed/1 passed = KILLED；突变 main.py generate_replan → 1 failed/2 passed = KILLED。
+            对照：8 个权威门禁在 4b1e829 上 collected 99（9759633 上是 98，13f1453 加了 1 条）；
+              services.py:91 突变 → 99 passed（盲点，本门为唯一看守）；anchor_schedule.py:90 突变 → 5 failed/94 passed（已有覆盖，本门为冗余加强）。
+            空转陷阱自证已写入 RX4_GATE.md §4.3：demo 巡航在全新旅程（Commitment 行数 = 0）即 locked=True，
+              故“巡航仍在候选里”类断言天生为空；原始数据 raw/vacuity_{citynexus,tiptree}.txt。
+            交付 raw/c4_guard_map（delivery/c4_guard_map.json）：22 个 C4/protected-level 决策点 + 宿主函数 + 是否 generate 可达（3 个），供 C4G 系列复用。
+            ORD-0002 复核（沙箱 tiptree=4b1e829 逐字节）：原样 SUITES 下 C4G/C4A 均 SURVIVED（ran=102, failed=0）；
+              仅把 tests/test_rx4_c4_generate_gate.py 加进 SUITES（第 39-50 行）后即 C4G KILLED(ran=109,failed=1)、
+              C4A KILLED(ran=109,failed=2) 并打印杀它的 node id —— 唯一缺陷就是 SUITES 漏了这一行（C4G 第 211 行、C4A 第 219 行定义本身正确）。
+              harness 其余修正复核通过：CRLF 锚点归一（351-359）、KILLED 需 FAILED+collected>0（252-300）、跑完源文件逐字节还原。
+              另注：REQUIRED_ACTIONABLE=16（第 36 行）使 `--only` 子集恒为红，建议按子集折算。
+            16 突变矩阵已按分工停止（被杀时 main.py 曾残留突变态，已从 git blob 修复校验），移交 8c66aa92。
 
 - id: ORD-0004
   to: dc19d662
@@ -63,11 +79,24 @@
   order: 在你自己的原始目录（不要复制到其他路径）把 test_v3_concurrency.py 连跑 5 次，逐次报每条用例的 PASS/FAIL；
          特别是 test_three_way_race_one_winner_and_the_canonical_state 在你改写断言后是否仍会偶发失败。
          若仍偶发，给出最小调度重现与它违反哪条不变式；若 5/5 全过，就把它标为已闭合并说明原因。
-  status: CLAIMED@2026-09-20T03:15+08:00
-  evidence: 你的 raw 日志：full_run 该用例 FAILED（旧断言 statuses.count(200)==2），repeat_1/2 PASSED；
-            现在文件里断言已改成 schedule-blind（恰好一个赢家 + 第三方重放跟随赢家）。
-            另注：Commander 把 harness 复制到别处跑时 test_restart_then_retry… 报 NotADirectoryError(WinError 267)，
-            属路径基准依赖，不是产品缺陷——所以复现必须原地。
+  status: DONE@2026-09-20T03:22+08:00
+  evidence: 原地连跑（未复制）。collected 恒为 4、deselected 恒为 0（`--collect-only` 头行：
+            "4 tests collected in 1.09s"）。共 10 轮全绿：03:20:19–03:20:54 五轮 + 03:21:16–03:21:43 五轮
+            （第二轮起改用 `-rA` 取逐用例清单，故跑了 5+5）。每轮 4 passed / 0 failed，
+            四条用例名逐轮均 PASSED：test_restart_then_retry_of_the_same_key_never_transitions_twice、
+            test_one_key_spent_on_two_different_proposals_is_not_a_silent_replay、
+            test_three_way_race_one_winner_and_the_canonical_state、
+            test_capture_after_accept_then_a_second_accept_attempt。
+            ⇒ three_way_race 已闭合并说明原因：旧断言写死 `statuses.count(200)==2`，即假定"a 提案赢"；
+            竞态胜者本就是非确定的，实测出现 [409,200,409]（b 赢 + a 的重放正确地不被伪装成成功）。
+            改为调度无关判据后：两个不同 proposal 恰好一个 200、第三方重放当且仅当重放胜者时才 200、
+            且 DB 真值必须 1 ACTIVE plan / 1 ACCEPTED / 指针一致 / 0 悬挂 ACTIVE C4。
+            该用例在 HEAD 4b1e829 的并发负载下（同期另一进程正在跑全仓 904 条突变套件）也 5/5 通过，
+            负载下通过比安静态更强。日志 raw/ord0004_five_runs.txt。
+            注：test_restart_then_retry… 依赖原地相对路径（WinError 267 只在被复制后出现），复现须原地。
+            本会话另按 ORD-0004 之外自测得：HEAD 上 6 突变仅 M3 存活（904 collected/0 deselected）、
+            main.py 四处 C4 谓词单点降级在 9759633 与 4b1e829 上均为 2/4 KILLED（883 与 904 collected，
+            deselected 恒 0），存活的是 _trip_studio_authoritative_gate 与 _revalidate_locked_commitments。
 
 - id: ORD-0005
   to: 6af4cf53
@@ -77,10 +106,23 @@
          排除至少含 _qoder_recovery_20260919 / _qoder_rx4_20260920 / _qoder_verifier_20260920 / _codex_sol_* / _astra_* /
          各类一次性克隆与 *.db / .venv / node_modules / __pycache__ / test-results / playwright-report。
          不得访问 github.com 的 git 协议（会弹登录框）。
-  status: CLAIMED@20260920-034500
-  evidence: 仲裁禁令 + GCM 凭据被 401 抹除会导致无人可点的交互弹窗（已发生过一次）。
-            CLAIM 时动作：已停止进行中的分批推送脚本，并 kill 掉 git-remote-https.exe
-            （唯一会触发凭据弹窗的进程）；此后本会话不再访问 github.com 的 git 协议。
+  status: DONE@20260920-042000
+  evidence: 交付 D:\moodle\_qoder_publish_manifest_20260920\ 四件套：
+            - summary.md（结论摘要 + 排除清单 + 扫描判定）
+            - exclusions.json（排除目录 4630 条 + 按规则文件统计）
+            - filelist.tsv（候选完整清单 383175 行）
+            - secretscan.json（55 条命中明细含判定）
+            collected = 383,175 files / 3,659.5 MB；
+            deselected = 4,630 dirs + 38,794 files；
+            密钥扇 55 命中 = LIVE-EXCLUDE 0 / ALREADY-LEAKED 0 / REVIEW 51（全误报）/ PLACEHOLDER 4。
+            关键断言：
+            (1) 候选集内活跃密钥命中 = 0（首轮 4 处 node-compile-cache 私钥已由目录规则挡掉）；
+            (2) 已泄漏 key sk-5343f86b… 在候选集内已就地替换，复扫归零；
+            (3) 51 条 REVIEW 全部为 DEEPSEEK_API_KEY= 空值跨行误匹配，模板文件中真实值匹配数 = 0；
+            (4) .api_tok_20260920 随 _qoder_recovery_20260919 整体排除，未进入候选集。
+            未完成/待复核：CityNexus-History 分批推送在第 6 批前被停机，远端是否已收到前几批
+            无法确认（按指令未再访问 github.com）；本地 commit 保留未推。
+            本会话未执行 git push / git fetch / git credential fill 访问 github.com。
 
 - id: ORD-0006
   to: 8c66aa92
@@ -92,22 +134,63 @@
          新增权威回归：ACTIVE 计划 + 存在但不可解析的 current_activity_id + len(legs) > len(activities)
          （腿端点可空，属合法持久态），断言整个元组；该回归必须在"移除 trustworthy-Now 守卫"的一次性突变下失败。
          此门独立于 16 突变分母，不得塞进分母凑数。
-  status: OPEN
+  status: DONE@20260920-034901
   evidence: Commander 沙箱重现（HEAD 4d2f0c8 + 未提交文件，指纹稳定）：
             {"cursor_status":"STALE","now":null,"next":null,"next_leg_id":"80e9018e…","next_mode":"AUTO","next_eta_min":29}
-
+            [8c66aa92 DONE@20260920-034901] 同一提交 00dfd62。权威回归落在 tests/test_sol_execution_cursor.py：test_a_stale_cursor_with_more_legs_than_activities_nulls_the_whole_tuple + test_a_finished_journey_with_extra_legs_projects_no_departure_step，各 1 collected；断言整元组 now/now_activity_id/now_state/next/next_activity_id/next_state/next_leg_id/next_mode/next_eta_min 加 cursor_status，并同时核对持久快照、/offline-snapshot 与 Edge 设备视图。该门未进 16 分母。诚实边界：本树无任何出厂路径产出 len(legs)>len(activities)（demo 计划 0 条腿；三处写入者 v9.py:668 / main.py:4628 / authoritative_v12.py:1383 都按相邻活动成对写，恒为 activities-1），所以这是契约加固而非复现；你的 AUTO/29 指纹若来自真实计划，那条多写腿的路径是另一个缺陷，我没有顺手吸收。突变：移除守卫 -> 4 failed / 12 passed（killer 见 evidence 上一条），字节还原校验 True。
 - id: ORD-0007
   to: 8c66aa92
   priority: urgent
   if_head: 4b1e829
   order: 新增跨消费者差分不变式：v9 暴露非空 next_activity_id 时 Edge/V10 必须对同一活动给出非空 next state；
          若语义上确实没有下一步，则 v9 也必须给 next_activity_id = null。不允许两个消费者对"是否存在 Next"意见不一致。
-  status: OPEN
+  status: DONE@20260920-034901
   evidence: 重现用例 test_v1_cursor.py::test_terminal_cursor_with_pending_steps_keeps_next_consistent_across_consumers
             （cursor_status=VALID、next_activity_id 非空、Edge next_state=None）。
             三向竞态按仲裁指示保持 UNCONFIRMED，不计入产品缺陷与账面。
-
+            [8c66aa92 DONE@20260920-034901] 00dfd62。edge_snapshot 之前用 legs=[] 调共享投影、再自己按 now_activity_id 反推 index（推不出就落 len(activities)），于是同一份响应里 execution 与设备字段对“有没有 Next”各执一词；你复现的形状正是 cursor 落在已完成活动、后面还有 PENDING。现在 Edge 取同一份腿列表、只问一次 _execution_truth，now/next/mode/eta 全部取自该答案，并新增顶层 next_leg_id 供设备直接引用。新增两向差分门各 1 collected：test_edge_and_v9_agree_on_whether_a_next_step_exists（有 Next 必须两边都给状态）、test_edge_and_v9_agree_when_there_really_is_no_next_step（没有 Next 两边都给 null）。突变验证：让 Edge 再自己反推 -> 1 failed / 15 passed，killer 是前者；后者在反推下仍通过，所以两个方向都留了独立节点。三向竞态按你的指示未动、未计入账面。
 ```
+
+
+## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
+
+### Amendment C — `CNX-CMD-002C-OVERNIGHT-PRODUCT-AND-UI`（用户优先级修订）
+用户明确改优先级：**今晚要实质的产品推进 + 前端肉眼可见变好**，仍只用 Qoder。不取消 Mission 002，
+而是**并行两条车道**：① 真值/收敛车道（Mission 002 的硬阻塞优先关掉）；② 产品体验车道
+（一个隔离的 UI Worker，独立 worktree/分支，零后端契约改动）。醒来要同时拿到"更强的真值内核"和
+"在手机上明显更精致的界面"。
+- Mission 002 今晚优先关闭顺序（仲裁原列）：STALE 游标三元组全空 → VALID-next 跨消费者一致 →
+  量具（语法/CRLF/anchor 缺失即失败/断言感知）→ RX-4 generate 哨兵吸收 → 16 actionable 突变矩阵
+  16 KILLED 0 SURVIVED 0 HARNESS_INVALID → 独立 Verifier 重跑 → 后端全量 0 failed。
+  **不许把时间花在打磨报告上而让上述任一项保持红色。**
+- UI 车道：先从**稳定** checkpoint 建 `D:\moodle\_qoder_ui_overnight_20260920` / `agent/ui-overnight-20260920`；
+  改文件前必须先交 `UI_OVERNIGHT_PLAN.md`（四界面：Journey 创建、Today、Live、Wallet/支付）并让 Commander 批 write-set；
+  `V8Experience.tsx` 仍归 `8c66aa92` → UI Worker 只读。禁止改后端/契约/游标/移动真值/物理身份/C4/E2E 策略/DB 不变式/幂等；
+  保留 Apple 风设计语言。验收口径 360x800 / 390x844 / 412x915，四界面各 before/after 截图（412x915），
+  Today/Live 若支持再加暗色一对；前端生产门不得新增 TypeScript 错误。
+
+### Road-Prep 001（外部只读铺路车道，非新任务）
+外部 ChatGPT 窗口改为主动替 Qoder 做侦察/测试设计/冲突分析/UI 铺路，让 Qoder 把上下文花在实现上。
+不扩大生产写权。要点已采纳：STALE 回归必须证明"合法的持久化形态"（ACTIVE 计划 + 不可解析游标 +
+`len(legs) > len(activities)`，因腿端点可空而合法），而不是手拼一个畸形响应；突变判定用显式状态机。
+
+### Road-Prep 002 — Qwen3.8Flash 侦察小队（授权边界）
+用户授权今晚激进使用免费 Flash 额度，但它是**吞吐引擎不是权威**。
+- 上限：同时 3 个 scout；对权威树严格只读；每单一个窄任务、一个输出目录、30–45 分钟硬停、要证据路径、交 DONE/PARTIAL。
+- 适合做：大范围代码搜索与清点、精确 pytest node 映射、突变 preflight、截图/移动审计、CSS/token 审查、
+  空转测试猎取、API/UI 追踪映射、重复性证据收集。
+- **scout 不得自行决定**：真值语义、物理身份策略、并发架构、分支集成、红门是否可接受。Commander 仍是仲裁者，
+  实现线 owner 仍是唯一后端/真值写者。
+- 手册已拉到本地：`D:\moodle\QWEN_FLASH_SCOUT_PLAYBOOK.md`（远端 commander/control 提交 6a9109e）。
+
+### 会话登记（新增 4 个）
+| 会话 | 角色 | 写权 |
+|---|---|---|
+| `212868a1` | FLASH-F1 执行真相静态审计 | 只读，输出 `_qoder_flash_f1_20260920` |
+| `220b011b` | FLASH-F2 突变测绘 / preflight | 只读 + 自己副本，输出 `_qoder_flash_f2_20260920` |
+| `50bfde09` | FLASH-F3 移动 UI 审计 | 只读，输出 `_qoder_flash_f3_20260920` |
+| `e345b9d6` | UI Worker（Amendment C） | 仅 `_qoder_ui_overnight_20260920`，write-set 待批 |
+
 
 ### 控制面校正（来自侧边会话 `50fd7edb` 的实测，已并入规则）
 - 跨会话**没有**"停止对方回合"的工具；不要试图停 worker。降低插话延迟的办法是把分钟级长命令
@@ -124,7 +207,7 @@
 
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window (Issue #1 = message bus)
-Refreshed: 2026-09-20 01:55 (+08:00) — every number below was measured by the commander in its own sandbox, not reported by a worker.
+Refreshed: 2026-09-20 03:50 (+08:00) · LAST_ARBITER_COMMENT_ID = 5744788662 — every number below was measured by the commander in its own sandbox, not reported by a worker.
 
 ## MISSION 002 执行中（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
