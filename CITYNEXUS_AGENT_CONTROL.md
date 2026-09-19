@@ -1619,7 +1619,16 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
     → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
     所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
-  status: DISPATCHED@2026-09-20 07:40
+  status: CLAIMED@20260920-075000
+  evidence: |
+    CLAIM 时复核（全部成立）：
+    - if_head 8579cbb 是当前 HEAD（ee6a93e）的祖先；8579cbb..ee6a93e 只有 1 个提交
+      （ee6a93e "docs: section 86 - the empty-plan case now has a mutant that kills it"），
+      仅改 INTEGRATION_REPORT.md。tip 再次前进，收尾时一并对齐。
+    - 四个文件确认 HEAD 有、包内无：frontend/src/lib/executionWindow.ts、
+      frontend/e2e/qoder-mobile-ui-overnight.spec.ts、frontend/e2e/_qoderMobileScan.ts、
+      frontend/e2e/qoder-ui-overnight-shots.spec.ts。
+    - HEAD tracked blobs = 6672，与 Commander 读数一致。
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
@@ -1699,7 +1708,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 07:3x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5746109359 = Mission 002 状态字修正：`CNX_CMD_002_PARTIAL`(5745942415) → `CNX_CMD_002_COMPLETE`**
+Refreshed: 2026-09-20 07:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5746196501 = 发布包漂移自纠（撤销我终态包 §9 那句"发布卫生全部闭口"）**；上一条 5746109359 = 状态字修正 `CNX_CMD_002_COMPLETE`
 修正理由（三条 PARTIAL 阻塞项全部关闭，均经 Commander 亲测）：UI 分支已合入 `5a33eaf`；ORD-0027 F 行机制已改；ORD-0031 依赖权威结论已定（LOCK 为权威，离线重装被 registry/CDN 域名不一致系统性阻断，typecheck 记为"不可比"）。
 **E 节权威读数（Commander 自测，勿再推导）**：合并前 tip `94295e5` → `--collect-only` **928**，`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓。
 合并后 tip `5a33eaf` 复测：**后端 913 passed / 15 skipped / 0 failed / 0 error（70.43s）**；**前端 e2e 54 passed / 5 skipped / 0 failed（exit 0）**；`vite build` **exit 0**。
@@ -1711,6 +1720,15 @@ Refreshed: 2026-09-20 07:3x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（A
 我在 `14afb84` 直接重采 `_qoder_integration_20260919/backend`：**`928 tests collected in 1.28s`** ✓（`raw/collect_14afb84.txt`）。
 该树 `git status --porcelain`：未跟踪 **0 条**，3 行修改分别是该车道正在写的报告、另一车道的 handoff patch、**我的** `tools/verification/mutation_campaign.py`（`killed_by`/`restore_everything`/F 行新 reason 均逐条 grep 命中，未被覆盖）。
 `REQ-0009`（UI 车道 write-set 入向请求）已标 **SUPERSEDED** 并附 D-7 警告 ⇒ **榜上 OPEN 归零**。
+**发布卫生"闭口"这条我撤销了（07:5x，总线评论 5746196501）**：终态包 §9 那句"五件事全部闭口"是按合并前 HEAD 判的，对最终交付物不成立。
+实测（`raw/check_stage_vs_head.py`，读数 `raw/stage_vs_head_8579cbb.txt` 与 `raw/stage_vs_head_ee6a93e.txt`，两者四格一致）：
+`698 文件 / 10,100,098 B`，**与 HEAD 逐字节相同 681 / 不一致 15 / 仅包内 2**；禁路径 0、真实 key 包内 0 而 HEAD 1。
+**构建阻塞**：包内 `frontend/src/lib/` 少 **`executionWindow.ts`**，而包内 `V8Experience.tsx:12` 与
+`V10LiveExecutionPanel.tsx:13` 都 `import { liveActivityWindow } from "../lib/executionWindow"` ⇒ 包内 `npm run build` 必挂。
+**证据缺口**：包内 e2e 24 份 / HEAD 27 份，缺 `qoder-mobile-ui-overnight.spec.ts`（= Amendment E 的 <44px 移动门）、其使用者 `_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`。
+⇒ 已下 **ORD-0032**（`6af4cf53`，urgent，已直接派消息唤醒该会话）：重出清单 + **包内** build + **包内**权威模式 e2e + 双扫描 0 命中，验收口径见该订单 a–e 条。
+tip 现 `ee6a93e`（`8579cbb..ee6a93e` 与 `5a33eaf..8579cbb` 全是 docs，`git diff --name-only` 只 `INTEGRATION_REPORT.md`；§80.2 结案 16+1 口径、§86 给空计划例补了它自己形状的突变体 M5 ⇒ `1 failed / 5 passed` @ `spec:138`）。
+巡检循环已从夜间版改为**晨间降频版**：每 30 分钟一轮、`expiresAt 12:00`，指令已重写（禁止重发状态字更正帖；唯一在飞事项 = ORD-0032）。
 
 ## MISSION 002 已交付（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）→ 状态字 `CNX_CMD_002_COMPLETE`（评论 5746109359）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
