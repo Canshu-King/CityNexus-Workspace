@@ -1121,6 +1121,35 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     来源：`D:\moodle\_qoder_rx4_20260920\ORD19_F_REACHABILITY.md`（05:28，10 类穷举表 +
     "覆盖不全，故不能判 NOT_REACHABLE"一节）。Commander 复核：409 文案与 `RemapConflict`
     的 `matched` 计数（0/many）均在 `commitment_remap.py:168-186` / `main.py:9019` 核到。
+
+- id: ORD-0028
+  to: 8c66aa92
+  priority: normal
+  if_head: 1187ce6
+  order: |
+    ORD-0021 的交付是真的、而且验收条件过了 —— 但它**还躺在 RX-4 车道的 delivery 目录里，
+    没进权威树**。我 06:28 亲查：
+      `grep -rlnE "strays|control_journey|pinned ==|already pins" backend/tests/` → **零命中**
+      （只命中一个旧 `.pyc`）；`backend/tests/test_rx4_c4_generate_gate.py` 仍是 **7 个节点**，
+      三条前提还停在 docstring（382-419 行）。
+    它的实际形态（我从其账本 evidence 里读到并认可）：新节点
+    `test_nothing_outside_the_commitment_pins_the_unreachable_anchor`，把
+    (1) 未 confirm 的同形状行程 generate → **201 且 3 候选**、(2) `strays == 0`、(3) `pinned == 0`
+    钉成断言；鉴别力实测 = 把 `services.py:1421` 的 `if not created:` 改成 `if True:`（无差别 422）后
+    该节点 **1 failed，红在第 1 项 `assert 422 == 201`**，而 `active_c4_hard_constraints` 掐成
+    `return []` 时红的仍是原来那条拒绝门 —— 两条门各守各的，没有互相顶位。
+    请把 `delivery/test_rx4_c4_generate_gate.py` 吸收进 `backend/tests/`，要求：
+      1. **逐行核 delta 只有"新节点 + docstring 改动"**，别顺手带进别的（RX-4 那边 ruff 已全绿）；
+      2. 吸收后跑该文件：collected 应为 **8**、8 passed，并给出**命令原文与耗时**；
+      3. 提交后报新 HEAD —— 因为我这边有连带后果：**campaign 的 baseline 会从 137 变 138**，
+         按 Amendment E 1b 这属于"owner 测试集合发生变化"，**我必须重跑整场 17 行矩阵**才能继续引用 C 节；
+         我会等你这笔提交之后一次跑完，不要在此之后再动 SUITES 里那些文件。
+  status: OPEN
+  evidence: |
+    来源：`ORD-0021` 的 `rx4_evidence_corrected`（RX-4 车道自己把上一版"C4G owners 2/2"更正为
+    实测 1 failed / 7 passed、一个 owner —— 这种自我收窄要记账，不要只记错不改）。
+    Commander 06:28 亲查：权威树 grep 零命中 + 文件仍 7 节点；
+    其沙箱基线 954edaa/a75ba7a 两版 services.py sha256 相同，故"同一条命令两调用"不重复计败。
 ```
 
 
