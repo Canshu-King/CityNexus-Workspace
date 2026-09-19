@@ -81,6 +81,23 @@ RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_ga
 （另附 `matching_activities` / `resolve_commitment_target` / `RemapConflict` 位置）与三条纪律发回该会话：
 先区分断言失败与 harness 错误、每条命令报 collected/deselected 并固定只读 worktree 基线、保持只读且不碰 RX-4 目录。
 
+### checkpoint `13f1453`（02:38）实测与覆盖缺口
+新增 `tests/stateful/test_journey_truth_state_machine.py`(351 行)、`docs/E2E_ACCEPTANCE_POLICY.md`、
+`tools/verification/mutation_campaign.py`(298 行，11 个 sabotage：A/B/E/A1/G1/G2/F1-F4/F)。
+我的 worktree 实测：全量含 RX-1/2/3 **890 passed / 15 skipped / 0 failed**（该树自身 881/15/0），RX 专集 9 passed，stateful 单独 12 passed。
+
+**关键覆盖缺口（已实测，非推断）**：把 `backend/app/services.py` 里唯一一处 `Commitment.level == "C4_Anchored"` 改成 C3 之后 —
+`tests/stateful` 12 passed、campaign SUITES 里 5 个 sol 文件 33 passed、98 条真值门禁全绿，**全部 SURVIVED**；
+后果是 `/plans/generate` 静默给出不含已付费锚的候选。全仓目前唯一能杀它的是 RX-4 的候选门（1 failed / 6 passed）。
+`F` 那个 sabotage 管的是 accept 路径不可解析 C4，不覆盖 generate。
+
+**分工调整（避免两份互相对不上的矩阵）**：16 突变矩阵重跑归实现线 `8c66aa92` —— 要求 B 节吸收时把 RX-4 门以
+`test_rx4_c4_generate_gate.py` 收进 `backend/tests` 并加入 SUITES，同时新增 `C4G` sabotage 指向 `app/services.py`；
+verdict 判定必须改为"有 FAILED 行且 collected>0 才算 KILLED，收集/导入错算 HARNESS_INVALID"，并逐行输出 collected 与 node ID。
+RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的空转陷阱：demo 巡航 `locked=True` 且零承诺，
+所以"巡航仍存活"类断言天生为空，哨兵必须用不可解析锚或结构性 ARRIVAL），之后独立复核实现线的量具。
+
+
 
 
 
@@ -88,15 +105,14 @@ RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_ga
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    9759633  2026-09-20 01:48  docs(e2e): make settle-before-capture standing evidence policy
-prior   3934d65 01:41  docs(convergence): record C0, the database-backed invariant, and the accepted corrections
-        faaa4a8 01:34  fix: put the single-ACTIVE-plan invariant in the database, not in a lock
-        17c5bb5 01:04  docs(convergence): record the Sol convergence pass and its gate numbers
-        5951beb 00:54  fix(frontend): Live resolves the execution window instead of reading index zero
-worktrees  none besides the tree itself
-remotes    origin -> D:\moodle\CityNexus (local), iso -> D:\moodle\_qoder_th_20260918
-           GitHub is NOT a configured remote on this tree
-untracked  27 files, all lane scaffolding (_build_pkg_p14/p15/p16/sc.py, _p16_*.py, _sc_*.py, _patch_p15.py)
+HEAD    13f1453  2026-09-20 02:38  test: give the repository its own extended truth gate   ← 已验 checkpoint
+prior   9759633 01:48 docs(e2e): make settle-before-capture standing evidence policy
+        3934d65 01:41 docs(convergence): C0 + database-backed invariant
+        faaa4a8 01:34 fix: single-ACTIVE-plan invariant in the database, not in a lock
+        5951beb 00:54 fix(frontend): Live resolves the execution window instead of reading index zero
+worktree  3 个已修改文件（实现线正在写入，取快照前先做指纹比对）
+untracked 27 个脚手架脚本（_build_pkg_p14/p15/p16/sc.py、_p16_*.py、_sc_*.py、_patch_p15.py）
+remotes    origin -> D:\moodle\CityNexus (本地);  GitHub 不是这棵树的 remote
 ```
 
 ## 与 GitHub 远端的关系（需要人裁决）
