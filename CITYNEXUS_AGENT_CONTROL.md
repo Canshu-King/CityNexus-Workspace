@@ -538,6 +538,102 @@
     是在事故**之前**、junction 仍有效时用 run id `uifinal02` 跑完的，
     日志 `review/gates-final-suite2.log` 与 provenance JSON 均在；
     事故后那次重跑（`uiaudit01`）是 config 加载期失败，**不是产品红，不计入任何账面**。
+  commander_verdict: |
+    **恢复确认（Commander 05:19 亲测，非采信回报）**：
+      - `ls CityNexus/frontend/node_modules` = **394 条**，与恢复源
+        `_qoder_integration_20260919/frontend/node_modules` 的 394 条**顶层条目名逐条相同**（diff 空）；
+      - 功能性判据：在 `CityNexus/frontend` 下
+        `node -e "require.resolve('@playwright/test')"` →
+        `D:\moodle\CityNexus\frontend\node_modules\@playwright\test\index.js` —— **解析成功，
+        不是"数量看起来对"**。
+      - 影响面复核：我的两场突变 campaign 与全部后端门禁用的是 `.venv`（Python），不经 node_modules，
+        **C 节 17 行数字不受此事故影响**；E 节 e2e 若在 05:0x–05:19 之间报"缺 @playwright/test"，
+        那是本次事故的尾巴，不是产品红。
+    **裁定（你问的车道纪律，回答：写，且写成硬规则）**：见下面【纪律新增 D-7】。
+    ORD-0016 状态：恢复成立，**不追溯为交付失败**——主动报、给得出恢复源与兼容依据、
+    并且把"事故后的 config 加载期失败不计入账本"这条边界先划清楚了，这是正确处理。
+  discipline_added: |
+    D-7（全车道生效，起因即本单）：**任何车道不得在自己可能被
+    `git worktree remove --force` / `rm -rf` / `git clean -xdf` 摸到的树里放 junction / symlink /
+    hardlink 指向共享资产**（`CityNexus\`、权威树、其它沙箱都不例外）。需要依赖树时三选一：
+      (a) 用**绝对路径的 `NODE_PATH`/环境变量**指过去，不建链；
+      (b) 在**该树内**真装一份（npm ci，离线用缓存）；
+      (c) 用**只读副本**且明确它可被整体删除。
+    临时 worktree 清理前必须先 `Get-ChildItem -Force | ? LinkType` 列出链接并解除，再 remove。
+    理由：`git worktree remove --force` 顺着 junction 删的是**目标内容**，不是链接本身；
+    本次它清空了 `CityNexus\frontend\node_modules`（394 个顶层条目），差点让所有车道同时失去 e2e 能力。
+
+- id: ORD-0017
+  to: 8c66aa92
+  priority: normal
+  if_head: 954edaa
+  order: |
+    UI 车道交付时点名两处**属你写域**的东西（它只读未改，处理正确）：
+    (1) Wallet 面板文案自相矛盾：`Bookings()` 里 "IMPORT A BOOKING" 写着
+        "Use Trips · Bookings to paste a confirmation… This panel is for structured data only"，
+        而它正下方的 `JourneyInboxWorkbench` **就在做这句话叫用户去别处做的事**。
+        文案在 `V8Experience.tsx` → 请只改这一段措辞（纯文本、不动逻辑、不动结构），
+        并说明改后哪句不再撒谎。
+    (2) **Journey 创建没有底部主导航**，因为 `V8Experience.tsx:818` 的提前 return 落在
+        `.v8-product-shell` 之外。这条**不要动** —— 它是产品结构决定（首进门要不要导航），
+        我已单独提请仲裁裁；在裁定前，UI 车道的 token 上提已经是这件事的最小正确解。
+  status: OPEN
+  evidence: |
+    来源：`D:\moodle\_qoder_ui_overnight_20260920\review\UI_OVERNIGHT_EVIDENCE.md` §7 第 1、2 条。
+    Commander 已核 UI 车道 A/B/C 交付：触控红 9→**0**、截断红 4→**0**、溢出 0、重叠 0、CTA 被遮 0；
+    `npx playwright test` collected **54**（49 passed + 5 skipped）`SUITE_EXIT=0`；
+    `npm run build` exit 0；typecheck 错误数与基线**逐条相等**（1 与 5，不是"看起来差不多"）；
+    before/after 截图 40 张，before 采自**纯净 `00dfd62` 树**而非"改前随手拍"。
+
+- id: ORD-0018
+  to: e345b9d6
+  priority: normal
+  if_head: 954edaa
+  order: |
+    批准你 §7 第 5 条那一小批，但**单独成批**、别和已交付的那一批混：
+    `frontend/index.html` 的 `viewport-fit=cover` + `theme-color` 配对
+    （暗色需要第二条带 `media` 的 `theme-color`；现值 `#172945` 与 Apple 底色不符）。
+    条件沿用仲裁 Amendment E 第 6 条与既有纪律：
+      - `viewport-fit=cover` **必须与真实 safe-area padding 同批**（不许只开 cover 让内容钻到刘海下）；
+      - 改完立刻跑那三道门 + 新 12 点门，要求：**0 溢出 / 0 重叠 / 0 CTA 被遮 / 0 关键截断 / 0 个 <44px**，
+        并补 412x915 的 after 截图（暗色若仍支持则含暗色）；
+      - 任一门变红就**只回退这一批**，别把回退扩散到已验收的改动上。
+    你 §7 第 3、4 条（`styles.css:176` 的死 AA 覆写、`v10.css:19-37` 的死 `.v8-trial-*`）
+    **今晚都不许顺手修活** —— 那是独立重配色与 CSS 清理，仲裁明令不花额度；只留在账本待办。
+    另：D-7 纪律已因你 ORD-0016 的事故生效 —— **今后临时 worktree 清理前先列 LinkType 并解除**；
+    你归因"那条红是我引入还是基线就有"的做法本身是对的，不要因为这次事故改成靠猜。
+  status: OPEN
+  evidence: |
+    UI write-set 原本不含 `index.html`；本单是**明确扩域**，只扩这一个文件，且要求与 safe-area padding 同批。
+    恢复已由 Commander 05:19 亲测成立（见 ORD-0016 commander_verdict）。
+
+- id: ORD-0019
+  to: 1fb26149
+  priority: normal
+  if_head: 954edaa
+  order: |
+    交给你一件**只有你做过**的事：去推翻 C 节第 17 行 `F` 的等价声明。当前理由是
+    "公开端点走不到该分支：丢掉已承诺活动更早就被 feasibility gate 以 `LOCKED_COMMITMENT_LOST` 拒了，
+    重复它被 `ACTIVITY_OVERLAP` 拒了，所以没有合法 accept 到达这里；0/1/many 计数由
+    `resolve_commitment_target()` 直接断言"。**这段话现在是被断言的，不是被测的。**
+      1) 在 `D:\moodle\_qoder_rx4_20260920\` 里自己复现 F 的突变（别改权威树），确认改动位置；
+      2) 穷举可达路径：承诺状态（CONFIRMED / LOCKED / 外部预订但地点不可解析）×
+         提案形态（替换 / 插入 / 移动 / 同刻重叠）× accept 顺序与幂等键复用；
+      3) 每条尝试给出请求体、响应码、响应错误码，以及**该分支是否真被执行到**的证据
+         （用你 `RX4_GATE.md` §4.3 那套 instrumentation，别靠读代码猜）；
+      4) 结论只许三种：`FALSIFIED（附最小反例）` / `NOT_REACHABLE（附穷举表）` /
+         `PARTIAL（哪些没试到、为什么）`。
+    若 FALSIFIED：这行从"分母之外"搬进 actionable，矩阵按 Amendment E 1b 重跑，且这是一条真缺陷；
+    若 NOT_REACHABLE：`EQUIVALENT` 标签第一次拿到测量支撑。**不许**为了维持"C 节已 PASS"写第三种结论。
+    边界：只读权威树；只在自己目录突变；不写生产代码；不改量具；不新建会话；不碰 GitHub；
+    临时 worktree 若要用，遵守 D-7（先解链再 remove）。预算 40 分钟，到点交 PARTIAL + 已有穷举。
+  status: OPEN
+  evidence: |
+    为什么给你：你已有该分支的 instrumentation 与不可解析锚夹具（`RX4_GATE.md` §4.3 空转自证），
+    且 ORD-0011/0013/0014/0015/0017/0018 分属其它车道，本单写域零重叠。
+    你 ORD-0003 里"REQUIRED_ACTIONABLE=16 使 `--only` 子集恒为红"的顾虑我实测不成立：
+    该判定写作 `if not args.only and actionable < REQUIRED_ACTIONABLE`，且 `--only F` 冒烟实打实
+    打出 `CAMPAIGN PASSED`。但你建议的方向（全量前要有便宜自检）是对的，已变成硬规矩。
 ```
 
 
