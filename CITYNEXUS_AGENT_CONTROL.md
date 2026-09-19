@@ -6,6 +6,10 @@
 `evidence` 写清 collected/deselected 条数与关键断言；不认领别人的单、不改别人的文件；
 不为了接单去 rebase/reset/clean。若你已在比 `if_head` 更新的 HEAD 上，先复核订单是否还成立，
 不成立就地标 `SUPERSEDED`，不要按过期指令改代码。
+**记账格式（07:16 新立，起因是实测多条订单出现两个 `status:`）**：每条只允许**一个** `status:`
+与**一个** `evidence:`。交付时**改写那一行**（CLAIMED→DONE@时间），把新证据**追加进同一个
+`evidence` 块**；不要新增第二个 `status:`/`evidence:` 键——那样榜单会先读到 CLAIMED 而把你
+已完成的活计成未做（今晚 ORD-0015/0022/0030/0031 都踩到了），也让后来的人在歧义里猜进度。
 
 ```
 - id: ORD-0001
@@ -1141,7 +1145,29 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       请求体 / 响应码 / 错误码 / **是否进入该分支**，并明确哪一种形状最先响。
     结论仍只许三种：FALSIFIED / NOT_REACHABLE（这时整句等价声明才算测完）/ PARTIAL（写清还差什么）。
     预算 30 分钟；到点交 PARTIAL + 已有穷举。写域不变：你自己的目录 + 只读权威树。
-  status: CLAIMED@20260920-061210 by 1fb26149（现 HEAD a98babb 比 if_head 9e66d1e 新；已复核 409 文案仍在 main.py:9019、RemapConflict 分支未变，订单成立）
+  status: DONE@20260920-062740 by 1fb26149（结论 PARTIAL；并更正 F 行理由串里的机制）
+  rx4_evidence: |
+    基线 a98babb（if_head 9e66d1e 之后；已复核 409 文案仍在 main.py:9019）。沙箱 ord27/=git archive a98babb，
+    权威树只读（git status backend 为空），解释器 CityNexus\.venv，独立 DB，无行内改库。
+    6 条重复/重叠形状 + 1 条对照，全部公开端点：
+      D1 plans/generate place_ids 写两遍巡航 → 201 且**静默去重**（候选里巡航 count=1，未进 remap）；
+      D2 同 D1 再付款+start+replan → 422 MOBILITY_DATA_UNAVAILABLE（提案阶段）；
+      D3 trip-studio 草稿把巡航 id 列两次 → 422 TRIP_STUDIO_REQUIRES_FULL_ACTIVE_PLAN_ORDER（preview 与 accept 皆然）；
+      D4 同 key 同刻确认两条预订 → 200/200，得 2 条 ACTIVE C4 但 activity_id 均为 None（重复的是承诺不是候选）；
+      D5 replan protected_activity_ids 写两遍 → 201 → accept 200，spy same_key=1；
+      D6 plans/authoritative-compose 传重复 place_ids → 422 V13_ACTIVITY_OUTSIDE_DEPARTURE_WINDOW；
+      D0 对照（已付巡航+无关 CLOSURE）→ accept 200，spy same_key=1/same_instant=1。
+    分支指纹（409 accepted replan cannot remap an active C4 commitment）出现 **0 次**；same_key 峰值 **1**，从未到 2。
+    连 ORD-0019 的 10 类合计 17 类尝试、0 次进入分支。
+    **重要更正（不是可达性结论，是理由串）**：F 的 expected_survivor_reason 写"重复会被 ACTIVITY_OVERLAP 先拦下"，
+    实测 7 次里 ACTIVITY_OVERLAP **一次都没作为最先响应出现**；真正挡住重复的是
+    (a) plans/generate 侧对重复 place_id 的**静默去重**（services.py 以 {place.id: place} 建索引，根本不是门），
+    (b) trip-studio 整单顺序规则、(c) mobility 证据不可用、(d) v12 出发窗口规则。
+    留着现在这句会让人误以为 overlap 门是这行的守卫，改动了它还会以为安全。建议理由改写见 ORD27_OVERLAP_ARM.md 末节。
+    判 PARTIAL 而非 NOT_REACHABLE 的确切缺口：D6 的 422 是**窗口**拒绝，所以"合法多日行程上重复 place_ids
+    是否会被物化成两条同刻活动"仍未试（需 v12/v13 那类自建多日夹具，30 分钟预算内没搭）；
+    另未试 stay/legs 重叠族与非 demo 城市。补上多日那一格约再需 20 分钟，可另下单。
+    细节：D:\moodle\_qoder_rx4_20260920\ORD27_OVERLAP_ARM.md；原始 raw/ord27_shapes.txt、raw/ord27_d6.txt。
   evidence: |
     来源：`D:\moodle\_qoder_rx4_20260920\ORD19_F_REACHABILITY.md`（05:28，10 类穷举表 +
     "覆盖不全，故不能判 NOT_REACHABLE"一节）。Commander 复核：409 文案与 `RemapConflict`
@@ -1283,7 +1309,6 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
          `离线装不出来（说明缺什么，写进 HUMAN 待办）`。
     为什么现在做：终态包里"前端 build/E2E 绿"这一条如果建立在不可比的类型检查上，
     我宁可写成"未证"，也不要写成一个好看的数字。
-  status: CLAIMED@20260920-062000
   evidence: |
     来源：UI 车道在 ORD-0023 交付里主动写的"仍然没解的一件事"（`@types/react` 19.3.0 未锁、
     三个报错点源文件与 `00dfd62` 逐字节相同、所以 0/0 不可比）；
@@ -1292,6 +1317,18 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     CLAIM 时复核：if_head 94295e5 存在且为当前 HEAD（a98babb）的祖先，订单成立。
     注：tip 已从 94295e5 前进到 a98babb，按你已采纳的收口步骤，最终同步比对留到冻结后做。
   status: DONE@20260920-064000
+  commander_check: |
+    **Commander 07:15 独立复核（自己跑，不看回报）**：
+    `ls CityNexus/frontend/node_modules | wc -l` = **394**，
+    `ls _qoder_integration_20260919/frontend/node_modules | wc -l` = **394**（两棵都没被再次伤到）；
+    两处 `@types/react/package.json` 版本都读到 **19.3.0**；
+    `grep -c '@types/react' frontend/package-lock.json` = **0** ⇒ "package.json 声明、lock 里没有"成立。
+    （车道报的"顶层 664 / lock 顶层 711"我这边是 394/394，口径应是"含 scoped 展开与否"，
+    **不影响结论**，但两边数法不同要记下来，别互相覆盖。）
+    `Get-ChildItem -Depth 1 D:\moodle | Where LinkType` **零条** ⇒ 他们建的 junction 没留在危险位置。
+    **对终态包的直接影响**：`前端 build / E2E 绿`这一条继续成立（build exit 0、e2e 50 passed 可复现），
+    而 **typecheck 一律记"未证/不可比"**，谁把 0 errors 当成门通过都算错。
+    冻结后要做的：lock 补三条声明（需联网，属 HUMAN 待办）或明确以安装树为准并放弃 lock 的复现承诺。
   evidence: |
     交付 D:\moodle\_qoder_publish_manifest_20260920\ord31_dependency_authority.md。
     **结论：LOCK 是权威**，两棵 node_modules 有同一处偏移（仅 3 条，两棵树完全一致）：
