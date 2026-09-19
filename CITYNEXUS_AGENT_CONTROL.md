@@ -548,8 +548,13 @@
     请任何车道在恢复确认前**不要**启动依赖 `CityNexus\frontend\node_modules` 的 e2e / build。
     要求：(1) 复核恢复结果；(2) 裁定是否把"junction 不得出现在会被 worktree remove 的树里"
     写进车道纪律 —— 我此前不知道这条会连锁删除，QWEN_FLASH_SCOUT_PLAYBOOK 与 ORDERS 都没覆盖它。
-  status: CLAIMED@20260920-055500 by e345b9d6（恢复复制已在后台执行）
+  status: DONE@20260920-070500 by e345b9d6（恢复成立，依本单 commander_verdict 05:19 亲测；D-7 已生效）
   evidence: |
+    ⚠ 本单**关闭的只是恢复动作**。它引出的 typecheck 基线不可比问题
+      （`@types/react` 19.3.0 顶替原依赖集、`package-lock.json` 未锁该包 → 错误数 1/5 变 0/0，
+      而三个报错点源文件与 00dfd62 逐字节相同）**仍未裁定**，不因本单关闭而消失。
+      追加点在本单 evidence 末尾的【后续发现，06:2x 补】，并已在 ORD-0020 交付里再次标出。
+      在裁定前，任何车道用 `CityNexus\frontend\node_modules` 跑 typecheck 都会看到假的 0 错误。
     已核实事实（全部亲测，非推断）：
       - `D:\moodle\CityNexus\frontend\node_modules` 目录**存在但条目数 = 0**（事故前 394 个顶层条目）。
       - 我树里的 junction 本身没坏：它指向上述空目录，所以我的 `npx playwright test` 现在以
@@ -717,8 +722,44 @@
       3. `git status --porcelain` 在你交回时必须只剩 `index.html` 那一批（若 ORD-0018 已在做），
          并给每批的 commit sha。
     然后再做 ORD-0018。**不要**因为"改动已验证"就跳过第 2 步 —— 验证的是工作区，不是提交。
-  status: CLAIMED@20260920-064500 by e345b9d6
+  status: DONE@20260920-070000 by e345b9d6
   evidence: |
+    [e345b9d6 交付] 按批提交到 `agent/ui-overnight-20260920`，未碰权威树。tip `a425ad0`。
+      e00838e  test(e2e)   新 12 点门 + 截图采集器（3 个新文件，零生产改动）
+      23b7f7b  fix         token 上提 :root + 补 --v8-accent/--v8-surface + 移动 chrome/safe-area
+                           + 44px 触控 + stepper 截断 + 壳外界面 chrome（design-tokens.css, styles.css）
+      e4a1258  fix         v10.css 绿色孤岛并入 token（Wallet）
+      9bdb5a8  fix         index.html：viewport-fit=cover 与 theme-color 明暗对
+      a425ad0  docs        设单 + 基线红名单 + 交付证据三份 markdown
+    每批正文里都写了 run id、collected 数与"触控 9→0 / 截断 4→0"，以及两处我自己改红又改绿的
+    记录（--v8-green 不能当正文色；padding 10→16 撑破 grid 需 min-width:0）。
+
+    第 2 步照做了，**在提交态重跑**（工作区干净时，run id `uicommit01`，
+    backend :8165 / frontend :8165→4265、`.venv` python、独立 `_uicommit01.db`、ai=disabled）：
+      - 前端验收全套 = **49 passed / 0 failed / 5 skipped**，`SUITE_EXIT=0`（2.4m）
+        日志 `review/gates-committed-state.log`
+      - 新 12 点门逐条 = **溢出 0 / <44px 0 / 截断 0 / chrome 重叠 0 / CTA 被遮 0 / 找不到 CTA 0**
+      - `npm run build` **exit 0**（`review/build-committed-state.log`，built in 5.26s）
+      - 三道门都在全套里：contrast-audit 4/4、mobile-overflow 1/1、today-hero 2/2，
+        另 dock-geometry 3/3、live-structure 全绿
+    → 提交态 == 验收态。
+
+    第 3 步：`git status --porcelain` 现在**只剩 `?? review/patches/`**。
+    这批我**故意没提交**：四个 .patch 描述的内容现在已经在 git 历史里了，
+    再把累计 diff 存一份进树只会制造"两份真相"。留在磁盘上是为了你引用的那几个文件名
+    （`step3-token-hoist.patch` 被 ORD-0014 evidence 点名、`batch2-theme-color.patch` 是
+    ORD-0018 的独立回退单元）。
+    另：`review/evidence/`（40 张 PNG + 几何 JSON）被仓库自己的 `.gitignore:23 evidence/` 排除，
+    不是遗漏。它可重生成：
+    `CITYNEXUS_SHOT_LABEL=before|after npx playwright test e2e/qoder-ui-overnight-shots.spec.ts`
+    （before 需从纯净 00dfd62 树采，我是那么做的）。
+
+    ⚠ 提醒一条与本单同等重要的：`typecheck` 的判据现在**不可比**，起因是 ORD-0016 的恢复
+    换了依赖集（`@types/react` 19.3.0，而 package-lock 里 `@types/react` 未被锁），
+    错误数从 1/5 变 0/0 而三个报错点源文件与 00dfd62 逐字节相同。
+    已在 ORD-0016 追加条目 + `UI_OVERNIGHT_EVIDENCE.md` §8，等你裁定重录基线还是重装。
+    我没有把 0/0 当成本批的成果写进上面任何一行。
+    [Commander 原文，未改动]
     Commander 05:34 亲测：`git -C D:\moodle\_qoder_ui_overnight_20260920 rev-parse --short HEAD`
     = `00dfd62`；`git status --porcelain -- frontend src` 有 4 条 `M`（含 index.html），无该批的 commit。
     验收结果本身成立（我已独立复算：49 passed + 5 skipped = collected 54、SUITE_EXIT=0、40 PNG、
@@ -750,7 +791,34 @@
     写在 `test_rx4_c4_generate_gate.py` 里（你的文件），或另起一个明确命名的文件，
     但**不要**改 `test_rx3_stale_cursor_fails_closed.py`（那是 ORD-0011 的地盘）。
     回报：collected 条数、无差别失败突变下的红项名。
-  status: CLAIMED@20260920-053415 by 1fb26149（HEAD 954edaa 即 if_head；fb34d8a^ 的原文已取出逐条对照）
+  status: DONE@20260920-055640 by 1fb26149（按 05:36 收窄执行；此前 054720 那条 evidence 描述的是收窄前形状，作废）
+  rx4_evidence_corrected: |
+    只动 delivery/test_rx4_c4_generate_gate.py，未恢复退役文件、未沿用其节点名。
+    新增节点 test_nothing_outside_the_commitment_pins_the_unreachable_anchor（文件 7 → 8 条），
+    只钉三条前提为断言、不重复断 422：(1) 未 confirm 的同形状行程 generate 201 且 3 候选；
+    (2) strays==0；(3) pinned==0。对照 generate 被刻意排为本节点第一次 plans/generate 调用，
+    否则无差别失败会先死在夹具里、验不出"断言 vs 注释"。
+    基线 954edaa（a75ba7a 仅多一个前端 spec，services.py sha256 相同故同样适用）；仓库 ruff 配置 All checks passed：
+    干净态 collected 8 / deselected 0 / 8 passed；
+    验收硬条件：services.py:1421 `if not created:`→`if True:` 令所有行程 422，隔离跑
+    `-k nothing_outside` → collected 8、7 deselected、1 selected → **1 failed（真实断言失败非 error），红在第 1 项 `assert 422 == 201`**；
+    独立复核你给的鉴别力说法：`active_c4_hard_constraints` 的 `return constraints`→`return []` →
+    collected 8 / **1 failed**，红的正是存活节点 test_unresolvable_paid_anchor_refuses_generation_instead_of_omitting_it，新节点按设计保持绿。
+    **撤回我 054720 那条 "C4G owners 记 2/2"**：收窄后实测 C4G 仍 1 failed/7 passed、单一 owner，
+    C 节 owners 保持 1/2，不触发 Amendment E 1b 重跑。
+    每次跑完 services.py 与 protected_commitments.py 均与 954edaa 逐字节还原校验通过；权威树 backend 全程 git status 为空。
+    细节见 D:\moodle\_qoder_rx4_20260920\RX4_GATE.md §9。
+  rx4_evidence: |
+    补回节点沿用原名 test_the_refusal_is_caused_by_the_commitment_and_nothing_else，
+    写入 D:\moodle\_qoder_rx4_20260920\delivery	est_rx4_c4_generate_gate.py（7 条 → 8 条）。
+    基线 954edaa 沙箱 ord19/（权威树只读、独立 DB、仓库 ruff 配置 All checks passed）：
+    干净态全文件 collected 8 / 8 passed；仅该节点 collected 8、7 deselected、1 selected / 1 passed。
+    验收硬条件已满足：对 services.py:1421 施加“无差别 422”突变后单跑该节点 →
+    1 failed（真实断言失败，非 error），红在第 1 项 `assert 422 == 201`（对照行程应得 201），
+    不是死在夹具也不是死在第 5 项 422 上；随后 services.py 逐字节还原并复跑 8 passed。
+    额外覆盖增益：C4G（services.py:91）在 8 条文件下由 1 failed/6 passed 变 2 failed/6 passed，
+    新节点是第二个独立击杀者 → 按 Amendment E 1b，C4G 的 owners 应从 1/2 记为 2/2。
+    五项细则、命令与两次自纠见 D:\moodle\_qoder_rx4_20260920\RX4_GATE.md §9。
   evidence: |
     三方独立一致：`dc19d662`（`verify/dc19d662_mission002_d/NODE_SET_DIFF.md`）、
     Commander 复述（`git log --diff-filter=D` 显示 `fb34d8a` 删的正是该文件；
@@ -776,10 +844,108 @@
       （建议 `qoder-handoff/`，与已有交接材料同处），重出清单与总数，
       并让交接正文里的 HEAD 与你实际发布的内容自洽（写全 sha，不要只写短号）。
     仍然：不建分支、不推送、不 force-push。
-  status: OPEN
+  status: CLAIMED@20260920-055500
   evidence: |
     Commander 05:40 亲测：`696 / 10,091,919` 重算一致；seed-state 0 命中；`os.walk` 暂存树 696 个文件；
     清单路径逐条 `os.path.exists` 全在（0 缺）；`handover_authoritative.md` **不在暂存树**。
+    CLAIM 时复核：`find _cnx_auth_stage -maxdepth 2 -iname "*handover*"` = 0；
+    清单内 "handover" 唯一命中 backend/tests/test_sol_plan_handover.py（同名巧合），判定成立。
+  status: DONE@20260920-060000
+  evidence: |
+    ⚠ 先说一个必须让你知道的状态变化：**权威 HEAD 已从 954edaa 前进到
+    a75ba7aabb9b526e48a7c3f1693ec7e108c68089**（+1 提交 `a75ba7a`
+    "test(e2e): own the frontend guard that says a finished step is not the current one"，
+    改 frontend/e2e/qoder-live-recovery-cursor.spec.ts +45 行）。按 ORDERS 规则我复核了
+    订单仍成立（954edaa 是新 HEAD 的祖先），并在完成 ORD-0022 的同时把包重新同步到新 HEAD。
+    你 ORD-0015 的复核数字（696/10,091,919）对应 954edaa，仍然有效、无错。
+
+    已交付：
+    (1) 交接入包：`qoder-handoff/handover_authoritative.md`（4,202 B）
+        + `qoder-handoff/convergence_summary.md`（2,206 B，一页收敛摘要）。
+        `find _cnx_auth_stage -iname "*handover*"` 现在命中 2 个（另加原有的
+        backend/tests/test_sol_plan_handover.py 同名巧合）。
+    (2) 交接正文 HEAD 写**全 sha**：`a75ba7aabb9b526e48a7c3f1693ec7e108c68089`（两份都是）。
+    (3) 同步 spec：包内 frontend/e2e/qoder-live-recovery-cursor.spec.ts 已更新为 HEAD 版
+        （8,468 B → 10,239 B，cmp 验证一致）。
+    (4) 脱敏：交接文档初稿写了完整泄漏 key，已改为前缀 `sk-5343f86b…` + "完整值刻意不复现"。
+        包内泄漏 key 命中 = 0。
+
+    重出清单与总数（对齐新 HEAD）：
+    - **698 files / 10,100,098 B（9.63 MB）**
+    - 清单数据行 698 = 暂存树文件数 698，完全对齐
+    - 全量比对：**694 条字节相同 / 2 条有意不同 / 2 条不在 HEAD（即新增的两份交接文档）**
+    - 2 条有意不同仍为 §2.1 patch（sanitize 版）与 §2.2 mutation_campaign.py（硬化版），
+      性质未变，已在包内交接 §2 写明
+
+    包内最终核验：698 文件、无 .git、无 seed-state、泄漏 key 0、活跃 key 0。
+    包外 ORD-0015 版 handover_authoritative.md 保留为留档，顶部加了 ORD-0022 更新说明
+    （指向包内版本为权威）。
+    合规：未建分支、未推送、未 force-push、未访问 github.com、未调 credential fill。
+    **Commander 05:44 复核通过**：清单逐行重求和 = **698 / 10,100,098 B** 一致；
+    `os.walk` 暂存树 = 698（无缺、无夹带、无 `.git`）；交接已在包内
+    `qoder-handoff/handover_authoritative.md`；seed-state 0 命中。
+    ⇒ **Amendment E 第 5 条五件事全部闭口，发布卫生这一侧我给出绿灯（仅"内容可发"这一层，
+    建分支/推送仍未授权，等 Mission 002 终态）。**
+
+- id: ORD-0023
+  to: e345b9d6
+  priority: urgent
+  if_head: a75ba7a
+  order: |
+    仲裁 **Amendment F**（真总线评论 5745474928）把你等的两条产品决定裁了，UI 集成解冻。
+    两条都**不是**"把 Journey 创建搬进壳层"：
+
+    **F-1 首进门就是不要底部主导航**（刻意的 onboarding，不是早退的副作用）。理由它写得很清楚：
+    行程还不存在时，多数一级目的地要么空、要么误导；三步向导只该有一套导航（Back/Next/Create）；
+    在首跑里放全局底部导航等于同时给用户两套导航 + 一条逃进半初始化界面的出口。
+    → 所以：**不要**为了继承样式做结构性的壳层迁移。要做的是把**视觉地基**与**应用导航 chrome** 分开：
+      - tokens / 前后景色 / 暗色绑定 / 字体 / safe-area / 移动留白 必须在 `.v8-product-shell` **之外**也可用
+        （`:root` 上提保持，前提还是三道门绿）；
+      - 给 Journey 创建加一个**显式的 onboarding/setup wrapper**，提供同样的视觉地基与间距，
+        但**不渲染底部导航**；
+      - 缺的 gutter / body 颜色 / safe-area 处理**显式补上**（不要再靠"在壳层里所以继承得到"）。
+    验收（仲裁原文五条）：首跑 setup **0 个底部主导航项**；仍用同一套 Apple-like token 与明暗调色板；
+    360/390/412 宽度下**无左右裁切**；吸底 CTA **避开 safe area**；暗色标签**可读**。
+    若从已激活行程里再开 Journey 创建，**同一个向导形态**，显式 Cancel/Back 回到既有 app，
+    向导内依旧不加底部导航。
+
+    **F-2 44px 赢在触屏，30px 可以留在细指针桌面**：契约细化成
+    `touch/mobile 交互目标 >= 44 CSS px`，`fine-pointer/desktop compact 可保留 30px`。
+    → 你已做的三个 Today 次级操作 30→44 **被批准**，但**不**是全局吹大桌面控件的许可；
+    ≥44 这条规则编到 **mobile/touch 层或那个共享移动控件类**上，用既有移动断点当确定性可测路径；
+    可以额外用 `@media (pointer: coarse)` 加强，但**不要只依赖 pointer 探测**
+    （自动化移动端视口测试不一定模拟 coarse pointer）。
+    并在旧的 30px 规则旁加一行注释（仲裁给了原话）：
+    `30px = compact fine-pointer visual density; mobile/touch hit target is superseded by the >=44px accessibility contract.`
+
+    顺序仍按 Amendment E 第 6 条：先修已量出的红，再复核 token 上提，最后才是四界面润色；
+    **`V8Experience.tsx` 还是不许你直接改**（要注释/锚点就走 ORD-0024 与 ORD-0017 的转交通道）。
+    ORD-0020（把你已验收的批次真正提交、并证明提交态==验收态）继续有效，先做它。
+  status: CLAIMED@20260920-072000 by e345b9d6
+  evidence: |
+    仲裁原文：`Canshu-King/CityNexus-Workspace` Issue #1 评论 5745474928（Amendment F，
+    §1 导航、§2 触控契约、末尾 Integration ruling 解冻）。
+    背景：你 ORD-0014 交付 §7 第 1/2/5 条与 ORD-0021 侧的两条产品疑问，我在 5745409248 转交，
+    仲裁已裁。你现有数字我复算过：696→698 的包侧变化不影响 UI 车道；UI 侧我已独立核
+    collected 54（49+5）、SUITE_EXIT=0、40 PNG、`design-tokens.css:741/767` 两处 30px。
+
+- id: ORD-0024
+  to: 8c66aa92
+  priority: normal
+  if_head: a75ba7a
+  order: |
+    Amendment F 第 1 条落在**你的文件**里，一句话的事：
+    `V8Experience.tsx` 那个让 Journey 创建落在 `.v8-product-shell` 之外的提前 return，
+    仲裁裁定它是**刻意的 onboarding 行为**（首进门不要底部主导航，不为此做壳层迁移）。
+    → 请在该 return 处补一段**说明它是刻意的**注释（含"pre-Journey onboarding：不给全局底部导航，
+    视觉地基由 wrapper 提供"这层意思），让下一辆车道不会再把它当成漏掉的作用域 bug 去"顺手修好"。
+    这是 ORD-0017 之外的第二件小事，两件都在同一个文件里，可以一批做。
+    注意：UI 车道会新增 onboarding wrapper（ORD-0023），**它的注释归你、wrapper 归它**，
+    别互相伸手。
+  status: OPEN
+  evidence: |
+    仲裁原话："document the early return as intentional: focused pre-Journey onboarding,
+    no primary app navigation"（评论 5745474928 §1）。
 ```
 
 
@@ -959,7 +1125,22 @@ verdict 判定必须改为"有 FAILED 行且 collected>0 才算 KILLED，收集/
 RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的空转陷阱：demo 巡航 `locked=True` 且零承诺，
 所以"巡航仍存活"类断言天生为空，哨兵必须用不可解析锚或结构性 ARRIVAL），之后独立复核实现线的量具。
 
-### 仲裁 Amendment D + E（04:21–05:07，真总线评论 `5745031386` / `5745118156` / `5745135961` / `5745307084`）
+### 仲裁 Amendment D + E + F（04:21–05:36，真总线评论 `5745031386` / `5745118156` / `5745135961` / `5745307084` / `5745474928`）
+
+**Amendment F（两条产品决定 + 解冻，05:36 收到）**
+- **F-1 首进门 Journey 创建不要底部主导航**：那是**刻意的 onboarding**，不是提前 return 的副作用。
+  不许为继承样式做结构性壳层迁移；改为把**视觉地基**（tokens / 前后景色 / 暗色 / 字体 / safe-area /
+  移动留白）与**应用导航 chrome** 分开：`:root` 上提保持，给 setup 加**显式 onboarding wrapper**，
+  gutter/body 色/safe-area **显式补**。
+  验收五条：首跑 **0 个底部主导航项**、同一套 Apple token 与明暗调色板、360/390/412 **无左右裁切**、
+  吸底 CTA **避开 safe area**、暗色标签**可读**。→ 落 `ORD-0023`（UI）+ `ORD-0024`（真值线补注释）。
+- **F-2 触控契约细化**：`touch/mobile >= 44 CSS px`，`fine-pointer/desktop compact 可保留 30px`。
+  UI 已做的三个 Today 控件 30→44 **被批准**，但**不是**全局吹大桌面控件的许可；
+  ≥44 编到移动层/共享移动控件类，用既有移动断点当确定性可测路径，`pointer: coarse` 只能加强不能独任；
+  旧 30px 旁必须留仲裁给的那行注释。
+- **Integration ruling**：UI 集成在这两点上解冻；仍禁止为 CSS 继承做壳层迁移；Mission 002 收口继续。
+- 我转交的两条产品疑问在 `5745409248`，仲裁 05:36 回；**它两条都给了理由而不只是结论**，
+  其中"首跑放全局导航 = 给用户一条逃进半初始化界面的出口"这条，是我之前没想到的产品风险。
 
 **Amendment D（三条裁定，已全部落实为订单，无一条被灵活执行）**
 - STALE 缺席用**既有哨兵元组**，不迁 null → ORD-0011(1)。
