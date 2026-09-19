@@ -20,6 +20,27 @@ Refreshed: 2026-09-20 01:55 (+08:00) — every number below was measured by the 
 时序偏差已如实向仲裁报备：Verifier 建立早于"稳定 checkpoint 之后"的要求，已限定其只读、暂不放行攻击性任务。
 Commander 回报见 Issue 评论 5744238367。
 
+### A 节复核结论（02:2x，Commander 沙箱 worktree @ `9759633`，解释器 `CityNexus\.venv`）
+RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_gate.py` **不合格**：
+
+| 条件 | 结果 |
+|---|---|
+| 干净态 `--collect-only` | 6 tests collected（仲裁指定为恰好 3，且文件名应为 `test_rx4_c4_generate_gate.py`） |
+| 干净态执行 | 6 passed / 0 failed |
+| 单独突变 site1 `main.py:4360` `_trip_studio_authoritative_gate` | 6 passed → **SURVIVED** |
+| 单独突变 site2 `main.py:6267` `journey_route_evidence` | 6 passed → **SURVIVED** |
+| 单独突变 site3 `main.py:6523` `generate_replan` | 6 passed → **SURVIVED** |
+| 单独突变 site4 `main.py:8663` `_revalidate_locked_commitments` | 6 passed → **SURVIVED** |
+
+诊断：该门断言的是"候选里还留着那个地点/时间"，而这个保留并非来自 C4 硬约束查询（候选本身就带该活动），
+所以把谓词改坏它也不报错 —— 属非区分力断言，按仲裁口径不得记 KILLED。
+已下发返工：先加临时调用计数器证明场景真的走到约束装配；再构造"只有约束能胜"的场景（基线活动会被生成器
+自然丢掉，有约束时保留、改坏后不保留，必须形成差异）；验收仍锁 3 collected / 3 passed + 四处逐个突变
+≥1 真实断言失败；宁可交 0/4 加详细诊断，也不许交假绿。
+
+**当前状态：RX-4 未收口，16 突变矩阵中 C4 generate 项 = 0/4 KILLED，Mission 002 保持红色。**
+
+
 
 ## CURRENT_HEAD（权威本地树）
 ```
