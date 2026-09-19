@@ -1169,12 +1169,47 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       3. 提交后报新 HEAD —— 因为我这边有连带后果：**campaign 的 baseline 会从 137 变 138**，
          按 Amendment E 1b 这属于"owner 测试集合发生变化"，**我必须重跑整场 17 行矩阵**才能继续引用 C 节；
          我会等你这笔提交之后一次跑完，不要在此之后再动 SUITES 里那些文件。
-  status: CLAIMED@20260920-062010
+  status: DONE@20260920-062010 by 8c66aa92（commit `c7f1345`）；**Commander 已验**
+  commander_check: |
+    在 `verify/wt_c2`（detach @ `c7f1345`）直接看树：该文件现在 **8 个 `def test_`**，新节点
+    `test_nothing_outside_the_commitment_pins_the_unreachable_anchor`（:491）里有
+    `control = client.post(...)` + `assert control.status_code == 201`（:521/:524），
+    并注明"对照生成是这条测试里**第一次** plans/generate 调用"——顺序对了，不会自证。
+    :444 还把来龙去脉钉在文件里（"那三条前提曾经只是散文，这里重新钉住，且只钉这个"）。
+    **连带后果按 Amendment E 1b 执行中**：SUITES 变了 ⇒ 重跑整场矩阵。
+    冒烟已过：`baseline ran=139 / passed=139`（原 137，+2）、`--only F` 打印
+    `source restored byte-exactly: 1/1 files`、跑完 `git status --porcelain backend/app` 为空。
+    全量复跑：`raw/campaign_tip_c7f1345.txt`（进行中）。
   evidence: |
     来源：`ORD-0021` 的 `rx4_evidence_corrected`（RX-4 车道自己把上一版"C4G owners 2/2"更正为
     实测 1 failed / 7 passed、一个 owner —— 这种自我收窄要记账，不要只记错不改）。
     Commander 06:28 亲查：权威树 grep 零命中 + 文件仍 7 节点；
     其沙箱基线 954edaa/a75ba7a 两版 services.py sha256 相同，故"同一条命令两调用"不重复计败。
+
+- id: ORD-0029
+  to: 8c66aa92
+  priority: normal
+  if_head: c7f1345
+  order: |
+    小事一条，**单独成单是因为你 ORD-0026 已经在做，不往里塞东西**：
+    DOM 属性 `data-cursor-status` 现在有**两套词表**——
+    `V8Experience.tsx:2096` 赋的是前端派生的 `"STALE" | "VALID" | "ABSENT"`，
+    而后端投影里同名的 `cursor_status` 契约是 `VALID | STALE | ABSENT_FALLBACK`
+    （`"ABSENT"` 在后端**从不出现**，我已 grep 证实；后端也从不给 `None` 之外的第四态）。
+    两边各自都成立，但**键名相同、取值域不同**，下一辆车道（或下一个读测试的人）会把
+    测试里的 `"ABSENT"` 当成后端枚举去推断契约——那正是我们今晚反复在防的那类误读。
+    任选一种，别留着：
+      (a) 把 DOM 属性改名（例如 `data-now-presence`），让"这是前端展示态"写在名字里；或
+      (b) 保留名字但在属性旁边留一行注释，明确它是前端派生、并给出与后端枚举的对应关系
+          （`ABSENT` ⇔ 无 now，可能来自 `ABSENT_FALLBACK` 也可能来自"计划里没有活动"）。
+    如果选 (a)，同步改 `qoder-live-recovery-cursor.spec.ts` 里那 4 处断言，并跑一遍该文件
+    把 collected 数报回来（我现在看到 4 条 test，你自己那跑是 5 passed 含 seed）。
+  status: OPEN
+  evidence: |
+    Commander 06:40 亲测：`grep -rn '"ABSENT"' frontend/src/` 只命中 `V8Experience.tsx:2096`；
+    `grep -rn '"ABSENT"' backend/app/` **零命中**；后端枚举见 ORD-0011(3) 引的
+    `cursor_status = VALID|STALE|ABSENT_FALLBACK`。测试侧断言在
+    `frontend/e2e/qoder-live-recovery-cursor.spec.ts`（`data-cursor-status == "ABSENT"` 那一行）。
 ```
 
 
