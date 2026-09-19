@@ -271,7 +271,7 @@
         先把 (1) 与它的前端门做掉。
     (3) 门：新增一条前端断言 —— 游标落在中后段活动时，Live 恢复卡显示的 Now 必须等于该活动，
         且游标不可解析时不得出现任何 Now。请在权威内容上跑 campaign 时把它算进 C4/A 行之外。
-  status: DONE@20260920-045237
+  status: DONE@20260920-045237+修订
   evidence: |
     Commander 亲测（HEAD 00dfd62）：`grep '"current_activity_id"' backend/app/operations/v9.py` 只出现在函数参数与
     `persisted_cursor` 输出，返回字典无该键；LiveRecovery.tsx:198-200 原文已核对。
@@ -280,6 +280,7 @@
     且从不校验"杀它的是不是预期那条断言" —— 我已给 harness 加上 EXPECTED_KILLER 映射与
     KILLED_UNVERIFIED 类（py_compile exit 0），你不需要改这个文件。
             [8c66aa92 DONE@20260920-045237] HEAD 954edaa。(1) 已修：LiveRecovery 不再读 execution 里不存在的 current_activity_id，改按 now_activity_id 解析且不可解析时不给 Now（去掉 ?? activities[0]）；新增 data-cursor-status / data-now-activity-id 让门能指身份而不是看文案。严重性如实说：design-tokens.css 第 389 行把这张卡的 intro 在 .live-shell 下 display:none（注释明写 kept in the DOM），所以今天旅客在 /v8/live 并没有读到那个错步骤——谎言被计算并渲染进了 DOM，读得到它的是 markup 而不是屏幕；因此门两头都断言（卡的解析身份 + 可见 Live 标题一致）。(3) 新增 frontend/e2e/qoder-live-recovery-cursor.spec.ts，2 collected：干净态 2 passed / 0 failed（run ord10-c，backend :8163，一次性库 _ord10-c.db，ai=disabled，reuseExistingServer=false）；用例1 完全无拦截，走产品自己的 /complete 两次，要求卡与标题都指向第三个活动。突变验证：把修法退回原写法（phantom key + 索引零兜底）-> 3 个节点里 2 个失败，实测值 data-now-activity-id 3a58c470(=activities[0]) vs twin 61e3096d(=activities[2])；不可解析态打出 "Next: Old Town Gate"（首活动标题）而不是 "Execution position unresolved"；源文件跑完字节还原 sha256 一致。全量权威 E2E：49 expected / 0 unexpected / 0 flaky / 0 skipped（此前 47，+2 即本门）；typecheck / typecheck:all / build 退出码均 0（退出码取自 npm 本身，不取自管道尾）。顺手补了 Live 的第三态：有 ACTIVE 计划却无待执行步骤时，标题与副行原本说 "Awaiting plan"/"Select a plan to calculate your route"，都是对已有计划的不实陈述；新增 live.nothingDue（en+zh），卡与 Live 共用，避免同一状态两种说法。(2) 按令未动 main.py:5220 的 projection_status（仍只 READY/DEGRADED），等仲裁裁 schema；同一族的第三处是 V10LiveExecutionPanel.tsx:53——只要有游标就说 In progress（含陈旧游标），诚实修法要把解析后的窗口传进去而不是原始 current_activity_id，未擅自动。矩阵候选已加 Q-LIVE-PHANTOM-CURSOR 一行（门=本 spec），按你的要求记在 16 与 C4/A 之外；候选与 diff 已更新在 patches/CNX-002C-mandate16-matrix-v2.*。
+            [8c66aa92 DONE@20260920-045237+修订] 修订（数字过期了）：那两条 spec 现在是 4 collected（ORD-0011/0012 又补了"游标落在已完成步骤"与"空活动列表不造 current"两例），全量权威 E2E 以 51 expected / 0 unexpected / 0 flaky / 0 skipped 为准（run ord11-e2e2）；本线最新 HEAD fd1151c。矩阵候选里的 Q-LIVE-PHANTOM-CURSOR 行门同步指向该 spec。
 - id: ORD-0011
   to: 8c66aa92
   priority: urgent
@@ -309,7 +310,31 @@
     (3) 不要动 `/twin` 顶层 `projection_status`：仲裁明令 Mission 002 期间保持 `READY|DEGRADED`，
         执行新鲜度只走嵌套 `cursor_status = VALID|STALE|ABSENT_FALLBACK`。（你 ORD-0010 里没动，正确。）
     (4) `v9.py:1544-1572` 那份 Edge/v10 副本投影的是同一元组，给它也来一条同口径断言，别让两处实现漂移。
-  status: CLAIMED@20260920-054836
+  status: DONE@20260920-061922
+  commander_check: |
+    **Commander 06:40 逐项复述码（不是看回报）**：
+    (1) 结构不变式已交付且是多形状的：`backend/tests/test_qoder_next_leg_binding.py`
+        `test_the_three_leg_fields_are_absent_or_present_together(shape)` 每种形状**扫 ≥8 组合**
+        （`assert len(combinations) >= 8`），断 `missing == sentinel`
+        即 `next_leg_id null ⇒ ("NONE", 0)`，另有一条
+        `test_a_projected_leg_is_always_one_of_this_plan_s_legs` 钉住"投影出来的腿属于本计划"。
+        文件里还留了一句正确的判断："那四条断言在这里不加覆盖，未拥有的是**形状**" ——
+        说明它没有把 rx3 的重复断言当交付。
+    (2) LiveRecovery 现在 **4 条** `test(`，其中新增
+        `a plan that holds no activities invents no current step`：把 experience 与 twin
+        **两个消费者同时**清空活动（各自 `seen >= 1` 证明拦截真的生效），再断
+        `data-now-activity-id == ""`、卡片不含 "Next:"、标题 `data-cursor-status == "ABSENT"`。
+        ⇒ 仲裁点名的第三例**已闭**。
+        一条口径要说清：这一例**不是**位置回退的鉴别力守卫（空数组下 `activities[0]` 本来就是
+        undefined），它守的是"从空无里造出一个现在"；位置回退的鉴别力仍由
+        VALID/不可解析那两例承担（实现线 §81.1 自报突变下 3 条里 2 条红）。
+        我在 `9e66d1e` 亲跑过 3 条版本：**5 passed / exit 0 / 自有 DB 876 KB / 自有端口**。
+    ⚠ **发现一处命名撞车（转 ORD-0026 一并处置，不是缺陷）**：DOM 属性
+        `data-cursor-status` 在 `V8Experience.tsx:2096` 被赋成前端派生的
+        `"STALE" | "VALID" | "ABSENT"`，而后端投影的同名契约是
+        `VALID | STALE | ABSENT_FALLBACK`（`"ABSENT"` 在后端**从不出现**，已 grep 证实）。
+        两件事都成立，但**同一个键名两套词表**会让下一辆车道把测试里的 "ABSENT" 当成后端枚举去读。
+        要么改名（如 `data-now-presence`），要么在属性旁留一行说明它是前端派生态。
   evidence: |
     Commander 亲测缺口存在（HEAD 21cbf22）：`grep -n assert backend/tests/test_rx3_stale_cursor_fails_closed.py`
     共 15 条断言，STALE 用例（109-116 与 128-129）不含 now/next 对象本身、next_leg_id 与 now_state。
@@ -317,7 +342,7 @@
     next_eta_min→0），所以这是**门没测到**而不是产品错 —— 正是 Amendment D 要的那种精确契约测试。
     回报请附：新断言各自的失败信息（在一次性突变下）、collected 条数、以及 `?? activities[0]` 复原突变
     下变红的那条测试 node id。
-
+            [8c66aa92 DONE@20260920-061922] HEAD fd1151c。按 05:36 收缩版做：不抄四项断言（test_sol_execution_cursor.py:499-515 已用整字典相等钉住九项并含 Edge 视图，抄进去是 0 新增覆盖）。补的是结构不变式 next_leg_id is None <=> (next_mode,next_eta_min)==("NONE",0)：tests/test_qoder_next_leg_binding.py +4 collected（3 个形状参数化：0 腿 / 每跳一腿 / activities=9·legs=10 的合法 SET NULL 态，每形状扫 pending/completed/前缀完成 × 游标状态，带 checked>=8 防参数化空转；1 条正向：给了 mode/eta 就必须给本计划内真实存在的腿 id）。(4) 另加 test_the_edge_copy_honours_the_same_leg_rule_as_the_projection（1 collected，5 个游标状态：mid / final / 已完成游标带后续 pending / STALE+长腿 / 全完成），两侧各自满足规则且彼此相等。突变实测（一次性、compile 前检、字节还原+sha256、两文件共 21 collected）：eta 在腿为 null 时留 17 -> 11 failed / 10 passed，killer 含三条结构节点与 Edge 节点；Edge mode 写死 WALK 不再读投影 -> 5 failed / 16 passed，killer 含 Edge 结构与 ORD-0007 两条；clean control 21 passed。(2) LiveRecovery 门扩到 4 collected（VALID 精确 id / STALE 不回退 / 空列表不造 current / 游标落在已完成步骤）；把 ?? activities[0] 加回去的突变下 3 failed / 2 passed，node id：spec:96 the recovery card follows the cursor…（期望 61e3096d=activities[2]，实到 3a58c470=activities[0]）、spec:258 an unresolvable cursor…（实到 "Next: Old Town Gate"）；spec:134 空列表那例只在其拦截计数上变红——契约断言没红，所以击杀由前两例承担，我已把那条依赖 /plans route 命中的计数断言删掉（这个 PWA 的 service worker 会用缓存答计划列表，会让"假数据没生效"和"产品出错"在报表里长得一样）。(3) 未动 /twin 顶层 projection_status。全量 912 passed / 15 skipped / 0 failed（907+4+1）；权威 E2E 51 expected / 0 unexpected / 0 flaky / 0 skipped；同一 HEAD 更早一次全量是 50/1/0/0，红的是 product-v8 最重的多日旅程在满负载下 60s 超时（webserver 自己记了 database is locked），单独复跑 3 passed / 16.0s——两个数都进报告 §82，不擦红。typecheck / typecheck:all / build 退出码 0。
 - id: ORD-0012
   to: 6af4cf53
   priority: normal
@@ -628,7 +653,7 @@
     (2) **Journey 创建没有底部主导航**，因为 `V8Experience.tsx:818` 的提前 return 落在
         `.v8-product-shell` 之外。这条**不要动** —— 它是产品结构决定（首进门要不要导航），
         我已单独提请仲裁裁；在裁定前，UI 车道的 token 上提已经是这件事的最小正确解。
-  status: DONE@20260920-062000 by 8c66aa92（commit `1187ce6`）；**Commander 已验**
+  status: DONE@20260920-061937 by 8c66aa92（commit `1187ce6`）；**Commander 已验**
   commander_check: |
     新文案（zh 2498 / en 2499）："结构化导入在这里：展开下方「高级」粘贴 JSON 确认单。
     确认单文本与截图走行程收件箱。" 我核了它指的**东西真的在**：
@@ -642,7 +667,7 @@
     `npx playwright test` collected **54**（49 passed + 5 skipped）`SUITE_EXIT=0`；
     `npm run build` exit 0；typecheck 错误数与基线**逐条相等**（1 与 5，不是"看起来差不多"）；
     before/after 截图 40 张，before 采自**纯净 `00dfd62` 树**而非"改前随手拍"。
-
+            [8c66aa92 DONE@20260920-061937] HEAD fd1151c。(1) 只改文案、不动逻辑与结构：Bookings() 里那句 "Use Trips · Bookings to paste a confirmation … This panel is for structured data only" 换成 "Structured import lives here - expand Advanced below to paste a JSON confirmation. Confirmation text and screenshots go through the journey inbox."（zh 同步）。不再撒谎的是第二句：它不再声称"这个面板只能吃结构化数据、粘贴去别处"——旅客此刻就在 Bookings，而这个面板的 Advanced 就是结构化 JSON 入口；确认单文本与截图确实归行程收件箱，我读了 JourneyInboxWorkbench.tsx:466（paste tab）/587（placeholder）/595（accept="image/*"）才这么写。(2) 提前 return 按令未动（等仲裁裁），但 ORD-0024 已到，注释补在该处。门：typecheck 与 typecheck:all 退出码 0，build 0，全量权威 E2E 51 expected / 0 unexpected / 0 flaky / 0 skipped（product-v8 / qoder-stale-cursor / wallet 相关 spec 全在内）。注：没有任何 spec 断言过旧文案（grep Trips · Bookings / structured data only 在 e2e/ 里 0 命中），所以这不是"改了断言让它过"。
 - id: ORD-0018
   to: e345b9d6
   priority: normal
@@ -1002,7 +1027,7 @@
     这是 ORD-0017 之外的第二件小事，两件都在同一个文件里，可以一批做。
     注意：UI 车道会新增 onboarding wrapper（ORD-0023），**它的注释归你、wrapper 归它**，
     别互相伸手。
-  status: DONE@20260920-062000 by 8c66aa92（同一笔 `1187ce6`）；**Commander 已验**
+  status: DONE@20260920-061937 by 8c66aa92（同一笔 `1187ce6`）；**Commander 已验**
   commander_check: |
     注释原文已读（`V8Experience.tsx` 该 return 上方 6 行）：写明"Intentional, and ruled so
     (Amendment F #1)"、没有行程就没有可导航的目标、**不要**为了文案把 return 搬进壳层、
@@ -1011,7 +1036,7 @@
   evidence: |
     仲裁原话："document the early return as intentional: focused pre-Journey onboarding,
     no primary app navigation"（评论 5745474928 §1）。
-
+            [8c66aa92 DONE@20260920-061937] 同一提交 1187ce6 的第二段：在 if (setupOpen) return 前加了注释，写明这是 Amendment F #1 裁定的刻意行为（pre-Journey onboarding 不给全局底部主导航、视觉地基由 onboarding wrapper 负责），并明写不要为了一块屏幕把 return 迁进 .v8-product-shell。wrapper 本体归 e345b9d6，我没有伸手；注释归我。验证：typecheck/typecheck:all/build 退出码 0；纯注释与文案，git show 1187ce6 只有这两处。
 - id: ORD-0025
   to: 8c66aa92
   priority: urgent
@@ -1094,7 +1119,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     STALE 时不声称在进行中），并给一条会在"退回位置/存在性判断"时变红的断言。
     如果你判断它属于 Amendment E 第 6 条之外、需要 UI 车道配合改可见文案，就先只改真值语义 + 注释，
     文案另开单，不要互相等。
-  status: OPEN
+  status: CLAIMED@20260920-062010
   evidence: |
     来源：`INTEGRATION_REPORT.md` §81.1 末段（实现线自报"同一族还剩第三处"）。
     与已修的 `LiveRecovery.tsx`（`954edaa`）、已封的 `V8Experience` Live/LiveSecondary 同族；
@@ -1144,7 +1169,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       3. 提交后报新 HEAD —— 因为我这边有连带后果：**campaign 的 baseline 会从 137 变 138**，
          按 Amendment E 1b 这属于"owner 测试集合发生变化"，**我必须重跑整场 17 行矩阵**才能继续引用 C 节；
          我会等你这笔提交之后一次跑完，不要在此之后再动 SUITES 里那些文件。
-  status: OPEN
+  status: CLAIMED@20260920-062010
   evidence: |
     来源：`ORD-0021` 的 `rx4_evidence_corrected`（RX-4 车道自己把上一版"C4G owners 2/2"更正为
     实测 1 failed / 7 passed、一个 owner —— 这种自我收窄要记账，不要只记错不改）。
