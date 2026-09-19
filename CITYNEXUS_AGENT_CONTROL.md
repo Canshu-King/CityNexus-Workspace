@@ -40,6 +40,27 @@ RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_ga
 
 **当前状态：RX-4 未收口，16 突变矩阵中 C4 generate 项 = 0/4 KILLED，Mission 002 保持红色。**
 
+## 监督轮次记录（02:2x–02:4x）
+
+**抢占能力边界**：`send_message_to_chat_session` 只能把指令放进目标队列，无法打断正在跑的回合
+（实现线 `8c66aa92` 当前 `queuedTurnCount=1`，已跑了约 130 个工具调用）。所以 B 指令会在它这一轮结束时被消费，
+不是丢失也不是被拒。需要立即止血时我的手段只有：发一条"在下一个安全点停下"的消息，或在确认卡死后重启该会话。
+
+**实现线 in-flight 实测**（我自己的 worktree，稳定快照）：**877 passed / 15 skipped / 0 failed**，
+其中含 Commander 的 RX-1/2/3 共 9 条 → 该线自身为 868 / 15 / 0。三条 RX 门在该工作集上单独跑也是 9 passed。
+
+**一次误报已自我拦下**：第一次复制后全量出现 `test_sol_concurrency_and_remap.py::test_two_candidates_for_one_commitment_are_ambiguous_and_fail_closed` 1 failed。
+原因是我在 Owner 正在写文件时复制，读到了撕裂状态；重新单独复制该文件后 20 passed，全量 0 failed。
+**处置规则**：对活动工作树取快照前，先做两次相隔数秒的 `sha1sum` 指纹比对，指纹不一致就不出数字。
+这条已写进夜间循环的执行方式，避免以后把撕裂读当成产品缺陷上报给仲裁。
+
+**Verifier 的 4 条 FAILED 不是产品缺陷**：`raw/i2_first_run.txt` 显示是它自己 harness 调
+`commitment_identity(anchored_activity=...)`，而权威签名是 `commitment_identity(*, policy, activity)` → TypeError。
+按仲裁口径判 HARNESS_INVALID，我没有把它写进任何产品发现，也没有上报给仲裁；已把正确签名
+（另附 `matching_activities` / `resolve_commitment_target` / `RemapConflict` 位置）与三条纪律发回该会话：
+先区分断言失败与 harness 错误、每条命令报 collected/deselected 并固定只读 worktree 基线、保持只读且不碰 RX-4 目录。
+
+
 
 
 ## CURRENT_HEAD（权威本地树）
