@@ -386,6 +386,30 @@
     现有 2 例不覆盖此态；**要修请另开单**，并配一条"全部活动已结束时 Today 不得说 Next"的门。
     细节与表格见 `INTEGRATION_REPORT.md` §86（提交 `14afb84`）。三次突变跑完，权威树 `git status` 仍只余
     别人家两份，被突变的三个文件与 HEAD 逐字节相同（`f527d929…` / `4280bbe8…` / `56da6ea4…`）。
+            [8c66aa92 对 07:5x 更正的回执@20260920-075800] "如果已经在补四项就停下来"——**从未开始**，可证：
+    `git show 21cbf22:…test_rx3_stale_cursor_fails_closed.py` 与 HEAD 版**逐字节相同**（sha256 相等，
+    5 个 `def test` / 18 条 assert 未变），我在 ORD-0011 上的写域只有 `test_qoder_next_leg_binding.py`、
+    `test_sol_execution_cursor.py` 与文档。收缩版要求的**多形状结构不变式**已交付：
+    `test_qoder_next_leg_binding.py:168-172` 三个形状（`(3,0)` 零腿 / `(3,2)` 每跳一腿 / `(9,10)` 合法 SET NULL 态），
+    混合编码判红也测过（eta 在腿为 null 时留 17 → 11 failed）。
+    更正文本里两处前提与当前树不符，按树不按时钟：① "activities 为空那一例仍没写" —— 有，
+    `qoder-live-recovery-cursor.spec.ts:138`，该文件 `test(` 现在是 **4** 条不是 2 条；
+    ② "没有证据表明加回 `?? activities[0]` 前端门会变红" —— 07:42 已有（M2 杀 `spec:96`+`spec:267`、
+    M3 杀 `spec:267`+`qoder-stale-cursor.spec.ts:36`，含期望/实到值），本单第 2 件不是缺件而是**已结案**。
+    你说"守 STALE 元组的是后端那条不是前端 e2e"——**元组层面成立**（前端从未断过这九项字典），
+    但前端守的是另一条也已被突变证实的契约：表面不得从列表顺序造位置。两件事别合成一件。
+            [8c66aa92 追补@20260920-080200，报告 §86.2 表格 M5，提交 `ee6a93e`] 第三例**在**，你的 grep 差一步
+    命中：用例标题是 "a plan that holds **no activities** invents no current step"（`spec:138`），
+    注入写法是 `plan.activities = []` / `body.active_plan.activities = []`（160、175 行），
+    所以 `'activities: \[\]'|'no activities'|'empty activities'` 三个模式都错过它——第一个是字面量形态、
+    第二个跨了换行与所有格、第三个措辞不存在。**"拿终态步替空列表"这个指控不成立**：`:215` 与 `:138`
+    是并存的两条，不是替代关系。但你那句"前端 e2e 没有鉴别力对应物"里有一半是对的，我按你的意思补了：
+    **索引回退那具突变体在原理上杀不到空列表例**（空数组的 `activities[0]` 本就是 undefined，回退也是空），
+    所以不能重复 M1 交差，得打这个形状自己的失效方式。新突变体 M5：把共享解析器的
+    `if (!plan)` 改成 `if (!plan || plan.activities.length === 0)`，即**把"计划存在但零步"当成"还没拿到计划"**——
+    实测 `qoder-live-recovery-cursor.spec.ts:138` **1 / 5 红**，红在
+    `data-cursor-status` 期望 `ABSENT_FALLBACK`、实到 `UNKNOWN`（`tsc --noEmit` exit 0；还原后与 HEAD 逐字节同）。
+    于是三例各有能杀它的突变体：VALID ← M2(`spec:96`)、STALE ← M1/M2/M3(`spec:267`)、空列表 ← M5(`spec:138`)。
 
 - id: ORD-0012
   to: 6af4cf53
@@ -1534,6 +1558,69 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     （mtime 与 git status 均为证）；未提交；未对 github.com 做任何 git 操作。
 ```
 
+- id: ORD-0032
+  to: 6af4cf53
+  priority: urgent
+  if_head: 8579cbb
+  order: |
+    **发布包已落后权威线，而且缺一份生产源文件 —— 重新对齐后再交。** 我 07:3x 亲测，工具 `raw/check_stage_vs_head.py`
+    （只读，逐文件算 git blob sha1 与 HEAD 对比；读数存 `raw/stage_vs_head_8579cbb.txt`、
+    `raw/list_head_only_8579cbb.py`）：
+
+    ```
+    HEAD 8579cbb tracked blobs = 6672   |   暂存树 D:\moodle\_cnx_auth_stage = 698 文件 / 10,100,098 B
+    与 HEAD 逐字节相同 : 681
+    与 HEAD 不一致     : 15
+    仅在包内（设计如此）: 2   qoder-handoff/handover_authoritative.md / convergence_summary.md
+    卫生             : 禁路径命中 0（.db/.venv/node_modules/__pycache__/.api_tok）、真实 key 命中 0
+    ```
+
+    **(1) 构建阻塞（最严重，先修这个）**：包内 `frontend/src/lib/` 只有 7 个文件，
+    HEAD 有 8 个 —— 缺 **`frontend/src/lib/executionWindow.ts`**，
+    而包里带的这两份生产源都在 import 它：
+    `frontend/src/app/V8Experience.tsx:12` 与 `frontend/src/features/execution/V10LiveExecutionPanel.tsx:13`
+    （`import { liveActivityWindow } from "../lib/executionWindow"`）。
+    ⇒ 现在这个包**解不出模块、`npm run build` 必然挂**。这是 `5a33eaf` 合并带来的新文件，
+    包是按合并前的 `a75ba7a` 出的，所以漏了。
+
+    **(2) 验收证据缺口**：包内 `frontend/e2e/` 24 份 spec，HEAD 27 份（`testDir: "./e2e"`、只 ignore `legacy/`）。缺的三份：
+    `qoder-mobile-ui-overnight.spec.ts`（**就是 Amendment E 那条 "0 interactive targets <44px" 的门**）、
+    它唯一的使用者 `_qoderMobileScan.ts`、以及 `qoder-ui-overnight-shots.spec.ts`（截图采集）。
+    ⇒ 从包里跑不出移动触控门，等于把已验收的契约在交付物里抹掉了。
+
+    **(3) 与 HEAD 不一致的 15 条**（全部要按 HEAD 重出；后两条是**有意不同**，保留但要在包内交接里重新声明）：
+    ```
+    INTEGRATION_REPORT.md                              报告本体（包内是旧的）
+    backend/tests/test_qoder_next_leg_binding.py       结构不变式参数化 3 条
+    backend/tests/test_rx4_c4_generate_gate.py         rx4 门（HEAD 8 节点，含 ORD-0021 补的归因断言）
+    backend/tests/test_sol_execution_cursor.py         整字典 STALE 相等 + Edge 视图
+    frontend/e2e/qoder-live-recovery-cursor.spec.ts    游标恢复门（HEAD 4 条）
+    frontend/index.html  design-tokens.css  styles.css  v10.css
+    frontend/src/app/V8Experience.tsx
+    frontend/src/features/execution/V10LiveExecutionPanel.tsx
+    frontend/src/features/setup/JourneyTrialSetup.tsx
+    frontend/src/stories/V10Primitives.stories.tsx
+    qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch   有意：包内是 sanitize 版
+    tools/verification/mutation_campaign.py               有意：包内是硬化版（owner 归属 + 字节还原 + F 行新 reason）
+    ```
+    即：包内测试树仍是合并前那一版，**922/928 这条节点账在包里对不上**。
+
+    **验收（我按数字认，不接受"已同步"三个字）**：
+    a. 重出清单后给总数：文件数、字节数、逐条 diff 结果（预期 `与 HEAD 不一致 = 2`，就是上面那两条有意不同）；
+    b. 在**包内**跑 `npm run build`，报 exit code 与产物条目数；
+    c. 在**包内**以前权威模式跑一次 e2e（自带 DB/端口/解释器、`CITYNEXUS_AI_ENABLED=false`、`reuseExistingServer=false`），
+       报 `N passed / M skipped / K failed`，并说明与我在合并态测的 **54 passed / 5 skipped / 0 failed** 是否一致 ——
+       如果包内多了那三份 spec，读数变高是预期的，但必须点名多出来的是哪三条；
+    d. 复跑一次 key 扫描：包内真实 key 命中必须仍为 **0**（`sk-[0-9a-f]{24,}`），
+       注意别把文档里刻意保留的 11 字符前缀 `sk-5343f86b…` 算成命中，那是两回事；
+    e. 未跟踪/脚手架目录（`_qoder_*`、`_*` 沙箱、`review/`、`visio-renderer/`）继续排除在外。
+
+    **不授权**：建分支、推送、force-push、以及对 github.com 的任何 git 操作 —— 冻结与发布时机由用户裁决。
+    另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
+    → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
+    所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
+  status: DISPATCHED@2026-09-20 07:40
+
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
 
@@ -1619,7 +1706,7 @@ Refreshed: 2026-09-20 07:3x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（A
 对红队在 `954edaa` 测的 922 是 **+6 / −0**，六条逐一点名（rx4 前提 1 + 结构不变式参数化 3 +
 腿归属 1 + Edge 副本 1）。旧账"909/15=924"是推导值，已作废。
 **Mission 002 已交付完成，仅剩两条 HUMAN 事项**：①撤销泄露密钥 `sk-5343f86b…`（权威提交的 `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch` 里仍有 1 处命中；工作副本已清洗但未提交；force-push 也清不掉旧 SHA）；②凌晨 08:00 后续夜间巡检 cron `f92f2794`。Mission 003 **未启动**，等用户醒后批准。
-**tip 又前进了，但不构成新红（07:4x 实测）**：`5a33eaf..14afb84` 三提交（`5d3eff1`/`bf0869b`/`14afb84`）
+**tip 又前进了，但不构成新红（07:3x 实测）**：`5a33eaf..14afb84` 三提交（`5d3eff1`/`bf0869b`/`14afb84`）
 `git diff --name-only` **只有 `INTEGRATION_REPORT.md`** ⇒ 无产品代码、无测试，上面合并态读数继续作准；
 我在 `14afb84` 直接重采 `_qoder_integration_20260919/backend`：**`928 tests collected in 1.28s`** ✓（`raw/collect_14afb84.txt`）。
 该树 `git status --porcelain`：未跟踪 **0 条**，3 行修改分别是该车道正在写的报告、另一车道的 handoff patch、**我的** `tools/verification/mutation_campaign.py`（`killed_by`/`restore_everything`/F 行新 reason 均逐条 grep 命中，未被覆盖）。
@@ -1798,8 +1885,10 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    14afb84  2026-09-20 07:42  docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
-prior   bf0869b  07:15 docs: section 85.5 - the scratch scripts leave the tree
+HEAD    ee6a93e  2026-09-20 08:01  docs: section 86 - the empty-plan case now has a mutant that kills it
+prior   8579cbb  07:52 docs: close the F-row denominator question as ruled, re-locate the wall-clock hero
+        14afb84  07:42 docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
+        bf0869b  07:15 docs: section 85.5 - the scratch scripts leave the tree
         5d3eff1  07:12 docs: section 85 - the UI overnight lane merged, and a red run that was mine
         5a33eaf  06:5x Merge branch 'agent/ui-overnight-20260920' (tip 19d842a; 11 files, +1628/-25, 零 backend 路径)
         a98babb / 94295e5  06:5x ORD-0029 一套游标词表；fd1151c / c7f1345 ORD-0026+0028；954edaa ORD-0010
