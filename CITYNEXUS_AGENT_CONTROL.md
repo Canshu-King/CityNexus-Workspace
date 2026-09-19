@@ -287,16 +287,19 @@
     仲裁 Mission 002 **Amendment D** 已下（真总线 = `Canshu-King/CityNexus-Workspace` Issue #1，
     评论 5745031386 / 5745118156 / 5745135961；不是产品仓那条 —— 我 04:2x 误在产品仓开了一条平行总线，
     已作废并指向此处）。三条裁定落到你头上的有两件：
-    (1) 把 `backend/tests/test_rx3_stale_cursor_fails_closed.py` 的 STALE 用例升级成**精确契约元组**。
-        现在只有 5 项断言（now_activity_id / next_activity_id / next_mode / next_eta_min / cursor_status），
-        仲裁要的完整 absence 契约还差 4 项，逐条补上并让它可诊断：
-            now is None
-            next is None
-            next_leg_id is None
-            now_state == "STALE_CURSOR"
-        再加一条结构规则：**消费者不得由 next_mode 或 next_eta_min 推断"存在下一步"**；
-        `next_leg_id == null` 时只允许哨兵对 `("NONE", 0)` —— 出现 `null/"NONE"`、`null/17`、
-        `null/"AUTO"` 这类混合缺席编码即判红。
+    (1) **[05:36 更正，不要按原文做]** 精确缺席元组**已经有权威看守**，而且比本条要求的更硬：
+        `backend/tests/test_sol_execution_cursor.py:499-515` 用**整字典相等**钉住全部九项
+        （now / now_activity_id / now_state="STALE_CURSOR" / next / next_activity_id / next_state /
+        next_leg_id 全 null + 哨兵对 `("NONE", 0)`），并在 512-515 行把 Edge 视图同口径一起钉。
+        鉴别力已实测（`dc19d662` D 节 + Commander 复述）：把 trustworthy-Now 守卫退回索引式
+        `legs[current_index]` 后，`test_a_stale_cursor_with_more_legs_than_activities_nulls_the_whole_tuple`
+        collected 1 → 1 failed。
+        → **不要**把四项断言抄进 `test_rx3_stale_cursor_fails_closed.py` 当作交付（那是零新增覆盖）。
+        本条收缩为**只剩结构不变式这一件事**：
+            next_leg_id == null  =>  (next_mode, next_eta_min) == ("NONE", 0)
+        且必须在**多种形状**下成立（至少：0 腿计划；`activities=9 / legs=10` 那种
+        `journey_legs` ON DELETE SET NULL 的合法持久态），不是只钉一个 fixture；
+        出现 `null/"NONE"`、`null/17`、`null/"AUTO"` 这类混合缺席编码即判红。
     (2) LiveRecovery 的回归必须覆盖仲裁点名的三例：
         VALID 游标 → 解析出精确的 `now_activity_id`；
         STALE 游标 → 既无 current 也不得回退首项；
@@ -443,8 +446,34 @@
       frontend build 绿；相关 mobile E2E 绿；**412x915 的 4 张 before + 4 张 after**；
       若仍支持暗色，再来 Today + Live 的 after 暗色截图。
     仲裁明确不让做的：**不要**把剩下的夜间额度花在新增装饰性动画或再一版设计系统重写。
-  status: CLAIMED@20260920-045500 by e345b9d6
+  status: DONE@20260920-062500 by e345b9d6
   evidence: |
+    [e345b9d6 交付] 按 A→B→C 顺序做完，未自改优先级。
+    A. 已量出的缺陷，先记 selector 再原地修，没有全局吹大按钮：
+       - Today 9 条 <44px 的确切来源（基线原样记录）：
+         `[data-testid="hub-plan-with-ai"]` 117x30、`button.v8-quiet-button` "Try another city" 119x30、
+         "Open Trip Studio" 127x30，三档视口数字完全相同。
+         真因不是遗漏：`design-tokens.css` 里有**两条 pass-16 刻意写的 `min-height: 30px`**
+         （`.v8-hub-actions .v8-quiet-button`、`.cn-live-toolbar .v8-quiet-button`），
+         且 0,2,0 特异性压过 styles.css 的全局抬升 —— 所以必须在原地改这两条，
+         另把 Live 工具栏一并提到 44px。改完全绿。
+       - Journey 创建 4 条截断：未删任何文案。改为响应式 stepper 形态
+         （当前步显示名称，其余收成编号），且用 **visually-hidden 而非 display:none** ——
+         后者会把步骤名从可访问性树整个拿掉、只剩一个数字，违反"不牺牲语义"。
+    B. token 上提批次在**当前树**仍然过（不是沿用旧结论）：
+       contrast 4/4、mobile-overflow 1/1、today-hero 2/2、dock-geometry 3/3、
+       live-structure 全绿、新 12 点门 0 新红。结构性理由保持：setup 落在 `.v8-product-shell` 之外。
+    C. 四界面润色见 `review/UI_OVERNIGHT_EVIDENCE.md` §4。
+    最终验收（run id `uiaudit02`，ports 4261/8161，`.venv` python，独立 `_uiaudit02.db`，ai=disabled）：
+      前端验收全套 = **49 passed / 0 failed / 5 skipped**，`SUITE_EXIT=0`。
+      新 12 点门逐条：**溢出 0 / <44px 0 / 截断 0 / chrome 重叠 0 / CTA 被遮 0 / 找不到 CTA 0**。
+      `npm run build` exit 0。
+    存档：`review/patches/batch1-delivered.patch`（本单全部改动）、
+    `review/UI_OVERNIGHT_BASELINE.md` v2、`review/UI_OVERNIGHT_EVIDENCE.md`、
+    `review/evidence/{before,after}/`（各 20 张，before 取自纯净 00dfd62 树）。
+    ⚠ 一处口径更正必须看：ORD-0014 的 TS 判据"不新增错误"在 ORD-0016 事故后**不可比**，
+      详见我在 ORD-0016 追加的条目与 `UI_OVERNIGHT_EVIDENCE.md` §8。
+    [Commander 原文，未改动]
     你的基线已被 Commander 读过（`_qoder_ui_overnight_20260920/review/UI_OVERNIGHT_BASELINE.md` v2）：
     12 测量点、触控红 9（全在 Today，三档视口数字完全相同 → 常量问题）、截断红 4（全在 stepper），
     并且 v1 那条"Wallet CTA 被遮 44px"是你自己撤回的假红 —— 这种口径处理仲裁认。
@@ -538,6 +567,21 @@
     是在事故**之前**、junction 仍有效时用 run id `uifinal02` 跑完的，
     日志 `review/gates-final-suite2.log` 与 provenance JSON 均在；
     事故后那次重跑（`uiaudit01`）是 config 加载期失败，**不是产品红，不计入任何账面**。
+    【后续发现，06:2x 补】恢复动作本身引出一个**新的口径污染**，比事故本身更值得处理：
+      - 恢复后重跑 `tsconfig.check.json` = **0 条错误**、`tsconfig.typecheck.json` = **0 条错误**，
+        而事故前基线是 **1 条 / 5 条**。
+      - 已核实这**不是我的改动修好的**：三个报错点源文件
+        （`SortableActivityList.tsx`、`ProductErrorBoundary.tsx`、`V12ExecutionStates.stories.tsx`）
+        与 `00dfd62` **逐字节相同**（`git diff --stat 00dfd62 -- <三文件>` 无输出）。
+      - 真因是依赖集不等价：恢复源里 `@types/react` = **19.3.0**，
+        而 `frontend/package-lock.json` 中 **`@types/react` 出现 0 次（未被锁）**，
+        所以我复制过来的那份与原来那份**不是同一套类型包**。
+      - 后果一：ORD-0014 的"不新增 TypeScript 错误"判据在恢复后**不可比**。
+        可比的是事故前那一次（同一依赖集下 1→1、5→5，逐字节相同）。
+      - 后果二（更需要处理）：**任何车道现在用这份 `CityNexus\frontend\node_modules` 跑 typecheck
+        都会看到 0 错误，可能误判那 5 条已被修掉。** 请裁定：接受此依赖集并据此重录 TS 基线，
+        还是由有等价来源的车道重装。我没有 npm install、未联网，不凭猜测还原。
+      - 详见 `_qoder_ui_overnight_20260920/review/UI_OVERNIGHT_EVIDENCE.md` §8。
   commander_verdict: |
     **恢复确认（Commander 05:19 亲测，非采信回报）**：
       - `ls CityNexus/frontend/node_modules` = **394 条**，与恢复源
@@ -602,8 +646,26 @@
     **今晚都不许顺手修活** —— 那是独立重配色与 CSS 清理，仲裁明令不花额度；只留在账本待办。
     另：D-7 纪律已因你 ORD-0016 的事故生效 —— **今后临时 worktree 清理前先列 LinkType 并解除**；
     你归因"那条红是我引入还是基线就有"的做法本身是对的，不要因为这次事故改成靠猜。
-  status: CLAIMED@20260920-061000 by e345b9d6
+  status: DONE@20260920-063000 by e345b9d6
   evidence: |
+    [e345b9d6 交付] 单独成批，只动 `frontend/index.html` 一个文件（本单明确扩域的就是它）。
+    - `theme-color`：`#172945`（旧海军蓝，与应用任何表面都不符）→ 明暗一对
+      `#f5f5f7`（= `--cn-canvas` 亮）与 `media="(prefers-color-scheme: dark)"` 的 `#000000`
+      （= 暗 `--cn-canvas`）。声明顺序按规范"最后一条匹配的生效"排：恒匹配的亮色在前、暗色在后。
+    - `viewport-fit=cover` 与真实 safe-area padding **已在 batch1 同批落地**（导航
+      `env(safe-area-inset-bottom)`、壳层 `--cn-nav-clearance`、顶栏 `--cn-safe-top`），
+      本单的前置条件视为已满足，未重复改。
+    - 门禁（run id `uitheme01`，ports 4263/8163，`.venv` python，独立 db，ai=disabled）：
+      前端验收全套 **49 passed / 0 failed / 5 skipped**，`SUITE_EXIT=0`；
+      新 12 点门逐条 **溢出 0 / <44px 0 / 截断 0 / chrome 重叠 0 / CTA 被遮 0 / 找不到 CTA 0**；
+      `npm run build` exit 0。无门变红，故未回退。
+    - 截图：`review/evidence/after/` 已按最终态重采，412x915 明 + 暗各 5 场景（含 fold 共 20 张）。
+    - 回退单元：`review/patches/batch2-theme-color.patch` 是**真增量**补丁
+      （+5 / −1 行，只含 theme-color 那一处），不含 batch1 的 viewport-fit；
+      batch1 单独存 `review/patches/batch1-delivered.patch`。两批互不缠绕。
+    - 遵守禁令：§7 第 3、4 条（`styles.css:176` 死 AA 覆写、`v10.css:19-37` 死 `.v8-trial-*`）
+      **未动**，只留在账本待办。
+    [Commander 原文，未改动]
     UI write-set 原本不含 `index.html`；本单是**明确扩域**，只扩这一个文件，且要求与 safe-area padding 同批。
     恢复已由 Commander 05:19 亲测成立（见 ORD-0016 commander_verdict）。
 
@@ -627,7 +689,7 @@
     若 NOT_REACHABLE：`EQUIVALENT` 标签第一次拿到测量支撑。**不许**为了维持"C 节已 PASS"写第三种结论。
     边界：只读权威树；只在自己目录突变；不写生产代码；不改量具；不新建会话；不碰 GitHub；
     临时 worktree 若要用，遵守 D-7（先解链再 remove）。预算 40 分钟，到点交 PARTIAL + 已有穷举。
-  status: CLAIMED@20260920-051842 by 1fb26149（HEAD 即 if_head 954edaa；F 锚点解析到 backend/app/main.py:9013 的 if protected:，位于 _accept_replan_executing 的 C4 remap 循环）
+  status: DONE@20260920-052310 by 1fb26149（结论 PARTIAL，非 FALSIFIED 亦非 NOT_REACHABLE；穷举表见 D:\moodle\_qoder_rx4_20260920\ORD19_F_REACHABILITY.md）
   evidence: |
     为什么给你：你已有该分支的 instrumentation 与不可解析锚夹具（`RX4_GATE.md` §4.3 空转自证），
     且 ORD-0011/0013/0014/0015/0017/0018 分属其它车道，本单写域零重叠。
@@ -661,6 +723,37 @@
     = `00dfd62`；`git status --porcelain -- frontend src` 有 4 条 `M`（含 index.html），无该批的 commit。
     验收结果本身成立（我已独立复算：49 passed + 5 skipped = collected 54、SUITE_EXIT=0、40 PNG、
     `design-tokens.css:741/767` 确有两处 `min-height: 30px`）。
+
+- id: ORD-0021
+  to: 1fb26149
+  priority: urgent
+  if_head: 954edaa
+  order: |
+    **吸收 RX-4 的时候丢了一条门，请你补回来。** `dc19d662` 的节点差集查明、我也逐条复述码：
+    `fb34d8a` 把 `backend/tests/test_qoder_generate_anchor_gate.py` **整文件删除**，其中
+    第 1 条（具名 422 拒绝）安全合并进 `test_rx4_c4_generate_gate.py`，
+    但第 2 条 `test_the_refusal_is_caused_by_the_commitment_and_nothing_else` **没有继任者**
+    （`git grep -nE 'and_nothing_else|strays|already pins|control_journey' 954edaa -- backend/tests` 零命中）。
+    要补的是那条**归因对照**本身，至少这五项：
+      1) 同形状但**没有 ACTIVE C4** 的对照行程 → `plans/generate` 返回 **201 且 3 个候选**
+         （证明拒绝不是无差别失败）；
+      2) `strays == 0` —— 种子里本来就不含那个不可达锚（证明拒绝不是自带）；
+      3) `pinned == 0` —— ACTIVE 计划没有预先钉住该节点（证明没有别的守卫在起作用）；
+      4) 锚点身份形态断言（原条目是 `anchored[0].activity_id is None`）；
+      5) **上面三条成立之后**才断 `422` + `C4_ANCHOR_UNRESOLVED` —— 单独断 422 就是现在那份文件的形状，
+         它证明不了"是这个承诺造成的"。
+    验收硬条件：把 generate 路径的拒绝改成**无差别失败**（对所有行程都 422）时，
+    这条新门必须**因为第 1 项**变红；不变红说明你补的还是断言复制，不是归因对照。
+    写在 `test_rx4_c4_generate_gate.py` 里（你的文件），或另起一个明确命名的文件，
+    但**不要**改 `test_rx3_stale_cursor_fails_closed.py`（那是 ORD-0011 的地盘）。
+    回报：collected 条数、无差别失败突变下的红项名。
+  status: OPEN
+  evidence: |
+    三方独立一致：`dc19d662`（`verify/dc19d662_mission002_d/NODE_SET_DIFF.md`）、
+    Commander 复述（`git log --diff-filter=D` 显示 `fb34d8a` 删的正是该文件；
+    `git grep -l C4_ANCHOR_UNRESOLVED HEAD -- backend/tests` 全仓仅 `test_rx4_c4_generate_gate.py`）、
+    收集事实（tip `954edaa` collected **922**，Commander 自采 1.35s）。
+    顺带一条口径修正：账本"909 passed / 15 skipped = 924"是**推导值**，已按收集事实作废。
 ```
 
 
@@ -862,6 +955,18 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 | 7 | 终态包内容清单锁死（HEAD、节点数与差集解释、矩阵引用、LiveRecovery 三例+突变、STALE 精确门、发布集数字与凭据扫描、UI 分支与截图、剩余红项），状态字只能是 `CNX_CMD_002_COMPLETE` / `CNX_CMD_002_PARTIAL`；**Mission 003 不启动** | ⏳ 等 `dc19d662` / `8c66aa92` / `e345b9d6` / `6af4cf53` 四路回收 |
 
 ### C 节验收结论（04:48，权威口径已定）
+
+**C 节验收结论（04:48）** 之外，E 节节点口径于 05:40 更正如下（三方独立一致）：
+
+| 口径 | 结论 |
+|---|---|
+| 当前 tip `954edaa` 收集事实 | **collected 922 / passed 907 / skipped 15 / failed 0 / error 0 / deselected 0**（76.27s）<br>Commander 独立复采：`pytest tests --collect-only -q -p no:cacheprovider` → **922 collected in 1.35s** |
+| 账本旧记录 "909 passed / 15 skipped = 924" | **作废为"收集事实"**：924 是 `896 + 29 − 1` 的**推导值**，不是任何一棵树的 collected。差集已逐条查明：`test_qoder_generate_anchor_gate.py` 的 2 条 |
+| 那 2 条去哪了 | 文件在 **RX-4 吸收提交 `fb34d8a` 里被整文件删除**。第 1 条（具名 422 拒绝）**安全合并**进 `test_rx4_c4_generate_gate.py`（`git grep C4_ANCHOR_UNRESOLVED HEAD -- backend/tests` 全仓仅此一个文件命中，三条断言逐项对得上）。第 2 条 `test_the_refusal_is_caused_by_the_commitment_and_nothing_else` **没有继任者** —— 它是归因对照（无 ACTIVE C4 的同形状行程应 201 且给 3 个候选、种子不含该锚、ACTIVE 计划未预先钉住），在 tip 上**零等价断言** |
+| 按 Amendment E 第 2 条的分支 | 落在"922 合法但须同时满足两条件"那一支，而**两条件只满足一个**（差额可解释 ✅；未干掉唯一守门节点 ❌）。⇒ 这不是"报告陈旧"，是**吸收时丢了一条门**，已开 `ORD-0021` 补回 |
+| 谁改账本 | **Commander 这一侧改**：909/924 那格按收集事实改为 907/922，并注明 924 曾为推导值。实现线的 907/15 是对的，我此前引的 909/15 不再引用 |
+
+### C 节突变矩阵（原口径，保留）
 
 - 实现线在 `INTEGRATION_REPORT.md` 78.3 交了一张 17 行表。我用**带杀手归属**的量具在同一内容上重跑，
   **17 行数值逐行相同**（137/130/7、112/25、130/7…）→ 那张表是真测的，不是拼的。
