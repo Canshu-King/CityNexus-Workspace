@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\idna\__init__.py
+# hypothesis_version: 6.168.0
+
+['IDNABidiError', 'IDNAError', 'InvalidCodepoint', '__version__', 'alabel', 'check_bidi', 'check_hyphen_ok', 'check_label', 'check_nfc', 'decode', 'encode', 'intranges_contain', 'ulabel', 'unicode_version', 'uts46_remap', 'valid_contextj', 'valid_contexto', 'valid_label_length', 'valid_string_length']

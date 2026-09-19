@@ -1,0 +1,10 @@
+{
+  "status": "FAIL",
+  "stage": "route:C4-T-A:write-geometry",
+  "activeRoute": "C4-T-A",
+  "error": "RuntimeError('unexpected pre-existing Geometry1 rows before manual realization: count=5')",
+  "errorType": "RuntimeError",
+  "hresult": null,
+  "excepinfo": null,
+  "routes": []
+}

@@ -1,0 +1,114 @@
+{
+  "calibration": "C3",
+  "status": "PASS",
+  "artifact": "C3_Presentation.vsdx",
+  "rawSvg": "C3_Presentation.raw.svg",
+  "expectedPresentationCount": 5,
+  "records": {
+    "BG-CANVAS": {
+      "boundsIn": {
+        "left": 0.0,
+        "bottom": 0.0,
+        "right": 11.69291338582677,
+        "top": 8.26771653543307,
+        "width": 11.69291338582677,
+        "height": 8.26771653543307,
+        "centerX": 5.846456692913385,
+        "centerY": 4.133858267716535
+      },
+      "positionDeltaMm": 0.0,
+      "sizeDeltaMm": 0.0,
+      "fillPattern": "1",
+      "linePattern": "0"
+    },
+    "HDR-TITLE": {
+      "boundsIn": {
+        "left": 0.4724409448818898,
+        "bottom": 7.440944881889765,
+        "right": 7.559055118110236,
+        "top": 7.795275590551182,
+        "width": 7.086614173228346,
+        "height": 0.3543307086614173,
+        "centerX": 4.015748031496063,
+        "centerY": 7.618110236220473
+      },
+      "positionDeltaMm": 0.0,
+      "sizeDeltaMm": 0.0,
+      "fillPattern": "0",
+      "linePattern": "0"
+    },
+    "HDR-SUBTITLE": {
+      "boundsIn": {
+        "left": 0.4724409448818898,
+        "bottom": 7.155511811023621,
+        "right": 7.559055118110236,
+        "top": 7.372047244094487,
+        "width": 7.086614173228346,
+        "height": 0.2165354330708662,
+        "centerX": 4.015748031496063,
+        "centerY": 7.263779527559055
+      },
+      "positionDeltaMm": 0.0,
+      "sizeDeltaMm": 1.4099832412739487e-15,
+      "fillPattern": "0",
+      "linePattern": "0"
+    },
+    "HDR-STATUS": {
+      "boundsIn": {
+        "left": 9.173228346456696,
+        "bottom": 7.490157480314961,
+        "right": 11.220472440944885,
+        "top": 7.746062992125985,
+        "width": 2.047244094488189,
+        "height": 0.2559055118110236,
+        "centerX": 10.19685039370079,
+        "centerY": 7.618110236220473
+      },
+      "positionDeltaMm": 9.023892744153272e-14,
+      "sizeDeltaMm": 0.0,
+      "fillPattern": "1",
+      "linePattern": "1"
+    },
+    "LEGEND": {
+      "boundsIn": {
+        "left": 8.858267716535435,
+        "bottom": 0.47244094488188915,
+        "right": 11.220472440944885,
+        "top": 1.4173228346456686,
+        "width": 2.362204724409449,
+        "height": 0.9448818897637795,
+        "centerX": 10.03937007874016,
+        "centerY": 0.944881889763779
+      },
+      "positionDeltaMm": 4.511946372076636e-14,
+      "sizeDeltaMm": 1.127986593019159e-14,
+      "fillPattern": "1",
+      "linePattern": "1"
+    }
+  },
+  "outOfBounds": [],
+  "overlaps": [],
+  "visibleSvgText": [
+    {
+      "text": "CityNexus — Presentation Calibration",
+      "class": "st3",
+      "font": "Segoe UI"
+    },
+    {
+      "text": "Smart City Traveler System • Renderer v0.3.2",
+      "class": "st5",
+      "font": "Segoe UI"
+    },
+    {
+      "text": "C3 • PRESENTATION",
+      "class": "st7",
+      "font": "Segoe UI"
+    },
+    {
+      "text": "LegendAssociation  •  CompositionDependency   •  <<projection>>",
+      "class": "st8",
+      "font": "Segoe UI"
+    }
+  ],
+  "failures": []
+}

@@ -1,0 +1,60 @@
+继续 CityNexus 当前真实 Windows 工作树：D:\moodle\CityNexus。
+
+这是 GPT 对 `CityNexus-PostGoal-Repair-Vertical-Slice-Checkpoint-20260910.zip` 的独立二次验收。不要重新理解产品，不要改 Domain/Requirements/Visio，不要 reset/clean/rollback，不要自动 commit。
+
+先执行：
+  git status --short
+  git diff --stat
+
+当前 checkpoint 的重要结论：
+- 原先 5 个 Post-Goal 缺陷已经基本修实。
+- Frontend 已经从 hardcoded shell 进入真实 `/api/v1` backend-connected vertical slice。
+- 在补齐 checkpoint 遗漏的 repo-relative schema/mock support files 后，GPT 独立复现原 backend：155 passed, 1 skipped。
+- 但 GPT 新增 2 个 adversarial test 后，原 checkpoint 是 2 FAIL：
+  1) F3 Opportunity Window 的 inbound origin 仍取 disrupted slot 的 previous activity，而不是 authoritative `Journey.current_activity_id`。当 Journey 已执行到 Tech Art、13:25 闭馆时，恢复路线必须从 Tech Art 起算。
+  2) aware UTC Event（如 2026-10-10T05:25:00+00:00，即天津本地 13:25）没有先投影到 Journey schedule timezone，导致 F3/opening-hour 语义错误，甚至 F3 candidate 消失。
+
+不要先 apply 实现 patch。先只把 assist 包中的：
+  tests/test_vertical_slice_hardening_next.py
+复制到：
+  backend/tests/test_vertical_slice_hardening_next.py
+然后跑：
+  cd D:\moodle\CityNexus\backend
+  ..\.venv\Scripts\python.exe -m pytest -q tests\test_vertical_slice_hardening_next.py
+
+如果你当前真实树已经 2 PASS，则不要套 GPT backend 实现，检查现有实现是否语义等价并保留较新代码。
+如果仍失败，则 semantic-merge `patches/02_BACKEND_SEMANTIC_HARDENING.patch` 的语义：
+- effective Event time 统一映射到 Journey schedule timezone；
+- F3 origin 优先 current execution Activity，previous slot 仅 fallback；
+- F3 evidence 增加 origin_key；
+- backend Golden Scenario 真正 complete prefix activities 到 Tech Art 后再注入 13:25 closure。
+
+GPT review copy 修完后的独立结果：
+  targeted 3 passed
+  full backend 157 passed, 1 skipped
+  compileall PASS
+
+随后 semantic-merge `patches/03_FRONTEND_VERTICAL_SLICE_HARDENING.patch`：
+- 加 completeActivity API；
+- Golden bootstrap 真实推进 current activity 到 Tech Art；
+- CAPTURE key 改 booking scoped；
+- generate replan key 改 Event scoped；
+- accept key 改 Proposal scoped；
+- amount_minor 正确换算后显示，不准把 ¥130 显示成 ¥13,000；
+- closure 后 GET Twin 使用 closureOccurredAt；
+- Playwright 校验 current Activity=Tech Art、F3 origin_key=place-tech-art、window_opens_at=2026-10-10T13:25:00+08:00。
+
+Windows 必跑：
+  backend named tests
+  full pytest
+  compileall
+  Ruff check + format check
+  OpenAPI formal/runtime parity
+  frontend npm run build
+  frontend npm run test:e2e
+
+另外修 review package reproducibility：本次 checkpoint ZIP 虽带 root data/mock，但新鲜解压后 backend pytest 缺 `backend/db/schema.sql` 和 backend-relative mock fixtures。下一包必须能在 fresh extraction 中独立跑 backend tests，不依赖旧 checkpoint。不要靠塞 generated citynexus.db 掩盖问题。
+
+全部 PASS 后立即 STOP，打下一份 checkpoint 给 GPT。当前轮不要开始 OR-Tools / LiteLLM / DeepSeek / broader live Valhalla / PPT / Visio。
+
+下一轮 Provider Runtime 的完整边界我已经放在 `contracts/NEXT_PROVIDER_GATE.md`，等本轮 external freeze 后直接执行，不需要你重新设计架构。

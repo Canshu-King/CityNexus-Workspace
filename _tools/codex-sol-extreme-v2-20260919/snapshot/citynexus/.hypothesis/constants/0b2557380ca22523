@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\context\weather_snapshot.py
+# hypothesis_version: 6.168.0
+
+[-180, 180, 'PROVIDER_VERIFIED', 'WEATHER', 'at', 'captured_at', 'code', 'degraded', 'event_type', 'evidence', 'facts', 'forecast_valid_from', 'forecast_valid_until', 'latitude', 'longitude', 'occurred_at', 'open-meteo', 'payload', 'place_id', 'provenance', 'provider', 'provider_evidence', 'provider_key', 'query_scope', 'reason_code', 'severity', 'snapshot_captured_at', 'valid_from', 'valid_until']

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\approval.py
+# hypothesis_version: 6.168.0
+
+[403, 409, 422, 503, 'AI_AGENT', 'APPROVED', 'ActionApproval', 'CONSUMED', 'EXPIRED', 'PENDING', 'REQUIRE_STEP_UP', 'STEP_UP', 'USER', 'USER_CONFIRMATION', 'action', 'approval_id', 'approval_method', 'approved_at', 'consumed_at', 'created_at', 'decision', 'expires_at', 'facts', 'journey_id', 'policy_version', 'proposal_diff', 'required_decision', 'status', 'target_id', 'target_type']

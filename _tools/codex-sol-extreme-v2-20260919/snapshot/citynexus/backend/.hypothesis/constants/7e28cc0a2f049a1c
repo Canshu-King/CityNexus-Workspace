@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\icalendar\enums.py
+# hypothesis_version: 6.168.0
+
+['ACCEPTED', 'BUSY', 'BUSY-TENTATIVE', 'BUSY-UNAVAILABLE', 'CHAIR', 'CHILD', 'COMPLETED', 'CUTYPE', 'DECLINED', 'DELEGATED', 'END', 'FBTYPE', 'FREE', 'GROUP', 'IN-PROCESS', 'INDIVIDUAL', 'NEEDS-ACTION', 'NON-PARTICIPANT', 'OPT-PARTICIPANT', 'PARENT', 'PARTSTAT', 'RANGE', 'RELATED', 'RELTYPE', 'REQ-PARTICIPANT', 'RESOURCE', 'ROLE', 'ROOM', 'SIBLING', 'START', 'TENTATIVE', 'THISANDFUTURE', 'THISANDPRIOR', 'UNKNOWN']

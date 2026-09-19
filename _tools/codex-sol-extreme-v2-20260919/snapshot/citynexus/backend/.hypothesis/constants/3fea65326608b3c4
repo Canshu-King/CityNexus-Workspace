@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\solver_contract.py
+# hypothesis_version: 6.168.0
+
+[1000, ',', ':', 'allow_drop', 'cost_minor', 'current_location_key', 'destination', 'duration_min', 'earliest_start_min', 'journey_end_min', 'journey_id', 'latest_end_min', 'location_key', 'minutes', 'next_anchor', 'now_min', 'operation_key', 'option_key', 'origin', 'original_start_min', 'preference_milli', 'replacement_options', 'safety_buffer_min', 'semantic_key', 'start_min', 'travel_minutes', 'utf-8', '~DROP']

@@ -1,0 +1,26 @@
+[
+  {
+    "screen": "today/desktop/dark",
+    "scanned": 194,
+    "violations": [],
+    "borderWarnings": 2
+  },
+  {
+    "screen": "live/desktop/dark",
+    "scanned": 241,
+    "violations": [],
+    "borderWarnings": 2
+  },
+  {
+    "screen": "today/desktop/light",
+    "scanned": 194,
+    "violations": [],
+    "borderWarnings": 4
+  },
+  {
+    "screen": "live/desktop/light",
+    "scanned": 241,
+    "violations": [],
+    "borderWarnings": 4
+  }
+]

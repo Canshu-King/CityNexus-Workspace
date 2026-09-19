@@ -1,0 +1,189 @@
+{
+  "calibration": "C1",
+  "artifact": {
+    "vsdx": "D:\\moodle\\CityNexus\\visio-renderer\\calibration\\out\\C1_Font_Style.vsdx",
+    "svg": "D:\\moodle\\CityNexus\\visio-renderer\\calibration\\out\\C1_Font_Style.raw.svg"
+  },
+  "samples": {
+    "C1-ACTOR-H": {
+      "expected": {
+        "styleRef": "actorHuman",
+        "fill": "#ffffff",
+        "stroke": "#0f172a",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "actorHuman",
+        "fill": "#ffffff",
+        "stroke": "#0f172a",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-ACTOR-E": {
+      "expected": {
+        "styleRef": "actorExternal",
+        "fill": "#f8fafc",
+        "stroke": "#64748b",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "actorExternal",
+        "fill": "#f8fafc",
+        "stroke": "#64748b",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-UC-DEFAULT": {
+      "expected": {
+        "styleRef": "useCaseDefault",
+        "fill": "#ffffff",
+        "stroke": "#2563eb",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "useCaseDefault",
+        "fill": "#ffffff",
+        "stroke": "#2563eb",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-UC-PLANNING": {
+      "expected": {
+        "styleRef": "useCasePlanning",
+        "fill": "#f5f3ff",
+        "stroke": "#7c3aed",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "useCasePlanning",
+        "fill": "#f5f3ff",
+        "stroke": "#7c3aed",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-UC-COMMERCE": {
+      "expected": {
+        "styleRef": "useCaseCommerce",
+        "fill": "#ecfdf5",
+        "stroke": "#059669",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "useCaseCommerce",
+        "fill": "#ecfdf5",
+        "stroke": "#059669",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-DEFAULT": {
+      "expected": {
+        "styleRef": "classDefault",
+        "fill": "#ffffff",
+        "stroke": "#cbd5e1",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classDefault",
+        "fill": "#ffffff",
+        "stroke": "#cbd5e1",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-JOURNEY": {
+      "expected": {
+        "styleRef": "classJourney",
+        "fill": "#eff6ff",
+        "stroke": "#2563eb",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classJourney",
+        "fill": "#eff6ff",
+        "stroke": "#2563eb",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-PROJECTION": {
+      "expected": {
+        "styleRef": "classProjection",
+        "fill": "#f0fdfa",
+        "stroke": "#0f766e",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classProjection",
+        "fill": "#f0fdfa",
+        "stroke": "#0f766e",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-PLANNING": {
+      "expected": {
+        "styleRef": "classPlanning",
+        "fill": "#f5f3ff",
+        "stroke": "#7c3aed",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classPlanning",
+        "fill": "#f5f3ff",
+        "stroke": "#7c3aed",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-COMMERCE": {
+      "expected": {
+        "styleRef": "classCommerce",
+        "fill": "#ecfdf5",
+        "stroke": "#059669",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classCommerce",
+        "fill": "#ecfdf5",
+        "stroke": "#059669",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    },
+    "C1-CLASS-EVENT": {
+      "expected": {
+        "styleRef": "classEvent",
+        "fill": "#fffbeb",
+        "stroke": "#d97706",
+        "text": "#0f172a"
+      },
+      "actual": {
+        "styleRef": "classEvent",
+        "fill": "#fffbeb",
+        "stroke": "#d97706",
+        "text": "#0f172a",
+        "font": "Segoe UI"
+      },
+      "failures": []
+    }
+  },
+  "matched": 11,
+  "required": 11,
+  "status": "PASS",
+  "failures": []
+}

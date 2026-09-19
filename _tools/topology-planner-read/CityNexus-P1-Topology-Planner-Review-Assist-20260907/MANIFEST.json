@@ -1,0 +1,101 @@
+{
+  "formatVersion": 1,
+  "payloadCount": 19,
+  "payload": [
+    {
+      "path": "ASSIST-SUMMARY.json",
+      "size": 1385,
+      "sha256": "f1c08e618f06c91cc255cdbe98322dcbfd44dcc06db6131be6c6790c34d6a397"
+    },
+    {
+      "path": "CODEX_NEXT_INSTRUCTION.md",
+      "size": 5750,
+      "sha256": "76a9d05f4a7d1cf559c1dd62dca5d0b3b8fa3988d753c63ae8f42a40753ff0a0"
+    },
+    {
+      "path": "P1_ROUTE_FAMILY_SEEDS.yaml",
+      "size": 2655,
+      "sha256": "5c15f426e03d62ccfb16ea2b75e0138d2d424f46829859817b2aa15b45137848"
+    },
+    {
+      "path": "README.md",
+      "size": 1003,
+      "sha256": "6a201091c3165dcfde63b558057e6b442ba96c1c1c56af05e2c65dd82c9de1eb"
+    },
+    {
+      "path": "REVIEW-FINDINGS.md",
+      "size": 10142,
+      "sha256": "5b11722e4dae08f306af11e383dd8467f4f1676832a4ac17a79409d40f127c36"
+    },
+    {
+      "path": "evidence/assist-patch-tests.txt",
+      "size": 98,
+      "sha256": "ca12bf5ea55b044bc10bb2aa85a86e00af21c4d9016b261b92fd477b542d30a9"
+    },
+    {
+      "path": "evidence/core-file-comparison.json",
+      "size": 3995,
+      "sha256": "b82dc5569dc78fcfa9e1b5af78c73495ab14c7854d461970011d2ed55fb27a18"
+    },
+    {
+      "path": "evidence/off-grid-raster-reproduction.txt",
+      "size": 550,
+      "sha256": "ad05a122c7a31e63ed0cc19654e818284ac402208c8e135e1ba133c9c2264365"
+    },
+    {
+      "path": "evidence/plan-port-grid-alignment.json",
+      "size": 2175,
+      "sha256": "738a29ab0670f9abf053d5c0e9a5945ac3753610e288094b5291bd923d146fd9"
+    },
+    {
+      "path": "evidence/topology-current-v2.json",
+      "size": 16262,
+      "sha256": "4af4d5c4ed632b72b0ba3c09b25e0e6d8e385702477cb3021f60f317d70db3db"
+    },
+    {
+      "path": "evidence/topology-plan-o-v2.json",
+      "size": 16386,
+      "sha256": "cadc0d54e8e66ba1f4c3d1f5da75a7f4e9213c40621bdfb3a63bdb595a7407b1"
+    },
+    {
+      "path": "evidence/topology-plan-r-v2.json",
+      "size": 16364,
+      "sha256": "3d550f66bd9ec597222b5b21ad75ae171239afbe6e07b0d2895253edccfb7bd5"
+    },
+    {
+      "path": "evidence/uploaded-package-audit.json",
+      "size": 387,
+      "sha256": "7cd13cd44f3b73c0e47caf91a898b921c9936dc24c8fc8d81574c33d83b42fda"
+    },
+    {
+      "path": "evidence/validator-rerun-summary.json",
+      "size": 515,
+      "sha256": "7db1953d849cf283678bc4532c140b838f0308762281013ac852485ce74dd641"
+    },
+    {
+      "path": "inputs/P1_ROUTE_PORT_PLANS.yaml",
+      "size": 3908,
+      "sha256": "b3cfc5ddb22195777384b9a98d0963547519b92102147e9c726831c5977387a5"
+    },
+    {
+      "path": "patches/audit_p1_route_topology_v2.py",
+      "size": 7729,
+      "sha256": "799a32426be1efed480daca067286bf8f05dcc80b8c852f17146b6cb06b78f74"
+    },
+    {
+      "path": "patches/critical_grid_geometry.py",
+      "size": 2767,
+      "sha256": "51a3924e7f2e6b496affe033935523711a887a48a01d6481808a7f7b5ef48743"
+    },
+    {
+      "path": "patches/route_candidate_selector.py",
+      "size": 7987,
+      "sha256": "a2bfe78098d9360a860c46be83f58f4956e8a454e116ce6d2a8a3b19b12a6c86"
+    },
+    {
+      "path": "patches/test_topology_and_critical_grid_contract.py",
+      "size": 3861,
+      "sha256": "be4e696855066ae1709cd01c42d9588af81e730ea422e50019631e0723ce6740"
+    }
+  ]
+}

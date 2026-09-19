@@ -1,0 +1,4 @@
+# file: C:\Users\仓鼠王\AppData\Local\uv\cache\archive-v0\4lBNSZNvPXe33Tzx\Lib\site-packages\_pytest\_py\error.py
+# hypothesis_version: 6.168.0
+
+[267, 'P', 'R', 'UnknownErrnoNone', '[{}]: {}', '_', '__doc__', '__module__', 'errno', 'py.error', 'win32', '{}.{} {!r}: {} ']

@@ -1,0 +1,46 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_O_M10_B06_PA_LOW",
+  "seed": 20260936,
+  "samples": 32,
+  "axisCounts": {
+    "x": 84,
+    "y": 71
+  },
+  "familyCounts": {
+    "A-T-UC-02": 13,
+    "A-T-UC-04": 18,
+    "A-T-UC-05": 23,
+    "A-T-UC-06": 15,
+    "A-T-UC-07": 4,
+    "A-T-UC-08": 15,
+    "A-T-UC-10": 18,
+    "A-T-UC-11": 27,
+    "A-T-UC-12": 12
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 26268,
+  "solverStatus": "INFEASIBLE",
+  "wallTimeSeconds": 0.0182615,
+  "candidateCount": 145,
+  "conflictPairCount": 4553,
+  "maximalDisjointSubset": [
+    "A-T-UC-02",
+    "A-T-UC-04",
+    "A-T-UC-07",
+    "A-T-UC-08",
+    "A-T-UC-11",
+    "A-T-UC-12"
+  ],
+  "missingFromMaximalSubset": [
+    "A-T-UC-05",
+    "A-T-UC-06",
+    "A-T-UC-10"
+  ]
+}

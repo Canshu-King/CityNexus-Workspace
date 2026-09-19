@@ -1,0 +1,362 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_NEAR8_PORTS_20260908",
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "candidateCount": 579,
+  "familyCounts": {
+    "A-T-UC-02": 11,
+    "A-T-UC-04": 48,
+    "A-T-UC-05": 44,
+    "A-T-UC-06": 4,
+    "A-T-UC-07": 45,
+    "A-T-UC-08": 27,
+    "A-T-UC-10": 15,
+    "A-T-UC-11": 49,
+    "A-T-UC-12": 27,
+    "A-CD-UC-04": 30,
+    "A-CD-UC-05": 13,
+    "A-CD-UC-10": 41,
+    "A-M-UC-04": 33,
+    "A-M-UC-08": 52,
+    "A-M-UC-10": 36,
+    "A-B-06": 39,
+    "A-PA-07": 29,
+    "A-CE-09": 36
+  },
+  "conflictPairCount": 63778,
+  "pairRepairHistory": [
+    {
+      "round": 0,
+      "impossibleBefore": [],
+      "addedByRoute": {},
+      "impossibleAfter": []
+    }
+  ],
+  "impossibleRoutePairs": [],
+  "authoritativeCandidateModified": false,
+  "arcConsistency": {
+    "status": "FAIL",
+    "rounds": 1,
+    "emptyRoutes": [
+      "A-T-UC-11"
+    ],
+    "removalCount": 186,
+    "lastRemovals": [
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:75",
+        "unsupportedBy": [
+          "A-T-UC-05",
+          "A-T-UC-07"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:89",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:0",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:30",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:35",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:23",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:47",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:17",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:16",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-CD-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:40",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-CD-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:4",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-CD-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:22",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-CD-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:10",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-CD-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:31",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:71",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-10",
+          "A-CD-UC-10",
+          "A-M-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:49",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:73",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:77",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:13",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:7",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:1",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:65",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:113",
+        "unsupportedBy": [
+          "A-T-UC-02",
+          "A-T-UC-04",
+          "A-T-UC-05",
+          "A-CD-UC-05"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:62",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:107",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:83",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:98",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:101",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:53",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      },
+      {
+        "route": "A-T-UC-11",
+        "candidate": "A-T-UC-11:11",
+        "unsupportedBy": [
+          "A-T-UC-06",
+          "A-T-UC-07",
+          "A-T-UC-08",
+          "A-T-UC-10",
+          "A-T-UC-12"
+        ]
+      }
+    ],
+    "remainingDomainSizes": {
+      "A-T-UC-02": 11,
+      "A-T-UC-04": 18,
+      "A-T-UC-05": 3,
+      "A-T-UC-06": 3,
+      "A-T-UC-07": 6,
+      "A-T-UC-08": 9,
+      "A-T-UC-10": 7,
+      "A-T-UC-11": 0,
+      "A-T-UC-12": 27,
+      "A-CD-UC-04": 30,
+      "A-CD-UC-05": 13,
+      "A-CD-UC-10": 41,
+      "A-M-UC-04": 33,
+      "A-M-UC-08": 52,
+      "A-M-UC-10": 36,
+      "A-B-06": 39,
+      "A-PA-07": 29,
+      "A-CE-09": 36
+    }
+  },
+  "reason": "arc-consistency-proved-current-pool-infeasible"
+}

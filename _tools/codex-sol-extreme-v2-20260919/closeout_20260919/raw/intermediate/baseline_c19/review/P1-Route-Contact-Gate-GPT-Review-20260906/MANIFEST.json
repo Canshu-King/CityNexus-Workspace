@@ -1,0 +1,67 @@
+[
+  {
+    "path": "AUDIT-RESULT.md",
+    "size": 686,
+    "sha256": "0D26066C4011FD74F25EAE6C1DF154AAE013B766469D793F0D5ABECAA1AC2C1C"
+  },
+  {
+    "path": "README.md",
+    "size": 371,
+    "sha256": "3649D18228FEB0E760EC581DBB67C4AC11AABEBC61865F149BCE3BF046CE5F2C"
+  },
+  {
+    "path": "visio-renderer/phase1-routing-rc6-candidate.yaml",
+    "size": 9417,
+    "sha256": "8C1661EBB1A9D5A371F48EF800316DD643F391BEEC559EB2A4B8065EED75182D"
+  },
+  {
+    "path": "visio-renderer/routing_geometry.py",
+    "size": 4961,
+    "sha256": "E289F47C5BCD1138F989962D39B8F4E5E1C75AE19B45BBA5F4C2CE532EB3D42B"
+  },
+  {
+    "path": "visio-renderer/calibration/audit_p1_route_contacts.py",
+    "size": 7547,
+    "sha256": "3CCC8B74387938774BA9F65C9520083C0630E230D6513FA60E01ADACACE1E5E2"
+  },
+  {
+    "path": "visio-renderer/calibration/validate_p1_route_candidate_v2.py",
+    "size": 2466,
+    "sha256": "AAC508C33336E6349242C7302BD8BA687C3DC00A66426BD21F96DA86C75D2CE4"
+  },
+  {
+    "path": "visio-renderer/calibration/validate_p1_route_candidate.py",
+    "size": 4537,
+    "sha256": "874EE5783C6C67B066186C2DEBC210FC91DDB4FA81AF3EE9F80E0C917E1C3E73"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-report.json",
+    "size": 3081,
+    "sha256": "3892ED7134F75009D05208571B11252035D24AF9FC31F1CD090B2CC392CAAE99"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v2-report.json",
+    "size": 625,
+    "sha256": "B1BF4F8947600537EA014ABFF8C42BD8F470A5C8F7319BE2C878D8C13DEDC3AA"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CONTACT-AUDIT.json",
+    "size": 25177,
+    "sha256": "D8C545743BB004445E178A768B2C3F1A634F2584FA4565D90F2D5C8D1C9E7FF1"
+  },
+  {
+    "path": "visio-renderer/tests/test_p1_rc6_route_prep_contract.py",
+    "size": 1479,
+    "sha256": "2C595A35951F5C5EEEFA4270EE2EB0A0D2E4EF8E933786B01EE4B6DCCB15F064"
+  },
+  {
+    "path": "visio-renderer/tests/test_p1_route_contact_gate_contract.py",
+    "size": 750,
+    "sha256": "24DFEB4BAF1F01CF873E1BE1970AAC706037F9C30F96B142A9DE26AA5DEB424C"
+  },
+  {
+    "path": "visio-spec/pages/p1_uc_overview.yaml",
+    "size": 5722,
+    "sha256": "6E2B9876177803F05A9397DFA6D4D64DA1D2FEAC01F3946925864F64FC6D24C5"
+  }
+]

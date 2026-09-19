@@ -1,0 +1,11 @@
+CityNexus WP05/WP06 Deep Assist validation
+2026-09-09
+
+Source checkpoint independent reconstruction: 104 tests PASS
+Prepared patch application: PASS
+Combined suite after patch: 115 tests PASS
+New regression tests: 11
+Python compileall: PASS
+Patch git apply --check on reconstructed baseline: PASS
+Hash/SHA verification: intentionally NOT performed
+External live providers: NOT required / NOT live-tested

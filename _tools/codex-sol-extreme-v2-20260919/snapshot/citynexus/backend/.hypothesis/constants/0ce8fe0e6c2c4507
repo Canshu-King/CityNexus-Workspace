@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\geometry\base.py
+# hypothesis_version: 6.168.0
+
+[0.04, 1.0, 5.0, 100.0, 300, '#66cc99', '#ff3333', '/>', '</g>', '<g />', '<g>', 'F', 'G', 'GeometryCollection', 'LineString', 'LinearRing', 'Multi', 'MultiLineString', 'MultiPoint', 'MultiPolygon', 'Point', 'Polygon', 'X', 'cap_style', 'f', 'g', 'grid_size', 'index out of range', 'join_style', 'mitre_limit', 'normalized', 'preserve_topology', 'quadsegs', 'resolution', 'round', 'single_sided', 'x']

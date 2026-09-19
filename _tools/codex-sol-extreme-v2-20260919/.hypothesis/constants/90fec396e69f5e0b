@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\provider_config.py
+# hypothesis_version: 6.168.0
+
+['1', 'CITYNEXUS_AI_ENABLED', 'CITYNEXUS_AI_MODEL', 'CITYNEXUS_ROUTER', 'DEEPSEEK_API_KEY', 'auto', 'direct', 'env_proxy', 'on', 'pedestrian', 'true', 'valhalla', 'yes']

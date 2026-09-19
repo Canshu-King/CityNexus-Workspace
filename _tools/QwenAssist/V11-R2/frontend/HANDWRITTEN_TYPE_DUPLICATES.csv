@@ -1,0 +1,17 @@
+﻿File,TypeName,BackendSchemaEquivalent,GeneratedTypeAvailable,MigrationPriority,Notes
+src/app/v8Types.ts,V8Data,PlanVersion + Journey + Offers,Yes (generated/api.ts),P1,Handwritten V8 types - duplicates Journey/PlanVersion
+src/app/v8Types.ts,V8Mode,TransitMode,Yes,P2,Enum duplicates v8Modes
+src/api/citynexus.ts,Money,Money (components/schemas),Yes,P0,Direct duplicate - use generated type
+src/api/citynexus.ts,Activity,Activity (components/schemas),Yes,P0,Direct duplicate - use generated type
+src/api/citynexus.ts,PlanVersion,PlanVersion (components/schemas),Yes,P0,Direct duplicate - use generated type
+src/api/citynexus.ts,JourneyRecord,Journey (components/schemas),Yes,P1,Renamed duplicate
+src/api/citynexus.ts,DemoIds,N/A,No,P2,Frontend-only type
+src/contracts/journeyTwin.ts,Money,Money (components/schemas),Yes,P0,Duplicate - use from api/citynexus.ts or generated
+src/contracts/journeyTwin.ts,Commitment,Commitment (components/schemas),Yes,P1,Similar but not identical
+src/contracts/journeyTwin.ts,JourneyTwinContext,PlanContext (components/schemas),Yes,P1,Similar structure
+src/contracts/journeyTwin.ts,JourneyTwin,N/A,No,P2,Frontend-specific state
+src/contracts/replan.ts,FeasibilityEnvelope,N/A,No,P2,Frontend-specific planning type
+src/contracts/replan.ts,ReplanProposal,N/A,No,P2,Frontend-specific planning type
+src/lib/v8Formatting.ts,V8FormattingHelpers,N/A,No,P2,Utility functions
+src/state/journeyModeMachine.ts,JourneyModeState,ExecutionState (components/schemas),Yes,P1,State machine vs enum
+src/api/v10Execution.ts,ExecutionState,ExecutionState (components/schemas),Yes,P1,Duplicate of backend enum

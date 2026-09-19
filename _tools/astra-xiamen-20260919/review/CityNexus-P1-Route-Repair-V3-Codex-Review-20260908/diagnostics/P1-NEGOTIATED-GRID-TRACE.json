@@ -1,0 +1,19 @@
+{
+  "status": "FAIL",
+  "solverStatus": "UNKNOWN",
+  "plan": "PLAN_O_GRID10_NEGOTIATED",
+  "axisCounts": {
+    "x": 84,
+    "y": 71
+  },
+  "edgeCount": 9118,
+  "routeCount": 9,
+  "wallTimeSeconds": 120.42136330000001,
+  "objective": 0.0,
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ]
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\random\_pickle.py
+# hypothesis_version: 6.168.0
+
+['MT19937', 'PCG64', 'PCG64DXSM', 'Philox', 'SFC64']

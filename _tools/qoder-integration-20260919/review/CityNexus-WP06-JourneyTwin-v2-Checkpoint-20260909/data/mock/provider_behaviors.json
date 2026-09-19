@@ -1,0 +1,19 @@
+{
+  "mock-booking": {
+    "default": "CONFIRMED",
+    "failure_token": "FORCE_BOOKING_FAIL"
+  },
+  "mock-payment": {
+    "default_authorize": "AUTHORIZED",
+    "default_capture": "SUCCEEDED",
+    "failure_token": "FORCE_PAYMENT_FAIL"
+  },
+  "mock-ai": {
+    "default_mode": "available",
+    "fallback_when_disabled": true,
+    "must_not_change_feasibility": true
+  },
+  "mock-context": {
+    "fixture_file": "events.json"
+  }
+}

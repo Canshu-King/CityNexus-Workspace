@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\sql\functions.py
+# hypothesis_version: 6.168.0
+
+['*', 'GenericFunction', '_', '_S', '_T', '__', '__return_type__', '_default', '_default_array_type', '_parsed_args', '_register', '_table_value_type', '_with_ordinality', 'cast', 'clause_expr', 'extract', 'fn', 'function', 'identifier', 'joins_implicitly', 'left_index', 'modifiers', 'name', 'next_value', 'package', 'packagenames', 'right_index', 'sequence', 'sql_function', 'type', 'type_', 'with_ordinality']

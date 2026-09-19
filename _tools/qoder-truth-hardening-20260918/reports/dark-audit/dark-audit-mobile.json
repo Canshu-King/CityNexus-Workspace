@@ -1,0 +1,14 @@
+[
+  {
+    "screen": "today/mobile",
+    "scanned": 197,
+    "violations": [],
+    "borderWarnings": 2
+  },
+  {
+    "screen": "live/mobile",
+    "scanned": 241,
+    "violations": [],
+    "borderWarnings": 2
+  }
+]

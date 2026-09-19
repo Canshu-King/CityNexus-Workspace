@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\rapidfuzz\distance\__init__.py
+# hypothesis_version: 6.168.0
+
+['DamerauLevenshtein', 'Editop', 'Editops', 'Hamming', 'Indel', 'Jaro', 'JaroWinkler', 'LCSseq', 'Levenshtein', 'MatchingBlock', 'OSA', 'Opcode', 'Opcodes', 'Postfix', 'Prefix', 'ScoreAlignment']

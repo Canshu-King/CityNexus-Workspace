@@ -1,0 +1,46 @@
+# Changed files in the overnight Agent Foundation checkpoint
+
+## Solver hardening
+
+- backend/app/main.py
+- backend/tests/test_gpt_solver_hardening_next.py
+- reports/overnight/00_WORKTREE_BASELINE.txt
+- reports/overnight/01_SRH_BASELINE.txt
+
+## Agent policy and gateway
+
+- backend/app/agent/__init__.py
+- backend/app/agent/contracts.py
+- backend/app/agent/delegation_policy.py
+- backend/app/agent/gateway.py
+- backend/app/agent/tool_catalog.py
+- backend/app/core/audit.py
+- backend/app/db/models.py
+- backend/app/schemas.py
+- backend/app/services.py
+- backend/db/schema.sql
+- backend/tests/test_agent_runtime_gate.py
+
+## MCP adapter and contracts
+
+- agent-mcp/
+- contracts/AGENT_RUNTIME_ARCHITECTURE.md
+- contracts/AGENT_GATE_TEST_MATRIX.md
+- contracts/AGENT_TOOL_CATALOG.md
+- contracts/DELEGATION_POLICY.md
+- contracts/HERMES_MCP_BOUNDARY.md
+- contracts/openapi.yaml
+- tools/verify_openapi_parity.py
+
+## Reports
+
+- CURRENT_STATUS.md
+- BLOCKERS.md
+- TEST_RESULTS.md
+- AGENT_RUNTIME_ARCHITECTURE.md
+- DELEGATION_POLICY.md
+- AGENT_TOOL_CATALOG.md
+- HERMES_INTEGRATION_STATUS.md
+- NEXT_RECOMMENDATION.md
+- CHANGED_FILES.txt
+- reports/overnight/GOAL_PROGRESS.md

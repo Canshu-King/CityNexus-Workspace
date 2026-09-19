@@ -1,0 +1,211 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "seed": 202609083,
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "samples": 100,
+  "axisCounts": {
+    "x": 99,
+    "y": 85
+  },
+  "familyCounts": {
+    "A-CD-UC-10": 38,
+    "A-M-UC-08": 59,
+    "A-M-UC-10": 32,
+    "A-B-06": 63,
+    "A-PA-07": 19,
+    "A-CE-09": 34
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pairRepairHistory": [
+    {
+      "round": 0,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-CD-UC-10",
+          "A-PA-07"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-PA-07"
+        ],
+        [
+          "A-M-UC-08",
+          "A-CE-09"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 11,
+        "A-B-06": 13,
+        "A-M-UC-08": 15,
+        "A-M-UC-10": 3
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 1,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 2,
+        "A-B-06": 11,
+        "A-M-UC-08": 5,
+        "A-M-UC-10": 4
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 2,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 1,
+        "A-B-06": 9,
+        "A-M-UC-08": 7,
+        "A-M-UC-10": 2
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    }
+  ],
+  "pid": 27556,
+  "poolFeasibilityPrecheck": "FAIL",
+  "impossibleRoutePairs": [
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 2394,
+      "conflictingPairs": 2394,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-B-06",
+      "candidatePairs": 3717,
+      "conflictingPairs": 3717,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 2016,
+      "conflictingPairs": 2016,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    }
+  ],
+  "tightRoutePairs": [
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 608,
+      "conflictingPairs": 605,
+      "compatiblePairs": 3,
+      "compatibilityRatio": 0.004934210526315789
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "candidatePairs": 1197,
+      "conflictingPairs": 1183,
+      "compatiblePairs": 14,
+      "compatibilityRatio": 0.011695906432748537
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 722,
+      "conflictingPairs": 686,
+      "compatiblePairs": 36,
+      "compatibilityRatio": 0.04986149584487535
+    }
+  ],
+  "reason": "pairwise-impossible-current-pool"
+}

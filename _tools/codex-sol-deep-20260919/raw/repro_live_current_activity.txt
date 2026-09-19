@@ -1,0 +1,31 @@
+{
+  "finding": "CX-SOL-001",
+  "baseline": {
+    "now": {
+      "id": "act-1",
+      "title": "Completed museum"
+    },
+    "next": {
+      "id": "act-2",
+      "title": "Current lunch"
+    },
+    "leg": {
+      "id": "leg-1",
+      "mode": "WALK"
+    }
+  },
+  "candidate": {
+    "now": {
+      "id": "act-2",
+      "title": "Current lunch"
+    },
+    "next": {
+      "id": "act-3",
+      "title": "Next ferry"
+    },
+    "leg": {
+      "id": "leg-2",
+      "mode": "TRANSIT"
+    }
+  }
+}

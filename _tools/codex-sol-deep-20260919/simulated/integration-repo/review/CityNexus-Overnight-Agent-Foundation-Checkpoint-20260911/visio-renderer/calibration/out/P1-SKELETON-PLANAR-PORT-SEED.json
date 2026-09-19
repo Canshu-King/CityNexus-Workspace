@@ -1,0 +1,99 @@
+{
+  "status": "PASS",
+  "trial": 212,
+  "genus": 0.0,
+  "providerOverrides": {
+    "A-CD-UC-04": {
+      "sourcePortFraction": 0.5,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.8461538461538461
+    },
+    "A-CD-UC-05": {
+      "sourcePortFraction": 0.75,
+      "targetSide": "RIGHT",
+      "targetPortFraction": 0.7692307692307693
+    },
+    "A-CD-UC-10": {
+      "sourcePortFraction": 0.25,
+      "targetSide": "TOP",
+      "targetPortFraction": 0.23076923076923078
+    },
+    "A-M-UC-04": {
+      "sourcePortFraction": 0.5,
+      "targetSide": "BOTTOM",
+      "targetPortFraction": 0.07692307692307693
+    },
+    "A-M-UC-08": {
+      "sourcePortFraction": 0.25,
+      "targetSide": "RIGHT",
+      "targetPortFraction": 0.9230769230769231
+    },
+    "A-M-UC-10": {
+      "sourcePortFraction": 0.75,
+      "targetSide": "TOP",
+      "targetPortFraction": 0.38461538461538464
+    },
+    "A-B-06": {
+      "sourcePortFraction": 0.5,
+      "targetSide": "TOP",
+      "targetPortFraction": 0.6923076923076923
+    },
+    "A-PA-07": {
+      "sourcePortFraction": 0.5,
+      "targetSide": "TOP",
+      "targetPortFraction": 0.3076923076923077
+    },
+    "A-CE-09": {
+      "sourcePortFraction": 0.5,
+      "targetSide": "TOP",
+      "targetPortFraction": 0.6153846153846154
+    }
+  },
+  "travelerSkeletonOverrides": {
+    "A-T-UC-02": {
+      "sourcePortFraction": 0.033333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-04": {
+      "sourcePortFraction": 0.133333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-05": {
+      "sourcePortFraction": 0.233333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-06": {
+      "sourcePortFraction": 0.333333,
+      "targetSide": "RIGHT",
+      "targetPortFraction": 0.574074
+    },
+    "A-T-UC-07": {
+      "sourcePortFraction": 0.433333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-11": {
+      "sourcePortFraction": 0.533333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-10": {
+      "sourcePortFraction": 0.633333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    },
+    "A-T-UC-08": {
+      "sourcePortFraction": 0.733333,
+      "targetSide": "BOTTOM",
+      "targetPortFraction": 0.791667
+    },
+    "A-T-UC-12": {
+      "sourcePortFraction": 0.833333,
+      "targetSide": "LEFT",
+      "targetPortFraction": 0.5
+    }
+  }
+}

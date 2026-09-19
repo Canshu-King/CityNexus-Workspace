@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\dateutil\tz\win.py
+# hypothesis_version: 6.168.0
+
+['\x00', ',-', '=3l16h', '=8h', '@', '@tzres', 'Bias', 'DaylightBias', 'DaylightName', 'DaylightStart', 'Display', 'Dlt', 'StandardBias', 'StandardName', 'StandardStart', 'Std', 'TZI', 'tzres', 'tzres.dll', 'tzwin', 'tzwin(%s)', 'tzwinlocal', 'tzwinlocal(%s)', 'tzwinlocal()', 'user32', '{kn}\\{name}', '{kn}\\{sn}']

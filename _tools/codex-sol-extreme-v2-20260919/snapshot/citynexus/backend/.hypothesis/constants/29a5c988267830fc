@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\_core\_ufunc_config.py
+# hypothesis_version: 6.168.0
+
+['_all', '_call', '_divide', '_invalid', '_over', '_token', '_under', 'bufsize', 'call', 'errstate', 'getbufsize', 'geterr', 'geterrcall', 'numpy', 'setbufsize', 'seterr', 'seterrcall']

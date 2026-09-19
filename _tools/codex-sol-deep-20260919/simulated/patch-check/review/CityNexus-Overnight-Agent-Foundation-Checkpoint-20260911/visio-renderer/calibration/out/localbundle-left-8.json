@@ -1,0 +1,387 @@
+{
+  "status": "FAIL",
+  "scope": "LOCAL_5_ROUTE_DIAGNOSTIC",
+  "plan": "PLAN_TRAVELER_SKELETON_PLANAR_GRID",
+  "bundle": [
+    "A-T-UC-06",
+    "A-T-UC-07",
+    "A-T-UC-11",
+    "A-B-06",
+    "A-PA-07"
+  ],
+  "testedVariants": 2,
+  "elapsedSeconds": 245.93700000000536,
+  "bestAttempt": {
+    "index": 2,
+    "portScore": 0.7872342592592593,
+    "orientableGenus": 0.0,
+    "portOverrides": {
+      "A-T-UC-06": {
+        "targetSide": "RIGHT",
+        "targetPortFraction": 0.5740740740740741
+      },
+      "A-B-06": {
+        "targetSide": "RIGHT",
+        "targetPortFraction": 0.0555555555555556
+      },
+      "A-PA-07": {
+        "targetSide": "TOP",
+        "targetPortFraction": 0.3125
+      }
+    },
+    "candidateCounts": {
+      "A-T-UC-06": 8,
+      "A-T-UC-07": 37,
+      "A-T-UC-11": 7,
+      "A-B-06": 5,
+      "A-PA-07": 19
+    },
+    "impossibleRoutePairs": [],
+    "ac3Status": "FAIL",
+    "ac3EmptyRoutes": [
+      "A-T-UC-07"
+    ],
+    "ac3DomainSizes": {
+      "A-T-UC-06": 4,
+      "A-T-UC-07": 0,
+      "A-T-UC-11": 7,
+      "A-B-06": 5,
+      "A-PA-07": 19
+    },
+    "pairRepair": [
+      {
+        "round": 0,
+        "impossibleBefore": [
+          [
+            "A-T-UC-07",
+            "A-B-06"
+          ],
+          [
+            "A-T-UC-07",
+            "A-PA-07"
+          ],
+          [
+            "A-B-06",
+            "A-PA-07"
+          ]
+        ],
+        "addedByRoute": {
+          "A-T-UC-07": 12,
+          "A-PA-07": 9
+        },
+        "impossibleAfter": [
+          [
+            "A-T-UC-07",
+            "A-PA-07"
+          ]
+        ]
+      },
+      {
+        "round": 1,
+        "impossibleBefore": [
+          [
+            "A-T-UC-07",
+            "A-PA-07"
+          ]
+        ],
+        "addedByRoute": {
+          "A-T-UC-07": 7,
+          "A-PA-07": 5
+        },
+        "impossibleAfter": []
+      }
+    ],
+    "arcRepair": [
+      {
+        "round": 0,
+        "ac3Before": "FAIL",
+        "emptyBefore": [
+          "A-T-UC-07"
+        ],
+        "repairs": [
+          {
+            "route": "A-T-UC-07",
+            "dominantBlockers": [
+              "A-T-UC-06",
+              "A-B-06"
+            ],
+            "blockerCounts": {
+              "A-T-UC-06": 23,
+              "A-B-06": 20,
+              "A-PA-07": 20,
+              "A-T-UC-11": 5
+            },
+            "bundleAttempts": 25,
+            "added": 7
+          }
+        ],
+        "ac3After": "FAIL",
+        "emptyAfter": [
+          "A-T-UC-07"
+        ]
+      },
+      {
+        "round": 1,
+        "ac3Before": "FAIL",
+        "emptyBefore": [
+          "A-T-UC-07"
+        ],
+        "repairs": [
+          {
+            "route": "A-T-UC-07",
+            "dominantBlockers": [
+              "A-T-UC-06",
+              "A-PA-07"
+            ],
+            "blockerCounts": {
+              "A-T-UC-06": 23,
+              "A-B-06": 20,
+              "A-PA-07": 22,
+              "A-T-UC-11": 12
+            },
+            "bundleAttempts": 30,
+            "added": 3
+          }
+        ],
+        "ac3After": "FAIL",
+        "emptyAfter": [
+          "A-T-UC-07"
+        ]
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "index": 1,
+      "portScore": 0.7853009259259259,
+      "orientableGenus": 0.0,
+      "portOverrides": {
+        "A-T-UC-06": {
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.5740740740740741
+        },
+        "A-B-06": {
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.0555555555555556
+        },
+        "A-PA-07": {
+          "targetSide": "TOP",
+          "targetPortFraction": 0.3125
+        }
+      },
+      "candidateCounts": {
+        "A-T-UC-06": 7,
+        "A-T-UC-07": 8,
+        "A-T-UC-11": 7,
+        "A-B-06": 10,
+        "A-PA-07": 14
+      },
+      "impossibleRoutePairs": [],
+      "ac3Status": "FAIL",
+      "ac3EmptyRoutes": [
+        "A-B-06"
+      ],
+      "ac3DomainSizes": {
+        "A-T-UC-06": 3,
+        "A-T-UC-07": 1,
+        "A-T-UC-11": 2,
+        "A-B-06": 0,
+        "A-PA-07": 14
+      },
+      "pairRepair": [
+        {
+          "round": 0,
+          "impossibleBefore": [
+            [
+              "A-T-UC-07",
+              "A-B-06"
+            ],
+            [
+              "A-T-UC-07",
+              "A-PA-07"
+            ],
+            [
+              "A-B-06",
+              "A-PA-07"
+            ]
+          ],
+          "addedByRoute": {
+            "A-B-06": 4,
+            "A-PA-07": 11
+          },
+          "impossibleAfter": []
+        }
+      ],
+      "arcRepair": [
+        {
+          "round": 0,
+          "ac3Before": "FAIL",
+          "emptyBefore": [
+            "A-B-06"
+          ],
+          "repairs": [
+            {
+              "route": "A-B-06",
+              "dominantBlockers": [
+                "A-PA-07",
+                "A-T-UC-07"
+              ],
+              "blockerCounts": {
+                "A-T-UC-07": 6,
+                "A-T-UC-11": 5,
+                "A-PA-07": 6,
+                "A-T-UC-06": 4
+              },
+              "bundleAttempts": 5,
+              "added": 0
+            }
+          ],
+          "ac3After": "FAIL",
+          "emptyAfter": [
+            "A-B-06"
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "portScore": 0.7872342592592593,
+      "orientableGenus": 0.0,
+      "portOverrides": {
+        "A-T-UC-06": {
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.5740740740740741
+        },
+        "A-B-06": {
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.0555555555555556
+        },
+        "A-PA-07": {
+          "targetSide": "TOP",
+          "targetPortFraction": 0.3125
+        }
+      },
+      "candidateCounts": {
+        "A-T-UC-06": 8,
+        "A-T-UC-07": 37,
+        "A-T-UC-11": 7,
+        "A-B-06": 5,
+        "A-PA-07": 19
+      },
+      "impossibleRoutePairs": [],
+      "ac3Status": "FAIL",
+      "ac3EmptyRoutes": [
+        "A-T-UC-07"
+      ],
+      "ac3DomainSizes": {
+        "A-T-UC-06": 4,
+        "A-T-UC-07": 0,
+        "A-T-UC-11": 7,
+        "A-B-06": 5,
+        "A-PA-07": 19
+      },
+      "pairRepair": [
+        {
+          "round": 0,
+          "impossibleBefore": [
+            [
+              "A-T-UC-07",
+              "A-B-06"
+            ],
+            [
+              "A-T-UC-07",
+              "A-PA-07"
+            ],
+            [
+              "A-B-06",
+              "A-PA-07"
+            ]
+          ],
+          "addedByRoute": {
+            "A-T-UC-07": 12,
+            "A-PA-07": 9
+          },
+          "impossibleAfter": [
+            [
+              "A-T-UC-07",
+              "A-PA-07"
+            ]
+          ]
+        },
+        {
+          "round": 1,
+          "impossibleBefore": [
+            [
+              "A-T-UC-07",
+              "A-PA-07"
+            ]
+          ],
+          "addedByRoute": {
+            "A-T-UC-07": 7,
+            "A-PA-07": 5
+          },
+          "impossibleAfter": []
+        }
+      ],
+      "arcRepair": [
+        {
+          "round": 0,
+          "ac3Before": "FAIL",
+          "emptyBefore": [
+            "A-T-UC-07"
+          ],
+          "repairs": [
+            {
+              "route": "A-T-UC-07",
+              "dominantBlockers": [
+                "A-T-UC-06",
+                "A-B-06"
+              ],
+              "blockerCounts": {
+                "A-T-UC-06": 23,
+                "A-B-06": 20,
+                "A-PA-07": 20,
+                "A-T-UC-11": 5
+              },
+              "bundleAttempts": 25,
+              "added": 7
+            }
+          ],
+          "ac3After": "FAIL",
+          "emptyAfter": [
+            "A-T-UC-07"
+          ]
+        },
+        {
+          "round": 1,
+          "ac3Before": "FAIL",
+          "emptyBefore": [
+            "A-T-UC-07"
+          ],
+          "repairs": [
+            {
+              "route": "A-T-UC-07",
+              "dominantBlockers": [
+                "A-T-UC-06",
+                "A-PA-07"
+              ],
+              "blockerCounts": {
+                "A-T-UC-06": 23,
+                "A-B-06": 20,
+                "A-PA-07": 22,
+                "A-T-UC-11": 12
+              },
+              "bundleAttempts": 30,
+              "added": 3
+            }
+          ],
+          "ac3After": "FAIL",
+          "emptyAfter": [
+            "A-T-UC-07"
+          ]
+        }
+      ]
+    }
+  ],
+  "nextAction": "Broaden target/source port search for the AC-3-empty route(s), then regenerate bundle families; do not spend CP-SAT time on a pool that fails pairwise or AC-3 prechecks."
+}

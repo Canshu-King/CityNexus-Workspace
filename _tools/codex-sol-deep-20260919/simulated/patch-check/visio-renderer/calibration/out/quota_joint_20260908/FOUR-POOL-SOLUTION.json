@@ -1,0 +1,64 @@
+{
+  "status": "FAIL",
+  "candidateCounts": {
+    "A-B-06": 66,
+    "A-PA-07": 19,
+    "A-CD-UC-10": 48,
+    "A-M-UC-10": 56
+  },
+  "impossiblePairs": [
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "candidatePairs": 1254,
+      "conflictingPairs": 1254,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-CD-UC-10",
+      "candidatePairs": 3168,
+      "conflictingPairs": 3168,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-M-UC-10",
+      "candidatePairs": 3696,
+      "conflictingPairs": 3696,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-PA-07",
+      "routeB": "A-CD-UC-10",
+      "candidatePairs": 912,
+      "conflictingPairs": 912,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-PA-07",
+      "routeB": "A-M-UC-10",
+      "candidatePairs": 1064,
+      "conflictingPairs": 1064,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    }
+  ],
+  "arcConsistency": {
+    "status": "FAIL",
+    "emptyRoutes": [
+      "A-B-06"
+    ],
+    "domainSizes": {
+      "A-B-06": 0,
+      "A-PA-07": 19,
+      "A-CD-UC-10": 48,
+      "A-M-UC-10": 56
+    }
+  },
+  "reason": "pairwise-impossible"
+}

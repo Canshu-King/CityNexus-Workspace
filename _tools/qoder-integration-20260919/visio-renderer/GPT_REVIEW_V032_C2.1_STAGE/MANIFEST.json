@@ -1,0 +1,167 @@
+[
+  {
+    "path": "build_calibrations.py",
+    "sha256": "2B16721E917225E3808A17C924013AD6AE8E5A59D538BB5663CEA5993F7067B0",
+    "bytes": 3752
+  },
+  {
+    "path": "class_adapter.py",
+    "sha256": "11A8D10EA2B7AC656C68CEF4B1B423DA21874F18111A66AB8938008B1401D9C9",
+    "bytes": 589
+  },
+  {
+    "path": "native-master-map.json",
+    "sha256": "E3CC9C9035D3B194F1DF8F86597F3937C9FEAC8E7C1B2AABDE74727DDF705E69",
+    "bytes": 47750
+  },
+  {
+    "path": "phase1-routing.yaml",
+    "sha256": "430F886AA7FF753578101FBE99C9C2B6843E2C803EFEE5B84E85181D23E20F19",
+    "bytes": 2058
+  },
+  {
+    "path": "presentation.py",
+    "sha256": "11503F7870F72E5B11730B567D1AA20ED985C766C3DD6CFAF8C9FF5A580EBA61",
+    "bytes": 155
+  },
+  {
+    "path": "render_core.py",
+    "sha256": "1F2D2A2E88BFD7388227A20A4AC744E39401C17C1CA4B29C6161105C0C8A0322",
+    "bytes": 744
+  },
+  {
+    "path": "style_adapter.py",
+    "sha256": "D08A9FBD7C193F0809BA6C292D8E2FB6BF8F53E2F8278BDF66D7EA2CD90ED3E5",
+    "bytes": 2983
+  },
+  {
+    "path": "TOOLCHAIN-BASELINE.md",
+    "sha256": "485BD64035DCFE9FBFC45CC35665054B76CB8BF5A4C1E4F79CBBC945E10AF3D7",
+    "bytes": 1806
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style-report.json",
+    "sha256": "4A3376C25CFF9F73D9AA7F364B58D07D54993956E3775D7E1EB89DD6849727E6",
+    "bytes": 4627
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.debug-nonauthoritative.svg",
+    "sha256": "D14CC6C881771C662FE657569742C5CB85C7F4E2492EA8880E4F28DB946E1448",
+    "bytes": 63675
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.png",
+    "sha256": "695B41846C47D4689813E32B516E3CBA1FB275874822A7E7F635D1A2185DDD21",
+    "bytes": 29045
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.raw.svg",
+    "sha256": "EFB8E4D8991B41ECD9362FA42372528E89553F0EA5816D8F3D7F0D24F8124144",
+    "bytes": 62148
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.vsdx",
+    "sha256": "CC48CCF4062D24C90C33D2B8BBEF9988F555DA136BB9CB6153E1D9D74EFBC393",
+    "bytes": 30835
+  },
+  {
+    "path": "calibration-out\\C2_Anchored_Class_v2-report.json",
+    "sha256": "1732DF5AA89ADB94215B3ACE32405472548EDB9FF4448016326BCBDC7176BCFD",
+    "bytes": 331
+  },
+  {
+    "path": "calibration-out\\C2_Anchored_Class_v2.png",
+    "sha256": "E7B1B712220BA730ACD9D832B2696CE66EADDCE474C48506DA4E0801123961B7",
+    "bytes": 8330
+  },
+  {
+    "path": "calibration-out\\C2_Anchored_Class_v2.raw.svg",
+    "sha256": "93BC19A5382A25A6A6D800D02FDD931AF31933ED4A4B60A2794DD600E301361B",
+    "bytes": 28289
+  },
+  {
+    "path": "calibration-out\\C2_Anchored_Class_v2.vsdx",
+    "sha256": "3EBAAC9D373321DFDE3BD094A0309FDB91862AD54D6C64FD7C7663F87352FF97",
+    "bytes": 27712
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class-report.json",
+    "sha256": "63B95783EFAF5DFC6B18532377F358153653B895982F3AA52F949A2181BFAC16",
+    "bytes": 314
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.png",
+    "sha256": "FC4F72999F83560E135CB657AB5AF25D2BA18ABBFFDB93BF134E51282EA5B2A2",
+    "bytes": 9662
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.raw.svg",
+    "sha256": "C3DB658DF7F8230BBDBBF0493C30D88CDDA3F7754E18CC6D4647CBDC002EFA05",
+    "bytes": 28342
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.vsdx",
+    "sha256": "CB9AEA941B7EAD8E7058D4308D609C7F483E381360D0FBCA5EA1EF4244CCE29B",
+    "bytes": 25528
+  },
+  {
+    "path": "calibration-out\\calibration-summary.json",
+    "sha256": "B7BD2E00536ED585F758EDA0349CD4AC8565F5902C6680F76FEA36174B5FE2E5",
+    "bytes": 80
+  },
+  {
+    "path": "calibration-out\\manifest.json",
+    "sha256": "E3CE68C2BA0A80119A69993BF3160DDAC46F51ACA180FF49CCE8CE1BEF6120C7",
+    "bytes": 2637
+  },
+  {
+    "path": "calibration-out\\route-static-test-results.json",
+    "sha256": "E73C0D188A1DB40483CC5A3663AED6FD33BC89318AE947452C11AF6FEC5B80D5",
+    "bytes": 453
+  },
+  {
+    "path": "calibration-out\\source-input-hashes.json",
+    "sha256": "D3E5DEBEAF680E9BDC96A29DDA7C6B0EBF8272C67A007C2DB8AC58CC2E2F8CE6",
+    "bytes": 1433
+  },
+  {
+    "path": "calibration-out\\static-test-report.json",
+    "sha256": "D5EB27D257CEF588D313273B3978EDA63F14BD9D42C78F63CEE0147EA2937240",
+    "bytes": 158
+  },
+  {
+    "path": "tests\\test_coordinate_conversion.py",
+    "sha256": "6DEF408D507A763B8A665065250743D924B2944ADC24620B820E50F8EFFD2356",
+    "bytes": 374
+  },
+  {
+    "path": "tests\\test_no_legacy_imports.py",
+    "sha256": "0D2169DAEAF0169471A2BFD61642F5E2CE8B41E9C54D5B8B4AF897319EAD0C64",
+    "bytes": 613
+  },
+  {
+    "path": "tests\\test_route_coverage.py",
+    "sha256": "F8BD9893AF144FBB6B4712C08B23590392E8F8093928BA987CCADE285516A8A2",
+    "bytes": 610
+  },
+  {
+    "path": "tests\\test_route_family.py",
+    "sha256": "9FC8EDD926C49F2270116053FA766D7C51194D43B878FD1E9563402D650EC90B",
+    "bytes": 333
+  },
+  {
+    "path": "tests\\test_route_schema.py",
+    "sha256": "031C612D9B8991DBD7D08D6F0C3BAD7315BB43F37BB84BF32EECD35103A17B0A",
+    "bytes": 450
+  },
+  {
+    "path": "tests\\test_route_side_policy.py",
+    "sha256": "E9A25030421A7932A4CD4D868AE88E5A69A43111CE36029F1D03795AFFF215D5",
+    "bytes": 531
+  },
+  {
+    "path": "tests\\test_style_resolution.py",
+    "sha256": "62BF02A747C0B67BEFD670CFEFD638205F4892CC1D20E1B25B7EB429F8C92571",
+    "bytes": 713
+  }
+]

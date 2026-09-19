@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\mixins.py
+# hypothesis_version: 6.168.0
+
+['abs', 'add', 'and', 'divmod', 'eq', 'floordiv', 'ge', 'gt', 'invert', 'le', 'lshift', 'lt', 'matmul', 'mod', 'mul', 'ne', 'neg', 'or', 'pos', 'pow', 'rshift', 'sub', 'truediv', 'xor']

@@ -1,0 +1,16 @@
+{
+  "provider_key": "mock-mobility",
+  "mode": "mixed_public_transit",
+  "default_minutes": 20,
+  "minutes": {
+    "place-old-town|place-riverside-museum": 15,
+    "place-riverside-museum|place-food-hall": 15,
+    "place-food-hall|place-tech-art": 20,
+    "place-tech-art|place-river-cruise": 20,
+    "place-food-hall|place-city-park": 15,
+    "place-city-park|place-river-cruise": 20,
+    "place-food-hall|place-design-library": 15,
+    "place-design-library|place-river-cruise": 20,
+    "place-river-cruise|place-skyline-dinner": 20
+  }
+}

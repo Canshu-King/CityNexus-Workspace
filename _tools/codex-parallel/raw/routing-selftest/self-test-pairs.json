@@ -1,0 +1,23 @@
+{
+  "points": [
+    {
+      "id": "a",
+      "lat": 24.4581979,
+      "lon": 118.0689473,
+      "verification_status": "PROJECT_KNOWN"
+    },
+    {
+      "id": "b",
+      "lat": 24.459,
+      "lon": 118.07,
+      "verification_status": "PROJECT_KNOWN"
+    }
+  ],
+  "pairs": [
+    {
+      "id": "stub-a-b",
+      "origin": "a",
+      "destination": "b"
+    }
+  ]
+}

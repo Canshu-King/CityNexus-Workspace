@@ -1,0 +1,207 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "seed": 202609088,
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "samples": 100,
+  "axisCounts": {
+    "x": 99,
+    "y": 85
+  },
+  "familyCounts": {
+    "A-CD-UC-10": 39,
+    "A-M-UC-08": 54,
+    "A-M-UC-10": 35,
+    "A-B-06": 65,
+    "A-PA-07": 14,
+    "A-CE-09": 31
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pairRepairHistory": [
+    {
+      "round": 0,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-CD-UC-10",
+          "A-PA-07"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-PA-07"
+        ],
+        [
+          "A-M-UC-08",
+          "A-CE-09"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 10,
+        "A-B-06": 19,
+        "A-M-UC-08": 14,
+        "A-M-UC-10": 4
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 1,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 2,
+        "A-B-06": 11,
+        "A-M-UC-08": 7,
+        "A-M-UC-10": 2
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 2,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 2,
+        "A-B-06": 7,
+        "A-M-UC-08": 3,
+        "A-M-UC-10": 2
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    }
+  ],
+  "pid": 17516,
+  "poolFeasibilityPrecheck": "FAIL",
+  "impossibleRoutePairs": [
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 2535,
+      "conflictingPairs": 2535,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-B-06",
+      "candidatePairs": 3510,
+      "conflictingPairs": 3510,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 2275,
+      "conflictingPairs": 2275,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    }
+  ],
+  "tightRoutePairs": [
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "candidatePairs": 910,
+      "conflictingPairs": 894,
+      "compatiblePairs": 16,
+      "compatibilityRatio": 0.017582417582417582
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 490,
+      "conflictingPairs": 474,
+      "compatiblePairs": 16,
+      "compatibilityRatio": 0.0326530612244898
+    }
+  ],
+  "reason": "pairwise-impossible-current-pool"
+}

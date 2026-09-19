@@ -1,0 +1,415 @@
+metadata:
+  status: RIPUP_FIXED_WITNESS
+  mutableConflictCluster:
+  - A-B-06
+  - A-CD-UC-10
+  - A-M-UC-08
+  - A-M-UC-10
+  - A-PA-07
+routes:
+- id: A-T-UC-02
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-02
+  family: traveler
+  lane: traveler-1
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.3
+  targetPortFraction: 0.5
+  waypoints:
+  - - 4.6
+    - 9.1
+  - - 5.0
+    - 9.1
+  - - 5.0
+    - 9.0
+  - - 5.0
+    - 4.5
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-04
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-04
+  family: traveler
+  lane: traveler-2
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.2
+  targetPortFraction: 0.5
+  waypoints:
+  - - 4.5
+    - 8.8
+  - - 4.5
+    - 9.0
+  - - 4.6
+    - 9.0
+  - - 5.0
+    - 9.0
+  - - 5.2
+    - 9.0
+  - - 8.3
+    - 9.0
+  - - 11.1
+    - 9.0
+  - - 13.52
+    - 9.0
+  - - 13.55
+    - 9.0
+  - - 13.7
+    - 9.0
+  - - 13.7
+    - 6.8
+  - - 13.7
+    - 6.6
+  - - 13.7
+    - 4.5
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-05
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-05
+  family: traveler
+  lane: traveler-3
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.1
+  targetPortFraction: 0.5
+  waypoints:
+  - - 4.6
+    - 8.5
+  - - 4.6
+    - 9.0
+  - - 4.6
+    - 9.1
+  - - 4.6
+    - 9.2
+  - - 5.2
+    - 9.2
+  - - 8.3
+    - 9.2
+  - - 11.1
+    - 9.2
+  - - 13.52
+    - 9.2
+  - - 13.55
+    - 9.2
+  - - 13.8
+    - 9.2
+  - - 19.9
+    - 9.2
+  - - 19.9
+    - 8.2
+  - - 19.9
+    - 6.8
+  - - 19.9
+    - 4.77
+  - - 19.9
+    - 4.5
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-06
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-06
+  family: traveler
+  lane: traveler-4
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.2
+    - 9.7
+  - - 5.2
+    - 9.399999999999999
+  - - 5.2
+    - 9.2
+  - - 5.2
+    - 9.0
+  - - 5.2
+    - 8.2
+  - - 8.3
+    - 8.2
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-07
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-07
+  family: traveler
+  lane: traveler-5
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.7
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.4
+    - 10.299999999999999
+  - - 7.5
+    - 10.299999999999999
+  - - 13.55
+    - 10.299999999999999
+  - - 13.8
+    - 10.3
+  - - 13.8
+    - 10.2
+  - - 13.8
+    - 9.6
+  - - 13.8
+    - 9.399999999999999
+  - - 13.8
+    - 9.2
+  - - 13.8
+    - 8.2
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-08
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-08
+  family: traveler
+  lane: traveler-6
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.6
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.4
+    - 10.0
+  - - 5.4
+    - 10.299999999999999
+  - - 5.4
+    - 10.6
+  - - 5.4
+    - 10.899999999999999
+  - - 5.4
+    - 11.9
+  - - 7.5
+    - 11.9
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-10
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-10
+  family: traveler
+  lane: traveler-7
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.8
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.4
+    - 10.6
+  - - 7.5
+    - 10.6
+  - - 13.55
+    - 10.6
+  - - 17.2
+    - 10.6
+  - - 19.9
+    - 10.6
+  - - 19.9
+    - 11.9
+  - - 20.05
+    - 11.9
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-11
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-11
+  family: traveler
+  lane: traveler-8
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.4
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.2
+    - 9.399999999999999
+  - - 8.3
+    - 9.399999999999999
+  - - 11.1
+    - 9.399999999999999
+  - - 13.52
+    - 9.399999999999999
+  - - 13.55
+    - 9.399999999999999
+  - - 13.8
+    - 9.399999999999999
+  - - 20.05
+    - 9.399999999999999
+  - - 20.1
+    - 9.4
+  - - 20.1
+    - 8.2
+  planningStatus: PLANNING_REQUIRED
+- id: A-T-UC-12
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-12
+  family: traveler
+  lane: traveler-9
+  sourceSide: RIGHT
+  targetSide: LEFT
+  sourcePortFraction: 0.9
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.4
+    - 10.899999999999999
+  - - 7.5
+    - 10.899999999999999
+  - - 13.55
+    - 10.899999999999999
+  - - 13.6
+    - 10.9
+  - - 13.6
+    - 15.2
+  planningStatus: PLANNING_REQUIRED
+- id: A-CD-UC-04
+  connectorType: association
+  source: ACT-CITY-DATA
+  target: UC-04
+  family: provider
+  lane: provider-1
+  sourceSide: LEFT
+  targetSide: RIGHT
+  sourcePortFraction: 0.03571428571428575
+  targetPortFraction: 0.5740740740740738
+  waypoints:
+  - - 20.0
+    - 2.7
+  - - 20.0
+    - 4.6
+  planningStatus: ROUTE_PLANNED_CONFLICT_WITNESS
+- id: A-CD-UC-05
+  connectorType: association
+  source: ACT-CITY-DATA
+  target: UC-05
+  family: provider
+  lane: provider-2
+  sourceSide: LEFT
+  targetSide: RIGHT
+  sourcePortFraction: 0.4
+  targetPortFraction: 0.5
+  waypoints:
+  - - 26.1
+    - 3.72
+  - - 26.1
+    - 4.5
+  planningStatus: PLANNING_REQUIRED
+- id: A-M-UC-04
+  connectorType: association
+  source: ACT-MOBILITY
+  target: UC-04
+  family: provider
+  lane: provider-4
+  sourceSide: LEFT
+  targetSide: TOP
+  sourcePortFraction: 0.6071428571428569
+  targetPortFraction: 0.5833333333333335
+  waypoints:
+  - - 29.8
+    - 7.1
+  - - 29.8
+    - 6.5
+  - - 29.5
+    - 6.5
+  - - 29.5
+    - 6.0
+  - - 29.9
+    - 6.0
+  - - 29.9
+    - 5.4
+  - - 32.2
+    - 5.4
+  - - 32.2
+    - 2.5
+  - - 17.6
+    - 2.5
+  planningStatus: ROUTE_PLANNED_CONFLICT_WITNESS
+- id: A-CE-09
+  connectorType: association
+  source: ACT-CONTEXT
+  target: UC-09
+  family: provider
+  lane: provider-9
+  sourceSide: LEFT
+  targetSide: LEFT
+  sourcePortFraction: 0.5000000000000001
+  targetPortFraction: 0.87037037037037
+  waypoints:
+  - - 29.8
+    - 15.2
+  - - 29.8
+    - 14.5
+  - - 13.6
+    - 14.5
+  - - 13.6
+    - 11.2
+  - - 13.0
+    - 11.2
+  - - 13.0
+    - 11.0
+  - - 14.5
+    - 11.0
+  - - 14.5
+    - 12.4
+  planningStatus: ROUTE_PLANNED_CONFLICT_WITNESS
+- id: EXT-07-06
+  connectorType: extend
+  source: UC-07
+  target: UC-06
+  family: extend
+  lane: extend-1
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 17.2
+    - 6.6
+  - - 8.3
+    - 6.6
+  - - 8.3
+    - 9.7
+  - - 11.1
+    - 9.7
+  planningStatus: FROZEN_FROM_C4E1
+- id: EXT-09-08
+  connectorType: extend
+  source: UC-09
+  target: UC-08
+  family: extend
+  lane: extend-2
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 17.2
+    - 10.2
+  - - 7.5
+    - 10.2
+  - - 7.5
+    - 13.4
+  - - 11.1
+    - 13.4
+  planningStatus: FROZEN_FROM_C4E1
+- id: EXT-10-09
+  connectorType: extend
+  source: UC-10
+  target: UC-09
+  family: extend
+  lane: extend-3
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 23.3
+    - 9.4
+  - - 27.0
+    - 9.4
+  - - 27.0
+    - 14.2
+  - - 17.2
+    - 14.2
+  planningStatus: FROZEN_FROM_C4E1

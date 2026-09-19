@@ -1,0 +1,17 @@
+export const testIds = {
+  journeyStatus: "journey-status",
+  journeyMap: "journey-map",
+  currentActivity: "current-activity",
+  nextCommitment: "next-commitment",
+  opportunityWindow: "opportunity-window",
+  feasibilityEnvelope: "feasibility-envelope",
+  providerDegradation: "provider-degradation",
+  eventSimulator: "event-simulator",
+  eventClosureButton: "event-closure-button",
+  replanPanel: "replan-panel",
+  replanCandidate: "replan-candidate",
+  replanDiff: "replan-diff",
+  protectedCommitment: "protected-commitment",
+  acceptReplan: "accept-replan",
+  aiExplanation: "ai-explanation",
+} as const;

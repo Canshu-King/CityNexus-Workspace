@@ -1,0 +1,27 @@
+CityNexus WP06 -> WP07 Road-Prep Assist
+Date: 2026-09-09
+
+Baseline: CityNexus-WP06-PostGate-Checkpoint-20260909.zip
+
+Prepared patch validation:
+- patch --dry-run -p1 on fresh checkpoint copy: PASS
+- patch apply on fresh checkpoint copy: PASS
+- focused patched tests on fresh patched copy: 21 PASS
+- Python compileall for backend/app: PASS
+
+Post-patch regression review, split because the review container may leave module-global FastAPI TestClient processes alive after pytest reaches 100%:
+- foundation/core group: 43 PASS, 1 SKIPPED
+- WP01-WP04 group: 69 PASS
+- WP05 integrity: 8 PASS
+- WP06 candidate/provenance: 2 PASS
+- WP06 post-gate hardening: 7 PASS
+- WP06 Twin v2: 4 PASS
+- new WP06 follow-up tests: 5 PASS
+- new WP07 foundation tests: 4 PASS
+
+Equivalent split-run total after the prepared patch:
+- 142 PASS
+- 1 SKIPPED optional live-provider smoke
+
+No live external provider was required for validation.
+No production credentials are included.

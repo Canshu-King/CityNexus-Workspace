@@ -1,0 +1,21 @@
+{
+  "status": "FAIL",
+  "solverStatus": "UNKNOWN",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "axisCounts": {
+    "x": 97,
+    "y": 82
+  },
+  "edgeCount": 10585,
+  "routeCount": 4,
+  "wallTimeSeconds": 421.9665865,
+  "objective": 0.0,
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ]
+}

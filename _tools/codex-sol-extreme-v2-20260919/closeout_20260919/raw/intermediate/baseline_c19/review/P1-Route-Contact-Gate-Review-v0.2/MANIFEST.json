@@ -1,0 +1,15 @@
+{
+  "noRC6": true,
+  "noPart2": true,
+  "package": "CityNexus-P1-Route-Contact-Gate-Review-v0.2",
+  "protectedPaths": [
+    "domain-model",
+    "requirements",
+    "use-cases",
+    "visio-spec/pages/p1_uc_overview.yaml"
+  ],
+  "v2Report": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v2-report.json",
+  "status": "FAIL",
+  "noVisio": true,
+  "contactAudit": "visio-renderer/calibration/out/P1_UC_ROUTE_CONTACT-AUDIT.json"
+}

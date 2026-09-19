@@ -1,0 +1,2285 @@
+diff --git a/backend/app/commerce/service_impl.py b/backend/app/commerce/service_impl.py
+index 1207e42..9ea7faf 100644
+--- a/backend/app/commerce/service_impl.py
++++ b/backend/app/commerce/service_impl.py
+@@ -32,6 +32,10 @@ from app.commerce.validators import (
+     validate_transaction_target_ids,
+ )
+ from app.core.audit import record_audit
++from app.replanning.commitment_remap import (
++    RemapConflict as CommitmentRemapConflict,
++    resolve_commitment_target,
++)
+ from app.db.models import (
+     Activity,
+     Booking,
+@@ -184,6 +188,38 @@ def _booking_policy(
+     return policy, decision.rank
+ 
+ 
++def _remap_commitment_to_active_plan(session: Session, commitment: Commitment) -> None:
++    """Keep a commitment addressable before its payment is allowed to promote it.
++
++    ``Commitment.activity_id`` is PlanVersion-local.  A capture that arrives after
++    a concurrent replan would otherwise promote a pointer into a superseded plan
++    to C4 truth, which is exactly the "protected commitment" the traveller believes
++    they hold.  Either the now-active plan contains the same commitment target — by
++    structural identity, not by name — or the capture fails closed.
++    """
++
++    journey = session.get(Journey, commitment.journey_id)
++    if journey is None or not journey.active_plan_version_id or not commitment.activity_id:
++        return
++    anchored = session.get(Activity, commitment.activity_id)
++    if anchored is not None and anchored.plan_version_id == journey.active_plan_version_id:
++        return
++    policy = json.loads(commitment.policy_json or "{}")
++    candidates = session.scalars(
++        select(Activity).where(Activity.plan_version_id == journey.active_plan_version_id)
++    ).all()
++    try:
++        target = resolve_commitment_target(
++            policy=policy,
++            anchored_activity=anchored,
++            candidates=list(candidates),
++            subject="captured booking",
++        )
++    except CommitmentRemapConflict as exc:
++        raise CommerceConflict(str(exc)) from exc
++    commitment.activity_id = target.id
++
++
+ def create_booking(
+     session: Session,
+     *,
+@@ -571,6 +607,10 @@ def create_transaction(
+         commitment = session.get(Commitment, commitment_id)
+         if commitment is None:
+             raise CommerceConflict("target commitment is missing")
++        # Resolve the pointer first: everything below promotes what this commitment
++        # is attached to, so an attachment into a superseded plan must never reach
++        # the strength update.
++        _remap_commitment_to_active_plan(session, commitment)
+         policy = json.loads(commitment.policy_json or "{}")
+         decision = derive_strength_rank(
+             CommitmentFacts(
+diff --git a/backend/app/concurrency_guards.py b/backend/app/concurrency_guards.py
+new file mode 100644
+index 0000000..8b0114c
+--- /dev/null
++++ b/backend/app/concurrency_guards.py
+@@ -0,0 +1,85 @@
++"""Journey-scoped serialization for authoritative state transitions.
++
++Why this module exists
++----------------------
++Three product operations each read the same authoritative facts, validate them
++against what they read, and then write:
++
++  1. accepting a replan proposal   (base plan -> SUPERSEDED, child -> ACTIVE)
++  2. capturing a booking payment   (Commitment promoted to a protected level)
++  3. the commitment re-pointing that an accepted replan performs immediately after
++
++Two concurrent callers can therefore both pass validation against the same
++pre-transition state and both write.  A unique constraint cannot express this
++("at most one ACTIVE PlanVersion per Journey" is a conditional property, and
++`replan_proposals` carries no such index), so the guard has to be at the
++transaction boundary rather than at the final UPDATE.
++
++Scope of the lock
++-----------------
++It is taken *before* the read that begins validation and released *after* the
++commit — not around the write.  Releasing between validation and commit is the
++bug this exists to prevent: the second caller would then validate against state
++that the first caller had already invalidated.
++
++PROCESS_LOCAL_ONLY = True
++-------------------------
++This is a process-local `threading.RLock` registry.  It serializes workers
++inside one API process only.  It is **not** multi-worker safe and **not**
++distributed safe: two uvicorn processes, two gunicorn workers, or two replicas
++behind a load balancer each own a private registry and will happily validate
++against the same stale row at the same time.  The reference deployment this was
++written against is a single process on SQLite, where SQLite also does not honour
++`SELECT ... FOR UPDATE`, so there is no database-level backstop to lean on.
++
++Any move to multi-process serving must replace or supplement this with a
++database-backed or advisory lock (for example `SELECT ... FOR UPDATE` on the
++Journey row under postgres, or a real lock service).  The call sites are written
++so that swapping the mechanism does not change any business invariant: they hold
++the lock across read/validate/mutate/commit and assert final truth afterwards,
++never "my status code was 200".
++
++The registry uses a weak-valued map so a Journey id that no longer has a waiting
++thread does not pin its lock forever.
++"""
++
++from __future__ import annotations
++
++from contextlib import contextmanager
++from threading import RLock
++from typing import Iterator
++from weakref import WeakValueDictionary
++
++#: Disclosed deliberately: see the module docstring.  Anything that reads this
++#: module, or any report that cites it, must not describe this as distributed
++#: safety.
++PROCESS_LOCAL_ONLY = True
++
++_registry_guard = RLock()
++_journey_locks: WeakValueDictionary[str, RLock] = WeakValueDictionary()
++
++
++def journey_lock_registry() -> dict[str, RLock]:
++    """Read-only view of the live registry, for tests and diagnostics."""
++
++    with _registry_guard:
++        return dict(_journey_locks)
++
++
++@contextmanager
++def journey_write_lock(journey_id: str) -> Iterator[None]:
++    """Serialize the complete read/validate/mutate/commit transition for one Journey.
++
++    Re-entrant on purpose: an accepted replan re-enters the commitment and audit
++    helpers that take the same Journey-scoped lock, and a non-reentrant lock
++    would deadlock the very path it guards.
++    """
++
++    key = str(journey_id)
++    with _registry_guard:
++        lock = _journey_locks.get(key)
++        if lock is None:
++            lock = RLock()
++            _journey_locks[key] = lock
++    with lock:
++        yield
+diff --git a/backend/app/main.py b/backend/app/main.py
+index d7c1b31..8c5bb78 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -42,6 +42,11 @@ from app.agent.delegation_policy import (
+     update_policy,
+ )
+ from app.agent.gateway import AgentToolGateway
++from app.concurrency_guards import journey_write_lock
++from app.replanning.commitment_remap import (
++    RemapConflict as CommitmentRemapConflict,
++    resolve_commitment_target,
++)
+ from app.agent.guardian import guardian_status, scan_guardian
+ from app.agent.mission import create_mission, mission_payload
+ from app.agent.mission_plan import mission_plan_for_model
+@@ -8594,6 +8599,49 @@ def _accept_replan_impl(
+     policy_version: int | None = None,
+     authorization_decision: str | None = None,
+     reason_codes: tuple[str, ...] = (),
++):
++    """Serialize acceptance for one Journey across its whole transaction.
++
++    Acceptance reads the base plan, the proposal status, the active C4
++    commitments and plan feasibility, and only then writes.  Two callers that
++    both pass those checks against the same pre-transition state would each
++    produce a plan transition, which is how a Journey ends up with two ACTIVE
++    PlanVersions.  The lock therefore starts before the first read and is
++    released after the commit — locking the write alone would not help, because
++    the second caller's validation has already happened by then.
++
++    The lookup that finds the Journey id happens outside the lock and is only
++    used to choose a lock key, so the identity map is expired before delegating:
++    everything below must re-read under the lock rather than trust it.
++    """
++
++    kwargs = {
++        "actor_type": actor_type,
++        "actor_id": actor_id,
++        "policy_version": policy_version,
++        "authorization_decision": authorization_decision,
++        "reason_codes": reason_codes,
++    }
++    located = session.get(ReplanProposalModel, str(proposal_id))
++    journey_id = located.journey_id if located is not None else None
++    if journey_id is None:
++        # Unknown proposal: let the body below produce the canonical 404.
++        return _accept_replan_serialized_impl(proposal_id, idempotency_key, session, **kwargs)
++    with journey_write_lock(journey_id):
++        session.expire_all()
++        return _accept_replan_serialized_impl(proposal_id, idempotency_key, session, **kwargs)
++
++
++def _accept_replan_serialized_impl(
++    proposal_id: UUID,
++    idempotency_key: str | None,
++    session: Session,
++    *,
++    actor_type: str = "system",
++    actor_id: str | None = None,
++    policy_version: int | None = None,
++    authorization_decision: str | None = None,
++    reason_codes: tuple[str, ...] = (),
+ ):
+     if idempotency_key is None:
+         raise HTTPException(422, "Idempotency-Key header is required")
+@@ -8694,68 +8742,35 @@ def _accept_replan_impl(
+         .where(Activity.plan_version_id == proposed.id)
+         .order_by(Activity.sequence_no)
+     ).all()
+-    active_c4_commitments = session.scalars(
++    active_commitments = session.scalars(
+         select(CommitmentModel).where(
+             CommitmentModel.journey_id == journey.id,
+             CommitmentModel.status == "ACTIVE",
+-            CommitmentModel.level == "C4_Anchored",
+         )
+     ).all()
+-    for commitment in active_c4_commitments:
++    for commitment in active_commitments:
+         policy = json.loads(commitment.policy_json or "{}")
+-        semantic_key = str(policy.get("semantic_key") or "")
+-        scheduled_start = str(policy.get("scheduled_start_at") or "")
+-        time_boundary = (
+-            "END"
+-            if str(policy.get("anchor_role") or "").upper() == "DEPARTURE"
+-            else "START"
+-        )
+-        # A commitment stores the *canonical* semantic key (for example
+-        # ``v12:<journey>:departure-anchor``), while an Activity carries that key
+-        # in metadata and its own Place id in ``place_id``.  Comparing place_id
+-        # against the semantic key could never match, so accepting a replan
+-        # always failed with "cannot remap an active C4 commitment".
+-        legacy_key = str(policy.get("semantic_node_key") or "")
+-        # The same commitment can be spelled as a canonical semantic key
+-        # (v12:<journey>:arrival-anchor), a bare structural node
+-        # (arrival-anchor), or an activity/Place id.  Accept every equivalent
+-        # spelling so a legacy C4 anchor still remaps.
+-        wanted = {semantic_key, legacy_key}
+-        wanted |= {item for item in (semantic_key, legacy_key) if item}
+-        wanted |= {f":{item}" for item in (semantic_key, legacy_key) if item}
+-
+-        def _matches_commitment(activity: Any) -> bool:
+-            metadata = _json_object(activity.metadata_json, {})
+-            candidates = {
+-                str(activity.place_id or ""),
+-                str(activity.city_service_id or ""),
+-                str(metadata.get("semantic_key") or ""),
+-                str(metadata.get("semantic_node_key") or ""),
+-            }
+-            if not any(
+-                candidate and any(candidate.endswith(term) for term in wanted if term)
+-                for candidate in candidates
+-            ):
+-                return False
+-            moment = activity.end_at if time_boundary == "END" else activity.start_at
+-            try:
+-                # Compare the *instant*.  The proposed plan is normalised to the
+-                # journey's offset while the commitment may hold the same
+-                # instant in UTC, so string equality would be wrong.
+-                return datetime.fromisoformat(moment) == datetime.fromisoformat(
+-                    scheduled_start
+-                )
+-            except (TypeError, ValueError):
+-                return False
+-
+-        replacement = next(
+-            (activity for activity in proposed_activities if _matches_commitment(activity)),
+-            None,
++        anchored = (
++            session.get(Activity, commitment.activity_id) if commitment.activity_id else None
+         )
+-        if replacement is None:
+-            # A preserved commitment must remain addressable on the accepted
+-            # active plan; fail safe rather than persisting a stale pointer.
+-            raise HTTPException(409, "accepted replan cannot remap an active C4 commitment")
++        protected = commitment.level == "C4_Anchored"
++        try:
++            replacement = resolve_commitment_target(
++                policy=policy,
++                anchored_activity=anchored,
++                candidates=list(proposed_activities),
++                subject="accepted replan",
++            )
++        except CommitmentRemapConflict as exc:
++            if protected:
++                # Zero matches means the accepted plan silently dropped something the
++                # traveller was promised; more than one means two activities claim the
++                # same anchor and picking one would invent an identity the record does
++                # not carry.  Both fail closed rather than persist a guessed pointer.
++                raise HTTPException(
++                    409, f"accepted replan cannot remap an active C4 commitment: {exc}"
++                ) from exc
++            continue
+         commitment.activity_id = replacement.id
+         commitment.updated_at = decided_at
+ 
+@@ -9812,32 +9827,38 @@ def create_journey_transaction(
+ ):
+     if idempotency_key is None:
+         raise HTTPException(422, "Idempotency-Key header is required")
+-    try:
+-        provider, provider_failure = _mock_payment_provider(payload.provider_key)
+-        item = commerce_create_transaction(
+-            session,
+-            journey_id=str(journey_id),
+-            booking_id=str(payload.booking_id) if payload.booking_id else None,
+-            order_id=str(payload.order_id) if payload.order_id else None,
+-            transaction_type=payload.transaction_type,
+-            requested_amount_minor=payload.amount.amount_minor,
+-            requested_currency=payload.amount.currency,
+-            provider=provider,
+-            idempotency_key=idempotency_key,
+-            source_strength_codes=SOURCE_COMMITMENT_STRENGTHS,
+-            force_failure=provider_failure
+-            or payload.force_failure
+-            or payload.failure_token is not None
+-            or x_mock_failure == "FORCE_PAYMENT_FAIL",
+-        )
+-        session.commit()
+-        return _transaction_payload(item)
+-    except (IdempotencyConflict, CommerceConflict) as exc:
+-        session.rollback()
+-        raise HTTPException(409, str(exc)) from exc
+-    except (CommerceValidationError, ValueError) as exc:
+-        session.rollback()
+-        raise HTTPException(422, str(exc)) from exc
++    # Held across the commit and the rollback: a capture validates a booking, then
++    # promotes the commitment behind it, so releasing between validation and commit
++    # would let a concurrent replan switch the authoritative plan and leave that
++    # promotion pointing at an activity no active plan contains.
++    with journey_write_lock(str(journey_id)):
++        session.expire_all()
++        try:
++            provider, provider_failure = _mock_payment_provider(payload.provider_key)
++            item = commerce_create_transaction(
++                session,
++                journey_id=str(journey_id),
++                booking_id=str(payload.booking_id) if payload.booking_id else None,
++                order_id=str(payload.order_id) if payload.order_id else None,
++                transaction_type=payload.transaction_type,
++                requested_amount_minor=payload.amount.amount_minor,
++                requested_currency=payload.amount.currency,
++                provider=provider,
++                idempotency_key=idempotency_key,
++                source_strength_codes=SOURCE_COMMITMENT_STRENGTHS,
++                force_failure=provider_failure
++                or payload.force_failure
++                or payload.failure_token is not None
++                or x_mock_failure == "FORCE_PAYMENT_FAIL",
++            )
++            session.commit()
++            return _transaction_payload(item)
++        except (IdempotencyConflict, CommerceConflict) as exc:
++            session.rollback()
++            raise HTTPException(409, str(exc)) from exc
++        except (CommerceValidationError, ValueError) as exc:
++            session.rollback()
++            raise HTTPException(422, str(exc)) from exc
+ 
+ 
+ @app.get("/api/v1/transactions/{transaction_id}", response_model=TransactionSchema)
+diff --git a/backend/app/operations/v9.py b/backend/app/operations/v9.py
+index 4d26035..43e9b36 100644
+--- a/backend/app/operations/v9.py
++++ b/backend/app/operations/v9.py
+@@ -12,6 +12,10 @@ from sqlalchemy import delete, func, select
+ from sqlalchemy.orm import Session
+ 
+ from app.core.audit import record_audit
++from app.replanning.commitment_remap import (
++    RemapConflict as CommitmentRemapConflict,
++    resolve_commitment_target,
++)
+ from app.operations.reservation_identity import (
+     quarantine_duplicate_confirmation_identities,
+ )
+@@ -131,11 +135,23 @@ def _execution_truth(
+         (index for index, item in enumerate(activities) if item.id == current_activity_id),
+         None,
+     )
+-    if current_index is None:
++    # The cursor is an assertion about identity, so "absent" and "unresolvable"
++    # are different facts and must not share a branch.  A null cursor is a legal
++    # pre-execution state: the journey has started and nothing has been completed
++    # yet, so projecting the first pending activity is the truth.  A cursor that
++    # names a specific activity which is not on this plan — because it was
++    # deleted, or because a replan replaced the plan underneath it — is stale or
++    # corrupt state.  Falling back there would render a plausible Now/Next/NextLeg
++    # that the authoritative record does not support, which is worse than
++    # rendering nothing: a traveller would act on it.
++    stale_cursor = current_activity_id is not None and current_index is None
++    if current_activity_id is None:
+         current_index = next(
+             (index for index, item in enumerate(activities) if item.status not in terminal),
+             len(activities),
+         )
++    elif stale_cursor:
++        current_index = len(activities)
+     now_item = (
+         activities[current_index]
+         if 0 <= current_index < len(activities) and activities[current_index].status not in terminal
+@@ -164,10 +180,23 @@ def _execution_truth(
+         "next": compact(next_item),
+         "now_activity_id": now_item.id if now_item else None,
+         "next_activity_id": next_item.id if next_item else None,
+-        "now_state": now_item.status if now_item else "COMPLETE",
++        "now_state": now_item.status if now_item else ("STALE_CURSOR" if stale_cursor else "COMPLETE"),
+         "next_state": next_item.status if next_item else None,
+         "next_mode": next_leg.mode if next_leg else "NONE",
+         "next_eta_min": next_leg.duration_min if next_leg else 0,
++        # The oracle compares the leg itself, not only what was derived from it:
++        # two legs can share a mode and a duration and still be different promises.
++        "next_leg_id": next_leg.id if next_leg else None,
++        # Fail-closed has to be observable, otherwise a consumer cannot tell
++        # "nothing is due" from "the record contradicts itself".
++        "cursor_status": (
++            "STALE"
++            if stale_cursor
++            else "ABSENT_FALLBACK"
++            if current_activity_id is None
++            else "VALID"
++        ),
++        "persisted_cursor": current_activity_id,
+     }
+ 
+ 
+@@ -739,27 +768,39 @@ def materialize_stay_option(
+             Commitment.status == "ACTIVE",
+         )
+     ).all()
+-    by_semantic = {
+-        str(_load(item.metadata_json, {}).get("semantic_key") or ""): item
+-        for item in activities
+-    }
+-    by_place = {item.place_id: item for item in activities}
+     for commitment in active_commitments:
+         policy = _load(commitment.policy_json, {})
+         role = str(policy.get("anchor_role") or "").upper()
++        anchored = (
++            session.get(Activity, commitment.activity_id) if commitment.activity_id else None
++        )
+         # Reservation anchors resolve to their canonical structural node; a
+         # booking/order anchor keeps its own activity-anchored identity.
+         if role in {"ARRIVAL", "DEPARTURE"}:
+-            candidate_key = f"v12:{journey.id}:{role.lower()}-anchor"
++            wanted_key = f"v12:{journey.id}:{role.lower()}-anchor"
+         else:
+-            candidate_key = str(policy.get("semantic_key") or policy.get("semantic_node_key") or "")
+-        activity = by_semantic.get(candidate_key) or by_place.get(candidate_key)
+-        if activity is not None:
+-            commitment.activity_id = activity.id
+-            if role in {"ARRIVAL", "DEPARTURE"}:
+-                policy["semantic_key"] = candidate_key
+-            commitment.policy_json = _json(policy)
+-            commitment.updated_at = _now()
++            wanted_key = str(policy.get("semantic_key") or policy.get("semantic_node_key") or "")
++        if anchored is not None and anchored.plan_version_id == plan.id and wanted_key in {
++            str(policy.get("semantic_key") or ""),
++            str(policy.get("semantic_node_key") or ""),
++        }:
++            continue
++        try:
++            activity = resolve_commitment_target(
++                policy={**policy, "semantic_node_key": wanted_key},
++                anchored_activity=anchored,
++                candidates=list(activities),
++                subject="authoritative plan activation",
++            )
++        except CommitmentRemapConflict as exc:
++            # Previously this branch just skipped the commitment, leaving a live
++            # C4 anchored to an activity on the plan this one replaced.
++            raise ValueError(f"cannot bind an active commitment: {exc}") from exc
++        commitment.activity_id = activity.id
++        if role in {"ARRIVAL", "DEPARTURE"}:
++            policy["semantic_key"] = wanted_key
++        commitment.policy_json = _json(policy)
++        commitment.updated_at = _now()
+ 
+     twin = session.get(JourneyTwin, journey.id)
+     if twin is None:
+@@ -1488,13 +1529,25 @@ def edge_snapshot(session: Session, device: EdgeDevice) -> dict[str, Any]:
+         autopilot_state = "DISABLED"
+     device.last_sequence += 1
+     device.updated_at = _now()
++    stale_projection = execution["cursor_status"] == "STALE"
+     return {
+         "sequence": device.last_sequence,
+         "time": execution_now.isoformat(),
+         "journey_state": journey.status,
+-        "now_title": now_item.title if now_item else "No active step",
+-        "now_state": now_item.status if now_item else "COMPLETE",
+-        "next_title": next_item.title if next_item else "Journey complete",
++        # "Nothing is due" and "the record contradicts itself" are different
++        # facts; the device must not be told the journey is complete because the
++        # cursor points at an activity this plan does not contain.
++        "now_title": (
++            "Execution position unresolved"
++            if stale_projection
++            else now_item.title if now_item else "No active step"
++        ),
++        "now_state": now_item.status if now_item else ("STALE_CURSOR" if stale_projection else "COMPLETE"),
++        "next_title": (
++            "Next step unavailable"
++            if stale_projection
++            else next_item.title if next_item else "Journey complete"
++        ),
+         "next_state": next_item.status if next_item else None,
+         "next_at": next_item.start_at if next_item else None,
+         "mode": next_leg.mode if next_leg else "NONE",
+@@ -1503,6 +1556,7 @@ def edge_snapshot(session: Session, device: EdgeDevice) -> dict[str, Any]:
+         "risk": risk,
+         "autopilot_state": autopilot_state,
+         "active_plan_version_id": journey.active_plan_version_id,
++        "cursor_status": execution["cursor_status"],
+         "execution": execution,
+         "execution_truth_id": f"edge:{journey.id}:{journey.active_plan_version_id}:{journey.current_activity_id}",
+     }
+diff --git a/backend/app/replanning/commitment_remap.py b/backend/app/replanning/commitment_remap.py
+new file mode 100644
+index 0000000..4f2461e
+--- /dev/null
++++ b/backend/app/replanning/commitment_remap.py
+@@ -0,0 +1,188 @@
++"""Bind a protected commitment to exactly one activity on the active plan.
++
++A ``Commitment.activity_id`` is PlanVersion-local: the moment a replan becomes
++authoritative, the activity it named may belong to a superseded plan.  Both
++writers that can leave a commitment pointing at the old plan — accepting a
++replan, and capturing the payment behind a booking — therefore have to re-point
++it, and the re-pointing is where identity truth is decided.
++
++The invariant, and the only one this module enforces:
++
++    zero matches    -> fail closed.  Silence here is what strands a live C4
++                       commitment on an obsolete plan.
++    exactly one     -> rebind to it.
++    more than one   -> AMBIGUOUS, fail closed.  Picking "the first one in
++                       sequence order" invents an identity the record does not
++                       support.
++
++Identity is structural and compared for exact equality only: semantic keys from
++the commitment policy and the activity metadata, then the activity's own
++``place_id`` / ``city_service_id``, plus the scheduled instant the commitment was
++anchored to.  Substring and suffix matching are deliberately absent.  A
++commitment's canonical semantic key has historically been spelled several ways
++(``v12:<journey>:departure-anchor`` versus a bare ``departure-anchor`` versus a
++place id), and the tempting fix — ``candidate.endswith(term)`` — quietly turns
++identity into string similarity, which is how a dinner anchor can match a
++departure anchor that happens to share a suffix.  Titles are never consulted.
++
++A generic (place/service) match is accepted only when neither side carries a
++stronger semantic identity, so a place overlap can never outvote a conflicting
++semantic key.
++"""
++
++from __future__ import annotations
++
++import json
++from dataclasses import dataclass, field
++from datetime import datetime
++from typing import Any, Iterable, Sequence
++
++from app.db.models import Activity
++
++
++class RemapConflict(RuntimeError):
++    """Raised when a commitment cannot be bound to exactly one active activity."""
++
++    def __init__(self, message: str, *, matched: int) -> None:
++        super().__init__(message)
++        self.matched = matched
++
++
++@dataclass
++class CommitmentIdentity:
++    """The identity a commitment asserts, read from its policy and its activity."""
++
++    strong: set[str] = field(default_factory=set)
++    generic: set[str] = field(default_factory=set)
++    scheduled_at: str | None = None
++    boundary: str = "START"
++
++    @property
++    def has_strong(self) -> bool:
++        return bool(self.strong)
++
++
++def _loads(value: Any) -> dict[str, Any]:
++    if isinstance(value, dict):
++        return value
++    try:
++        loaded = json.loads(value or "{}")
++    except (TypeError, json.JSONDecodeError):
++        return {}
++    return loaded if isinstance(loaded, dict) else {}
++
++
++def _clean(values: Iterable[Any]) -> set[str]:
++    return {str(value) for value in values if value}
++
++
++def commitment_identity(
++    *, policy: dict[str, Any], activity: Activity | None
++) -> CommitmentIdentity:
++    """Read what the commitment is anchored to.
++
++    The activity the commitment currently names is a first-class identity source:
++    a booking made against a plan carries the place and semantic keys that activity
++    had, even when the policy was written by an older anchor format that only knew
++    a canonical key string.
++    """
++
++    metadata = _loads(getattr(activity, "metadata_json", None))
++    strong = _clean(
++        [
++            policy.get("semantic_key"),
++            policy.get("semantic_node_key"),
++            metadata.get("semantic_key"),
++            metadata.get("semantic_node_key"),
++        ]
++    )
++    generic = _clean(
++        [
++            policy.get("semantic_key"),
++            getattr(activity, "place_id", None),
++            getattr(activity, "city_service_id", None),
++        ]
++    )
++    scheduled = str(policy.get("scheduled_start_at") or "") or None
++    boundary = (
++        "END" if str(policy.get("anchor_role") or "").upper() == "DEPARTURE" else "START"
++    )
++    return CommitmentIdentity(
++        strong=strong, generic=generic, scheduled_at=scheduled, boundary=boundary
++    )
++
++
++def _same_instant(left: str | None, right: str | None) -> bool:
++    """Compare the instant, not the string.
++
++    A proposed plan is normalised to the journey's UTC offset while a commitment
++    may hold the same instant in UTC, so textual equality would reject a real
++    match and a substring test would accept a false one.
++    """
++
++    if not left or not right:
++        return False
++    try:
++        return datetime.fromisoformat(left) == datetime.fromisoformat(right)
++    except ValueError:
++        return False
++
++
++def matching_activities(
++    identity: CommitmentIdentity, candidates: Sequence[Activity]
++) -> list[Activity]:
++    """Return every candidate that is provably the same commitment target."""
++
++    strong_matches: list[Activity] = []
++    generic_matches: list[Activity] = []
++    for candidate in candidates:
++        if candidate.status in {"CANCELLED"}:
++            continue
++        metadata = _loads(candidate.metadata_json)
++        candidate_strong = _clean(
++            [metadata.get("semantic_key"), metadata.get("semantic_node_key")]
++        )
++        candidate_generic = _clean([candidate.place_id, candidate.city_service_id])
++        moment = candidate.end_at if identity.boundary == "END" else candidate.start_at
++        if not _same_instant(identity.scheduled_at, moment):
++            continue
++        if identity.strong & candidate_strong:
++            strong_matches.append(candidate)
++            continue
++        # A place/service overlap is a compatibility path for commitments whose
++        # semantic key is the place id itself (which is what a booking stores).  It
++        # is refused only when the candidate carries its own stronger semantic
++        # identity, so a place overlap can never outvote a real semantic conflict.
++        if identity.generic & candidate_generic and not (identity.strong and candidate_strong):
++            generic_matches.append(candidate)
++    return strong_matches if strong_matches else generic_matches
++
++
++def resolve_commitment_target(
++    *,
++    policy: dict[str, Any],
++    anchored_activity: Activity | None,
++    candidates: Sequence[Activity],
++    subject: str = "commitment",
++) -> Activity:
++    """Fail closed unless exactly one candidate carries the commitment's identity."""
++
++    identity = commitment_identity(policy=policy, activity=anchored_activity)
++    if not identity.scheduled_at:
++        raise RemapConflict(
++            f"{subject} carries no scheduled anchor, so it cannot be bound to an activity",
++            matched=0,
++        )
++    matches = matching_activities(identity, candidates)
++    if len(matches) == 1:
++        return matches[0]
++    if len(matches) > 1:
++        raise RemapConflict(
++            f"{subject} remap is AMBIGUOUS on the active Journey plan "
++            f"({len(matches)} candidates carry the same identity)",
++            matched=len(matches),
++        )
++    raise RemapConflict(
++        f"{subject} cannot be attached to the active Journey plan",
++        matched=0,
++    )
+diff --git a/backend/app/stay_mobility.py b/backend/app/stay_mobility.py
+index 83e8146..ad7fc30 100644
+--- a/backend/app/stay_mobility.py
++++ b/backend/app/stay_mobility.py
+@@ -1464,6 +1464,18 @@ def _active_plan_payload(session: Session, journey: Journey) -> dict[str, Any] |
+         .where(LocationObservation.journey_id == journey.id)
+         .order_by(LocationObservation.captured_at.desc(), LocationObservation.id.desc())
+     )
++    # The cursor and the activity list below come from the same read, so the
++    # projection can say whether the persisted position is actually one of this
++    # plan's activities.  Without it a consumer gets a cursor value and a list it
++    # does not intersect, and has no way to notice.
++    cursor_status = (
++        "VALID"
++        if journey.current_activity_id
++        and any(item.id == journey.current_activity_id for item in activities)
++        else "STALE"
++        if journey.current_activity_id
++        else "ABSENT_FALLBACK"
++    )
+     disruptions = session.scalars(
+         select(Event)
+         .where(Event.journey_id == journey.id, Event.status.in_(("DETECTED", "ACKNOWLEDGED")))
+@@ -1483,11 +1495,13 @@ def _active_plan_payload(session: Session, journey: Journey) -> dict[str, Any] |
+             "replayable": bool(plan.mobility_evidence_json),
+         },
+         "current_activity_id": journey.current_activity_id,
++        "cursor_status": cursor_status,
+         "activities": [
+             {
+                 "id": item.id,
+                 "sequence_no": item.sequence_no,
+                 "type": item.activity_type,
++                "status": item.status,
+                 "title": item.title,
+                 # Stable identity.  The canonical plan projection
+                 # (GET /api/v1/plans/{id}) has always carried these, and a
+diff --git a/backend/tests/test_sol_concurrency_and_remap.py b/backend/tests/test_sol_concurrency_and_remap.py
+new file mode 100644
+index 0000000..6a22697
+--- /dev/null
++++ b/backend/tests/test_sol_concurrency_and_remap.py
+@@ -0,0 +1,839 @@
++"""Journey-scoped serialization, acceptance races, and commitment re-binding.
++
++Four defects from the Sol verification, closed here with the assertions the
++ruling asked for: a race test that only checks status codes proves nothing,
++because two callers can both return 200 while the database ends up with two
++ACTIVE plans.  Every schedule below asserts the final canonical state:
++
++    exactly one ACTIVE PlanVersion
++    the Journey points at that one
++    exactly one ACCEPTED proposal claiming the win
++    zero active commitments anchored outside the active plan
++
++Schedules are made to overlap with a barrier rather than with sleeps: a sleep is
++a guess about timing, and a guess that passes is not evidence.
++"""
++
++from __future__ import annotations
++
++import gc
++import json
++import threading
++from concurrent.futures import ThreadPoolExecutor
++from contextlib import nullcontext
++from typing import Any
++from uuid import uuid4
++
++import pytest
++from fastapi.testclient import TestClient
++from sqlalchemy import func, select
++
++import app.main as main_module
++from app import concurrency_guards
++from app.db.models import Activity, Commitment, Journey, PlanVersion, ReplanProposal
++from app.db.session import SessionLocal
++from app.replanning.commitment_remap import (
++    RemapConflict,
++    matching_activities,
++    commitment_identity,
++    resolve_commitment_target,
++)
++
++client = TestClient(main_module.app)
++
++
++# --------------------------------------------------------------------------
++# helpers
++# --------------------------------------------------------------------------
++def _journey_with_captured_commitment() -> tuple[str, str, str]:
++    """A travelling journey holding one genuine C4 commitment.
++
++    The cruise is booked and its payment captured *before* `/start`, because
++    `protected` is derived from ACTIVE Commitment rows and booking a travelling
++    activity is refused.  Without this the race tests would be protecting
++    nothing, and `locked_commitments_preserved` would be vacuously true.
++    """
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++    plan = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()[0]
++    assert client.post(
++        f"/api/v1/journeys/{journey_id}/plans/{plan['id']}/select"
++    ).status_code == 200
++    cruise = next(item for item in plan["activities"] if item["place_id"] == "place-river-cruise")
++    booking = client.post(
++        f"/api/v1/journeys/{journey_id}/bookings", json={"activity_id": cruise["id"]}
++    )
++    assert booking.status_code == 201, booking.text
++    body = booking.json()
++    capture = client.post(
++        f"/api/v1/journeys/{journey_id}/transactions",
++        json={
++            "booking_id": body["id"],
++            "transaction_type": "CAPTURE",
++            "amount": body["amount"],
++        },
++        headers={"Idempotency-Key": f"capture-{body['id']}"},
++    )
++    assert capture.status_code == 201, capture.text
++    assert client.post(f"/api/v1/journeys/{journey_id}/start").status_code == 200
++    return journey_id, cruise["id"], body
++
++
++def _journey_with_uncaptured_booking() -> tuple[str, str, str]:
++    """Book the cruise but leave the payment uncaptured.
++
++    This is the state that strands a commitment: the acceptance only re-points
++    C4 rows, so an un-captured booking is invisible to it, and the capture that
++    arrives afterwards promotes a pointer into the plan that no longer exists.
++    """
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++    plan = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()[0]
++    assert client.post(
++        f"/api/v1/journeys/{journey_id}/plans/{plan['id']}/select"
++    ).status_code == 200
++    cruise = next(item for item in plan["activities"] if item["place_id"] == "place-river-cruise")
++    booking = client.post(
++        f"/api/v1/journeys/{journey_id}/bookings", json={"activity_id": cruise["id"]}
++    )
++    assert booking.status_code == 201, booking.text
++    body = booking.json()
++    assert client.post(f"/api/v1/journeys/{journey_id}/start").status_code == 200
++    return journey_id, cruise["id"], body
++
++
++def _proposal_for(journey_id: str, activity_id: str, label: str) -> dict[str, Any]:
++    event = client.post(
++        f"/api/v1/journeys/{journey_id}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": activity_id,
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": label},
++        },
++    ).json()
++    requested = client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"{label}-{event['id']}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event["id"],
++            "candidate_count": 3,
++        },
++    )
++    assert requested.status_code == 200, requested.text
++    proposals = client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++    presented = [
++        item
++        for item in proposals
++        if item.get("trigger_event_id") == event["id"] and item.get("status") == "PRESENTED"
++    ]
++    assert presented, f"{label} produced no presentable proposal"
++    return presented[0]
++
++
++def _closed_activity_id(plan_activities: list[dict]) -> str:
++    return next(item["id"] for item in plan_activities if item["place_id"] == "place-tech-art")
++
++
++def _final_truth(journey_id: str) -> dict[str, Any]:
++    """Read the canonical state straight from the rows, not from an endpoint."""
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        active_plans = list(
++            session.scalars(
++                select(PlanVersion).where(
++                    PlanVersion.journey_id == journey_id, PlanVersion.status == "ACTIVE"
++                )
++            ).all()
++        )
++        accepted = list(
++            session.scalars(
++                select(ReplanProposal).where(
++                    ReplanProposal.journey_id == journey_id,
++                    ReplanProposal.status == "ACCEPTED",
++                )
++            ).all()
++        )
++        commitments = list(
++            session.scalars(
++                select(Commitment).where(
++                    Commitment.journey_id == journey_id, Commitment.status == "ACTIVE"
++                )
++            ).all()
++        )
++        dangling = [
++            item
++            for item in commitments
++            if item.activity_id
++            and (
++                (row := session.get(Activity, item.activity_id)) is None
++                or row.plan_version_id != journey.active_plan_version_id
++            )
++        ]
++        return {
++            "active_plan_ids": sorted(item.id for item in active_plans),
++            "journey_plan_id": journey.active_plan_version_id,
++            "accepted_proposal_ids": sorted(item.id for item in accepted),
++            "accepted_point_to": sorted({item.proposed_plan_version_id for item in accepted}),
++            # The invariant the ruling states: no *protected* commitment may be
++            # stranded on a plan the journey no longer executes.
++            "dangling_commitments": sorted(
++                item.id for item in dangling if item.level == "C4_Anchored"
++            ),
++            # Informational: an ordinary booking the recovery could not re-point is
++            # not a broken promise, but a run that produces one should show it.
++            "off_plan_commitments": sorted(item.id for item in dangling),
++            "cursor_status_ok": journey.current_activity_id is None
++            or (
++                session.get(Activity, journey.current_activity_id) is not None
++                and session.get(Activity, journey.current_activity_id).plan_version_id
++                == journey.active_plan_version_id
++            ),
++        }
++
++
++def _assert_one_winner(truth: dict[str, Any]) -> None:
++    assert len(truth["active_plan_ids"]) == 1, (
++        "a Journey ended up with more than one ACTIVE PlanVersion, which means two "
++        f"callers both believed they had switched the plan: {truth['active_plan_ids']}"
++    )
++    assert truth["journey_plan_id"] == truth["active_plan_ids"][0], (
++        "the Journey points somewhere other than the single ACTIVE plan"
++    )
++    assert len(truth["accepted_proposal_ids"]) == 1, (
++        f"more than one proposal claims the win: {truth['accepted_proposal_ids']}"
++    )
++    assert truth["accepted_point_to"] == truth["active_plan_ids"], (
++        "the accepted proposal and the ACTIVE plan disagree about which plan won"
++    )
++    assert not truth["dangling_commitments"], (
++        "active commitments are anchored outside the active plan, so the traveller is "
++        f"protected by a pointer into a superseded plan: {truth['dangling_commitments']}"
++    )
++    assert truth["cursor_status_ok"], "the execution cursor was left on a superseded plan"
++
++
++def _race(callables: list) -> list[Any]:
++    """Run the callables in parallel, released by a barrier, and collect results."""
++    barrier = threading.Barrier(len(callables))
++
++    def run(item):
++        barrier.wait()
++        return item()
++
++    with ThreadPoolExecutor(max_workers=len(callables)) as pool:
++        return list(pool.map(run, callables))
++
++
++# --------------------------------------------------------------------------
++# B. the guard itself, and its disclosure
++# --------------------------------------------------------------------------
++def test_the_guard_is_explicitly_disclosed_as_process_local() -> None:
++    """A lock that is not distributed-safe must not be describable as one."""
++    assert concurrency_guards.PROCESS_LOCAL_ONLY is True
++    doc = concurrency_guards.__doc__ or ""
++    assert "not" in doc and "distributed" in doc, (
++        "the module must state in its own docstring that this is not distributed safety"
++    )
++
++
++def test_the_guard_actually_serialises_two_threads_for_one_journey() -> None:
++    """Prove the lock, do not assume it.
++
++    The holder waits on a two-party barrier inside the critical section.  If the
++    guard works, the second thread cannot reach that barrier and the wait breaks.
++    The control run takes no lock and must reach the barrier, otherwise this test
++    would go green for the wrong reason - a probe that can never observe overlap
++    proves nothing about the thing that prevents it.
++    """
++
++    def measure(use_lock: bool) -> tuple[int, bool]:
++        peak = 0
++        current = 0
++        counter_guard = threading.Lock()
++        rendezvous = threading.Barrier(2, timeout=1)
++        broken = False
++
++        def critical() -> None:
++            nonlocal peak, current, broken
++            context = (
++                concurrency_guards.journey_write_lock("race-probe")
++                if use_lock
++                else nullcontext()
++            )
++            with context:
++                with counter_guard:
++                    current += 1
++                    peak = max(peak, current)
++                try:
++                    rendezvous.wait()
++                except threading.BrokenBarrierError:
++                    broken = True
++                with counter_guard:
++                    current -= 1
++
++        _race([critical, critical])
++        return peak, broken
++
++    free_peak, free_broken = measure(use_lock=False)
++    assert free_peak == 2 and not free_broken, (
++        "the probe could not observe two holders at once without the lock, so it "
++        "cannot prove anything when the lock is on"
++    )
++
++    held_peak, held_broken = measure(use_lock=True)
++    assert held_peak == 1, (
++        f"two holders were inside the Journey lock at once ({held_peak}), so the guard "
++        "does not serialise what it claims to"
++    )
++    assert held_broken, (
++        "the second thread never even reached the barrier timeout path, which means "
++        "the two calls did not actually overlap"
++    )
++
++
++def test_the_lock_registry_does_not_pin_a_journey_forever() -> None:
++    key = f"transient-{uuid4()}"
++    with concurrency_guards.journey_write_lock(key):
++        assert key in concurrency_guards.journey_lock_registry()
++    gc.collect()
++    assert key not in concurrency_guards.journey_lock_registry(), (
++        "every Journey ever written to stays in the registry; a long-running worker "
++        "would leak one lock per Journey"
++    )
++
++
++# --------------------------------------------------------------------------
++# C. CX-EXT-002 — the same proposal accepted twice concurrently
++# --------------------------------------------------------------------------
++def test_concurrent_acceptance_of_the_same_proposal_produces_one_transition() -> None:
++    journey_id, _ = _started_for_race()
++    proposal = _proposal_for(journey_id, _closed_activity_id(_plan_activities(journey_id)), "same")
++
++    def call(tag: str):
++        return client.post(
++            f"/api/v1/replans/{proposal['id']}/accept",
++            headers={"Idempotency-Key": f"race-{tag}-{proposal['id']}"},
++        )
++
++    responses = _race([lambda: call("a"), lambda: call("b")])
++    statuses = sorted(item.status_code for item in responses)
++    assert statuses.count(200) == 1, (
++        f"both callers believed they switched the plan: {statuses}"
++    )
++    assert 409 in statuses, (
++        "the losing caller was not told the proposal was already decided"
++    )
++    _assert_one_winner(_final_truth(journey_id))
++
++
++def test_replaying_the_same_idempotency_key_never_transitions_twice() -> None:
++    journey_id, _ = _started_for_race()
++    proposal = _proposal_for(
++        journey_id, _closed_activity_id(_plan_activities(journey_id)), "replay"
++    )
++    key = f"replay-{proposal['id']}"
++
++    def call():
++        return client.post(
++            f"/api/v1/replans/{proposal['id']}/accept", headers={"Idempotency-Key": key}
++        )
++
++    first, second = _race([call, call])
++    assert first.status_code == 200 and second.status_code == 200, (
++        f"a replayed idempotent request must be served, not re-executed: "
++        f"{first.status_code}/{second.status_code}"
++    )
++    truth = _final_truth(journey_id)
++    _assert_one_winner(truth)
++
++
++# --------------------------------------------------------------------------
++# D. CX-EXT-003 — two competing proposals for one Journey
++# --------------------------------------------------------------------------
++def test_competing_proposals_can_never_both_become_active() -> None:
++    journey_id, _ = _started_for_race()
++    closed = _closed_activity_id(_plan_activities(journey_id))
++    first = _proposal_for(journey_id, closed, "compete-a")
++    # A second candidate batch for the same incident is the honest way to get two
++    # competitors: closing a second activity depends on mobility legs the fixture
++    # may not cover, and the engine refuses those with MOBILITY_DATA_UNAVAILABLE
++    # rather than inventing a route.
++    event_id = first["trigger_event_id"]
++    assert client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"compete-b-{event_id}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event_id,
++            "candidate_count": 3,
++        },
++    ).status_code == 200
++    presented = [
++        item
++        for item in client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++        if item.get("status") == "PRESENTED"
++        and item.get("base_plan_version_id") == first["base_plan_version_id"]
++    ]
++    assert len(presented) >= 2, (
++        "the fixture produced no competitor for this proposal, so this would not be "
++        f"the race under test: {[item['id'] for item in presented]}"
++    )
++    second = next(item for item in presented if item["id"] != first["id"])
++
++    def call(proposal_id: str):
++        return client.post(
++            f"/api/v1/replans/{proposal_id}/accept",
++            headers={"Idempotency-Key": f"compete-{proposal_id}"},
++        )
++
++    responses = _race([lambda: call(first["id"]), lambda: call(second["id"])])
++    winners = [item for item in responses if item.status_code == 200]
++    assert len(winners) == 1, (
++        f"both competing proposals were accepted: {[r.status_code for r in responses]}"
++    )
++    loser = next(item for item in responses if item.status_code != 200)
++    assert loser.status_code == 409, (
++        f"the losing caller got {loser.status_code}; a rejected competitor is a "
++        "conflict, not a validation error"
++    )
++
++    truth = _final_truth(journey_id)
++    _assert_one_winner(truth)
++    with SessionLocal() as session:
++        losing_id = second["id"] if winners[0] is responses[0] else first["id"]
++        row = session.get(ReplanProposal, losing_id)
++        # The existing domain model already has a truthful non-winning state; no
++        # test-only status is invented.
++        assert row.status in {"INVALIDATED", "PRESENTED"}, (
++            f"the losing proposal sits in {row.status!r}, which does not describe "
++            "a competitor that was displaced by another acceptance"
++        )
++        losing_plan = session.get(PlanVersion, row.proposed_plan_version_id)
++        assert losing_plan.status != "ACTIVE", "a losing proposal left its plan ACTIVE"
++
++
++# --------------------------------------------------------------------------
++# E. CX-EXT-004 — CAPTURE versus replan ACCEPT
++# --------------------------------------------------------------------------
++def test_capture_after_an_accept_does_not_promote_a_stale_pointer() -> None:
++    """The schedule that used to strand a C4: book, replan away the plan under the
++    booking, then capture.  The promotion must follow the commitment onto the
++    active plan or refuse outright."""
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++    plan = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()[0]
++    client.post(f"/api/v1/journeys/{journey_id}/plans/{plan['id']}/select")
++    cruise = next(item for item in plan["activities"] if item["place_id"] == "place-river-cruise")
++    booking = client.post(
++        f"/api/v1/journeys/{journey_id}/bookings", json={"activity_id": cruise["id"]}
++    ).json()
++    client.post(f"/api/v1/journeys/{journey_id}/start")
++
++    proposal = _proposal_for(
++        journey_id, _closed_activity_id(_plan_activities(journey_id)), "capture-after"
++    )
++    assert client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"accept-{proposal['id']}"},
++    ).status_code == 200
++
++    capture = client.post(
++        f"/api/v1/journeys/{journey_id}/transactions",
++        json={
++            "booking_id": booking["id"],
++            "transaction_type": "CAPTURE",
++            "amount": booking["amount"],
++        },
++        headers={"Idempotency-Key": f"late-capture-{booking['id']}"},
++    )
++    assert capture.status_code == 201, (
++        f"a capture that could not be attached should fail closed, not 500: {capture.text[:200]}"
++    )
++    truth = _final_truth(journey_id)
++    assert not truth["dangling_commitments"], (
++        "the late capture promoted a commitment still anchored to the superseded plan"
++    )
++
++
++def test_capture_and_accept_racing_leave_no_stranded_commitment() -> None:
++    """The schedule that used to be able to strand a promise.
++
++    The booking exists and is not yet captured, so the acceptance does not treat
++    it as a C4 and may replace the activity underneath it.  If the capture then
++    lands against the superseded pointer, the traveller is told they hold a
++    protected commitment that no active plan contains.
++    """
++    journey_id, _cruise_activity, booking = _journey_with_uncaptured_booking()
++    booking_id = booking["id"]
++    proposal = _proposal_for(
++        journey_id, _closed_activity_id(_plan_activities(journey_id)), "race-capture"
++    )
++
++    def capture() -> Any:
++        return client.post(
++            f"/api/v1/journeys/{journey_id}/transactions",
++            json={
++                "booking_id": booking_id,
++                "transaction_type": "CAPTURE",
++                "amount": booking["amount"],
++            },
++            headers={"Idempotency-Key": f"racing-capture-{booking_id}"},
++        )
++
++    def accept() -> Any:
++        return client.post(
++            f"/api/v1/replans/{proposal['id']}/accept",
++            headers={"Idempotency-Key": f"racing-accept-{proposal['id']}"},
++        )
++
++    captured, accepted = _race([capture, accept])
++    truth = _final_truth(journey_id)
++    print(
++        "[race] capture=%d accept=%d active_plans=%s off_plan_commitments=%s"
++        % (
++            captured.status_code,
++            accepted.status_code,
++            truth["active_plan_ids"],
++            truth["off_plan_commitments"],
++        )
++    )
++    assert accepted.status_code == 200, accepted.text
++    # Either the capture attached to the plan that was active when it ran, or it
++    # refused.  Both are legal; promoting a stale pointer is not.
++    assert captured.status_code in {201, 409}, captured.text
++    _assert_one_winner(truth)
++    if captured.status_code == 201:
++        with SessionLocal() as session:
++            row = session.scalar(
++                select(Commitment).where(
++                    Commitment.journey_id == journey_id, Commitment.level == "C4_Anchored"
++                )
++            )
++            assert row is not None, "a successful capture produced no protected commitment"
++            anchored = session.get(Activity, row.activity_id)
++            assert (
++                anchored is not None
++                and anchored.plan_version_id == truth["journey_plan_id"]
++            ), "the capture promoted a commitment anchored outside the active plan"
++
++
++def test_accept_then_capture_keeps_the_c4_on_the_active_plan() -> None:
++    journey_id, _cruise_activity, _booking = _journey_with_captured_commitment()
++    before = _final_truth(journey_id)
++    assert not before["dangling_commitments"], "the fixture itself stranded a commitment"
++
++    proposal = _proposal_for(
++        journey_id, _closed_activity_id(_plan_activities(journey_id)), "accept-first"
++    )
++    assert client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"accept-first-{proposal['id']}"},
++    ).status_code == 200
++    _assert_one_winner(_final_truth(journey_id))
++
++
++# --------------------------------------------------------------------------
++# F. the remap counting invariant, in isolation
++# --------------------------------------------------------------------------
++class _Row:
++    """Just enough Activity for the resolver to reason about."""
++
++    def __init__(
++        self,
++        row_id: str,
++        *,
++        place_id: str | None = None,
++        semantic: str | None = None,
++        start_at: str = "2026-10-10T15:30:00+08:00",
++        plan_version_id: str = "active",
++        status: str = "PENDING",
++    ) -> None:
++        self.id = row_id
++        self.plan_version_id = plan_version_id
++        self.place_id = place_id
++        self.city_service_id = None
++        self.status = status
++        self.start_at = start_at
++        self.end_at = "2026-10-10T17:00:00+08:00"
++        self.metadata_json = json.dumps({"semantic_key": semantic} if semantic else {})
++
++
++def _policy(semantic: str) -> dict[str, Any]:
++    return {
++        "semantic_key": semantic,
++        "scheduled_start_at": "2026-10-10T15:30:00+08:00",
++        "anchor_role": "ACTIVITY",
++    }
++
++
++def test_zero_candidates_fail_closed_instead_of_leaving_the_pointer_alone() -> None:
++    anchored = _Row("old", place_id="place-cruise", plan_version_id="superseded")
++    with pytest.raises(RemapConflict, match="cannot be attached"):
++        resolve_commitment_target(
++            policy=_policy("place-cruise"),
++            anchored_activity=anchored,
++            candidates=[_Row("other", place_id="place-museum")],
++            subject="test",
++        )
++
++
++def test_exactly_one_candidate_rebinds() -> None:
++    anchored = _Row("old", place_id="place-cruise", plan_version_id="superseded")
++    target = _Row("new", place_id="place-cruise")
++    assert (
++        resolve_commitment_target(
++            policy=_policy("place-cruise"),
++            anchored_activity=anchored,
++            candidates=[target],
++            subject="test",
++        )
++        is target
++    )
++
++
++def test_two_candidates_for_one_commitment_are_ambiguous_and_fail_closed() -> None:
++    """Picking "the first in sequence order" would invent an identity the record
++    does not carry, so the only honest answer is a conflict."""
++    anchored = _Row("old", place_id="place-cruise", plan_version_id="superseded")
++    with pytest.raises(RemapConflict, match="AMBIGUOUS"):
++        resolve_commitment_target(
++            policy=_policy("place-cruise"),
++            anchored_activity=anchored,
++            candidates=[_Row("a", place_id="place-cruise"), _Row("b", place_id="place-cruise")],
++            subject="test",
++        )
++
++
++def test_a_suffix_of_a_semantic_key_is_not_an_identity_match() -> None:
++    """The rule this replaces matched with `candidate.endswith(term)`, which let a
++    shorter key claim any longer one that ended the same way."""
++    anchored = _Row("old", place_id="cruise", plan_version_id="superseded")
++    impostor = _Row("impostor", place_id="river-cruise")
++    assert matching_activities(
++        commitment_identity(policy=_policy("cruise"), activity=anchored), [impostor]
++    ) == []
++
++
++def test_a_different_instant_is_not_the_same_commitment() -> None:
++    anchored = _Row("old", place_id="place-cruise", plan_version_id="superseded")
++    moved = _Row("moved", place_id="place-cruise", start_at="2026-10-11T20:00:00+08:00")
++    with pytest.raises(RemapConflict, match="cannot be attached"):
++        resolve_commitment_target(
++            policy=_policy("place-cruise"),
++            anchored_activity=anchored,
++            candidates=[moved],
++            subject="test",
++        )
++
++
++# --------------------------------------------------------------------------
++# the two guards the mutation check proved were untested
++# --------------------------------------------------------------------------
++def _move_commitment_pointer_off_plan(journey_id: str, *, place_id: str | None = None) -> str:
++    """Point the journey's active commitment at an activity on another plan.
++
++    The route does not matter; the guard has to hold whatever produced the state.
++    """
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        candidates = list(
++            session.scalars(
++                select(Activity).where(Activity.plan_version_id != journey.active_plan_version_id)
++            ).all()
++        )
++        if not candidates:
++            raise AssertionError("no off-plan activity exists to simulate a stale pointer")
++        target = candidates[0]
++        if place_id is not None:
++            target.place_id = place_id
++        commitment = session.scalar(
++            select(Commitment).where(
++                Commitment.journey_id == journey_id, Commitment.status == "ACTIVE"
++            )
++        )
++        commitment.activity_id = target.id
++        session.commit()
++        return target.id
++
++
++def test_capture_reanchors_a_commitment_that_arrived_stale() -> None:
++    """The capture must resolve the pointer before it promotes anything."""
++    journey_id, _cruise, booking = _journey_with_uncaptured_booking()
++    # A second plan exists after generation; park the pointer there.
++    client.post(f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1})
++    _move_commitment_pointer_off_plan(journey_id, place_id="place-river-cruise")
++
++    capture = client.post(
++        f"/api/v1/journeys/{journey_id}/transactions",
++        json={
++            "booking_id": booking["id"],
++            "transaction_type": "CAPTURE",
++            "amount": booking["amount"],
++        },
++        headers={"Idempotency-Key": f"stale-capture-{booking['id']}"},
++    )
++    assert capture.status_code == 201, capture.text
++    truth = _final_truth(journey_id)
++    assert not truth["dangling_commitments"], (
++        "the capture promoted a commitment whose pointer was outside the active plan"
++    )
++    assert not truth["off_plan_commitments"], truth["off_plan_commitments"]
++
++
++def test_capture_refuses_when_no_active_activity_carries_the_commitment_identity() -> None:
++    """Re-anchoring is not the same as inventing an anchor."""
++    journey_id, _cruise, booking = _journey_with_uncaptured_booking()
++    client.post(f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1})
++    # A pointer whose place exists nowhere on the active plan and whose scheduled
++    # instant is moved: nothing may be bound to it.
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        on_plan = {
++            item.place_id
++            for item in session.scalars(
++                select(Activity).where(
++                    Activity.plan_version_id == journey.active_plan_version_id
++                )
++            ).all()
++        }
++        # Any activity on another plan, moved to an instant no activity on the
++        # active plan can share.  Identity plus scheduled instant both have to
++        # match, so an unmatched instant is enough to make the anchor unresolvable
++        # without inventing a Place the foreign key would reject.
++        foreign = session.scalar(
++            select(Activity)
++            .where(Activity.plan_version_id != journey.active_plan_version_id)
++            .where(Activity.place_id.is_not(None))
++        )
++        assert foreign is not None, "no off-plan activity is available for the orphan case"
++        foreign.start_at = "2026-11-11T11:11:00+08:00"
++        foreign.end_at = "2026-11-11T12:11:00+08:00"
++        commitment = session.scalar(
++            select(Commitment).where(
++                Commitment.journey_id == journey_id, Commitment.status == "ACTIVE"
++            )
++        )
++        commitment.activity_id = foreign.id
++        policy = json.loads(commitment.policy_json or "{}")
++        policy["semantic_key"] = foreign.place_id
++        policy["scheduled_start_at"] = foreign.start_at
++        commitment.policy_json = json.dumps(policy)
++        session.commit()
++
++    capture = client.post(
++        f"/api/v1/journeys/{journey_id}/transactions",
++        json={
++            "booking_id": booking["id"],
++            "transaction_type": "CAPTURE",
++            "amount": booking["amount"],
++        },
++        headers={"Idempotency-Key": f"orphan-capture-{booking['id']}"},
++    )
++    assert capture.status_code == 409, (
++        "a capture that cannot locate the commitment on the active plan must refuse, "
++        f"not promote: {capture.status_code} {capture.text[:160]}"
++    )
++    truth = _final_truth(journey_id)
++    assert not truth["dangling_commitments"], (
++        "the refused capture still left a protected commitment stranded off-plan"
++    )
++
++
++def test_a_recovery_cannot_be_accepted_over_a_duplicated_protected_anchor() -> None:
++    """Two activities claiming one protected commitment must never be accepted.
++
++    Measured, and reported rather than smoothed over: this state is caught by the
++    feasibility gate (`ACTIVITY_OVERLAP`) before the acceptance's own remap runs,
++    and the sibling case - the committed activity moved to a different instant -
++    is caught there too (`LOCKED_COMMITMENT_LOST`).  So the remap's conflict branch
++    is not reachable through this endpoint; it stays as defence in depth, and the
++    0 / 1 / many counting it depends on is asserted directly against the resolver
++    in the three `resolve_commitment_target` tests below.  What this case does pin
++    is the invariant the ruling asks for: the acceptance refuses, the Journey keeps
++    exactly one ACTIVE plan, and the promise is not re-pointed at anything.
++    """
++    journey_id, _cruise_activity, _booking = _journey_with_captured_commitment()
++    proposal = _proposal_for(
++        journey_id, _closed_activity_id(_plan_activities(journey_id)), "ambiguous-c4"
++    )
++    with SessionLocal() as session:
++        original = next(
++            item
++            for item in session.scalars(
++                select(Activity).where(
++                    Activity.plan_version_id == proposal["proposed_plan_version_id"]
++                )
++            ).all()
++            if item.place_id == "place-river-cruise"
++        )
++        rows = session.scalars(
++            select(Activity).where(
++                Activity.plan_version_id == proposal["proposed_plan_version_id"]
++            )
++        ).all()
++        columns = {
++            column.name: getattr(original, column.name)
++            for column in Activity.__table__.columns
++            if column.name not in {"id", "plan_version_id", "sequence_no"}
++        }
++        twin = Activity(
++            id=str(uuid4()),
++            plan_version_id=original.plan_version_id,
++            sequence_no=max(item.sequence_no for item in rows) + 40,
++            **columns,
++        )
++        session.add(twin)
++        session.commit()
++        assert (
++            session.scalar(
++                select(func.count())
++                .select_from(Activity)
++                .where(
++                    Activity.plan_version_id == original.plan_version_id,
++                    Activity.place_id == "place-river-cruise",
++                )
++            )
++            == 2
++        ), "the duplicate anchor was not persisted, so this is not the ambiguity case"
++
++
++    accepted = client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"drop-c4-{proposal['id']}"},
++    )
++    assert accepted.status_code == 409, (
++        "acceptance must refuse a plan that cannot carry the traveller's protected "
++        f"commitment unambiguously, got {accepted.status_code}: {accepted.text[:200]}"
++    )
++    assert "place-river-cruise" in accepted.text, (
++        "the refusal does not name the protected place at issue, so a traveller "
++        f"cannot tell what was preserved: {accepted.text[:240]}"
++    )
++    truth = _final_truth(journey_id)
++    assert len(truth["active_plan_ids"]) == 1
++    assert truth["journey_plan_id"] == truth["active_plan_ids"][0]
++    assert not truth["dangling_commitments"]
++    assert proposal["id"] not in truth["accepted_proposal_ids"], (
++        "the rejected acceptance still recorded the proposal as ACCEPTED"
++    )
++
++
++# --------------------------------------------------------------------------
++# shared setup for the race tests
++# --------------------------------------------------------------------------
++def _started_for_race() -> tuple[str, str]:
++    journey_id, _cruise, _booking = _journey_with_captured_commitment()
++    return journey_id, _cruise
++
++
++def _plan_activities(journey_id: str) -> list[dict[str, Any]]:
++    plan = client.get(f"/api/v1/journeys/{journey_id}/experience").json()["active_plan"]
++    return plan["activities"]
+diff --git a/backend/tests/test_sol_execution_cursor.py b/backend/tests/test_sol_execution_cursor.py
+new file mode 100644
+index 0000000..758f0cf
+--- /dev/null
++++ b/backend/tests/test_sol_execution_cursor.py
+@@ -0,0 +1,382 @@
++"""CX-SOL-001 — the execution cursor is an assertion about identity, not a hint.
++
++Before this pass the projection had one branch for "the cursor is absent" and
++"the cursor names something that is not on this plan", and that branch was
++*fall back to the first pending activity*.  The two cases are not alike:
++
++    null cursor      -> the journey has started and nothing is done yet.  Showing
++                        the first pending step is the truth.
++    unresolvable     -> the record contradicts itself.  Showing the first pending
++                        step is a fabrication the traveller will act on: they are
++                        told they are at the museum when the authoritative row
++                        says they were at a dinner that no longer exists.
++
++So the cursor now has three states (VALID / ABSENT_FALLBACK / STALE), STALE
++projects no Now, no Next and no NextLeg, and every consumer can see which state
++it is in instead of inferring one from list order.
++
++The second half of this file is a differential oracle: an independent reference
++projection computed straight from the Activity and JourneyLeg rows is compared
++against what the product serves, field by field, for every cursor state.  Where
++authoritative truth exists, zero divergence is allowed; where it does not, the
++product must fail closed rather than produce an equivalent-looking value.
++"""
++
++from __future__ import annotations
++
++from typing import Any
++from uuid import uuid4
++
++from fastapi.testclient import TestClient
++from sqlalchemy import select
++
++import app.main as main_module
++from app.db.models import Activity, Journey, JourneyLeg
++from app.db.session import SessionLocal
++from app.operations.v9 import refresh_offline_snapshot
++
++client = TestClient(main_module.app)
++
++TERMINAL = {"COMPLETED", "SKIPPED", "CANCELLED"}
++
++
++# --------------------------------------------------------------------------
++# fixture helpers, all through the product's own endpoints
++# --------------------------------------------------------------------------
++def _started_journey() -> tuple[str, list[dict[str, Any]]]:
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++    plan = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()[0]
++    assert client.post(
++        f"/api/v1/journeys/{journey_id}/plans/{plan['id']}/select"
++    ).status_code == 200
++    assert client.post(f"/api/v1/journeys/{journey_id}/start").status_code == 200
++    return journey_id, plan["activities"]
++
++
++def _set_cursor(journey_id: str, cursor: str | None, statuses: dict[str, str] = {}) -> None:
++    """Move the persisted cursor, then refresh the projection as the product does."""
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        assert journey is not None
++        journey.current_activity_id = cursor
++        activities = session.scalars(
++            select(Activity)
++            .where(Activity.plan_version_id == journey.active_plan_version_id)
++            .order_by(Activity.sequence_no)
++        ).all()
++        for item in activities:
++            if item.id in statuses:
++                item.status = statuses[item.id]
++        refresh_offline_snapshot(session, journey)
++        session.commit()
++
++
++def _plan_rows(journey_id: str) -> tuple[list[Activity], list[JourneyLeg], str | None]:
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        assert journey is not None
++        activities = list(
++            session.scalars(
++                select(Activity)
++                .where(Activity.plan_version_id == journey.active_plan_version_id)
++                .order_by(Activity.sequence_no)
++            ).all()
++        )
++        legs = list(
++            session.scalars(
++                select(JourneyLeg)
++                .where(JourneyLeg.plan_version_id == journey.active_plan_version_id)
++                .order_by(JourneyLeg.sequence_no)
++            ).all()
++        )
++        return activities, legs, journey.current_activity_id
++
++
++
++def _off_plan_activity_id(journey_id: str) -> str:
++    """A real Activity row that is not on the active plan.
++
++    The foreign key on `journeys.current_activity_id` means a made-up id cannot
++    be persisted at all, so it cannot be the test.  A pointer into another plan
++    of the same journey satisfies the key and is still stale for the plan being
++    executed, which is exactly the state the guard has to survive.
++    """
++    candidates = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 3}
++    ).json()
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        assert journey is not None
++        for plan in candidates:
++            if plan["id"] == journey.active_plan_version_id:
++                continue
++            for item in plan["activities"]:
++                return str(item["id"])
++    raise AssertionError("no off-plan activity is available to act as a stale cursor")
++
++
++def _served_projection(journey_id: str) -> dict[str, Any]:
++    """What the product actually serves to a client, after a projection refresh."""
++    with SessionLocal() as session:
++        journey = session.get(Journey, journey_id)
++        refresh_offline_snapshot(session, journey)
++        session.commit()
++    snapshot = client.get(f"/api/v1/journeys/{journey_id}/offline-snapshot").json()["snapshot"]
++    return snapshot["execution"]
++
++
++def _reference_projection(journey_id: str) -> dict[str, Any]:
++    """Recompute the window straight from the rows, without the product's code."""
++    activities, legs, cursor = _plan_rows(journey_id)
++    by_id = {item.id: index for index, item in enumerate(activities)}
++    if cursor is None:
++        index = next(
++            (i for i, item in enumerate(activities) if item.status not in TERMINAL),
++            len(activities),
++        )
++        status = "ABSENT_FALLBACK"
++    elif cursor not in by_id:
++        index = len(activities)
++        status = "STALE"
++    else:
++        index = by_id[cursor]
++        status = "VALID"
++    now = (
++        activities[index]
++        if index < len(activities) and activities[index].status not in TERMINAL
++        else None
++    )
++    nxt = next(
++        (item for item in activities[index + 1 :] if item.status not in TERMINAL), None
++    )
++    leg = legs[index] if 0 <= index < len(legs) else None
++    return {
++        "cursor_status": status,
++        "persisted_cursor": cursor,
++        "now_activity_id": now.id if now else None,
++        "next_activity_id": nxt.id if nxt else None,
++        "next_leg_id": leg.id if leg else None,
++        "next_mode": leg.mode if leg else "NONE",
++        "next_eta_min": leg.duration_min if leg else 0,
++    }
++
++
++# --------------------------------------------------------------------------
++# A. the truth table
++# --------------------------------------------------------------------------
++def test_null_cursor_is_a_legal_pre_execution_state_and_projects_the_first_step() -> None:
++    journey_id, activities = _started_journey()
++    _set_cursor(journey_id, None)
++
++    served = _served_projection(journey_id)
++    assert served["cursor_status"] == "ABSENT_FALLBACK"
++    # Falling back is allowed here, and it is the truth: nothing has happened yet.
++    assert served["now_activity_id"] == activities[0]["id"]
++    assert served["next_activity_id"] == activities[1]["id"]
++
++
++def test_valid_cursor_projects_exactly_that_activity_and_not_its_neighbours() -> None:
++    journey_id, activities = _started_journey()
++    target = activities[2]["id"]
++    _set_cursor(journey_id, target)
++
++    served = _served_projection(journey_id)
++    assert served["cursor_status"] == "VALID"
++    assert served["persisted_cursor"] == target
++    assert served["now_activity_id"] == target
++    assert served["next_activity_id"] == activities[3]["id"]
++
++
++def test_cursor_naming_an_off_plan_activity_fails_closed_and_invents_nothing() -> None:
++    journey_id, _ = _started_journey()
++    _set_cursor(journey_id, _off_plan_activity_id(journey_id))
++
++    served = _served_projection(journey_id)
++    assert served["cursor_status"] == "STALE"
++    # The three fabricated fields are the defect: each one looks plausible and
++    # none of them is supported by the record.
++    assert served["now_activity_id"] is None
++    assert served["next_activity_id"] is None
++    assert served["next_leg_id"] is None
++    assert served["now_state"] == "STALE_CURSOR"
++    assert served["next_mode"] == "NONE"
++    assert served["next_eta_min"] == 0
++
++
++def test_cursor_left_on_a_superseded_plan_after_a_replan_fails_closed() -> None:
++    """The realistic stale case: the cursor still names a real row, but a row on
++    the plan the accepted recovery replaced."""
++    journey_id, activities = _started_journey()
++    base_cursor = activities[1]["id"]
++    _set_cursor(journey_id, base_cursor)
++
++    event = client.post(
++        f"/api/v1/journeys/{journey_id}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": activities[3]["id"],
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "stale cursor after replan"},
++        },
++    ).json()
++    client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"stale-{event['id']}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event["id"],
++            "candidate_count": 3,
++        },
++    )
++    proposals = client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++    proposal = next(
++        item
++        for item in proposals
++        if item.get("trigger_event_id") == event["id"] and item.get("status") == "PRESENTED"
++    )
++    assert client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"stale-accept-{proposal['id']}"},
++    ).status_code == 200
++
++    # A correctly carried-forward cursor is VALID on the child plan.
++    served = _served_projection(journey_id)
++    assert served["cursor_status"] == "VALID", (
++        "acceptance did not carry the execution position onto the child plan, so the "
++        "traveller's current step was silently reset or dropped"
++    )
++
++    # Now simulate the failure mode the guard exists for: a cursor that still
++    # names the superseded plan's row.
++    _set_cursor(journey_id, base_cursor)
++    stale = _served_projection(journey_id)
++    assert stale["cursor_status"] == "STALE"
++    assert stale["now_activity_id"] is None
++    assert stale["next_activity_id"] is None
++
++
++def test_experience_projection_reports_the_cursor_state_next_to_the_cursor() -> None:
++    journey_id, activities = _started_journey()
++    _set_cursor(journey_id, _off_plan_activity_id(journey_id))
++
++    plan = client.get(f"/api/v1/journeys/{journey_id}/experience").json()["active_plan"]
++    listed = {item["id"] for item in plan["activities"]}
++    assert plan["current_activity_id"] not in listed
++    assert plan["cursor_status"] == "STALE", (
++        "/experience served a cursor and an activity list that do not intersect, with "
++        "no way for the consumer to notice"
++    )
++    # The lifecycle status is what lets a client tell "done" from "pending" without
++    # re-deriving it from list order.
++    assert all(item.get("status") for item in plan["activities"])
++
++
++def test_edge_device_is_told_the_position_is_unresolved_not_that_the_journey_ended() -> None:
++    journey_id, _ = _started_journey()
++    device = client.post(
++        f"/api/v1/journeys/{journey_id}/edge/devices",
++        json={"display_name": "oracle device"},
++    ).json()
++    headers = {"X-Edge-Token": device["device_token"]}
++
++    _set_cursor(journey_id, _off_plan_activity_id(journey_id))
++    snapshot = client.get(
++        f"/api/v1/edge/devices/{device['device_id']}/journey-snapshot", headers=headers
++    ).json()
++
++    assert snapshot["cursor_status"] == "STALE"
++    assert snapshot["now_title"] == "Execution position unresolved"
++    # "Journey complete" is the pre-fix wording and it is a lie: the journey is
++    # active, the record is inconsistent.
++    assert snapshot["next_title"] == "Next step unavailable"
++    assert snapshot["now_state"] == "STALE_CURSOR"
++
++
++# --------------------------------------------------------------------------
++# H. differential oracle
++# --------------------------------------------------------------------------
++def _oracle_case(journey_id: str) -> None:
++    reference = _reference_projection(journey_id)
++    served = _served_projection(journey_id)
++    diverging = {
++        field: (reference[field], served.get(field))
++        for field in (
++            "cursor_status",
++            "now_activity_id",
++            "next_activity_id",
++            "next_leg_id",
++            "next_mode",
++            "next_eta_min",
++        )
++        if reference[field] != served.get(field)
++    }
++    assert not diverging, (
++        f"the product projection disagrees with the rows for cursor "
++        f"{reference['cursor_status']}: {diverging}"
++    )
++
++
++def test_projection_matches_the_reference_for_every_cursor_state() -> None:
++    for label, mutate in (
++        ("valid", lambda acts, jid: _set_cursor(jid, acts[1]["id"])),
++        ("null", lambda acts, jid: _set_cursor(jid, None)),
++        (
++            "off-plan cursor",
++            lambda acts, jid: _set_cursor(jid, _off_plan_activity_id(jid)),
++        ),
++        (
++            "cursor on a terminal step",
++            lambda acts, jid: _set_cursor(
++                jid, acts[1]["id"], {acts[1]["id"]: "COMPLETED"}
++            ),
++        ),
++        (
++            "null cursor with the first steps completed",
++            lambda acts, jid: _set_cursor(
++                jid, None, {acts[0]["id"]: "COMPLETED", acts[1]["id"]: "SKIPPED"}
++            ),
++        ),
++    ):
++        journey_id, activities = _started_journey()
++        mutate(activities, journey_id)
++        _oracle_case(journey_id)
++        assert _reference_projection(journey_id)["cursor_status"] is not None, label
++
++
++def test_projection_matches_the_reference_after_an_accepted_replan() -> None:
++    journey_id, activities = _started_journey()
++    _set_cursor(journey_id, activities[1]["id"])
++    event = client.post(
++        f"/api/v1/journeys/{journey_id}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": activities[3]["id"],
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "post-replan oracle"},
++        },
++    ).json()
++    client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"oracle-{event['id']}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event["id"],
++            "candidate_count": 3,
++        },
++    )
++    proposal = next(
++        item
++        for item in client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++        if item.get("trigger_event_id") == event["id"] and item.get("status") == "PRESENTED"
++    )
++    assert client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"oracle-accept-{proposal['id']}"},
++    ).status_code == 200
++    _oracle_case(journey_id)
+diff --git a/frontend/e2e/qoder-stale-cursor.spec.ts b/frontend/e2e/qoder-stale-cursor.spec.ts
+new file mode 100644
+index 0000000..90e7bb5
+--- /dev/null
++++ b/frontend/e2e/qoder-stale-cursor.spec.ts
+@@ -0,0 +1,112 @@
++import { expect, test } from "@playwright/test";
++
++/* The Live surface must not invent an execution position.
++
++   CX-SOL-001 is a backend contract, but the failure the traveller sees is a
++   frontend one: Live used to render `activities[0]` as "now" and
++   `activities[1]` as "next" regardless of the persisted cursor, so a cursor that
++   named a step the active plan no longer contains still produced a confident,
++   wrong "You are at the museum".
++
++   The stale state is not reachable through any public endpoint — writing the
++   cursor is the product's own business — so this case intercepts the projection
++   and hands the surface the state it must survive. That is a UI guarantee about
++   what the surface does with a contradiction, not a fake of product behaviour. */
++
++const API =
++  process.env.CITYNEXUS_API_BASE_URL ??
++  `http://127.0.0.1:${Number(process.env.CITYNEXUS_BACKEND_PORT ?? 8000)}`;
++
++async function call<T>(
++  request: import("@playwright/test").APIRequestContext,
++  url: string,
++  method: "GET" | "POST" = "GET",
++  data?: unknown,
++): Promise<T> {
++  const response =
++    method === "GET"
++      ? await request.get(`${API}${url}`)
++      : await request.post(`${API}${url}`, { data });
++  if (!response.ok()) {
++    throw new Error(`${url} -> HTTP ${response.status()}: ${(await response.text()).slice(0, 180)}`);
++  }
++  return (await response.json()) as T;
++}
++
++test("a cursor the plan cannot resolve is reported as unresolved, not as a plausible step", async ({
++  page,
++  request,
++}) => {
++  const demo = await call<{ journey_id: string }>(request, "/api/v1/demo/reset", "POST");
++  const journeyId = demo.journey_id;
++  const plans = await call<{ id: string; activities: { id: string; place_id: string }[] }[]>(
++    request,
++    `/api/v1/journeys/${journeyId}/plans/generate`,
++    "POST",
++    { candidate_count: 1 },
++  );
++  await call(request, `/api/v1/journeys/${journeyId}/plans/${plans[0].id}/select`, "POST");
++  await call(request, `/api/v1/journeys/${journeyId}/start`, "POST");
++
++  // A well-formed id that this plan does not contain: the shape the guard exists
++  // for, and the one no endpoint can produce on its own.
++  const ghost = "00000000-0000-4000-8000-000000000000";
++  const titles = plans[0].activities.map((item) => item.id);
++
++  await page.addInitScript((id) => {
++    localStorage.setItem("citynexus.locale", "en");
++    localStorage.setItem("citynexus.v8.journey_id", id);
++    localStorage.setItem("citynexus.demo.journey_id", id);
++  }, journeyId);
++
++  // One handler for the whole case: the control pass changes what it serves
++  // rather than tearing the route down mid-navigation, which raced and aborted.
++  let mode: "stale" | "real" = "stale";
++  let served = 0;
++  await page.route(`**/api/v1/journeys/${journeyId}/experience`, async (route) => {
++    let body: any;
++    try {
++      body = await route.fetch().then((response) => response.json());
++      if (mode === "stale") {
++        body.active_plan.current_activity_id = ghost;
++        body.active_plan.cursor_status = "STALE";
++      }
++      served += 1;
++      await route.fulfill({ json: body });
++    } catch {
++      // The page abandoned this request by navigating away; nothing to assert on.
++      return;
++    }
++  });
++
++  await page.setViewportSize({ width: 1280, height: 900 });
++  await page.goto("/v8/live");
++
++  const current = page.getByTestId("live-journey-current");
++  await expect(current).toBeVisible();
++  await expect(current).toHaveAttribute("data-cursor-status", "STALE");
++  await expect(current).toHaveText("Execution position unresolved");
++  await expect(current).not.toHaveText("Awaiting plan");
++
++  // The claim this case exists to kill: no plan step may be presented as "now".
++  for (const activity of plans[0].activities) {
++    await expect(current).not.toHaveText(activity.id);
++  }
++  const nextLine = page.locator(".v8-live-now p").first();
++  await expect(nextLine).toContainText("no current or next step");
++
++  // And the honest control: the same surface, same code path, real cursor.
++  mode = "real";
++  await page.reload();
++  await expect(page.getByTestId("live-journey-current")).toHaveAttribute(
++    "data-cursor-status",
++    "VALID",
++  );
++  await expect(page.getByTestId("live-journey-current")).not.toHaveText(
++    "Execution position unresolved",
++  );
++  expect(titles.length).toBeGreaterThan(1);
++  // The catch above is only for requests the page abandoned.  If the handler
++  // never served both passes, the "stale" render was not produced by this test.
++  expect(served, `the projection was intercepted ${served} time(s), expected at least 2`).toBeGreaterThanOrEqual(2);
++});
+diff --git a/frontend/src/app/V8Experience.tsx b/frontend/src/app/V8Experience.tsx
+index ac34cd2..e88c79e 100644
+--- a/frontend/src/app/V8Experience.tsx
++++ b/frontend/src/app/V8Experience.tsx
+@@ -240,14 +240,45 @@ function initialsFrom(name: string) {
+   return (initials || "CN").toUpperCase();
+ }
+ 
++const TERMINAL_ACTIVITY_STATES = new Set(["COMPLETED", "SKIPPED", "CANCELLED"]);
++
++/**
++ * Resolve the live execution window from the authoritative cursor.
++ *
++ * Three states, deliberately kept distinct:
++ *   - cursor null            -> pre-execution; the first non-terminal step is honest;
++ *   - cursor names a step    -> that step is Now, the next non-terminal one is Next;
++ *   - cursor names nothing   -> stale.  Nothing may be invented from list order,
++ *     so the window is empty and `unresolved` tells the surface why.
++ */
++function liveActivityWindow(plan: V8Data["active_plan"]) {
++  if (!plan) return { now: null, next: null, nextLeg: null, unresolved: false };
++  const activities = plan.activities;
++  const cursor = plan.current_activity_id ?? null;
++  const index = activities.findIndex((item) => item.id === cursor);
++  if (cursor !== null && index === -1) {
++    return { now: null, next: null, nextLeg: null, unresolved: true };
++  }
++  const anchor =
++    index === -1
++      ? activities.findIndex((item) => !TERMINAL_ACTIVITY_STATES.has(item.status))
++      : index;
++  if (anchor === -1) return { now: null, next: null, nextLeg: null, unresolved: false };
++  const candidate = activities[anchor];
++  const now =
++    candidate && !TERMINAL_ACTIVITY_STATES.has(candidate.status) ? candidate : null;
++  const next =
++    activities
++      .slice(anchor + 1)
++      .find((item) => !TERMINAL_ACTIVITY_STATES.has(item.status)) ?? null;
++  const nextLeg = now && next ? plan.legs[anchor] ?? null : null;
++  return { now, next, nextLeg, unresolved: false };
++}
++
+ // The authoritative current step is current_activity_id; falling back to a
+ // fixed index would show a stale "next" once the journey has advanced.
+ function nextActivityOf(plan: V8Data["active_plan"]) {
+-  if (!plan) return null;
+-  const index = plan.activities.findIndex(
+-    (item) => item.id === plan.current_activity_id,
+-  );
+-  return plan.activities[index >= 0 ? index + 1 : 1] ?? null;
++  return liveActivityWindow(plan).next;
+ }
+ 
+ export function V8Experience() {
+@@ -2027,9 +2058,12 @@ function Live({
+ }) {
+   const t = useT();
+   const { locale } = useLocale();
+-  const now = data.active_plan?.activities[0];
+-  const next = data.active_plan?.activities[1];
+-  const nextLeg = data.active_plan?.legs[0];
++  const {
++    now,
++    next,
++    nextLeg,
++    unresolved: cursorUnresolved,
++  } = liveActivityWindow(data.active_plan ?? null);
+   return (
+     <section className="v8-page" data-testid="v8-live-journey">
+       <div className="v8-page-intro compact">
+@@ -2051,24 +2085,37 @@ function Live({
+             {t("live.now")}
+           </span>
+           <div>
+-            <h2 data-testid="live-journey-current">
+-              {now
+-                ? now.title
+-                : `${t("live.awaitingPlan")}${selected?.stay.property_name ? ` · ${selected.stay.property_name}` : ""}`}
++            <h2
++              data-testid="live-journey-current"
++              data-cursor-status={cursorUnresolved ? "STALE" : now ? "VALID" : "ABSENT"}
++            >
++              {cursorUnresolved
++                ? t("live.unresolvedStep")
++                : now
++                  ? now.title
++                  : `${t("live.awaitingPlan")}${selected?.stay.property_name ? ` · ${selected.stay.property_name}` : ""}`}
+             </h2>
+             <p>
+-              {next
+-                ? t("live.nextLeg", {
+-                    title: next.title,
+-                    mode: modeLabel(nextLeg?.mode ?? mode, locale.startsWith("zh")),
+-                    duration: nextLeg?.duration_min ?? t("live.durationPending"),
+-                    unit: nextLeg ? " min" : "",
+-                  })
+-                : t("live.nextSelect")}
++              {cursorUnresolved ? (
++                t("live.unresolvedStepHint")
++              ) : next ? (
++                t("live.nextLeg", {
++                  title: next.title,
++                  mode: modeLabel(nextLeg?.mode ?? mode, locale.startsWith("zh")),
++                  duration: nextLeg?.duration_min ?? t("live.durationPending"),
++                  unit: nextLeg ? " min" : "",
++                })
++              ) : (
++                t("live.nextSelect")
++              )}
+             </p>
+           </div>
+           <strong>
+-            {now ? clockInZone(now.start_at, data.journey.timezone || "UTC") : t("live.awaitingPlanUpper")}
++            {now && !cursorUnresolved
++              ? clockInZone(now.start_at, data.journey.timezone || "UTC")
++              : cursorUnresolved
++                ? "—"
++                : t("live.awaitingPlanUpper")}
+           </strong>
+         </div>
+         <MapPanel data={data} option={selected} />
+@@ -2101,8 +2148,7 @@ function LiveSecondary({
+   const t = useT();
+   const { locale } = useLocale();
+   const zh = locale.startsWith("zh");
+-  const next = data.active_plan?.activities[1];
+-  const nextLeg = data.active_plan?.legs[0];
++  const { next, nextLeg } = liveActivityWindow(data.active_plan ?? null);
+   const planDisruptions = data.active_plan?.disruptions ?? [];
+   const disruptions = planDisruptions.filter((item) => !isHandledDisruption(item));
+   const destination =
+diff --git a/frontend/src/app/v8Types.ts b/frontend/src/app/v8Types.ts
+index a4ac933..f255d8c 100644
+--- a/frontend/src/app/v8Types.ts
++++ b/frontend/src/app/v8Types.ts
+@@ -7,7 +7,7 @@ export type V8Data = {
+   options: Array<{ id: string; rank: number; status: string; score: number; stay: V8Data["offers"][number]; stay_total_minor: number; daily_travel_minor: number; mobility_total_minor: number; walking_min: number; protected_margin_min: number; arrival_fit: number; departure_fit: number; cancellation_score: number; days: Array<{ day: number; label: string; anchor: string; activities: string[]; mode: string }>; leg_modes: string[]; leg_mode_map: Array<{ from_key: string; to_key: string; mode: string; mobility_fact_id?: string }>; journey_impact: Record<string, any>; hard_constraints_passed: boolean; optimizer_kind: string; weather_state: string; materialized_plan_version_id?: string | null }>;
+   selected_option_id: string | null;
+   mobility_facts: Array<{ id?: string; mode: string; from_key: string; to_key: string; duration_min: number; cost_amount_minor: number | null; currency: string | null; cost_status: string; walking_min: number; transfers: number; weather_exposure: string; reliability_score: number; provider_key?: string; provenance?: string; crs?: string; geometry?: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>;
+-  active_plan: null | { id: string; version_no: number; status: string; source: string; mobility_snapshot_id?: string | null; mobility_evidence?: { snapshot_id?: string | null; expires_at?: string | null; aggregate_provenance?: string; replayable?: boolean }; current_activity_id: string | null; activities: Array<{ id: string; sequence_no: number; type: string; title: string; start_at: string; end_at: string; locked: boolean; protected: boolean; metadata: { latitude?: number; longitude?: number; crs?: string; role?: string } }>; legs: Array<{ id: string; from_key: string; to_key: string; mode: string; duration_min: number; provider_key: string; provenance: string; crs: string; geometry: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>; user_location: null | { latitude: number; longitude: number; accuracy_m: number; captured_at: string; source: string }; disruptions: Array<{ id: string; type: string; severity: string; status?: string; affected_activity_id: string | null; occurred_at: string; resolved_at?: string | null }> };
++  active_plan: null | { id: string; version_no: number; status: string; source: string; mobility_snapshot_id?: string | null; mobility_evidence?: { snapshot_id?: string | null; expires_at?: string | null; aggregate_provenance?: string; replayable?: boolean }; current_activity_id: string | null; cursor_status?: "VALID" | "STALE" | "ABSENT_FALLBACK"; activities: Array<{ id: string; sequence_no: number; type: string; status: string; title: string; place_id?: string | null; city_service_id?: string | null; start_at: string; end_at: string; locked: boolean; protected: boolean; metadata: { latitude?: number; longitude?: number; crs?: string; role?: string } }>; legs: Array<{ id: string; from_key: string; to_key: string; mode: string; duration_min: number; provider_key: string; provenance: string; crs: string; geometry: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>; user_location: null | { latitude: number; longitude: number; accuracy_m: number; captured_at: string; source: string }; disruptions: Array<{ id: string; type: string; severity: string; status?: string; affected_activity_id: string | null; occurred_at: string; resolved_at?: string | null }> };
+   traveler_twin?: { explicit_dimensions: string[]; learned_soft_dimensions: string[]; authority: string; explicit_capabilities?: TravelerCapability[]; capability_summary?: Record<string, unknown> };
+   provider_mesh?: Record<string, any>;
+   recovery?: RecoveryState | null;
+diff --git a/frontend/src/i18n/LocaleContext.tsx b/frontend/src/i18n/LocaleContext.tsx
+index 9bf8ad6..458d03e 100644
+--- a/frontend/src/i18n/LocaleContext.tsx
++++ b/frontend/src/i18n/LocaleContext.tsx
+@@ -168,6 +168,10 @@ const en: Dict = {
+   "live.reportRain": "Report rain",
+   "live.now": "NOW",
+   "live.awaitingPlan": "Awaiting plan",
++  // A cursor that names an activity the active plan does not contain is a
++  // different fact from "no plan yet"; the UI must not claim the latter.
++  "live.unresolvedStep": "Execution position unresolved",
++  "live.unresolvedStepHint": "The saved position points at a step this plan no longer contains, so no current or next step can be shown honestly.",
+   "live.nextLeg": "NEXT · {title} · {mode} · {duration}{unit}",
+   "live.nextSelect": "NEXT · Select a plan to calculate the next leg",
+   "live.awaitingPlanUpper": "AWAITING PLAN",
+@@ -806,6 +810,8 @@ const zhCN: Dict = {
+   "live.reportRain": "报告降雨",
+   "live.now": "现在",
+   "live.awaitingPlan": "等待方案",
++  "live.unresolvedStep": "执行位置无法确认",
++  "live.unresolvedStepHint": "已保存的位置指向当前方案中不再存在的步骤，无法如实显示当前或下一步。",
+   "live.nextLeg": "下一步 · {title} · {mode} · {duration}{unit}",
+   "live.nextSelect": "下一步 · 选择方案以计算下一段路程",
+   "live.awaitingPlanUpper": "等待方案",

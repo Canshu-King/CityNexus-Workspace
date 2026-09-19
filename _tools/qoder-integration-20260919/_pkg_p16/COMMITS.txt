@@ -1,0 +1,78 @@
+HEAD (this package)   fec2204  docs(pass-16): give the final run's own screenshot diffs instead of the intermediate one's
+gates ran on          967e2b2  test(e2e): prove the prediction's own provenance, not just its trigger label
+
+Every number in INTEGRATION_REPORT.md sections 52-60 was produced on tree 967e2b2,
+by the single authoritative run recorded in provenance/authoritative.json
+(run id p16full3).  An earlier run on tree 6311382 was also 45/0 but its
+screenshot evidence failed review (see section 58), so it is not quoted.
+
+HEAD adds only these files over the gates tree (the real list, not a summary):
+  INTEGRATION_REPORT.md
+  reports/dock-geometry/live-390x844-bottom.png
+  reports/e2e-provenance/authoritative.json
+  reports/product-v13.5/fully-grounded-discovery.png
+  reports/product-v8/ui/after/journey-hub-desktop.png
+  reports/product-v8/ui/after/mobility-sheet-desktop.png
+  reports/product-v8/ui/after/mobility-sheet-mobile.png
+  reports/product-v8/ui/after/stay-explorer-desktop.png
+  reports/product-v8/ui/after/trip-studio-desktop.png
+  reports/product-v9/ui/live-journey-mobile.png
+  reports/product-v9/ui/offline-journey-mobile.png
+
+Its parent is cee3253.
+
+The gates commit itself carries the code the run executed -- verify:
+967e2b2 test(e2e): prove the prediction's own provenance, not just its trigger label
+ frontend/e2e/predictive-real-city-v6.spec.ts | 35 +++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
+
+The authoritative command, verbatim (stdout kept clean for --reporter=json):
+  CITYNEXUS_E2E_AUTHORITATIVE=1 CITYNEXUS_E2E_RUN_ID=p16full3 \
+  DEEPSEEK_API_KEY= CITYNEXUS_AI_API_KEY= CITYNEXUS_AI_ENABLED=false \
+  CITYNEXUS_PYTHON='D:\moodle\CityNexus\.venv\Scripts\python.exe' \
+  CITYNEXUS_BACKEND_PORT=8054 CITYNEXUS_E2E_PORT=4225 \
+  CITYNEXUS_DATABASE_URL='sqlite:///./_p16full3.db' \
+    npx playwright test --reporter=json
+
+Note on patches/: text-mode diffs, so PNG blobs appear as 'Binary files differ'.
+The images themselves ship under screens/.
+
+--- full chain (newest first) ---
+fec2204 09-19 23:36 docs(pass-16): give the final run's own screenshot diffs instead of the intermediate one's
+cee3253 09-19 23:34 docs(pass-16): retarget the gate numbers to the run that matches the shipped tree
+967e2b2 09-19 23:31 test(e2e): prove the prediction's own provenance, not just its trigger label
+5de880b 09-19 23:25 docs(pass-16): record the pass-16 numbers against the tree that produced them
+1d922ef 09-19 23:21 test(e2e): settle the discovery card before capturing it — the passing case shipped an empty image
+86f7270 09-19 23:19 docs(pass-16): record the pass, and make two documents stop describing pass-14
+6311382 09-19 23:10 feat(frontend): pass-16 D/E — V8 owns the preventive result, asserted field by field
+564bf3b 09-19 23:09 test(e2e): give the commitment cases a commitment, and compare plans by identity
+05a06bf 09-19 23:09 fix(backend): keep activity identity across the /experience projection
+0af1905 09-19 22:18 test(e2e): pass-15 D — prevention works in the backend and has no owner in V8, so the case stays red
+d664143 09-19 22:06 test(e2e): pass-15 B and C — the envelope case and the zero-touch case now live on the current product
+3e9059f 09-19 22:00 test(e2e): pass-15 A — golden's invariant now lives on the current V8 Live surface
+5cac395 09-19 21:39 test(e2e): pass-14 — authoritative E2E becomes the only thing that can sign a gate, and four legacy cases are actually retired
+55318e8 09-19 21:11 docs(integration): record that live/mobile/light lost one borderWarning to the dock yield, so the evidence change is attributed rather than noticed later
+2c28503 09-19 21:01 test(e2e): pass-13.1 — fresh-or-no-run where it can be answered once, a /health that cannot leak a DSN, and a dock that yields instead of covering
+2309150 09-19 20:55 docs(integration): pass-13.1 — fresh-or-no-run moved to the process that opens the file, /health stops echoing a DSN, and the Today dock yields at rest instead of covering it
+efbf513 09-19 20:25 chore(evidence): the screenshots and provenance record now come from the same authoritative run as the numbers
+67fb263 09-19 20:11 docs(integration): pass-13 report — the provenance gate, the dock measurement that retracts my own pass-12 claim, and one authoritative run's numbers
+5e84e29 09-19 20:04 test(e2e): pass-13 — an authoritative mode that cannot borrow a server, and a dock gate that measures instead of guessing
+60958b8 09-19 19:37 docs(integration): pass-12 question 3 named the blocker pass-11 already released — CURRENT_E2E_CONTRACT_MIGRATION is the live one
+79c6190 09-19 19:22 docs(integration): pass-12 closeout — 38/8/0 on a self-started backend, and the evidence-validity hole that produced 37/9
+2875aba 09-19 19:05 test(e2e): pass-12 — migrate the three current-product specs to today's V8 contract
+b346175 09-19 18:17 docs(integration): pass-11 closeout — map gate race, single-run numbers aligned to one HEAD, and the three current specs attributed to spec drift rather than shared state
+dafe091 09-19 18:07 test(e2e): pass-11 ① — one branch-aware map-height rule, and the race that made the gate lie
+f5117f4 09-19 17:38 docs(integration): pass-10 closeout report — four blockers, the tile-failure finding, the pollution that survives, and a placebo fix of mine that the screenshots caught
+f34d50e 09-19 17:36 test(e2e): per-spec journey ownership instead of one shared global seed (pass-9 blocker 4)
+d7aad19 09-19 17:21 fix(frontend,map): pass-9 closeout blockers 1-3 — the camera reserves the caption band, the idle dock becomes a pill, and the screenshot harness waits for tiles
+4ee7c6c 09-19 17:06 docs(integration): the leftover worktree shells were removed safely — unlink the reparse point first, verify both real node_modules, then delete the shell
+8ab555b 09-19 17:03 docs(integration): record the node_modules junction incident I caused while cleaning worktrees, and the four checks that prove the tree is healthy again
+7870270 09-19 16:36 docs(integration): pass-9 report — four Apple P0 items, three mainline items, the seed upgrade that exposed three more defects, and the suite isolation finding
+7c97fa5 09-19 16:35 fix(frontend): the Live current badge no longer wraps to two lines at 412px
+ecea2cf 09-19 16:31 test(e2e): pin the language in the v10 specs too, and record the isolation defect their rerun exposed
+7f2f5bb 09-19 15:51 test(e2e): seed a two-night stay-aware journey instead of the one-day demo trip, and the defects that uncovered
+2b4af20 09-19 15:17 fix(frontend): the honest map empty state finally gets an honest height, and the gate admits which branch it measured
+35300e4 09-19 14:59 fix(frontend): pass-8 ruling #6/#7 — avatar glyphs stay inside the circle, the advisory stops running two sentences together, and the Live leg line speaks the user's language
+0fa1f6c 09-19 14:55 feat(frontend): pass-8 ruling #3/#4/#5 — Live reads Current first, the honest map empty state costs an honest height, and the shell reserves the dock band
+f3f175c 09-19 14:40 feat(frontend): pass-8 ruling #1/#2 — Today's hero is the only primary action, and the gate now proves it
+3aebbca 09-19 14:31 chore(frontend): honour pass-8 evidence hygiene — rename the contrast gate, restore the map option, and the light focus ring that renaming exposed

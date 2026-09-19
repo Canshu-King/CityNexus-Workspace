@@ -1,0 +1,244 @@
+diff --git a/frontend/package.json b/frontend/package.json
+index a823543..3bdc470 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -6,6 +6,7 @@
+     "dev": "vite",
+     "build": "vite build",
+     "typecheck": "tsc -p tsconfig.check.json --noEmit",
++    "typecheck:all": "tsc -p tsconfig.typecheck.json --noEmit",
+     "test:e2e": "playwright test",
+     "storybook": "set STORYBOOK=1&& storybook dev -p 6006",
+     "storybook:build": "set STORYBOOK=1&& storybook build"
+@@ -30,6 +31,8 @@
+     "@axe-core/playwright": "^4.10.2",
+     "@playwright/test": "^1.54.0",
+     "@storybook/react-vite": "^9.1.20",
++    "@types/react": "^19.1.0",
++    "@types/react-dom": "^19.1.0",
+     "@vitejs/plugin-react": "^4.7.0",
+     "openapi-typescript": "^7.5.0",
+     "storybook": "^9.1.20",
+diff --git a/frontend/src/api/v10Execution.ts b/frontend/src/api/v10Execution.ts
+index a3915ee..26f64a1 100644
+--- a/frontend/src/api/v10Execution.ts
++++ b/frontend/src/api/v10Execution.ts
+@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
+ // in CI whenever contracts/openapi.yaml changes.
+ export type GeneratedOpenApiPaths = paths;
+ 
+-export type ExecutionClockResponse = paths["/api/v1/journeys/{journey_id}/execution-clock"]["get"]["responses"][200]["content"]["application/json"];
++export type ExecutionClockResponse = paths["/journeys/{journey_id}/execution-clock"]["get"]["responses"][200]["content"]["application/json"];
+ 
+ export type WebObservationPayload = {
+   id: string;
+diff --git a/frontend/src/app/v8Types.ts b/frontend/src/app/v8Types.ts
+index 55b1255..a4ac933 100644
+--- a/frontend/src/app/v8Types.ts
++++ b/frontend/src/app/v8Types.ts
+@@ -30,6 +30,8 @@ export type RecoveryState = {
+   kind: string;
+   event_id: string;
+   event_status: "DETECTED" | "ACKNOWLEDGED" | "RESOLVED";
++  acknowledged: boolean;
++  no_alternative: boolean;
+   capability_code: string | null;
+   active_plan_version_id: string | null;
+   failures: string[];
+diff --git a/frontend/src/components/v8/MapPanel.tsx b/frontend/src/components/v8/MapPanel.tsx
+index 9546072..117f2ad 100644
+--- a/frontend/src/components/v8/MapPanel.tsx
++++ b/frontend/src/components/v8/MapPanel.tsx
+@@ -1,5 +1,6 @@
+ import { useEffect, useMemo, useRef, useState } from "react";
+ import "maplibre-gl/dist/maplibre-gl.css";
++import type { FeatureCollection } from "geojson";
+ import type { V8Data } from "../../app/v8Types";
+ import { useT, useLocale } from "../../i18n/LocaleContext";
+ 
+@@ -74,7 +75,7 @@ export function MapPanel({
+         .flatMap((feature) => feature.geometry.coordinates)
+         .filter((value) => value.length >= 2);
+       const center: [number, number] | null =
+-        coordinates[Math.floor(coordinates.length / 2)] ??
++        (coordinates[Math.floor(coordinates.length / 2)] as [number, number] | undefined) ??
+         (points[0] ? [points[0].longitude, points[0].latitude] : null);
+       if (!center) {
+         // No route geometry and no located activity: an honest empty state is
+@@ -84,10 +85,7 @@ export function MapPanel({
+       }
+       setNoLocation(false);
+       const mapInstance = new maplibregl.Map({
+-        // Never leave the traveller staring at an empty box when the tile
+-        // server is unreachable (common on restricted networks).
+-        failIfMajorPerformanceCaveat: false,
+-      container: host.current,
++        container: host.current,
+       style: {
+         version: 8,
+         sources: {
+@@ -109,7 +107,7 @@ export function MapPanel({
+             data: {
+               type: "FeatureCollection",
+               features: route,
+-            } as GeoJSON.FeatureCollection,
++            } as FeatureCollection,
+           },
+         },
+         layers: [
+diff --git a/frontend/src/features/agent/AgentComposer.tsx b/frontend/src/features/agent/AgentComposer.tsx
+index a508a7a..504ef34 100644
+--- a/frontend/src/features/agent/AgentComposer.tsx
++++ b/frontend/src/features/agent/AgentComposer.tsx
+@@ -1,7 +1,7 @@
+ import { useEffect, useMemo, useState } from "react";
+ import type { V8Data } from "../../app/v8Types";
+ import { cityNexusApi, type CopilotResponse } from "../../api/citynexus";
+-import { useLocale, useT } from "../../i18n/LocaleContext";
++import { useLocale, useT, type TripLocale } from "../../i18n/LocaleContext";
+ import { formatMinorMoney } from "../../lib/money";
+ import { NativeMissionTimeline } from "./CopilotDock";
+ 
+@@ -221,7 +221,7 @@ export function AgentComposer({
+                       </div>
+                       <div>
+                         <span>{t("agent.feasibility")}</span>
+-                        <b>{feasibilityLabel(item.response.what_if.feasibility, zh)}</b>
++                        <b>{feasibilityLabel(item.response.what_if.feasibility, locale === "zh-CN")}</b>
+                       </div>
+                     </div>
+                     <small>
+@@ -305,7 +305,7 @@ function readStoredMessages(journeyId: string): CopilotMessage[] {
+ function formatMetric(
+   record: Record<string, unknown>,
+   cost: unknown,
+-  locale: "zh-CN" | "en-GB",
++  locale: TripLocale,
+ ) {
+   const currency = typeof record.currency === "string" ? record.currency : "CNY";
+   const value = typeof cost === "number" ? formatMinorMoney(cost, currency, locale) : "—";
+diff --git a/frontend/src/features/notifications/PushCapabilityCard.tsx b/frontend/src/features/notifications/PushCapabilityCard.tsx
+index 1f67e09..b911ef5 100644
+--- a/frontend/src/features/notifications/PushCapabilityCard.tsx
++++ b/frontend/src/features/notifications/PushCapabilityCard.tsx
+@@ -4,7 +4,7 @@ import { useT } from "../../i18n/LocaleContext";
+ type Props = { travelerId: string };
+ type PushConfig = { capability: string; public_key: string | null; record_fallback: boolean };
+ 
+-function decodeKey(value: string): Uint8Array {
++function decodeKey(value: string): Uint8Array<ArrayBuffer> {
+   const padded = `${value}${"=".repeat((4 - (value.length % 4)) % 4)}`;
+   const binary = window.atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+diff --git a/frontend/src/features/planning/PlanComparison.tsx b/frontend/src/features/planning/PlanComparison.tsx
+index e677154..5bc8a9e 100644
+--- a/frontend/src/features/planning/PlanComparison.tsx
++++ b/frontend/src/features/planning/PlanComparison.tsx
+@@ -13,6 +13,15 @@ import { useState } from "react";
+ import { useLocale } from "../../i18n/LocaleContext";
+ import type { PlanVersion } from "../../api/v12Authoritative";
+ 
++// The generated OpenAPI PlanVersion schema lags the backend, which also emits
++// plan.stale, plan.selectable and per-activity cost_status / metadata. View
++// types layer those additive runtime fields without editing the generated schema.
++type PlanVersionView = PlanVersion & { stale?: boolean; selectable?: boolean };
++type PlanActivityView = NonNullable<PlanVersion["activities"]>[number] & {
++  cost_status?: string;
++  metadata?: Record<string, unknown>;
++};
++
+ const MINOR = 100;
+ 
+ function money(amountMinor: number, currency: string, zh: boolean): string {
+@@ -67,7 +76,7 @@ export function PlanComparison({
+   const [busyId, setBusyId] = useState<string | null>(null);
+   const [error, setError] = useState<string | null>(null);
+ 
+-  const candidates = plans.filter(
++  const candidates = (plans as PlanVersionView[]).filter(
+     (plan) => plan.status === "CANDIDATE" && !plan.stale && plan.selectable !== false,
+   );
+   if (candidates.length === 0) return null;
+@@ -116,7 +125,7 @@ export function PlanComparison({
+           // relationship from missing data is a fabricated fact.
+           // Partial coverage is not coverage: if ANY stop's price is unknown the
+           // total is unknown, so no within/over verdict may be claimed from it.
+-          const stops = plan.activities ?? [];
++          const stops = (plan.activities ?? []) as PlanActivityView[];
+           const knownFlags = stops.map((activity) => {
+             const status = String(activity.cost_status ?? "").toUpperCase();
+             if (status === "KNOWN_FREE" || status === "KNOWN_PAID") return true;
+diff --git a/frontend/src/features/studio/SortableActivityList.tsx b/frontend/src/features/studio/SortableActivityList.tsx
+index 9abb6ed..508a52d 100644
+--- a/frontend/src/features/studio/SortableActivityList.tsx
++++ b/frontend/src/features/studio/SortableActivityList.tsx
+@@ -28,7 +28,7 @@ function SortableActivity({ activity, label, index, protectedActivity }: { activ
+ }
+ 
+ export function SortableActivityList({ activities, protectedFirst, onDraft, labels }: { activities: string[]; protectedFirst: boolean; onDraft?: (activities: string[]) => void; labels?: Record<string, string> }) {
+-  const [items, setItems] = useState(activities);
++  const [items, setItems] = useState<string[]>(activities);
+   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+   useEffect(() => {
+     setItems(activities);
+@@ -37,7 +37,7 @@ export function SortableActivityList({ activities, protectedFirst, onDraft, labe
+     if (!over || active.id === over.id) return;
+     const oldIndex = items.indexOf(String(active.id));
+     const newIndex = items.indexOf(String(over.id));
+-    const next = arrayMove(items, oldIndex, newIndex);
++    const next = arrayMove<string>(items, oldIndex, newIndex);
+     setItems(next);
+     onDraft?.(next);
+   };
+diff --git a/frontend/src/main.tsx b/frontend/src/main.tsx
+index 163255e..e2be003 100644
+--- a/frontend/src/main.tsx
++++ b/frontend/src/main.tsx
+@@ -37,6 +37,7 @@ import { V8Experience } from "./app/V8Experience";
+ import { ProductErrorBoundary } from "./components/ProductErrorBoundary";
+ import { LocaleProvider } from "./i18n/LocaleContext";
+ import "./styles.css";
++import "./design-tokens.css";
+ 
+ const journeyStorageKey = "citynexus.demo.journey_id";
+ const agentRunStorageKey = "citynexus.demo.agent_run_id";
+@@ -746,7 +747,7 @@ function LegacyApp() {
+     );
+     if (!riverCruise) throw new Error("Accepted plan lost the protected River Cruise activity");
+     setSession({
+-      journeyId: session.journeyId,
++      ...session,
+       plan: acceptedPlan,
+       techArt:
+         acceptedPlan.activities.find((item) => item.place_id === "place-tech-art") ?? null,
+@@ -1396,7 +1397,7 @@ function LegacyApp() {
+             ) : (
+               travelerTwin.explicit_preferences.map((item, index) => (
+                 <span key={(String(item.dimension ?? "explicit")) + index}>
+-                  {String(item.dimension ?? item.category ?? "preference")} · {item.explanation ?? "user-provided"}
++                  {String(item.dimension ?? item.category ?? "preference")} · {String(item.explanation ?? "user-provided")}
+                 </span>
+               ))
+             )}
+diff --git a/frontend/src/stories/V12ExecutionStates.stories.tsx b/frontend/src/stories/V12ExecutionStates.stories.tsx
+index 931b29f..eb359b3 100644
+--- a/frontend/src/stories/V12ExecutionStates.stories.tsx
++++ b/frontend/src/stories/V12ExecutionStates.stories.tsx
+@@ -52,6 +52,7 @@ export default meta;
+ type Story = StoryObj<typeof meta>;
+ 
+ export const StateMatrix: Story = {
++  args: { plan: fixture(states[0]) },
+   render: () => (
+     <div className="v12-story-grid">
+       {states.map((state) => {
+diff --git a/frontend/tsconfig.typecheck.json b/frontend/tsconfig.typecheck.json
+new file mode 100644
+index 0000000..d9da574
+--- /dev/null
++++ b/frontend/tsconfig.typecheck.json
+@@ -0,0 +1,4 @@
++{
++  "compilerOptions": {"target":"ES2022","lib":["ES2022","DOM","DOM.Iterable"],"jsx":"react-jsx","module":"ESNext","moduleResolution":"bundler","skipLibCheck":true,"noEmit":true,"strict":false,"allowJs":true,"resolveJsonModule":true,"esModuleInterop":true,"types":["vite/client"]},
++  "include": ["src/**/*.ts","src/**/*.tsx"]
++}

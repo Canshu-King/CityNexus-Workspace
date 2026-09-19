@@ -1,0 +1,16 @@
+{
+  "calibration": "C2.1",
+  "status": "PASS",
+  "nativeClassMaster": true,
+  "fieldOverlayCount": 5,
+  "fieldInsideOwnerBody": 5,
+  "fieldOverlap": 0,
+  "presentationOutOfBounds": 0,
+  "anchorBehaviour": "PASS",
+  "metadata": {
+    "OwnerSpecId": 5,
+    "ContentRole": 5,
+    "FieldOrder": 5
+  },
+  "failures": []
+}

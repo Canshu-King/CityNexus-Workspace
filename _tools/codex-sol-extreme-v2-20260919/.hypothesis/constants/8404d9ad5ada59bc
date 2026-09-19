@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\replanning\protected_commitments.py
+# hypothesis_version: 6.168.0
+
+['ACTIVE', 'C4_Anchored', 'END', 'HARD', 'LOCKED_COMMITMENT', 'START', 'STRUCTURAL_ANCHOR', 'active', 'anchor_role', 'category', 'commitment', 'journey_id', 'kind', 'level', 'location_evidence', 'params', 'policy_json', 'rule_code', 'scheduled_start_at', 'semantic_key', 'semantic_node_key', 'semantic_ref', 'start_at', 'status', 'time_boundary', '{}']

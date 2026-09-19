@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\_geometry.py
+# hypothesis_version: 6.168.0
+
+['3.12.0', 'GeometryType', 'force_2d', 'force_3d', 'get_dimensions', 'get_exterior_ring', 'get_geometry', 'get_interior_ring', 'get_m', 'get_num_coordinates', 'get_num_geometries', 'get_num_points', 'get_parts', 'get_point', 'get_precision', 'get_rings', 'get_srid', 'get_type_id', 'get_x', 'get_y', 'get_z', 'return_index', 'set_precision', 'set_srid', 'valid_output']

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mobility\routingpy_adapter.py
+# hypothesis_version: 6.168.0
+
+[60.0, 'api_key', 'base_url', 'distance', 'geometry', 'latitude', 'location', 'longitude', 'pedestrian', 'raw']

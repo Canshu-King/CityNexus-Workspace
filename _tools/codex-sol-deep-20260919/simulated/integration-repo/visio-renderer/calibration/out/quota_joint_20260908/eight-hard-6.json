@@ -1,0 +1,19 @@
+{
+  "status": "FAIL",
+  "seed": 8135596715,
+  "best": {
+    "routed": 7,
+    "trial": 61,
+    "failure": "A-B-06",
+    "order": [
+      "A-M-UC-08",
+      "A-M-UC-10",
+      "A-CE-09",
+      "A-PA-07",
+      "A-M-UC-04",
+      "A-CD-UC-04",
+      "A-CD-UC-10",
+      "A-B-06"
+    ]
+  }
+}

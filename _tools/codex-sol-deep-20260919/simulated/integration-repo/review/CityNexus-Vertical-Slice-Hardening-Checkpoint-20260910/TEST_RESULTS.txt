@@ -1,0 +1,68 @@
+CityNexus Vertical Slice Hardening Validation
+Date: 2026-09-10
+
+TARGETED HARDENING + EXISTING REGRESSION
+Working directory: D:\moodle\CityNexus\backend
+Command:
+  ..\.venv\Scripts\python.exe -m pytest -q tests\test_vertical_slice_hardening_next.py tests\test_backend_connected_golden_contract.py tests\test_post_goal_five_defects.py
+Result:
+  8 passed, 2 warnings
+
+FULL BACKEND REGRESSION
+Command:
+  ..\.venv\Scripts\python.exe -m pytest -q
+Result:
+  157 passed, 1 skipped, 2 warnings
+The skip is the opt-in live Valhalla smoke test because
+CITYNEXUS_LIVE_VALHALLA_URL is not configured.
+
+PYTHON COMPILEALL
+Command:
+  ..\.venv\Scripts\python.exe -m compileall -q app tests
+Result:
+  PASS
+
+RUFF CHECK AND FORMAT
+Commands:
+  ..\.venv\Scripts\ruff.exe check app tests
+  ..\.venv\Scripts\ruff.exe format --check app tests
+Results:
+  All checks passed; 99 files already formatted.
+
+OPENAPI FORMAL/RUNTIME PARITY
+Command:
+  Compared contracts/openapi.yaml operations after applying its declared
+  server path prefix against app.routes under /api/v1.
+Result:
+  OpenAPI 3.1.0; formal 38; runtime 38; missing 0; extra 0.
+
+FRONTEND BUILD
+Working directory: D:\moodle\CityNexus\frontend
+Command:
+  npm run build
+Result:
+  PASS; Vite 7.3.6 production build.
+
+BACKEND-CONNECTED PLAYWRIGHT
+Command:
+  npm run test:e2e
+Result:
+  1 passed. The configured local FastAPI and Vite servers were used. The
+  browser asserted current activity Tech Art Center, ¥130 remaining budget,
+  F3 origin_key place-tech-art, and the 2026-10-10 13:25 +08:00 opening.
+
+NETWORK AND OPTIONAL DEPENDENCIES
+The deterministic demo required no live network. OR-Tools, LiteLLM/DeepSeek,
+routingpy, and live Valhalla remained optional. No live payments or external
+Providers were used.
+
+FRESH EXTRACTION REPLAY
+Archive was extracted into a new directory with no prior CityNexus archive or
+database. From the extracted backend directory:
+  D:\moodle\CityNexus\.venv\Scripts\python.exe -m pytest -q
+Result:
+  157 passed, 1 skipped, 2 warnings in 20.66s.
+The generated SQLite database existed only inside the temporary extraction
+after the test run and is not part of the checkpoint payload.
+
+No SHA, file hash, archive hash, or hash manifest work was performed.

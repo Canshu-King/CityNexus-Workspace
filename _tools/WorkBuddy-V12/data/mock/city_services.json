@@ -1,0 +1,12 @@
+[
+  {
+    "id": "service-001",
+    "provider_key": "mock-city",
+    "external_id": "svc-001",
+    "place_id": "place-001",
+    "city_code": "TJ",
+    "service_type": "transport",
+    "name": "City Tour Bus",
+    "availability": {"days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]}
+  }
+]

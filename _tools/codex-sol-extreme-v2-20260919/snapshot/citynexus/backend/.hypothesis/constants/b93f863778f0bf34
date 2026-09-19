@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\intelligence\opportunity_window.py
+# hypothesis_version: 6.168.0
+
+['BUDGET_EXCEEDED', 'INVALID_COST', 'INVALID_DURATION', 'NOT_OPEN_YET']

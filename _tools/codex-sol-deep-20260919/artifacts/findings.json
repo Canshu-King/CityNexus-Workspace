@@ -1,0 +1,38 @@
+[
+  {
+    "finding_id":"CX-SOL-001","severity":"P1","category":"cross-layer","verified":true,
+    "affected_files":["frontend/src/app/V8Experience.tsx"],
+    "symbols":["Live","LiveSecondary","liveActivityWindow"],
+    "preconditions":["active plan has at least three activities","current_activity_id points after index 0"],
+    "minimal_repro":"python tests/repro_live_current_activity.py",
+    "observed":"Live used activities[0], activities[1], legs[0].",
+    "expected":"Now/next/leg derive from current_activity_id.",
+    "evidence":["raw/repro_live_current_activity.txt","candidate_patches/CX-SOL-001-live-current-activity.patch"],
+    "recommended_action":"Owner-review and apply candidate patch, then retain browser regression.",
+    "covered_by_existing_gate":false
+  },
+  {
+    "finding_id":"CX-SOL-002","severity":"P2","category":"state-machine","verified":true,
+    "affected_files":["backend/app/main.py","frontend/src/lib/disruptionState.ts"],
+    "symbols":["_accept_replan_impl","isDisruptionOpen"],
+    "preconditions":["accepted replan linked to trigger event"],
+    "minimal_repro":"python tests/repro_ack_linkage.py",
+    "observed":"Event remains ACKNOWLEDGED; UI must join accepted proposals to close it.",
+    "expected":"Document this dual-resource contract or expose explicit resolution projection.",
+    "evidence":["artifacts/contract_graph.json"],
+    "recommended_action":"Keep existing helper; add API-level derived handled/resolution field in a future version.",
+    "covered_by_existing_gate":true
+  },
+  {
+    "finding_id":"CX-SOL-003","severity":"P2","category":"truth","verified":true,
+    "affected_files":["backend/app/stay_mobility.py","frontend/src/app/v8Types.ts"],
+    "symbols":["journey_leg_payload","V8Data.active_plan.legs"],
+    "preconditions":["consumer needs hard-vs-soft mobility eligibility"],
+    "minimal_repro":"Compare provider snapshot fact_quality with V8 leg projection.",
+    "observed":"Server enforces fact_quality but V8 legs expose only provenance/provider fields.",
+    "expected":"UI must not infer hard eligibility from provider name or provenance alone.",
+    "evidence":["reports/CROSS_LAYER_CONTRACT_MAP.md"],
+    "recommended_action":"Either expose normalized fact_quality or keep hard eligibility strictly server-owned and label UI copy accordingly.",
+    "covered_by_existing_gate":false
+  }
+]

@@ -1,0 +1,552 @@
+{
+  "status": "PASS",
+  "minimumRemovalSize": 3,
+  "rows": [
+    {
+      "removed": [],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CE-09"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CE-09"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-CE-09"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CE-09",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CE-09",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CE-09",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CE-09",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-04",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-04",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-04",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-08",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-08",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-CE-09"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CE-09",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CE-09",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CE-09",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-CE-09",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-04",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-04",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-04",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-08",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-08",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-04",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-CE-09",
+        "A-M-UC-04"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-CE-09",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-CE-09",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-CE-09",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-04",
+        "A-M-UC-08"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-04",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-04",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-08",
+        "A-M-UC-10"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-08",
+        "A-PA-07"
+      ],
+      "candidateCount": 0,
+      "candidates": []
+    },
+    {
+      "removed": [
+        "A-CD-UC-10",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "candidateCount": 3,
+      "candidates": [
+        [
+          [
+            29.9,
+            9.4
+          ],
+          [
+            29.8,
+            9.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            13.0,
+            7.4
+          ],
+          [
+            13.0,
+            7.525
+          ]
+        ],
+        [
+          [
+            29.9,
+            9.4
+          ],
+          [
+            27.5,
+            9.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            13.5,
+            9.2
+          ],
+          [
+            13.5,
+            7.4
+          ],
+          [
+            13.0,
+            7.4
+          ],
+          [
+            13.0,
+            7.525
+          ]
+        ],
+        [
+          [
+            29.9,
+            9.4
+          ],
+          [
+            28.5,
+            9.4
+          ],
+          [
+            28.5,
+            9.0
+          ],
+          [
+            23.5,
+            9.0
+          ],
+          [
+            23.5,
+            8.9
+          ],
+          [
+            13.6,
+            8.9
+          ],
+          [
+            13.6,
+            7.4
+          ],
+          [
+            13.0,
+            7.4
+          ],
+          [
+            13.0,
+            7.525
+          ]
+        ]
+      ]
+    }
+  ]
+}

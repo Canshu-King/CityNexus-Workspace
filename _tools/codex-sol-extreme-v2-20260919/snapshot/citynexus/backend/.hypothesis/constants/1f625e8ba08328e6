@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\_core\records.py
+# hypothesis_version: 6.168.0
+
+[113, ',', ', ', '<', '=', '>', 'B', 'C', 'I', 'L', 'N', 'S', 'Unknown input type', '__array_interface__', 'aligned', 'array', 'array(', 'b', 'byteorder', 'dtype', 'f1', 'find_duplicate', 'format_parser', 'formats', 'fromarrays', 'fromfile', 'fromrecords', 'fromstring', 'getfield', 'i', 'l', 'n', 'names', 'numpy', 'numpy.rec', 'offsets', 'rb', 'readinto', 'rec.array(', 'recarray', 'record', 's', 'setfield', 'titles', '|']

@@ -1,0 +1,72 @@
+# WORKBUDDY_OVERNIGHT.patch - 建议修复补丁
+
+# 此补丁包含建议的代码修改，用于修复发现的问题。
+# 注意：这是静态分析得出的建议，未经过实际测试验证。
+
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -3505,6 +3505,21 @@ def _transition_activity_state(
+     return twin
+ 
+ 
++VALID_ACTIVITY_TRANSITIONS = {
++    "NOT_STARTED": ["EN_ROUTE"],
++    "EN_ROUTE": ["ARRIVED"],
++    "ARRIVED": ["IN_PROGRESS"],
++    "IN_PROGRESS": ["COMPLETED", "SKIPPED"],
++    "COMPLETED": [],  # Terminal state
++    "SKIPPED": [],    # Terminal state
++    "CANCELLED": [],  # Terminal state
++    "ACTIVE": ["EN_ROUTE"],  # First activity starts as ACTIVE
++}
++
++
+ def _transition_activity_state(
+     journey_id: UUID,
+     activity_id: UUID,
+@@ -3515,6 +3530,10 @@ def _transition_activity_state(
+     if journey.current_activity_id != activity.id:
+         raise HTTPException(409, "activity is not the current activity")
++
++    # Validate state transition
++    if target_state not in VALID_ACTIVITY_TRANSITIONS.get(activity.status, []):
++        raise HTTPException(409, f"invalid state transition from {activity.status} to {target_state}")
++
+     metadata = json.loads(activity.metadata_json or "{}")
+     actual_key = {
+         "EN_ROUTE": "en_route_at",
+
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -3003,8 +3003,18 @@ def trip_studio_accept(
+         mobility_snapshot_id=base.mobility_snapshot_id,
+         mobility_evidence_json=base.mobility_evidence_json,
+         created_at=now,
+     )
++
++    # Recalculate metrics based on new activity order
++    if slots:
++        first_start = min(datetime.fromisoformat(str(slot.start_at)) for slot in slots)
++        last_end = max(datetime.fromisoformat(str(slot.end_at)) for slot in slots)
++        new_plan.estimated_duration_min = max(0, int((last_end - first_start).total_seconds() // 60))
++
++    # Total cost will be calculated after JourneyLegs are created
++
+     session.add(new_plan)
+     session.flush()
+     new_by_old: dict[str, str] = {}
+
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -3080,6 +3080,11 @@ def trip_studio_accept(
+         )
+     session.add_all(new_legs)
++
++    # Update total_cost_minor to include travel costs
++    travel_cost = sum(leg.cost_amount_minor for leg in new_legs)
++    activity_cost = sum(row.estimated_cost_minor for row in new_rows)
++    new_plan.total_cost_minor = activity_cost + travel_cost
++
+     for commitment in session.scalars(
+         select(CommitmentModel).where(
+             CommitmentModel.journey_id == journey.id,

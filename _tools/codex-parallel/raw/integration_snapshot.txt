@@ -1,0 +1,75 @@
+CAPTURED 2026-09-19T06:17:11.3895161Z === INTEGRATION ===
+# branch.oid 1a8462dbc0108585266f637350202f9587ca532c
+# branch.head (detached)
+1a8462d (HEAD) docs(integration): A/B + truth integration report, real-seed classification, 32-shot visual review
+cfb2b4a test(frontend): real-seed setup project + two-theme contrast gate, and the light AA failures it exposed
+a2124c0 (integration/frontend-apple-pass1) fix(frontend): integrate Apple pass 1-5 group B — prerequisite type/behaviour fixes
+e330ac2 feat(frontend): integrate Apple pass 1-5 group A — visual / information architecture
+b12f24f (integration/truth-v6) feat(truth): integrate Qoder Xiaomi truth hardening v6 (GPT: QODER_V6_PATCH_READY_FOR_INTEGRATION)
+380e6ff (origin/integration/baseline, integration/baseline) chore(baseline): freeze authoritative CityNexus working tree as integration baseline
+7d22cd0 (origin/master, origin/eac/v19.2.2-realphone-codegate, origin/HEAD) feat(visio): establish CityNexus Visio model specification v1.0
+e3b7875 feat(use-cases): establish CityNexus use case baseline v0.1
+072e84f feat(requirements): establish CityNexus requirements baseline v0.3
+d5236d9 chore(domain): promote CityNexus domain model v0.4.2 RC3
+=== MAIN ===
+# branch.oid 7d22cd0eb7840121ba42a5ba363e1a4c7ca1a7e7
+# branch.head eac/v19.2.2-realphone-codegate
+1 .M N... 100644 100644 100644 d3967e3c602bdf19088dd9d77f75bf9be5a21074 d3967e3c602bdf19088dd9d77f75bf9be5a21074 .gitignore
+? .env.example
+? AGENT_RUNTIME_ARCHITECTURE.md
+? AGENT_TOOL_CATALOG.md
+? BLOCKERS.md
+? BUG_REPORT_20260913.md
+? CHANGED_FILES.txt
+? CODE_QUALITY_REPORT_20260912.md
+? CURRENT_STATUS.md
+? DELEGATION_POLICY.md
+? DEVELOPER_LEVEL_ASSESSMENT_20260913.md
+? HANDOFF-ROUTE-CONTACT-GATE.md
+? HERMES_INTEGRATION_STATUS.md
+? KNOWN_NONBLOCKING_DEBT.md
+? LOCAL-APPLY-INSTRUCTIONS.md
+? NEXT_RECOMMENDATION.md
+? PACKAGE-MANIFEST.json
+? PHONE_TRIAL_RUNBOOK.md
+? PROJECT_STATUS_SNAPSHOT_20260912.md
+? PROJECT_STATUS_SNAPSHOT_20260913.md
+? TEST_RESULTS.md
+? _autopilot_finding_20260912.md
+? _autopilot_flow.py
+? _codex_review_20260912.md
+? _coursework_gap_analysis_20260912.md
+? _demo_flow.py
+? _mobile_app_reuse_and_timeline_20260912.md
+? agent-mcp/
+? backend/
+? contracts/
+? data/
+? docs/
+? domain-model/citynexus-core-domain-model-v0.2.yaml
+? domain-model/citynexus-core-domain-model-v0.3.yaml
+? domain-model/citynexus-core-domain-model-v0.4.yaml
+? domain-model/citynexus-domain-model-v0.4.schema.json
+? domain-model/qa/domain-model-v0.4-report.json
+? domain-model/qa/model-diff-v0.4-to-v0.4.1.json
+? domain-model/qa/package-manifest.json
+? evals/
+? frontend/
+? output/
+? reports/
+? review/
+? scripts/
+? tests/
+? tools/
+? visio-renderer/
+? visio/
+7d22cd0eb7840121ba42a5ba363e1a4c7ca1a7e7
+=== HANDOFF ===
+# branch.oid 7d4562c56b5d5ace387caf6f5297af06ba991412
+# branch.head qoder-frontend
+? CityNexus-Frontend-Apple-Pass1-5-20260919.zip
+? _pkg/
+? qoder_xiaomi_truth_hardening_v5.patch
+? reports/
+? tools/
+7d4562c56b5d5ace387caf6f5297af06ba991412

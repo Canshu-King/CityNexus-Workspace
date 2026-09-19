@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\solver_v2.py
+# hypothesis_version: 6.168.0
+
+[5.0, 1000, 100000, ',', ':', 'DROP', 'KEEP', 'ORTOOLS_CP_SAT_V2', 'REPLACE', 'action', 'allow_drop', 'anchor', 'base_cost_minor', 'budget_ceiling_minor', 'choices', 'cost_delta_minor', 'cost_minor', 'current_location_key', 'destination', 'drift', 'drop', 'duration_min', 'earliest_start_min', 'end', 'end_min', 'journey_end_min', 'journey_id', 'key', 'latest_end_min', 'location_key', 'max_combinations', 'minutes', 'must_change', 'now_min', 'operation_key', 'option', 'option_key', 'options', 'origin', 'original_cost_minor', 'original_end_min', 'original_start_min', 'preference_milli', 'protected_anchors', 'risk_penalty_milli', 'safety_buffer_min', 'schedule_drift_min', 'selected', 'sequence_no', 'slot', 'slot_key', 'slots', 'start', 'start_min', 'top_k', 'travel_min', 'travel_minutes', 'utf-8', '~DROP']

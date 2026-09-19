@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "tests": [
+    {
+      "test": "test_route_coverage.py",
+      "status": "PASS"
+    },
+    {
+      "test": "test_route_schema.py",
+      "status": "PASS"
+    },
+    {
+      "test": "test_route_family.py",
+      "status": "PASS"
+    },
+    {
+      "test": "test_route_side_policy.py",
+      "status": "PASS"
+    }
+  ]
+}

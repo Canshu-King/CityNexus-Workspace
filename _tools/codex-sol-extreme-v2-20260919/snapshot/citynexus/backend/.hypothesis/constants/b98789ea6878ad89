@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_arraypad_impl.py
+# hypothesis_version: 6.168.0
+
+['C', 'F', 'constant', 'constant_values', 'edge', 'empty', 'end_values', 'even', 'i', 'linear_ramp', 'maximum', 'mean', 'median', 'minimum', 'numpy', 'odd', 'pad', 'reflect', 'reflect_type', 'stat_length', 'symmetric', 'wrap']

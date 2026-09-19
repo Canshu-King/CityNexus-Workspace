@@ -1,0 +1,13 @@
+{
+  "replan_closure": {
+    "summary": "The plan was adjusted because a future activity became unavailable.",
+    "reasons": [
+      "The closed activity was removed from the feasible schedule.",
+      "Your locked river-cruise commitment remains unchanged.",
+      "The replacement keeps the journey within its time and budget constraints."
+    ]
+  },
+  "ai_unavailable": {
+    "message": "AI assistance is unavailable, but CityNexus can still evaluate feasibility and propose deterministic alternatives."
+  }
+}

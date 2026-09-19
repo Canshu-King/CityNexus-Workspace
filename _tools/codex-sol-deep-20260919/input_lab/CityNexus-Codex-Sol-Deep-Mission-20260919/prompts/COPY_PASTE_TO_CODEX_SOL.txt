@@ -1,0 +1,74 @@
+Continue after the current CityNexus Parallel Readiness task.
+
+Do NOT stop after the four current tracks.
+
+Use the attached:
+CityNexus-Codex-Sol-Deep-Mission-20260919.zip
+
+You are GPT-5.6 Sol. Spend the remaining quota on reasoning-heavy work, not
+clerical repetition.
+
+READ-ONLY:
+- D:\moodle\_qoder_integration_20260919
+- D:\moodle\_qoder_th_20260918
+- D:\moodle\CityNexus
+
+ALL WRITES:
+- D:\moodle\_codex_sol_deep_20260919
+
+Do NOT modify Qoder's active integration tree or the authoritative main repo.
+Do NOT duplicate Qoder's current legacy-E2E repair work.
+Do NOT deploy Valhalla.
+Do NOT edit Today/Live in the active tree.
+
+After completing the current four tracks, execute ALL deep tracks:
+
+DEEP E — Cross-layer behavioral contract reconstruction
+Trace backend truth -> API -> frontend decision -> visible UI for Journey,
+active plan, disruptions, ACK/resolution, proposals, trigger_event, mobility
+provenance, bookings, budget evidence, Today/Live/Trips. Find semantic drift,
+impossible states, enum leaks, and unsupported frontend assumptions. Produce
+machine-readable contract_graph.json plus minimal repros for real mismatches.
+
+DEEP F — Model-based / property-based recovery audit
+Build a stateful randomized harness. Stress ACK vs resolution, proposal linkage,
+physical identity, live-provider failure, hard mobility allowlist, protected
+bookings, material replan diffs, budget evidence, Today/Live consistency, and
+idempotency. Shrink failures to replayable minimal cases. If a real bug is
+found, create a small isolated candidate patch plus regression test.
+
+DEEP G — Semantic merge simulator
+Compare authoritative/main + Qoder v6 truth + Apple frontend Pass1-5 +
+current integration. Go beyond textual Git conflicts. Build symbol-level and
+behavior-level overlap maps, recommend reconciliation order, and if safe create
+a disposable simulated merge under the Codex output tree and run focused gates.
+
+DEEP H — Failure injection / graceful degradation
+Model and, where practical, execute isolated fault injection for routing,
+places, AI, booking import, offline frontend, stale sessions, map failure, and
+duplicate actions. Prove the system fails honestly and never fabricates provider
+truth.
+
+DO NOT burn most of the run on:
+- rerunning already-green full suites with no hypothesis;
+- formatting docs;
+- hash checks;
+- package inventory busywork.
+
+Prefer:
+- semantic diffing;
+- source reasoning;
+- state-space exploration;
+- minimized counterexamples;
+- executable harnesses;
+- focused regression tests.
+
+Target package:
+CityNexus-Codex-Sol-Deep-Mission-Results-20260919.zip
+
+Final verdict exactly:
+CODEX_SOL_DEEP_MISSION_COMPLETE
+or
+CODEX_SOL_DEEP_MISSION_PARTIAL
+
+If PARTIAL, finish every unblocked deep track before stopping.

@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "D:\moodle\CityNexus\visio-renderer\calibration\search_near_four_pool.py", line 12, in <module>
+    from explore_p1_disjoint_pool import _candidate_points_cm, _candidate_pool
+  File "D:\moodle\CityNexus\visio-renderer\calibration\explore_p1_disjoint_pool.py", line 25, in <module>
+    from ortools.sat.python import cp_model
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\ortools\sat\python\cp_model.py", line 62, in <module>
+    import pandas as pd
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\pandas\__init__.py", line 49, in <module>
+    from pandas._config import (
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\pandas\_config\__init__.py", line 20, in <module>
+    from pandas._config import config
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\pandas\_config\config.py", line 68, in <module>
+    from pandas._typing import (
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\pandas\_typing.py", line 198, in <module>
+    np.random.Generator,
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\__init__.py", line 353, in __getattr__
+    import numpy.random as random
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\random\__init__.py", line 180, in <module>
+    from . import _pickle
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\random\_pickle.py", line 4, in <module>
+    from ._pcg64 import PCG64, PCG64DXSM
+ImportError: DLL load failed while importing _pcg64: 页面文件太小，无法完成操作。

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\icalendar\attr.py
+# hypothesis_version: 6.168.0
+
+['CATEGORIES', 'COLOR', 'EXDATE', 'LANGUAGE', 'RDATE', 'RRULE', 'SEQUENCE', 'UID', 'categories_property', 'color_property', 'dt', 'exdates_property', 'rdates_property', 'rrules_property', 'sequence_property', 'single_int_property', 'single_utc_property', 'uid_property']

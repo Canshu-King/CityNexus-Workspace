@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\icalendar\tools.py
+# hypothesis_version: 6.168.0
+
+['UIDGenerator', 'example.com', 'is_date', 'is_datetime', 'is_pytz', 'is_pytz_dt', 'localize', 'normalize_pytz', 'to_datetime']

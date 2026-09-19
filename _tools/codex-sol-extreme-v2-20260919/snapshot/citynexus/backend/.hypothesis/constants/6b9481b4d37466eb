@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_shape_base_impl.py
+# hypothesis_version: 6.168.0
+
+['apply_along_axis', 'apply_over_axes', 'array_split', 'column_stack', 'dsplit', 'dstack', 'expand_dims', 'hsplit', 'kron', 'numpy', 'put_along_axis', 'split', 'take_along_axis', 'tile', 'vsplit']

@@ -1,0 +1,32 @@
+{
+  "captured_at": "2026-09-19T06:12:55.6991880Z",
+  "computer": null,
+  "powershell": "7.6.5",
+  "backend_port": 8000,
+  "frontend_port": 5173,
+  "addresses": [
+    {
+      "InterfaceAlias": "以太网 4",
+      "IPAddress": "192.168.1.100",
+      "PrefixLength": 24
+    }
+  ],
+  "listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8000,
+      "OwningProcess": 5044
+    }
+  ],
+  "backend_health": {
+    "status": "ok",
+    "database": "ok",
+    "ai": "enabled"
+  },
+  "local_frontend_url": "http://127.0.0.1:5173/v8",
+  "phone_candidate_urls": [
+    "http://192.168.1.100:5173/v8"
+  ],
+  "firewall_changed": false,
+  "adb_changed": false
+}

@@ -1,0 +1,42 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_R_REVERSE_EMBEDDING",
+  "seed": 20260913,
+  "samples": 72,
+  "axisCounts": {
+    "x": 86,
+    "y": 80
+  },
+  "familyCounts": {
+    "A-T-UC-02": 10,
+    "A-T-UC-04": 28,
+    "A-T-UC-05": 31,
+    "A-T-UC-06": 17,
+    "A-T-UC-07": 12,
+    "A-T-UC-08": 15,
+    "A-T-UC-10": 29,
+    "A-T-UC-11": 39,
+    "A-T-UC-12": 18,
+    "A-CD-UC-04": 20,
+    "A-CD-UC-05": 8,
+    "A-CD-UC-10": 31,
+    "A-M-UC-04": 18,
+    "A-M-UC-08": 46,
+    "A-M-UC-10": 20,
+    "A-B-06": 22,
+    "A-PA-07": 23,
+    "A-CE-09": 31
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 24656,
+  "solverStatus": "INFEASIBLE",
+  "wallTimeSeconds": 0.11896140000000001,
+  "candidateCount": 418,
+  "conflictPairCount": 24241
+}

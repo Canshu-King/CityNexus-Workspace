@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\pydantic\_internal\_decorators.py
+# hypothesis_version: 6.168.0
+
+['@field_serializer', '@field_validator', '@model_serializer', '@model_validator', '@root_validator', '@validator', 'DecoratorInfoType', 'ReturnType', '__call__', '__get__', '__set_name__', 'after', 'before', 'cls', 'deleter', 'field', 'model', 'plain', 'return', 'self', 'setter', 'validator-signature', 'wrap']

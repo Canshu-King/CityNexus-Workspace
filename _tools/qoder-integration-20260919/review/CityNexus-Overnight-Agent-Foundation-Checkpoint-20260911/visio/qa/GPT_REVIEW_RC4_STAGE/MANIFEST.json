@@ -1,0 +1,62 @@
+[
+  {
+    "path": "CityNexus_Visio_Model_Baseline_v1.0.3_RC4.vsdx",
+    "sha256": "E219D799E1DB25548B404567367E55C57AB45BF346B56A819DB60F6181A35392",
+    "bytes": 100728
+  },
+  {
+    "path": "phase1-render-report-v1.0.3-RC4.json",
+    "sha256": "F5F5755917B3B956B861C9CDDD9B7A490E152B54E0593C1C3D058BBB200F5B4D",
+    "bytes": 1618
+  },
+  {
+    "path": "phase1-rc4\\00_Style_Guide_v1.0.3-RC4.svg",
+    "sha256": "5C1D2611AD1A98E5275D60951195DD67A3FF071D2814C2D7D598536DA02B5116",
+    "bytes": 44814
+  },
+  {
+    "path": "phase1-rc4\\P1_Domain_Overview_v1.0.3-RC4.svg",
+    "sha256": "0B24252B82791A7DC299C9BE55B9AADCAA6583263B8848F10530F8E239E0CFB3",
+    "bytes": 150671
+  },
+  {
+    "path": "phase1-rc4\\P1_UC_Overview_v1.0.3-RC4.svg",
+    "sha256": "2FFC130AAD19005B29E550E7F2D161605A856FD64EB1E5DCDB5DDE155F34DFAA",
+    "bytes": 74382
+  },
+  {
+    "path": "visio-renderer\\apply_font_rc4.py",
+    "sha256": "8D10B03FA149F69EF01EDC94DC0DC02F52F244D4C0B048187E02C708A90089A6",
+    "bytes": 522
+  },
+  {
+    "path": "visio-renderer\\apply_palette_rc4.py",
+    "sha256": "63C36D9211C64E0F0199A539EDB36AD291A914223C5FD12CAE9F692333765B9A",
+    "bytes": 967
+  },
+  {
+    "path": "visio-renderer\\export_phase1_rc4.py",
+    "sha256": "991E0BF23022340FABD04F49DE759CBCB785D4F5E305F02D94C78543EE774164",
+    "bytes": 514
+  },
+  {
+    "path": "visio-renderer\\README.md",
+    "sha256": "5069458128FE1514DDAC8829469C7464722A93AA41B1CE0462DE08BEF15BA927",
+    "bytes": 565
+  },
+  {
+    "path": "visio-renderer\\render_phase1.py",
+    "sha256": "82830FD799E7E8D801D32361046C20530B237642B76BA52CFEBFAC5E1FDBA028",
+    "bytes": 5518
+  },
+  {
+    "path": "visio-renderer\\render-config.yaml",
+    "sha256": "4FC506FE26AE3219250871694DA8FFB590450D2421532958A9FAC6F3A2C80A11",
+    "bytes": 176
+  },
+  {
+    "path": "visio-renderer\\validate_rendered_vsdx.py",
+    "sha256": "5B319BFB1441151674C91CDDB21AA98201096A45A792666ACCB2295AEDF95E68",
+    "bytes": 1769
+  }
+]

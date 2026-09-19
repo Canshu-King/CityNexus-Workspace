@@ -1,0 +1,360 @@
+{
+  "calibration": "C2.2",
+  "status": "PASS",
+  "artifact": "C2_Anchored_Class_v3.vsdx",
+  "rawSvg": "C2_Anchored_Class_v3.raw.svg",
+  "pageDimensionsIn": {
+    "width": 8.26771653543307,
+    "height": 11.69291338582677
+  },
+  "nativeClassMaster": true,
+  "owners": {
+    "C2-JOURNEY": {
+      "shapeId": 1,
+      "master": "Class",
+      "boundsIn": {
+        "left": 3.0,
+        "bottom": 3.999998780332817,
+        "right": 5.559055118110236,
+        "top": 5.336091628486319,
+        "centerX": 4.2795275590551185,
+        "centerY": 4.668045204409568,
+        "width": 2.559055118110236,
+        "height": 1.336092848153502
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 3.0,
+        "right": 5.559055118110236,
+        "bottom": 3.999998780332817,
+        "top": 4.740156260647777
+      },
+      "nativeStereotype": "<<aggregate root>>"
+    },
+    "C2-JOURNEY-TWIN": {
+      "shapeId": 12,
+      "master": "Class",
+      "boundsIn": {
+        "left": 5.5,
+        "bottom": 3.999998780332817,
+        "right": 8.059055118110237,
+        "top": 5.115619187541437,
+        "centerX": 6.7795275590551185,
+        "centerY": 4.557808983937127,
+        "width": 2.559055118110236,
+        "height": 1.11562040720862
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 5.5,
+        "right": 8.059055118110237,
+        "bottom": 3.999998780332817,
+        "top": 4.5196838197028955
+      },
+      "nativeStereotype": "<<projection>>"
+    }
+  },
+  "fieldCount": 5,
+  "fields": [
+    {
+      "specId": "C2-JOURNEY-FIELD-1",
+      "OwnerSpecId": "C2-JOURNEY",
+      "FieldOrder": 1,
+      "ownerShapeId": 1,
+      "ownerBoundsIn": {
+        "left": 3.0,
+        "bottom": 3.999998780332817,
+        "right": 5.559055118110236,
+        "top": 5.336091628486319,
+        "centerX": 4.2795275590551185,
+        "centerY": 4.668045204409568,
+        "width": 2.559055118110236,
+        "height": 1.336092848153502
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 3.0,
+        "right": 5.559055118110236,
+        "bottom": 3.999998780332817,
+        "top": 4.740156260647777
+      },
+      "fieldBoundsIn": {
+        "left": 3.0800000000000014,
+        "bottom": 4.499998780332817,
+        "right": 5.479055118110237,
+        "top": 4.681101142537541,
+        "centerX": 4.279527559055119,
+        "centerY": 4.590549961435179,
+        "width": 2.399055118110236,
+        "height": 0.1811023622047244
+      },
+      "insideOwner": true,
+      "insideBody": true,
+      "xFormula": "Class!PinX-Class!LocPinX+Class!Width*0.5",
+      "yFormula": "Class!PinY-Class!LocPinY+Class!Height-Class!User.HdrHgt-0.059055118110236 in-0.18110236220472 in*0.5-0*(0.18110236220472 in+0.039370078740157 in)",
+      "widthFormula": "Class!Width-0.16 in",
+      "font": "Segoe UI",
+      "textColor": "RGB(15,23,42)",
+      "fillPattern": "0",
+      "linePattern": "0",
+      "text": "journeyId"
+    },
+    {
+      "specId": "C2-JOURNEY-FIELD-2",
+      "OwnerSpecId": "C2-JOURNEY",
+      "FieldOrder": 2,
+      "ownerShapeId": 1,
+      "ownerBoundsIn": {
+        "left": 3.0,
+        "bottom": 3.999998780332817,
+        "right": 5.559055118110236,
+        "top": 5.336091628486319,
+        "centerX": 4.2795275590551185,
+        "centerY": 4.668045204409568,
+        "width": 2.559055118110236,
+        "height": 1.336092848153502
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 3.0,
+        "right": 5.559055118110236,
+        "bottom": 3.999998780332817,
+        "top": 4.740156260647777
+      },
+      "fieldBoundsIn": {
+        "left": 3.0800000000000014,
+        "bottom": 4.279526339387935,
+        "right": 5.479055118110237,
+        "top": 4.460628701592659,
+        "centerX": 4.279527559055119,
+        "centerY": 4.370077520490297,
+        "width": 2.399055118110236,
+        "height": 0.1811023622047244
+      },
+      "insideOwner": true,
+      "insideBody": true,
+      "xFormula": "Class!PinX-Class!LocPinX+Class!Width*0.5",
+      "yFormula": "Class!PinY-Class!LocPinY+Class!Height-Class!User.HdrHgt-0.059055118110236 in-0.18110236220472 in*0.5-1*(0.18110236220472 in+0.039370078740157 in)",
+      "widthFormula": "Class!Width-0.16 in",
+      "font": "Segoe UI",
+      "textColor": "RGB(15,23,42)",
+      "fillPattern": "0",
+      "linePattern": "0",
+      "text": "lifecycleState"
+    },
+    {
+      "specId": "C2-JOURNEY-FIELD-3",
+      "OwnerSpecId": "C2-JOURNEY",
+      "FieldOrder": 3,
+      "ownerShapeId": 1,
+      "ownerBoundsIn": {
+        "left": 3.0,
+        "bottom": 3.999998780332817,
+        "right": 5.559055118110236,
+        "top": 5.336091628486319,
+        "centerX": 4.2795275590551185,
+        "centerY": 4.668045204409568,
+        "width": 2.559055118110236,
+        "height": 1.336092848153502
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 3.0,
+        "right": 5.559055118110236,
+        "bottom": 3.999998780332817,
+        "top": 4.740156260647777
+      },
+      "fieldBoundsIn": {
+        "left": 3.0800000000000014,
+        "bottom": 4.059053898443053,
+        "right": 5.479055118110237,
+        "top": 4.240156260647777,
+        "centerX": 4.279527559055119,
+        "centerY": 4.149605079545415,
+        "width": 2.399055118110236,
+        "height": 0.1811023622047244
+      },
+      "insideOwner": true,
+      "insideBody": true,
+      "xFormula": "Class!PinX-Class!LocPinX+Class!Width*0.5",
+      "yFormula": "Class!PinY-Class!LocPinY+Class!Height-Class!User.HdrHgt-0.059055118110236 in-0.18110236220472 in*0.5-2*(0.18110236220472 in+0.039370078740157 in)",
+      "widthFormula": "Class!Width-0.16 in",
+      "font": "Segoe UI",
+      "textColor": "RGB(15,23,42)",
+      "fillPattern": "0",
+      "linePattern": "0",
+      "text": "healthStatus"
+    },
+    {
+      "specId": "C2-JOURNEY-TWIN-FIELD-1",
+      "OwnerSpecId": "C2-JOURNEY-TWIN",
+      "FieldOrder": 1,
+      "ownerShapeId": 12,
+      "ownerBoundsIn": {
+        "left": 5.5,
+        "bottom": 3.999998780332817,
+        "right": 8.059055118110237,
+        "top": 5.115619187541437,
+        "centerX": 6.7795275590551185,
+        "centerY": 4.557808983937127,
+        "width": 2.559055118110236,
+        "height": 1.11562040720862
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 5.5,
+        "right": 8.059055118110237,
+        "bottom": 3.999998780332817,
+        "top": 4.5196838197028955
+      },
+      "fieldBoundsIn": {
+        "left": 5.580000000000002,
+        "bottom": 4.279526339387935,
+        "right": 7.979055118110238,
+        "top": 4.460628701592659,
+        "centerX": 6.77952755905512,
+        "centerY": 4.370077520490297,
+        "width": 2.399055118110236,
+        "height": 0.1811023622047244
+      },
+      "insideOwner": true,
+      "insideBody": true,
+      "xFormula": "Class.12!PinX-Class.12!LocPinX+Class.12!Width*0.5",
+      "yFormula": "Class.12!PinY-Class.12!LocPinY+Class.12!Height-Class.12!User.HdrHgt-0.059055118110236 in-0.18110236220472 in*0.5-0*(0.18110236220472 in+0.039370078740157 in)",
+      "widthFormula": "Class.12!Width-0.16 in",
+      "font": "Segoe UI",
+      "textColor": "RGB(15,23,42)",
+      "fillPattern": "0",
+      "linePattern": "0",
+      "text": "healthStatus"
+    },
+    {
+      "specId": "C2-JOURNEY-TWIN-FIELD-2",
+      "OwnerSpecId": "C2-JOURNEY-TWIN",
+      "FieldOrder": 2,
+      "ownerShapeId": 12,
+      "ownerBoundsIn": {
+        "left": 5.5,
+        "bottom": 3.999998780332817,
+        "right": 8.059055118110237,
+        "top": 5.115619187541437,
+        "centerX": 6.7795275590551185,
+        "centerY": 4.557808983937127,
+        "width": 2.559055118110236,
+        "height": 1.11562040720862
+      },
+      "headerHeightIn": 0.5959353678385416,
+      "bodyBoundsIn": {
+        "left": 5.5,
+        "right": 8.059055118110237,
+        "bottom": 3.999998780332817,
+        "top": 4.5196838197028955
+      },
+      "fieldBoundsIn": {
+        "left": 5.580000000000002,
+        "bottom": 4.059053898443054,
+        "right": 7.979055118110238,
+        "top": 4.240156260647778,
+        "centerX": 6.77952755905512,
+        "centerY": 4.149605079545416,
+        "width": 2.399055118110236,
+        "height": 0.1811023622047244
+      },
+      "insideOwner": true,
+      "insideBody": true,
+      "xFormula": "Class.12!PinX-Class.12!LocPinX+Class.12!Width*0.5",
+      "yFormula": "Class.12!PinY-Class.12!LocPinY+Class.12!Height-Class.12!User.HdrHgt-0.059055118110236 in-0.18110236220472 in*0.5-1*(0.18110236220472 in+0.039370078740157 in)",
+      "widthFormula": "Class.12!Width-0.16 in",
+      "font": "Segoe UI",
+      "textColor": "RGB(15,23,42)",
+      "fillPattern": "0",
+      "linePattern": "0",
+      "text": "riskScore"
+    }
+  ],
+  "visibleFonts": [
+    "Segoe UI"
+  ],
+  "visibleDefaultArtifacts": [],
+  "fieldOverlapCount": 0,
+  "anchorBehaviour": "PASS",
+  "resizeAnchorBehaviour": "PASS",
+  "anchorProbe": [
+    {
+      "field": "C2-JOURNEY-FIELD-1",
+      "deltaErrorMm": 4.934941344458821e-14
+    },
+    {
+      "field": "C2-JOURNEY-FIELD-2",
+      "deltaErrorMm": 1.4099832412739488e-14
+    },
+    {
+      "field": "C2-JOURNEY-FIELD-3",
+      "deltaErrorMm": 1.4099832412739488e-14
+    },
+    {
+      "field": "C2-JOURNEY-TWIN-FIELD-1",
+      "deltaErrorMm": 3.665956427312267e-14
+    },
+    {
+      "field": "C2-JOURNEY-TWIN-FIELD-2",
+      "deltaErrorMm": 1.8329782136561334e-14
+    }
+  ],
+  "resizeProbe": [
+    {
+      "owner": "C2-JOURNEY",
+      "PASS": true,
+      "overlap": false,
+      "fields": [
+        {
+          "field": "C2-JOURNEY-FIELD-1",
+          "centerXErrorMm": 0.0,
+          "widthErrorMm": 0.0,
+          "insideBody": true,
+          "orderPreserved": true
+        },
+        {
+          "field": "C2-JOURNEY-FIELD-2",
+          "centerXErrorMm": 0.0,
+          "widthErrorMm": 0.0,
+          "insideBody": true,
+          "orderPreserved": true
+        },
+        {
+          "field": "C2-JOURNEY-FIELD-3",
+          "centerXErrorMm": 0.0,
+          "widthErrorMm": 0.0,
+          "insideBody": true,
+          "orderPreserved": true
+        }
+      ]
+    },
+    {
+      "owner": "C2-JOURNEY-TWIN",
+      "PASS": true,
+      "overlap": false,
+      "fields": [
+        {
+          "field": "C2-JOURNEY-TWIN-FIELD-1",
+          "centerXErrorMm": 0.0,
+          "widthErrorMm": 0.0,
+          "insideBody": true,
+          "orderPreserved": true
+        },
+        {
+          "field": "C2-JOURNEY-TWIN-FIELD-2",
+          "centerXErrorMm": 0.0,
+          "widthErrorMm": 0.0,
+          "insideBody": true,
+          "orderPreserved": true
+        }
+      ]
+    }
+  ],
+  "forbiddenTokenCounts": {
+    "#VALUE!": 0,
+    "#REF!": 0
+  },
+  "failures": []
+}

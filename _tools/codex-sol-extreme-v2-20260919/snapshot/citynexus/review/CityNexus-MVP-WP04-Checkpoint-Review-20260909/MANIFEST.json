@@ -1,0 +1,48 @@
+{
+  "package": "CityNexus-MVP-WP04-Checkpoint-Review-20260909",
+  "scope": "WP04A-0 bridge and WP04A-WP04G only",
+  "stopped_before": "WP05",
+  "contract_sources": [
+    "contract-source/CODEX_WP04_START_INSTRUCTION.md",
+    "contract-source/11_INTEGRATION_PATCH_MAP.md",
+    "contract-source/10_WP04_WORK_PACKAGE.md",
+    "contract-source/02_COMMERCE_STATE_AND_INVARIANTS.md",
+    "contract-source/03_API_CONTRACT_DELTA.md",
+    "contract-source/06_COMMITMENT_POLICY.md",
+    "contract-source/07_IDEMPOTENCY_AND_FAILURE_SEMANTICS.md",
+    "contract-source/08_TEST_AND_ACCEPTANCE_PLAN.md",
+    "contract-source/openapi_wp04_delta.yaml",
+    "contract-source/wp04_test_matrix.csv",
+    "contract-source/citynexus-core-domain-model-v0.4.2.yaml"
+  ],
+  "evidence": [
+    "evidence/gate-report.md",
+    "evidence/source-reconciliation.md",
+    "evidence/wp04-status-addendum.csv"
+  ],
+  "implementation_roots": [
+    "implementation/backend/app",
+    "implementation/backend/db/schema.sql",
+    "implementation/backend/tests",
+    "implementation/contracts/openapi.yaml",
+    "implementation/data/mock",
+    "implementation/wp04-status-addendum.csv"
+  ],
+  "focused_tests": [
+    "tests/test_wp04a0_bridge.py",
+    "tests/test_wp04_endpoints.py",
+    "tests/test_wp04_reference_contract.py",
+    "tests/test_wp04_validators.py",
+    "tests/test_wp04_order_pricing.py"
+  ],
+  "verification": {
+    "workspace_tests": "87 passed, 2 warnings",
+    "assist_tool_tests": "5 passed",
+    "ruff_check": "PASS",
+    "ruff_format_check": "PASS",
+    "wp04_preflight": "PASS (p0=0, p1=0)",
+    "openapi_route_smoke": "PASS",
+    "fresh_process_persistence_smoke": "PASS"
+  },
+  "integrity_checks": "not performed by instruction"
+}

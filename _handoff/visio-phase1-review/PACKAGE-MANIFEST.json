@@ -1,0 +1,28 @@
+{
+  "package": "CityNexus Visio Phase 1 GPT Review",
+  "scope": "00_Style_Guide + P1_UC_Overview + P1_Domain_Overview",
+  "artifact": "CityNexus_Visio_Model_Baseline_v1.0.vsdx",
+  "excluded": [
+    "Part 2 pages",
+    "Demo",
+    "requirements generation"
+  ],
+  "files": [
+    "visio\\CityNexus_Visio_Model_Baseline_v1.0.vsdx",
+    "visio\\exports\\part1\\CNX_P1_UC_Overview_v1.0.svg",
+    "visio\\exports\\part1\\CNX_P1_Domain_Overview_v1.0.svg",
+    "visio\\qa\\phase1-render-report.json",
+    "visio\\qa\\GPT-REVIEW-INSTRUCTIONS.md",
+    "visio-spec\\CODEX-RENDER-PHASE1.md",
+    "visio-spec\\visio-model-spec.yaml",
+    "visio-spec\\style-tokens.yaml",
+    "visio-spec\\qa-rules.yaml",
+    "visio-spec\\pages\\00_style_guide.yaml",
+    "visio-spec\\pages\\p1_uc_overview.yaml",
+    "visio-spec\\pages\\p1_domain_overview.yaml",
+    "domain-model\\citynexus-core-domain-model-v0.4.2.yaml",
+    "domain-model\\citynexus-domain-model.schema.json",
+    "use-cases\\use-cases.yaml",
+    "use-cases\\use-cases.schema.json"
+  ]
+}

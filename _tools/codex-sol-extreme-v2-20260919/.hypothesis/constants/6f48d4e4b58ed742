@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\ai\litellm_provider.py
+# hypothesis_version: 6.168.0
+
+[0.2, 'api_key', 'content', 'litellm', 'messages', 'model', 'role', 'system', 'task', 'temperature', 'user']

@@ -1,0 +1,26 @@
+{
+  "package": "CityNexus Hermes + Experience Convergence",
+  "version": "v18.3-2026-09-15",
+  "artifact": "CityNexus-V18.3-Hermes-Experience-Convergence-20260915.zip",
+  "scope": "V18.2 native Hermes Agent Experience converged with runtime truth, approval semantics, mobile history, lazy MapLibre loading, and release hygiene",
+  "authoritativeReport": "reports/product-v18-3/FINAL_REPORT.md",
+  "status": "V18_3_CONVERGENCE_NATIVE_HERMES_PROVEN",
+  "verification": {
+    "nativeHermesBoundary": "Official Hermes 0.21.2 citynexus profile, server-side Runs/SSE/stop proxy, and CityNexus MCP V2 remain authoritative",
+    "runtimeTruth": "DIRECT is displayed until a real native lifecycle/tool event; HERMES_NATIVE_MCP is run data, never a generic timeline constant",
+    "approvalBoundary": "PLAN_ONLY proposals stop at CityNexus Gateway/Guardian approval; Hermes API approval is not the safety boundary",
+    "experience": "Real ordered event history, safe raw disclosure, desktop/mobile compact mission sheet, Stop proxy, and reconnect-safe stale state",
+    "performance": "MapLibre is dynamically imported into a route-only chunk; raw/gzip before-after measurements are in reports/product-v18-3/FRONTEND_PERFORMANCE.md",
+    "staging": "Release allowlist excludes databases, SQLite WAL/SHM, environments, secrets, caches, virtual environments, old archives, and external Hermes profiles"
+  },
+  "excludedRuntimeArtifacts": [
+    ".git", ".venv", "node_modules", "dist", "build", "__pycache__", ".pytest_cache", ".ruff_cache",
+    "*.db", "*.sqlite", "*.db-wal", "*.db-shm", "*.zip", ".env", "secrets", "*.log", "*.err", "*.out",
+    "external Hermes profile/runtime files", "review", ".playwright-cli"
+  ],
+  "notes": [
+    "The official Hermes executable/profile remain outside the repository.",
+    "Traveler Capability UX remains a future domain-wired slice, not decorative localStorage authority.",
+    "The existing vite-plugin-pwa/v10-sw.js architecture is unchanged; no second handwritten service worker is included."
+  ]
+}

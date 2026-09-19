@@ -1,0 +1,20 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "shardIndex": 10,
+  "testedPortVariants": 49,
+  "elapsedSeconds": 177.36000000000058,
+  "candidateCounts": {
+    "A-B-06": 0,
+    "A-PA-07": 9,
+    "A-CE-09": 18,
+    "A-CD-UC-10": 12,
+    "A-M-UC-08": 22,
+    "A-M-UC-10": 17
+  },
+  "fixedSeedRouteCount": 12,
+  "reason": "empty-route-domain",
+  "emptyRoutes": [
+    "A-B-06"
+  ]
+}

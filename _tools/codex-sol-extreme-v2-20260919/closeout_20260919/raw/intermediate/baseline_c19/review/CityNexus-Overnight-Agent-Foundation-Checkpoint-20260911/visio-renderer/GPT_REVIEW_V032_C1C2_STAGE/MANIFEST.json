@@ -1,0 +1,157 @@
+[
+  {
+    "path": "native-master-map.json",
+    "sha256": "E3CC9C9035D3B194F1DF8F86597F3937C9FEAC8E7C1B2AABDE74727DDF705E69",
+    "bytes": 47750
+  },
+  {
+    "path": "phase1-routing.yaml",
+    "sha256": "D5228558E997524A9D49F6CDC849EC228C9F076844346C133B41E72869652832",
+    "bytes": 1737
+  },
+  {
+    "path": "TOOLCHAIN-BASELINE.md",
+    "sha256": "485BD64035DCFE9FBFC45CC35665054B76CB8BF5A4C1E4F79CBBC945E10AF3D7",
+    "bytes": 1806
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style-report.json",
+    "sha256": "4A3376C25CFF9F73D9AA7F364B58D07D54993956E3775D7E1EB89DD6849727E6",
+    "bytes": 4627
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.png",
+    "sha256": "695B41846C47D4689813E32B516E3CBA1FB275874822A7E7F635D1A2185DDD21",
+    "bytes": 29045
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.raw.svg",
+    "sha256": "EFB8E4D8991B41ECD9362FA42372528E89553F0EA5816D8F3D7F0D24F8124144",
+    "bytes": 62148
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.svg",
+    "sha256": "D14CC6C881771C662FE657569742C5CB85C7F4E2492EA8880E4F28DB946E1448",
+    "bytes": 63675
+  },
+  {
+    "path": "calibration-out\\C1_Font_Style.vsdx",
+    "sha256": "55DB45FE35BB08C02C38215EAA511A2CD27379177CF05B420C38D19DE4EE0C97",
+    "bytes": 30834
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class-report.json",
+    "sha256": "63B95783EFAF5DFC6B18532377F358153653B895982F3AA52F949A2181BFAC16",
+    "bytes": 314
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.png",
+    "sha256": "FC4F72999F83560E135CB657AB5AF25D2BA18ABBFFDB93BF134E51282EA5B2A2",
+    "bytes": 9662
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.raw.svg",
+    "sha256": "C3DB658DF7F8230BBDBBF0493C30D88CDDA3F7754E18CC6D4647CBDC002EFA05",
+    "bytes": 28342
+  },
+  {
+    "path": "calibration-out\\C2_Native_Class.vsdx",
+    "sha256": "CB9AEA941B7EAD8E7058D4308D609C7F483E381360D0FBCA5EA1EF4244CCE29B",
+    "bytes": 25528
+  },
+  {
+    "path": "calibration-out\\calibration-summary.json",
+    "sha256": "E063862AC6B29DDB62CA05F39570133A7214DE0E042EB40757B3E118E572B2AF",
+    "bytes": 86
+  },
+  {
+    "path": "calibration-out\\manifest.json",
+    "sha256": "A1BABB32726E633DCFA2C0F3105ADA3024EB47F19C5026B48846DED670C8F722",
+    "bytes": 2127
+  },
+  {
+    "path": "calibration-out\\route-static-test-results.json",
+    "sha256": "E73C0D188A1DB40483CC5A3663AED6FD33BC89318AE947452C11AF6FEC5B80D5",
+    "bytes": 453
+  },
+  {
+    "path": "calibration-out\\source-input-hashes.json",
+    "sha256": "3CCF18DE8B3814EF6A5B0A4019B998C0A0EA442A32E8AFBEB2C692756836F2BB",
+    "bytes": 1064
+  },
+  {
+    "path": "calibration-out\\static-test-report.json",
+    "sha256": "426022C97641C7583C4DB8B1D05002D3F8466AB94CBF808A126515AE37E0F16B",
+    "bytes": 158
+  },
+  {
+    "path": "tests\\test_coordinate_conversion.py",
+    "sha256": "6DEF408D507A763B8A665065250743D924B2944ADC24620B820E50F8EFFD2356",
+    "bytes": 374
+  },
+  {
+    "path": "tests\\test_no_legacy_imports.py",
+    "sha256": "0D2169DAEAF0169471A2BFD61642F5E2CE8B41E9C54D5B8B4AF897319EAD0C64",
+    "bytes": 613
+  },
+  {
+    "path": "tests\\test_route_coverage.py",
+    "sha256": "F8BD9893AF144FBB6B4712C08B23590392E8F8093928BA987CCADE285516A8A2",
+    "bytes": 610
+  },
+  {
+    "path": "tests\\test_route_schema.py",
+    "sha256": "031C612D9B8991DBD7D08D6F0C3BAD7315BB43F37BB84BF32EECD35103A17B0A",
+    "bytes": 450
+  },
+  {
+    "path": "tests\\test_style_resolution.py",
+    "sha256": "62BF02A747C0B67BEFD670CFEFD638205F4892CC1D20E1B25B7EB429F8C92571",
+    "bytes": 713
+  },
+  {
+    "path": "tests\\__pycache__\\test_coordinate_conversion.cpython-310-pytest-9.1.1.pyc",
+    "sha256": "E3103A126D3EA8B02FB3EB706555365039FDAB94C905F2692169C830BE21E9E6",
+    "bytes": 1223
+  },
+  {
+    "path": "tests\\__pycache__\\test_coordinate_conversion.cpython-310.pyc",
+    "sha256": "672C41873389B3EB0B6F8EC79CA2392B2591D88D99D92051CF13AE6E35DE98B8",
+    "bytes": 829
+  },
+  {
+    "path": "tests\\__pycache__\\test_no_legacy_imports.cpython-310-pytest-9.1.1.pyc",
+    "sha256": "8A9252C2BBFB42431A6470D36442B18DEC079C314F7EDE1EF0D9DFA6D76EE251",
+    "bytes": 2519
+  },
+  {
+    "path": "tests\\__pycache__\\test_no_legacy_imports.cpython-310.pyc",
+    "sha256": "F3BB6A64A5A72F328ACE6BDE83C30C3850EC4E34002C3EB6524E41C1EA466EA1",
+    "bytes": 958
+  },
+  {
+    "path": "tests\\__pycache__\\test_route_coverage.cpython-310-pytest-9.1.1.pyc",
+    "sha256": "2EE92B83CE11A741BA1C84EB9276463C0C0DBBA9265B54AD4734B0F4910E5145",
+    "bytes": 2538
+  },
+  {
+    "path": "tests\\__pycache__\\test_route_coverage.cpython-310.pyc",
+    "sha256": "8CE2AD05FF315CD56AC6C9337451DA5A0EEBABA5F2120A997AB9A7DDBA970CDE",
+    "bytes": 1042
+  },
+  {
+    "path": "tests\\__pycache__\\test_route_schema.cpython-310-pytest-9.1.1.pyc",
+    "sha256": "7F1F63CFDAC27BCBE847AA304C4A8CCEAA44978D0DE832C9278A268B48AEE19A",
+    "bytes": 2194
+  },
+  {
+    "path": "tests\\__pycache__\\test_style_resolution.cpython-310-pytest-9.1.1.pyc",
+    "sha256": "AEBEEFD64416FA7DA65B9F434B4D1A80146FF6D0A313DE3FB8F22EE88B65FC60",
+    "bytes": 1544
+  },
+  {
+    "path": "tests\\__pycache__\\test_style_resolution.cpython-310.pyc",
+    "sha256": "49A1B8D10A7DBE9CFE48399698D53F80FE6E1F9C0316FFAFA17891393D9527A2",
+    "bytes": 1150
+  }
+]

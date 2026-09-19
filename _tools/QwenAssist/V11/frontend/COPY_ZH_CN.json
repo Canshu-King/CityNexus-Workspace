@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "retry": "重试",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "finish": "完成",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "提示"
+  },
+  "journey": {
+    "hub": {
+      "title": "行程中心",
+      "empty": "暂无行程",
+      "createNew": "创建新行程",
+      "importFromCalendar": "从日历导入",
+      "importFromEmail": "从邮件导入"
+    },
+    "live": {
+      "title": "实时行程",
+      "offline": "离线模式",
+      "recovering": "恢复连接中...",
+      "lastSynced": "最后同步：{{time}}",
+      "nextActivity": "下一项活动",
+      "currentTime": "当前时间",
+      "delayed": "已延误",
+      "onTime": "准时"
+    },
+    "approval": {
+      "required": "需要批准",
+      "pending": "等待批准",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "reason": "批准原因",
+      "approveButton": "批准此变更",
+      "rejectButton": "拒绝此变更",
+      "autoApproved": "已自动批准"
+    },
+    "risk": {
+      "banner": "⚠️ 承诺面临风险",
+      "highRisk": "高风险",
+      "mediumRisk": "中风险",
+      "lowRisk": "低风险",
+      "reason": "风险原因",
+      "mitigation": "建议措施",
+      "dismiss": "忽略此警告"
+    }
+  },
+  "offline": {
+    "banner": "📴 离线模式",
+    "description": "您已离线，部分功能受限",
+    "recovering": "正在重新连接...",
+    "recovered": "已恢复在线",
+    "unsavedChanges": "您有未同步的更改",
+    "syncPending": "等待网络恢复后同步",
+    "actions": {
+      "retry": "重试连接",
+      "workOffline": "继续离线工作",
+      "viewCached": "查看缓存内容"
+    }
+  },
+  "booking": {
+    "imported": {
+      "title": "已导入预订",
+      "description": "此预订已从 {{source}} 导入",
+      "viewDetails": "查看详情",
+      "editDetails": "编辑详情",
+      "unverified": "待验证"
+    },
+    "fieldUnresolved": {
+      "title": "信息待确认",
+      "description": "以下字段需要您确认",
+      "fields": {
+        "checkInTime": "入住时间",
+        "checkOutTime": "退房时间",
+        "roomType": "房型",
+        "guestCount": "入住人数",
+        "specialRequests": "特殊要求"
+      }
+    },
+    "quoteExpired": {
+      "title": "报价已过期",
+      "description": "此报价已于 {{expiryTime}} 过期",
+      "currentPrice": "当前价格",
+      "originalPrice": "原价格",
+      "refreshButton": "刷新价格",
+      "bookAnyway": "仍要预订"
+    },
+    "unknownPrice": {
+      "label": "价格待确认",
+      "description": "价格信息暂不可用",
+      "estimateAvailable": "有估算价格",
+      "viewEstimate": "查看估算"
+    }
+  },
+  "provider": {
+    "stale": {
+      "banner": "⚠️ 数据可能已过时",
+      "description": "此信息最后更新于 {{lastUpdated}}",
+      "refreshButton": "刷新数据",
+      "autoRefreshIn": "自动刷新倒计时：{{seconds}}秒"
+    },
+    "outage": {
+      "banner": "⚠️ 服务暂时不可用",
+      "description": "{{providerName}} 服务当前不可用",
+      "fallbackActive": "已启用备用服务",
+      "estimatedRecovery": "预计恢复时间：{{eta}}"
+    },
+    "freshness": {
+      "fresh": "数据新鲜",
+      "aging": "数据开始变旧",
+      "stale": "数据已过时",
+      "expired": "数据已失效",
+      "lastVerified": "最后验证：{{time}}"
+    }
+  },
+  "autopilot": {
+    "acted": {
+      "title": "自动驾驶已操作",
+      "description": "系统已自动为您{{action}}",
+      "viewChanges": "查看变更",
+      "undo": "撤销此操作",
+      "settings": "自动驾驶设置"
+    },
+    "suggestion": {
+      "title": "建议操作",
+      "description": "系统建议您{{action}}",
+      "accept": "接受建议",
+      "reject": "拒绝建议",
+      "dismiss": "不再提示"
+    }
+  },
+  "agent": {
+    "unavailable": {
+      "title": "AI 助手暂不可用",
+      "description": "AI 服务当前不可用，您可以继续使用基础功能",
+      "retryButton": "重试连接",
+      "fallbackMode": "已切换到手动模式"
+    },
+    "thinking": {
+      "label": "AI 正在思考...",
+      "analyzing": "正在分析您的行程",
+      "checking": "正在检查实时信息",
+      "planning": "正在优化计划"
+    },
+    "action": {
+      "confirm": "确认执行此操作？",
+      "executing": "正在执行...",
+      "completed": "操作已完成",
+      "failed": "操作失败"
+    }
+  },
+  "edge": {
+    "connected": {
+      "label": "Edge 设备已连接",
+      "description": "实时位置同步中",
+      "battery": "设备电量：{{level}}%",
+      "signal": "信号强度：{{strength}}"
+    },
+    "disconnected": {
+      "label": "Edge 设备已断开",
+      "description": "最后已知位置：{{location}}",
+      "lastSeen": "最后在线：{{time}}",
+      "reconnectButton": "重新连接"
+    }
+  },
+  "transit": {
+    "realtimeUnavailable": {
+      "label": "实时信息暂不可用",
+      "description": "显示计划时间，实际可能有偏差",
+      "estimatedArrival": "预计到达：{{time}}",
+      "scheduledArrival": "计划到达：{{time}}"
+    },
+    "delayed": {
+      "label": "延误",
+      "minutes": "延误 {{minutes}} 分钟",
+      "newArrival": "新到达时间：{{time}}",
+      "reason": "延误原因：{{reason}}"
+    },
+    "cancelled": {
+      "label": "已取消",
+      "description": "此班次已取消",
+      "nextAvailable": "下一可用班次：{{time}}",
+      "alternativeButton": "查看替代方案"
+    }
+  },
+  "money": {
+    "unknown": "价格待确认",
+    "estimated": "估算：{{amount}}",
+    "confirmed": "确认：{{amount}}",
+    "free": "免费",
+    "currency": {
+      "CNY": "¥",
+      "USD": "$",
+      "EUR": "€",
+      "GBP": "£",
+      "JPY": "¥"
+    },
+    "priceChanged": {
+      "label": "价格已变更",
+      "from": "原价：{{oldAmount}}",
+      "to": "现价：{{newAmount}}",
+      "reason": "变更原因：{{reason}}"
+    }
+  },
+  "commitment": {
+    "atRisk": {
+      "label": "承诺面临风险",
+      "reason": "风险原因",
+      "timeRemaining": "剩余时间：{{time}}",
+      "actionRequired": "需要立即行动"
+    },
+    "missed": {
+      "label": "已错过",
+      "description": "您已错过此承诺时间",
+      "rescheduleButton": "重新安排",
+      "cancelButton": "取消承诺"
+    },
+    "completed": {
+      "label": "已完成",
+      "completedAt": "完成时间：{{time}}",
+      "reviewButton": "评价"
+    }
+  },
+  "replan": {
+    "required": {
+      "title": "需要重新规划",
+      "reason": "重新规划原因",
+      "impact": "影响评估",
+      "previewButton": "预览新计划",
+      "acceptButton": "接受新计划",
+      "rejectButton": "保持原计划"
+    },
+    "impact": {
+      "timeChanged": "时间变更：{{change}}",
+      "costChanged": "成本变更：{{change}}",
+      "activitiesAffected": "受影响活动：{{count}}项"
+    }
+  },
+  "validation": {
+    "required": "此字段为必填项",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "invalidPhone": "请输入有效的电话号码",
+    "invalidDate": "请输入有效的日期",
+    "invalidTime": "请输入有效的时间",
+    "minLength": "至少需要 {{min}} 个字符",
+    "maxLength": "最多 {{max}} 个字符",
+    "minValue": "最小值为 {{min}}",
+    "maxValue": "最大值为 {{max}}",
+    "pattern": "格式不正确"
+  },
+  "errors": {
+    "generic": "发生错误，请稍后重试",
+    "network": "网络连接失败，请检查网络设置",
+    "timeout": "请求超时，请稍后重试",
+    "unauthorized": "未授权，请登录",
+    "forbidden": "无权访问此资源",
+    "notFound": "请求的资源不存在",
+    "serverError": "服务器错误，请稍后重试",
+    "validation": "表单验证失败",
+    "conflict": "数据冲突，请刷新后重试"
+  },
+  "accessibility": {
+    "skipToContent": "跳转到主要内容",
+    "menuButton": "打开菜单",
+    "closeButton": "关闭",
+    "expandButton": "展开",
+    "collapseButton": "收起",
+    "loadingIndicator": "加载中，请稍候",
+    "liveRegion": "实时通知：{{message}}"
+  }
+}

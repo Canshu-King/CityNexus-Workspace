@@ -1,0 +1,18 @@
+# Keep all real providers disabled until their individual gate is active.
+CITYNEXUS_REAL_MOBILITY_ENABLED=false
+CITYNEXUS_ROUTER=valhalla
+CITYNEXUS_ROUTER_BASE_URL=http://localhost:8002
+CITYNEXUS_ROUTER_PROFILE=pedestrian
+
+CITYNEXUS_OPEN_METEO_ENABLED=false
+CITYNEXUS_PHOTON_ENABLED=false
+CITYNEXUS_PHOTON_BASE_URL=https://photon.komoot.io
+
+CITYNEXUS_AI_ENABLED=false
+CITYNEXUS_AI_PROVIDER=litellm
+CITYNEXUS_AI_MODEL=deepseek/<configure-current-model>
+DEEPSEEK_API_KEY=
+
+CITYNEXUS_WEBAUTHN_ENABLED=false
+CITYNEXUS_WEBAUTHN_RP_ID=localhost
+CITYNEXUS_WEBAUTHN_ORIGIN=http://localhost:5173

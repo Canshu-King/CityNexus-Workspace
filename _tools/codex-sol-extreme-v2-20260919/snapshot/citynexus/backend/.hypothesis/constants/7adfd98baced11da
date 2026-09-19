@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\fastapi\dependencies\utils.py
+# hypothesis_version: 6.168.0
+
+['-', '0.0.12', '<unnamed_callable>', 'Body_', '_', '__globals__', '__name__', 'alias', 'annotation', 'body', 'content-length', 'convert_underscores', 'default', 'dependency_overrides', 'embed', 'fastapi_inner_astack', 'function', 'in_', 'media_type', 'request', 'validation_alias']

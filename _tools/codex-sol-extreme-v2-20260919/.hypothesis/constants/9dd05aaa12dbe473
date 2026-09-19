@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\mission_plan.py
+# hypothesis_version: 6.168.0
+
+['CAPABILITY_AWARE', 'Inspect JourneyTwin', 'PENDING', 'PLAN_ONLY', 'PREFER_INDOOR', '[]', 'accept_replan', 'allowed_tools', 'approval_boundary', 'authority', 'autonomy', 'create_booking', 'evaluate_candidates', 'id', 'inspect_affected', 'inspect_capabilities', 'inspect_commitments', 'inspect_journey', 'inspect_proposal', 'inspect_twin', 'list_replans', 'objective_codes_json', 'operation', 'read_only_tools', 'replace_activity', 'request_replan', 'requested_autonomy', 'requires_authority', 'reschedule_activity', 'search_candidates', 'search_city_services', 'status', 'steps', 'tool_name', 'version']

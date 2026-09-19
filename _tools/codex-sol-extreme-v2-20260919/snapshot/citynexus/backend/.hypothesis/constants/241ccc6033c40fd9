@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py
+# hypothesis_version: 6.168.0
+
+['Binary', 'DBAPIModule', 'DatabaseError', 'Error', 'IntegrityError', 'NotSupportedError', 'OperationalError', 'PARSE_COLNAMES', 'PARSE_DECLTYPES', 'ProgrammingError', '_adapt_connection', '_connection', '_cursor', '_rows', 'aiosqlite', 'arraysize', 'async_creator_fn', 'async_fallback', 'await_', 'dbapi', 'description', 'lastrowid', 'no active connection', 'qmark', 'rowcount', 'sqlite3', 'sqlite_version', 'sqlite_version_info', 'stop']

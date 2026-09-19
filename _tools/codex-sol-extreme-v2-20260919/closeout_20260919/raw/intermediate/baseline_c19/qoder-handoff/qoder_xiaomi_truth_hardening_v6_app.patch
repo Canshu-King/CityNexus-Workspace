@@ -1,0 +1,2278 @@
+diff --git a/backend/app/integrations/mobility/runtime.py b/backend/app/integrations/mobility/runtime.py
+index febcbce..aee0b04 100644
+--- a/backend/app/integrations/mobility/runtime.py
++++ b/backend/app/integrations/mobility/runtime.py
+@@ -81,17 +81,32 @@ def capture_runtime_mobility_snapshot(
+     *,
+     operation_key: str,
+     captured_at: str | None = None,
++    require_explicit_facts: bool = False,
+ ) -> MobilitySnapshotCaptureResult:
+     """Capture one immutable mobility reality for a product operation.
+ 
+     The default/offline profile uses the deterministic mock provider. When an
+-    opt-in Valhalla URL is configured, Valhalla becomes the primary provider
+-    and the deterministic mock remains an explicit pair-level fallback. The
+-    returned snapshot is the only object allowed into the feasibility gate.
++    opt-in Valhalla URL is configured, Valhalla becomes the primary provider.
++    For *soft* (non-hard) captures the deterministic mock stays an explicit
++    pair-level fallback so a transient live outage degrades rather than
++    aborts.  For *hard* replan captures (``require_explicit_facts=True``) there
++    is deliberately NO mock fallback: a leg the live provider could not measure
++    must stay unavailable instead of inheriting a fixture number and being
++    laundered into a hard feasibility decision (V4 #4).  The returned snapshot
++    is the only object allowed into the feasibility gate.
++
++    ``require_explicit_facts`` is for the replan path: a pair with no explicit
++    frozen or measured fact must fail closed rather than inherit the mock
++    fixture's blanket ``default_minutes`` constant.  The constant is not a
++    measurement, so it must never become hard replan evidence
++    (T2 / docs/MOBILITY_TRUTH_CONTRACT.md).
+     """
+ 
+     normalized_pairs = tuple(sorted({(str(a), str(b)) for a, b in pairs if a and b and a != b}))
+-    mock = MockMobilityProvider(place_lookup=lambda key: _place_lookup(session, key))
++    mock = MockMobilityProvider(
++        place_lookup=lambda key: _place_lookup(session, key),
++        strict=require_explicit_facts,
++    )
+     if not settings.live_valhalla_url:
+         return capture_mobility_snapshot(
+             normalized_pairs,
+@@ -114,17 +129,38 @@ def capture_runtime_mobility_snapshot(
+                 "has_live_traffic": False,
+                 "error_type": type(exc).__name__,
+             }
++        # V4 #4: a live-configured HARD capture must not fall back to the mock
++        # fixture.  Soft/offline captures keep the pair-level mock fallback.
++        hard_capture = require_explicit_facts
+         captured = capture_mobility_snapshot(
+             normalized_pairs,
+             primary=primary,
+-            fallback=mock,
++            fallback=None if hard_capture else mock,
+             captured_at=captured_at,
+             operation_key=operation_key,
+         )
++        # V5 blocker-1: with a live routing provider configured, a leg the live
++        # provider FAILED must not enter hard feasibility just because the mock
++        # happened to carry an explicit matrix value for it.  The bulk replan
++        # capture runs soft (fallback=mock), so we DOWNGRADE every mock-fallback
++        # fact to UNKNOWN quality (kept for soft/display reads, but rejected by
++        # hard_minutes) -> the per-candidate hard gate refuses it, the on-demand
++        # strict recapture (live, fallback=None) reports that leg unavailable, and
++        # the candidate is excluded while a fully-live candidate still proceeds.
++        # Offline demos have no fallback pairs, so they keep using their
++        # legitimate explicit mock facts as hard truth.
++        snapshot = captured.snapshot
++        if captured.fallback_pairs:
++            facts = dict(snapshot.facts)
++            for pair in captured.fallback_pairs:
++                fact = facts.get(pair)
++                if fact is not None and fact.fact_quality is not None:
++                    facts[pair] = replace(fact, fact_quality=None)
++            snapshot = replace(snapshot, facts=facts)
+         return replace(
+             captured,
+             snapshot=replace(
+-                captured.snapshot,
++                snapshot,
+                 provider_capabilities={"valhalla": capabilities},
+             ),
+         )
+@@ -210,6 +246,7 @@ def capture_journey_mobility_matrix(
+                                 "captured_at": captured,
+                                 "route_provider": "valhalla",
+                                 "route_provenance": "LIVE_CAPTURE",
++                                "fact_quality": "LIVE_PROVIDER_CAPTURE",
+                                 "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+                                 "time_basis": "VALHALLA_SOURCES_TO_TARGETS",
+                                 "matrix_cell": cell.raw,
+diff --git a/backend/app/integrations/mobility/snapshot_capture.py b/backend/app/integrations/mobility/snapshot_capture.py
+index c0ac545..1963960 100644
+--- a/backend/app/integrations/mobility/snapshot_capture.py
++++ b/backend/app/integrations/mobility/snapshot_capture.py
+@@ -5,7 +5,13 @@ from datetime import datetime, timezone
+ from typing import Any, Iterable, Protocol
+ from uuid import uuid4
+ 
+-from app.replanning.provider_snapshots import MobilitySnapshot, TravelEstimateFact
++from app.replanning.provider_snapshots import (
++    EXPLICIT_FROZEN_FIXTURE,
++    LIVE_PROVIDER_CAPTURE,
++    SYNTHETIC_DEFAULT,
++    MobilitySnapshot,
++    TravelEstimateFact,
++)
+ 
+ 
+ class MinuteEstimator(Protocol):
+@@ -48,6 +54,29 @@ def _normalize_geometry(value: Any) -> tuple[tuple[float, float], ...]:
+     return tuple(points) if len(points) >= 2 else ()
+ 
+ 
++def _resolve_fact_quality(
++    provider: MinuteEstimator, origin: str, destination: str, provider_key: str
++) -> str | None:
++    """Classify a captured fact so hard feasibility can trust or reject it.
++
++    V4 #2 (fully fail-closed): a provider that distinguishes an explicit fixture
++    entry from its blanket default exposes ``fact_quality``; that attestation is
++    the only source of truth here.  A provider that cannot attest a leg, or
++    whose classifier raises, yields ``None`` (UNKNOWN), which hard feasibility
++    rejects.  We never infer trustworthiness from the provider's *name* — a mock
++    or fixture label is not a measurement (T2 / B1), and doing so would launder
++    an unmeasured leg into a hard fact.
++    """
++
++    provider_quality = getattr(provider, "fact_quality", None)
++    if callable(provider_quality):
++        try:
++            return str(provider_quality(origin, destination))
++        except Exception:
++            return None
++    return None
++
++
+ class MobilitySnapshotCaptureError(RuntimeError):
+     pass
+ 
+@@ -95,6 +124,7 @@ def capture_mobility_snapshot(
+             if minutes < 0:
+                 raise ValueError("negative travel minutes")
+             provider_key = str(primary.provider_key)
++            active_provider: MinuteEstimator = primary
+             degraded = False
+             if geometry:
+                 geometries[(origin, destination)] = geometry
+@@ -131,6 +161,7 @@ def capture_mobility_snapshot(
+                     f"primary and fallback mobility facts unavailable for {origin}|{destination}"
+                 ) from fallback_exc
+             provider_key = str(fallback.provider_key)
++            active_provider = fallback
+             degraded = True
+             fallback_pairs.append((origin, destination))
+             fallback_reasons[(origin, destination)] = type(primary_exc).__name__
+@@ -173,6 +204,9 @@ def capture_mobility_snapshot(
+                 or ""
+             ).upper()
+             or None,
++            fact_quality=_resolve_fact_quality(
++                active_provider, origin, destination, provider_key
++            ),
+         )
+ 
+     snapshot = MobilitySnapshot(
+diff --git a/backend/app/integrations/mobility/valhalla_http.py b/backend/app/integrations/mobility/valhalla_http.py
+index eb0b895..1cad213 100644
+--- a/backend/app/integrations/mobility/valhalla_http.py
++++ b/backend/app/integrations/mobility/valhalla_http.py
+@@ -6,6 +6,8 @@ from typing import Any, Callable, Mapping
+ 
+ import httpx
+ 
++from app.replanning.provider_snapshots import LIVE_PROVIDER_CAPTURE
++
+ 
+ @dataclass(frozen=True)
+ class ValhallaRouteEstimate:
+@@ -117,6 +119,16 @@ class ValhallaHTTPMobilityProvider:
+     def estimate_minutes(self, origin_place_id: str, destination_place_id: str) -> int:
+         return self.estimate(origin_place_id, destination_place_id).duration_min
+ 
++    def fact_quality(self, origin_place_id: str, destination_place_id: str) -> str:
++        """Valhalla returns a measured route, so it attests LIVE explicitly.
++
++        Hard feasibility trusts this declaration, not the provider's name
++        (V4 #2).  If a request fails, the capture records a failure and the leg
++        is unavailable — it never falls back to a synthetic default here.
++        """
++
++        return LIVE_PROVIDER_CAPTURE
++
+     def status_capabilities(self) -> dict[str, Any]:
+         """Read deployment capabilities before labelling traffic as live."""
+ 
+diff --git a/backend/app/integrations/mock/providers.py b/backend/app/integrations/mock/providers.py
+index 015de5b..25dd234 100644
+--- a/backend/app/integrations/mock/providers.py
++++ b/backend/app/integrations/mock/providers.py
+@@ -5,6 +5,7 @@ from pathlib import Path
+ from typing import Callable, Mapping
+ 
+ from app.integrations.mobility.routingpy_adapter import TravelEstimate
++from app.replanning.provider_snapshots import EXPLICIT_FROZEN_FIXTURE, SYNTHETIC_DEFAULT
+ 
+ MOCK_ROOT = Path(__file__).resolve().parents[4] / "data" / "mock"
+ 
+@@ -22,13 +23,51 @@ class MockCityDataProvider:
+ class MockMobilityProvider:
+     provider_key = "mock-mobility"
+ 
+-    def __init__(self, place_lookup: Callable[[str], Mapping[str, object]] | None = None) -> None:
++    def __init__(
++        self,
++        place_lookup: Callable[[str], Mapping[str, object]] | None = None,
++        *,
++        strict: bool = False,
++    ) -> None:
++        """Deterministic fixture-backed mobility provider.
++
++        ``strict`` distinguishes an *explicit fixture fact* from the fixture's
++        blanket ``default_minutes`` fallback.  The fallback is a constant, not a
++        measurement, so it must never become a hard travel fact in replan
++        feasibility (T2 / docs/MOBILITY_TRUTH_CONTRACT.md).  With ``strict=True``
++        a pair absent from the explicit matrix raises ``KeyError`` instead of
++        silently returning the constant; the caller's fail-closed path then
++        reports ``MOBILITY_DATA_UNAVAILABLE``.
++
++        The non-strict default preserves the seeded offline demo paths, which
++        intentionally rely on the fixture default.
++        """
++
+         self._fixture = json.loads((MOCK_ROOT / "mobility_matrix.json").read_text(encoding="utf-8"))
+         self._place_lookup = place_lookup
++        self._strict = strict
+ 
+     def estimate_minutes(self, origin_place_id: str, destination_place_id: str) -> int:
+         key = f"{origin_place_id}|{destination_place_id}"
+-        return int(self._fixture["minutes"].get(key, self._fixture["default_minutes"]))
++        explicit = self._fixture["minutes"].get(key)
++        if explicit is None:
++            if self._strict:
++                raise KeyError(f"no explicit mobility fact for {key}")
++            return int(self._fixture["default_minutes"])
++        return int(explicit)
++
++    def fact_quality(self, origin_place_id: str, destination_place_id: str) -> str:
++        """Whether a pair is an explicit fixture fact or the blanket default.
++
++        ``SYNTHETIC_DEFAULT`` marks the constant that must never become a hard
++        replan-travel fact; ``EXPLICIT_FROZEN_FIXTURE`` marks a genuine fixture
++        entry that demo paths may still use (T2 / B1).
++        """
++
++        key = f"{origin_place_id}|{destination_place_id}"
++        if self._fixture["minutes"].get(key) is None:
++            return SYNTHETIC_DEFAULT
++        return EXPLICIT_FROZEN_FIXTURE
+ 
+     def estimate(self, origin_place_id: str, destination_place_id: str) -> TravelEstimate:
+         """Return a frozen, deterministic route geometry for offline demos.
+diff --git a/backend/app/main.py b/backend/app/main.py
+index dcb2e1c..c27f903 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -4928,6 +4928,10 @@ def _grounded_recovery_reserve_snapshot(
+             walking_min=(
+                 int(chosen["walking_min"]) if chosen.get("walking_min") is not None else None
+             ),
++            # V6: propagate the captured provider fact's honest quality (no
++            # provenance guessing); if the source did not attest a quality this
++            # stays None and hard feasibility fails closed, as intended.
++            fact_quality=(str(chosen["fact_quality"]) if chosen.get("fact_quality") is not None else None),
+         )
+ 
+     for pair, fact in base.facts.items():
+@@ -6357,6 +6361,21 @@ class _ReplanCandidateSpec:
+     v2_choices: dict[tuple[str, str], Any] | None = None
+ 
+ 
++class MobilityDataUnavailable(RuntimeError):
++    """No explicit frozen or measured travel fact exists for a replan leg.
++
++    Distinct from "no feasible alternative": the engine never learned how long
++    the leg takes, so it must not declare a candidate infeasible (or feasible)
++    on the strength of a fabricated constant.  See
++    docs/MOBILITY_TRUTH_CONTRACT.md (T2).
++    """
++
++    def __init__(self, origin: str | None, destination: str | None) -> None:
++        self.origin = origin
++        self.destination = destination
++        super().__init__(f"MOBILITY_DATA_UNAVAILABLE:{origin}|{destination}")
++
++
+ def _replan_estimate(
+     session: Session,
+     journey: Journey,
+@@ -6370,21 +6389,45 @@ def _replan_estimate(
+ 
+     Frozen evidence was captured for the stop order that existed when the plan
+     was selected.  A replan creates new adjacencies, so a pair can be absent;
+-    that is a gap to fill from the provider, not a reason to fail the request.
++    that is a gap to fill from a *real* provider, not a reason to fail the
++    request — and not a licence to invent a constant.
++
++    The capture is therefore strict: a pair with no explicit frozen or measured
++    fact raises :class:`MobilityDataUnavailable` instead of inheriting the mock
++    fixture's blanket ``default_minutes`` (T2).
+     """
+ 
+     if not origin or not destination or origin == destination:
+         return 0
+     try:
++        # ``hard_minutes`` (not the raw ``estimate_minutes``) so a leg whose
++        # quality is SYNTHETIC_DEFAULT — the blanket mock 20 the bulk replan
++        # capture may have pre-frozen — is rejected at this front door rather
++        # than flowing into feasibility as if it were measured (V2-T2 / B1).
++        # The real MobilitySnapshot always exposes it; duck-typed providers that
++        # predate quality tagging fall back to the raw accessor.
++        hard_minutes = getattr(mobility, "hard_minutes", None)
++        if callable(hard_minutes):
++            return int(hard_minutes(origin, destination))
+         return int(mobility.estimate_minutes(origin, destination))
+     except KeyError:
+-        captured = capture_runtime_mobility_snapshot(
+-            session,
+-            journey,
+-            [(origin, destination)],
+-            operation_key=operation_key,
+-        ).snapshot
+-        return int(captured.estimate_minutes(origin, destination))
++        try:
++            captured = capture_runtime_mobility_snapshot(
++                session,
++                journey,
++                [(origin, destination)],
++                operation_key=operation_key,
++                require_explicit_facts=True,
++            ).snapshot
++        except (MobilitySnapshotCaptureError, KeyError) as exc:
++            raise MobilityDataUnavailable(origin, destination) from exc
++        captured_hard = getattr(captured, "hard_minutes", None)
++        try:
++            if callable(captured_hard):
++                return int(captured_hard(origin, destination))
++            return int(captured.estimate_minutes(origin, destination))
++        except KeyError as exc:
++            raise MobilityDataUnavailable(origin, destination) from exc
+ 
+ 
+ @app.post(
+@@ -7235,6 +7278,13 @@ def generate_replan(
+             effective_event_time.tzinfo,
+         )
+ 
++    # V2-T2 (B1, gate point 4): created / failed_reasons / mobility_unavailable_pairs
++    # are referenced by the first candidate loop below (its inbound/outbound legs
++    # can raise MobilityDataUnavailable), so they must exist before any
++    # _replan_estimate() runs — otherwise that path crashes with UnboundLocalError.
++    created: list[ReplanProposalModel] = []
++    failed_reasons: set[str] = set()
++    mobility_unavailable_pairs: set[str] = set()
+     heuristic_specs: list[_ReplanCandidateSpec] = []
+     # Set when a physical disruption has no material repair available.
+     heuristic_specs_unresolved_reason: str | None = None
+@@ -7265,22 +7315,32 @@ def generate_replan(
+                         if origin_activity is not None
+                         else None
+                     )
+-                    inbound = _replan_estimate(
+-                        session,
+-                        journey,
+-                        mobility,
+-                        origin,
+-                        choice.place_id,
+-                        operation_key=f"replan-inbound:{affected.id}",
+-                    )
+-                    outbound = _replan_estimate(
+-                        session,
+-                        journey,
+-                        mobility,
+-                        choice.place_id,
+-                        next_anchor[1],
+-                        operation_key=f"replan-outbound:{affected.id}",
+-                    )
++                    try:
++                        inbound = _replan_estimate(
++                            session,
++                            journey,
++                            mobility,
++                            origin,
++                            choice.place_id,
++                            operation_key=f"replan-inbound:{affected.id}",
++                        )
++                        outbound = _replan_estimate(
++                            session,
++                            journey,
++                            mobility,
++                            choice.place_id,
++                            next_anchor[1],
++                            operation_key=f"replan-outbound:{affected.id}",
++                        )
++                    except MobilityDataUnavailable as exc:
++                        # T2: the engine has no measured travel fact for this
++                        # leg.  It must not price the candidate at a fabricated
++                        # constant, and it must not report the candidate as
++                        # infeasible either -- the candidate's feasibility is
++                        # simply unknown.
++                        mobility_unavailable_pairs.add(str(exc))
++                        failed_reasons.add("MOBILITY_DATA_UNAVAILABLE")
++                        continue
+                     budget_remaining = journey.budget_amount_minor - (
+                         sum(item.estimated_cost_minor for item in source)
+                         - affected.estimated_cost_minor
+@@ -7849,8 +7909,8 @@ def generate_replan(
+         return total
+ 
+     base_route_total = _frozen_route_total(source)
+-    created: list[ReplanProposalModel] = []
+-    failed_reasons: set[str] = set()
++    # created / failed_reasons / mobility_unavailable_pairs are initialised
++    # earlier, before the first candidate loop (V2-T2 gate point 4).
+     accepted_assignment_keys: set[str] = set()
+     rejected_solver_assignment_keys: set[str] = set()
+ 
+@@ -8072,6 +8132,7 @@ def generate_replan(
+             return semantic or row.get("place_id") or row.get("city_service_id")
+ 
+         # 1. Resolve the travel time of every leg in the *new* order.
++        abandoned = False
+         for index, row in enumerate(copied_rows):
+             if index == 0:
+                 row["travel_from_prev_min"] = 0
+@@ -8082,14 +8143,31 @@ def generate_replan(
+             if not origin or not destination:
+                 row["travel_from_prev_min"] = 0
+                 continue
+-            row["travel_from_prev_min"] = _replan_estimate(
+-                session,
+-                journey,
+-                mobility,
+-                origin,
+-                destination,
+-                operation_key=f"replan-leg:{proposed.id}",
+-            )
++            try:
++                row["travel_from_prev_min"] = _replan_estimate(
++                    session,
++                    journey,
++                    mobility,
++                    origin,
++                    destination,
++                    operation_key=f"replan-leg:{proposed.id}",
++                )
++            except MobilityDataUnavailable as exc:
++                # T2: without a measured fact this leg cannot be re-timed.
++                # Abandon this candidate rather than shifting the schedule by a
++                # fabricated constant and letting the gate reject it for the
++                # wrong reason.
++                mobility_unavailable_pairs.add(str(exc))
++                failed_reasons.add("MOBILITY_DATA_UNAVAILABLE")
++                abandoned = True
++                break
++
++        if abandoned:
++            # T2: drop the half-built proposal.  Its travel times are unknown,
++            # so it must not be presented as a feasible or infeasible repair.
++            session.delete(proposed)
++            session.flush()
++            continue
+ 
+         # 1b. Normalise every timestamp into one offset.
+         #     ``activities.end_at > start_at`` is a TEXT comparison, so a plan
+@@ -8399,6 +8477,12 @@ def generate_replan(
+         # REPLAN_NO_ALTERNATIVE unreachable dead code.
+         if heuristic_specs_unresolved_reason:
+             raise HTTPException(422, heuristic_specs_unresolved_reason)
++        # T2: "we could not measure the legs" is not the same finding as "no
++        # replacement place exists".  Reporting the first as the second would
++        # tell the traveller that nothing can be done when the truth is that
++        # the engine lacked travel evidence.
++        if mobility_unavailable_pairs:
++            raise HTTPException(422, "MOBILITY_DATA_UNAVAILABLE")
+         details = ", ".join(sorted(failed_reasons)) or "NO_DISTINCT_CANDIDATE"
+         raise HTTPException(422, f"no feasible replan proposal: {details}")
+ 
+diff --git a/backend/app/planning/authoritative_v12.py b/backend/app/planning/authoritative_v12.py
+index e9fc89e..e30a517 100644
+--- a/backend/app/planning/authoritative_v12.py
++++ b/backend/app/planning/authoritative_v12.py
+@@ -623,6 +623,7 @@ def _capture_mode_matrix(
+                     "fact_type": "valhalla_matrix_route",
+                     "route_provider": str(source.get("route_provider") or route_provider),
+                     "route_provenance": provenance,
++                    "fact_quality": source.get("fact_quality"),
+                     "cost_provenance": cost_provenance,
+                     "source_node_from": provider_node_keys.get(origin, origin),
+                     "source_node_to": provider_node_keys.get(destination, destination),
+@@ -950,6 +951,7 @@ def _evidence(
+             "provenance": item.provenance,
+             "route_provider": fact_evidence.get("route_provider") or item.provider_key,
+             "route_provenance": fact_evidence.get("route_provenance") or item.provenance,
++            "fact_quality": fact_evidence.get("fact_quality"),
+             "cost_provenance": fact_evidence.get("cost_provenance") or "CITYNEXUS_COST_ESTIMATE",
+             "time_basis": fact_evidence.get("time_basis") or "FROZEN_MOBILITY_FACT",
+             "provider_node_from": fact_evidence.get("source_node_from") or item.from_key,
+diff --git a/backend/app/replanning/mock_replan_engine.py b/backend/app/replanning/mock_replan_engine.py
+index 548bff5..172f378 100644
+--- a/backend/app/replanning/mock_replan_engine.py
++++ b/backend/app/replanning/mock_replan_engine.py
+@@ -1,6 +1,8 @@
+ from __future__ import annotations
+ 
+ import json
++import math
++import re
+ from dataclasses import dataclass
+ from datetime import datetime
+ from typing import Any, Iterable
+@@ -121,6 +123,81 @@ def _capability_candidate_fit(
+ #: metre, which is finer than any two distinct venues are ever recorded.
+ _COORD_QUANTUM = 5
+ 
++#: Conservative ground distance (metres) within which two different-provider rows
++#: that share a venue name are treated as possibly the same physical venue and
++#: downgraded DIFFERENT -> AMBIGUOUS (V3-4).  Proximity alone is never SAME.
++_NEAR_VENUE_METERS = 60.0
++
++
++#: ``<namespace>:<object-type>/<object-id>`` — a provider-scoped reference such
++#: as ``overpass:node/1588295483``.  The numeric suffix alone is never an
++#: identity: OSM ``node/123`` and ``way/123`` are different objects, and two
++#: unrelated providers may both use the number ``123``.
++_PROVIDER_REFERENCE = re.compile(
++    r"^(?P<namespace>[a-z0-9_]+):(?P<object_type>[a-z]+)/(?P<object_id>.+)$",
++    re.IGNORECASE,
++)
++
++#: ``CN-<CITY-CODE>:<row-id>`` — a CityNexus domain wrapper that explicitly
++#: names the provider Place row it wraps, for example
++#: ``CN-XIAMEN:real-place-07e7689756fa27109a8bff96``.  Only this documented
++#: CityNexus prefix is treated as a wrapper cross-reference: an arbitrary
++#: ``SOMEPREFIX:value`` external id from any other source must not be mistaken
++#: for one (T1 hardening rule C — a broad uppercase-prefix regex wrongly turned
++#: every ``FOO:bar`` id into a CityNexus wrapper).
++_WRAPPER_REFERENCE = re.compile(r"^CN-[A-Z0-9]+:(?P<target>.+)$")
++
++#: Verdicts returned by :func:`compare_physical_venue`.
++SAME = "SAME"
++DIFFERENT = "DIFFERENT"
++AMBIGUOUS = "AMBIGUOUS"
++
++
++@dataclass(frozen=True)
++class PhysicalVenueIdentity:
++    """The structured identity evidence one Place row actually carries.
++
++    ``row_id``, ``wrapper_reference`` and the provider-scoped tuple are strong
++    evidence.  ``normalized_name``, ``category`` and ``coordinates`` are
++    supporting evidence only: one building routinely holds several venues at a
++    single centroid, so coordinates can never prove identity by themselves.
++    """
++
++    row_id: str | None
++    wrapper_reference: str | None
++    provider_namespace: str | None
++    provider_object_type: str | None
++    provider_object_id: str | None
++    normalized_name: str | None
++    category: str | None
++    coordinates: tuple[float, float] | None
++
++    @property
++    def provider_scoped(self) -> tuple[str, str, str] | None:
++        """``(namespace, object-type, object-id)`` when all three are known."""
++
++        if (
++            self.provider_namespace
++            and self.provider_object_type
++            and self.provider_object_id
++        ):
++            return (
++                self.provider_namespace,
++                self.provider_object_type,
++                self.provider_object_id,
++            )
++        return None
++
++
++def _non_empty(value: Any) -> str | None:
++    text = str(value or "").strip()
++    return text or None
++
++
++def _normalized_label(value: Any) -> str | None:
++    text = _non_empty(value)
++    return None if text is None else re.sub(r"\s+", " ", text.casefold())
++
+ 
+ def _coordinates(place: Any) -> tuple[float, float] | None:
+     try:
+@@ -132,51 +209,186 @@ def _coordinates(place: Any) -> tuple[float, float] | None:
+         return None
+ 
+ 
+-def _identity_tokens(place: Any) -> set[str]:
+-    """Opaque identifiers that name the physical venue behind a Place row.
++def physical_venue_identity(place: Any) -> PhysicalVenueIdentity | None:
++    """Extract the identity evidence carried by one Place row."""
++
++    if place is None:
++        return None
++    row_id = _non_empty(getattr(place, "id", None))
++    external_id = _non_empty(getattr(place, "external_id", None))
++    wrapper_reference: str | None = None
++    namespace: str | None = None
++    object_type: str | None = None
++    object_id: str | None = None
++    if external_id:
++        provider_match = _PROVIDER_REFERENCE.match(external_id)
++        if provider_match:
++            namespace = provider_match.group("namespace").casefold()
++            object_type = provider_match.group("object_type").casefold()
++            object_id = _non_empty(provider_match.group("object_id"))
++        else:
++            wrapper_match = _WRAPPER_REFERENCE.match(external_id)
++            if wrapper_match:
++                target = _non_empty(wrapper_match.group("target"))
++                if target and target != row_id:
++                    wrapper_reference = target
++    return PhysicalVenueIdentity(
++        row_id=row_id,
++        wrapper_reference=wrapper_reference,
++        provider_namespace=namespace,
++        provider_object_type=object_type,
++        provider_object_id=object_id,
++        normalized_name=_normalized_label(getattr(place, "name", None)),
++        category=_normalized_label(getattr(place, "category", None)),
++        coordinates=_coordinates(place),
++    )
++
++
++def _near_coordinates(
++    a: "tuple[float, float] | None", b: "tuple[float, float] | None"
++) -> bool:
++    """Approximate ground distance within a conservative venue threshold.
+ 
+-    A domain wrapper and the provider row it wraps are *different* Place rows
+-    with different ``id`` values, so comparing ids alone cannot tell that they
+-    are one venue.  The wrapper stores the provider identity inside its
+-    ``external_id`` (``CN-XIAMEN:real-place-<hex>``), so tokenising both rows'
+-    identifiers recovers the shared identity.  Short human labels such as a
+-    city code are deliberately ignored: only tokens that carry a digit and are
+-    long enough to be machine identifiers can name a venue.
++    Two providers routinely geocode the same restaurant a few to a few tens of
++    metres apart (door vs building centroid), so exact rounded equality would
++    wrongly split one venue into two.  This only feeds the DIFFERENT -> AMBIGUOUS
++    downgrade; proximity alone is never treated as SAME (V3-4).
++    """
++
++    if a is None or b is None:
++        return False
++    lat_m = abs(a[0] - b[0]) * 111320.0
++    lon_m = abs(a[1] - b[1]) * 111320.0 * math.cos(math.radians((a[0] + b[0]) / 2.0))
++    return (lat_m * lat_m + lon_m * lon_m) ** 0.5 <= _NEAR_VENUE_METERS
++
++
++def _corroborated_same_venue(
++    left: "PhysicalVenueIdentity", right: "PhysicalVenueIdentity"
++) -> bool:
++    """Whether two rows carry a same-venue signature despite differing ids.
++
++    Used only to downgrade ``DIFFERENT`` to ``AMBIGUOUS`` across distinct
++    provider identities.  It requires every corroborating signal to line up:
++    a near coordinate (within the conservative threshold), an equal, present
++    normalized name, and no category conflict.  It is deliberately conservative —
++    a match here means "we cannot safely call these different", not "they are
++    proven the same".
+     """
+ 
+-    tokens: set[str] = set()
+-    raw_id = str(getattr(place, "id", "") or "")
+-    if raw_id:
+-        tokens.add(raw_id)
+-    raw = str(getattr(place, "external_id", "") or "")
+-    for separator in (":", "/", "|", ",", "#"):
+-        raw = raw.replace(separator, " ")
+-    for token in raw.split():
+-        if len(token) >= 8 and any(character.isdigit() for character in token):
+-            tokens.add(token)
+-    return tokens
++    if not _near_coordinates(left.coordinates, right.coordinates):
++        return False
++    left_name = left.normalized_name
++    right_name = right.normalized_name
++    if not left_name or not right_name or left_name != right_name:
++        return False
++    if (
++        left.category
++        and right.category
++        and left.category != right.category
++    ):
++        return False
++    return True
++
++
++def compare_physical_venue(left: Any, right: Any) -> str:
++    """Ordered strong-evidence comparison of two Place rows.
++
++    Returns ``SAME``, ``DIFFERENT`` or ``AMBIGUOUS``.  Identity is proven by
++    structure — a non-empty row id, an explicit wrapper cross-reference, or a
++    provider-scoped ``(namespace, object-type, object-id)`` tuple.  Coordinates
++    only ever support identity together with a matching name and category.
++    """
++
++    left_identity = physical_venue_identity(left)
++    right_identity = physical_venue_identity(right)
++    if left_identity is None or right_identity is None:
++        return DIFFERENT
++
++    # Rule 1 — null safety: missing ids never match by equality.
++    if (
++        left_identity.row_id
++        and right_identity.row_id
++        and left_identity.row_id == right_identity.row_id
++    ):
++        return SAME
++
++    # Rule 2 — an explicit wrapper cross-reference is structural identity.
++    if left_identity.wrapper_reference and (
++        left_identity.wrapper_reference == right_identity.row_id
++        or left_identity.wrapper_reference == right_identity.wrapper_reference
++    ):
++        return SAME
++    if (
++        right_identity.wrapper_reference
++        and right_identity.wrapper_reference == left_identity.row_id
++    ):
++        return SAME
++
++    # Rule 3 — provider identity is a tuple, never a bare numeric suffix.
++    left_scoped = left_identity.provider_scoped
++    right_scoped = right_identity.provider_scoped
++    if left_scoped is not None and right_scoped is not None:
++        if left_scoped == right_scoped:
++            return SAME
++        # Different provider tuples are NOT proof of different physical venues:
++        # two providers routinely describe the same restaurant with different ids.
++        # Only a corroborating venue signature (same coordinate + same name, no
++        # category conflict) can downgrade this from DIFFERENT to AMBIGUOUS so the
++        # caller fails safe (T1 hardening rule B / B2).
++        if _corroborated_same_venue(left_identity, right_identity):
++            return AMBIGUOUS
++        return DIFFERENT
++
++    # Rules 4/5 — coordinates are supporting evidence, and a name alone is not
++    # proof.  A shared coordinate plus a corroborating name and compatible
++    # category is the strongest statement this evidence can support.
++    if (
++        left_identity.coordinates is not None
++        and left_identity.coordinates == right_identity.coordinates
++    ):
++        left_name = left_identity.normalized_name
++        right_name = right_identity.normalized_name
++        if left_name and right_name:
++            if left_name != right_name:
++                return DIFFERENT
++            if (
++                left_identity.category
++                and right_identity.category
++                and left_identity.category != right_identity.category
++            ):
++                return AMBIGUOUS
++            return SAME
++        # A shared coordinate with nothing to corroborate it is not identity:
++        # several venues routinely share one building centroid.
++        return DIFFERENT
++
++    return DIFFERENT
+ 
+ 
+ def is_same_physical_venue(left: Any, right: Any) -> bool:
+-    """Whether two Place rows describe one and the same real-world venue.
+-
+-    Used to keep a closed venue out of its own replacement family.  A domain
+-    wrapper row and the provider row it wraps have different ids but identical
+-    coordinates and cross-referencing identifiers; treating them as different
+-    places let a replan "replace" a closed restaurant with that same
+-    restaurant under a new id, so the plan looked recovered while the traveller
+-    was still sent to a closed venue.
++    """Whether two Place rows are *proven* to describe one physical venue.
++
++    Honest identity truth only: ``True`` strictly for a ``SAME`` verdict.  It
++    must never report ``AMBIGUOUS`` as same — callers that need the fail-safe
++    "do not treat these as different" behaviour use
++    :func:`should_exclude_replacement_candidate` instead
++    (T1 hardening rule A / B2).
+     """
+ 
+-    if left is None or right is None:
+-        return False
+-    if str(getattr(left, "id", "")) == str(getattr(right, "id", "")):
+-        return True
+-    left_coordinates = _coordinates(left)
+-    right_coordinates = _coordinates(right)
+-    if left_coordinates is not None and left_coordinates == right_coordinates:
+-        return True
+-    return bool(_identity_tokens(left) & _identity_tokens(right))
++    return compare_physical_venue(left, right) == SAME
++
++
++def should_exclude_replacement_candidate(candidate: Any, reference: Any) -> bool:
++    """Whether ``candidate`` must be kept out of ``reference``'s replacement family.
++
++    Exclusion is a fail-safe policy, not an identity claim: a candidate that is
++    proven the SAME venue, or merely AMBIGUOUS (we cannot safely tell it apart
++    from the venue the traveller just lost), is excluded — so a closed venue can
++    never reappear as its own replacement under a wrapper or cross-provider id.
++    Only a clean ``DIFFERENT`` verdict lets a candidate through.
++    """
++
++    return compare_physical_venue(candidate, reference) != DIFFERENT
+ 
+ 
+ def choose_closure_replacement(
+@@ -222,9 +434,13 @@ def rank_closure_replacements(
+         # venue already used elsewhere in the plan must not be reused.  Both
+         # checks are physical, because one venue can be stored under several
+         # id namespaces (domain wrapper vs provider row).
+-        if place_id in occupied_place_ids or is_same_physical_venue(place, affected_place):
++        if place_id in occupied_place_ids or should_exclude_replacement_candidate(
++            place, affected_place
++        ):
+             continue
+-        if any(is_same_physical_venue(place, other) for other in occupied_places):
++        if any(
++            should_exclude_replacement_candidate(place, other) for other in occupied_places
++        ):
+             continue
+         meta = _json(getattr(place, "metadata_json", "{}"), {})
+         tags = set(_json(getattr(place, "tags_json", "[]"), []))
+diff --git a/backend/app/replanning/provider_snapshots.py b/backend/app/replanning/provider_snapshots.py
+index 0ff68d4..0a5acd5 100644
+--- a/backend/app/replanning/provider_snapshots.py
++++ b/backend/app/replanning/provider_snapshots.py
+@@ -7,6 +7,17 @@ from typing import Any, Mapping
+ from uuid import uuid4
+ 
+ 
++# Mobility fact quality.  A fact's provenance is recorded at capture so hard
++# feasibility can trust real measurements while rejecting the mock fixture's
++# blanket default (T2 / B1).
++EXPLICIT_FROZEN_FIXTURE = "EXPLICIT_FROZEN_FIXTURE"
++LIVE_PROVIDER_CAPTURE = "LIVE_PROVIDER_CAPTURE"
++SYNTHETIC_DEFAULT = "SYNTHETIC_DEFAULT"
++
++#: Fact qualities allowed to drive a deterministic hard-feasibility decision.
++HARD_FEASIBLE_QUALITIES = frozenset({EXPLICIT_FROZEN_FIXTURE, LIVE_PROVIDER_CAPTURE})
++
++
+ @dataclass(frozen=True)
+ class TravelEstimateFact:
+     origin_key: str
+@@ -27,12 +38,50 @@ class TravelEstimateFact:
+     # The travel mode is what makes ``distance_m`` interpretable.  Without it a
+     # total route distance could be silently read as walking distance.
+     mode: str | None = None
++    # Fact quality separates a *real* mobility measurement from the mock
++    # fixture's blanket ``default_minutes``.  Only EXPLICIT_FROZEN_FIXTURE /
++    # LIVE_PROVIDER_CAPTURE are hard-eligible.  ``None`` means the quality is
++    # UNKNOWN, and ``MobilitySnapshot.hard_minutes`` FAILS CLOSED on it (V4 #1 /
++    # V6) — unknown/legacy-unclassified provenance is never trusted for hard truth.
++    fact_quality: str | None = None
+ 
+     def __post_init__(self) -> None:
+         if self.minutes < 0:
+             raise ValueError("travel minutes must be non-negative")
+ 
+ 
++def _derive_fact_quality_from_provenance(item: Mapping[str, Any]) -> str | None:
++    """Honest quality for a sealed fact — EXACT and fail-closed (V6).
++
++    1. An explicit persisted ``fact_quality`` always wins (capture/seal now write
++       it for every current fact — see authoritative_v12 and snapshot_capture).
++    2. The ONLY legacy provenance promoted to LIVE is the exact label
++       ``LIVE_CAPTURE``, which historically was emitted solely by the real
++       valhalla capture path.
++    3. Everything else — ``CAPTURED_REPLAY``, any ``SEALED*`` (including labels
++       that literally name ``SYNTHETIC_FALLBACK`` / ``SYNTHETIC_FIXTURE``),
++       ``RUNTIME_CAPTURE``, and any unrecognised string — is UNKNOWN and refused.
++
++    Rationale (V6 review): the previous substring/prefix rules ("LIVE" in prov,
++    prov.startswith("SEALED"), promote CAPTURED_REPLAY) were wider than any
++    actual proof.  Old authoritative_v12 code could normalise unrecognised
++    provenance to ``CAPTURED_REPLAY``, and historical seal labels such as
++    ``SEALED_REAL_REPLAY_WITH_EXPLICIT_SYNTHETIC_FALLBACK`` satisfied
++    ``startswith("SEALED")`` — so "looks sealed/live" was being granted a hard-
++    truth passport.  A genuinely-trusted fact carries an explicit quality; an
++    ambiguous historical row must be re-captured to earn trust, not inferred.
++    """
++
++    explicit = item.get("fact_quality")
++    if explicit is not None:
++        return str(explicit)
++    prov = str(item.get("route_provenance") or item.get("provenance") or "").upper()
++    if prov == "LIVE_CAPTURE":
++        # Exact, historically-proven real-capture label only.
++        return LIVE_PROVIDER_CAPTURE
++    return None
++
++
+ @dataclass(frozen=True)
+ class MobilitySnapshot:
+     """Frozen travel facts consumed by the deterministic feasibility gate.
+@@ -75,6 +124,10 @@ class MobilitySnapshot:
+         operation_key: str | None = None,
+         route_geometries: Mapping[tuple[str, str], Any] | None = None,
+         provider_capabilities: Mapping[str, Any] | None = None,
++        # V4 #3: unknown provenance by default.  A caller building a genuinely
++        # explicit frozen matrix must opt in with EXPLICIT_FROZEN_FIXTURE; the
++        # builder cannot assume where a number came from.
++        fact_quality: str | None = None,
+     ) -> MobilitySnapshot:
+         stamp = captured_at or datetime.now(timezone.utc).isoformat()
+         return cls(
+@@ -90,6 +143,7 @@ class MobilitySnapshot:
+                     geometry_provider=(
+                         source_provider_key if (route_geometries or {}).get(pair) else None
+                     ),
++                    fact_quality=fact_quality,
+                 )
+                 for pair, value in minutes.items()
+             },
+@@ -107,6 +161,36 @@ class MobilitySnapshot:
+             raise KeyError(f"missing frozen travel estimate: {origin_key}|{destination_key}")
+         return fact.minutes
+ 
++    def hard_minutes(self, origin_key: str, destination_key: str) -> int:
++        """Travel minutes allowed into a deterministic hard-feasibility decision.
++
++        Unlike :meth:`estimate_minutes` — the raw accessor the offline demo and
++        geometry use — this is the *truth gate* for replan feasibility and is a
++        strict ALLOWLIST (V3-1 / V4 #1 / V6): only a fact whose quality is
++        ``EXPLICIT_FROZEN_FIXTURE`` or ``LIVE_PROVIDER_CAPTURE`` may pass.  A leg
++        positively tagged ``SYNTHETIC_DEFAULT`` (the mock blanket constant), or
++        one with NO recorded quality / unknown / legacy-unclassified provenance,
++        all raise ``KeyError`` and fail closed — so the caller reports
++        ``MOBILITY_DATA_UNAVAILABLE`` instead of trusting a number we cannot
++        source.  Genuine sealed replays keep working because they carry an
++        explicit, persisted ``fact_quality`` (V4 #1), not because untagged rows
++        are trusted.
++        """
++
++        fact = self.facts.get((origin_key, destination_key))
++        if fact is None:
++            raise KeyError(f"missing frozen travel estimate: {origin_key}|{destination_key}")
++        # True allowlist (V3-1): only an explicitly trusted quality may drive
++        # hard feasibility.  A pre-v2 snapshot can hold an *untagged* blanket
++        # default 20, so None / unknown / LEGACY must fail closed — we would
++        # rather say "mobility unavailable" than trust a number we cannot source.
++        if fact.fact_quality not in HARD_FEASIBLE_QUALITIES:
++            raise KeyError(
++                f"fact quality {fact.fact_quality!r} is not eligible for hard "
++                f"feasibility: {origin_key}|{destination_key}"
++            )
++        return fact.minutes
++
+     def to_evidence(self) -> dict[str, Any]:
+         return {
+             "snapshot_id": self.snapshot_id,
+@@ -133,6 +217,7 @@ class MobilitySnapshot:
+                     "walking_distance_m": fact.walking_distance_m,
+                     "walking_min": fact.walking_min,
+                     "mode": fact.mode,
++                    "fact_quality": fact.fact_quality,
+                 }
+                 for _, fact in sorted(self.facts.items())
+             ],
+@@ -205,6 +290,7 @@ class MobilitySnapshot:
+                     if item.get("mode") is not None
+                     else None
+                 ),
++                fact_quality=_derive_fact_quality_from_provenance(item),
+             )
+         return cls(
+             facts=facts,
+diff --git a/data/replay/tianjin_v135_journey_snapshot.json b/data/replay/tianjin_v135_journey_snapshot.json
+index 37d0999..a7a498c 100644
+--- a/data/replay/tianjin_v135_journey_snapshot.json
++++ b/data/replay/tianjin_v135_journey_snapshot.json
+@@ -350,7 +350,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -362,7 +363,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -374,7 +376,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -386,7 +389,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -398,7 +402,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -410,7 +415,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -422,7 +428,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -434,7 +441,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -446,7 +454,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -458,7 +467,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -470,7 +480,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -482,7 +493,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -494,7 +506,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -506,7 +519,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -518,7 +532,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -530,7 +545,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -542,7 +558,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -554,7 +571,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -566,7 +584,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -578,7 +597,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -590,7 +610,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -602,7 +623,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -614,7 +636,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -626,7 +649,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -638,7 +662,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -650,7 +675,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -662,7 +688,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -674,7 +701,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -686,7 +714,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -698,7 +727,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -710,7 +740,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -722,7 +753,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -734,7 +766,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -746,7 +779,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -758,7 +792,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -770,7 +805,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -782,7 +818,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -794,7 +831,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -806,7 +844,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -818,7 +857,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -830,7 +870,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -842,7 +883,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -854,7 +896,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -866,7 +909,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -878,7 +922,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -890,7 +935,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -902,7 +948,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -914,7 +961,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -926,7 +974,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -938,7 +987,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -950,7 +1000,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -962,7 +1013,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -974,7 +1026,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -986,7 +1039,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -998,7 +1052,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1010,7 +1065,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1022,7 +1078,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1034,7 +1091,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1046,7 +1104,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1058,7 +1117,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1070,7 +1130,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1082,7 +1143,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1094,7 +1156,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1106,7 +1169,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1118,7 +1182,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1130,7 +1195,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1142,7 +1208,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1154,7 +1221,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1166,7 +1234,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1178,7 +1247,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1190,7 +1260,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:arrival",
+@@ -1202,7 +1273,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1214,7 +1286,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1226,7 +1299,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1238,7 +1312,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1250,7 +1325,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1262,7 +1338,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1274,7 +1351,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1286,7 +1364,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "commitment:place-river-cruise",
+@@ -1298,7 +1377,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1310,7 +1390,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1322,7 +1403,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1334,7 +1416,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1346,7 +1429,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1358,7 +1442,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1370,7 +1455,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1382,7 +1468,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "anchor:departure",
+@@ -1394,7 +1481,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1406,7 +1494,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1418,7 +1507,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1430,7 +1520,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1442,7 +1533,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1454,7 +1546,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1466,7 +1559,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1478,7 +1572,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/73422999",
+@@ -1490,7 +1585,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1502,7 +1598,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1514,7 +1611,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1526,7 +1624,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1538,7 +1637,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1550,7 +1650,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1562,7 +1663,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1574,7 +1676,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1228981599",
+@@ -1586,7 +1689,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1598,7 +1702,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1610,7 +1715,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1622,7 +1728,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1634,7 +1741,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1646,7 +1754,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1658,7 +1767,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1670,7 +1780,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:way/1464199917",
+@@ -1682,7 +1793,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1694,7 +1806,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1706,7 +1819,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1718,7 +1832,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1730,7 +1845,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1742,7 +1858,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1754,7 +1871,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1766,7 +1884,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172762221",
+@@ -1778,7 +1897,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1790,7 +1910,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1802,7 +1923,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1814,7 +1936,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1826,7 +1949,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1838,7 +1962,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1850,7 +1975,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1862,7 +1988,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       },
+       {
+         "from_key": "place:node/5172662927",
+@@ -1874,7 +2001,8 @@
+         "route_provider": "valhalla",
+         "route_provenance": "CAPTURED_REPLAY",
+         "cost_provenance": "CITYNEXUS_COST_ESTIMATE",
+-        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT"
++        "time_basis": "VALHALLA_SOURCES_TO_TARGETS_CAPTURED_AT",
++        "fact_quality": "LIVE_PROVIDER_CAPTURE"
+       }
+     ],
+     "supported_modes": [
+@@ -1899,4 +2027,4 @@
+       "AUTO"
+     ]
+   }
+-}
+\ No newline at end of file
++}

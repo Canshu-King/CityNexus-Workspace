@@ -1,0 +1,27 @@
+[
+  {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "provider_key": "mock-context",
+    "event_type": "CLOSURE",
+    "severity": "MAJOR",
+    "occurred_at": "2026-10-10T13:10:00+08:00",
+    "affected_place_id": "place-tech-art",
+    "payload": {
+      "reason": "Unexpected facility closure",
+      "unavailable_from": "2026-10-10T13:10:00+08:00",
+      "unavailable_until": "2026-10-10T18:00:00+08:00"
+    }
+  },
+  {
+    "id": "44444444-4444-4444-8444-444444444444",
+    "provider_key": "mock-context",
+    "event_type": "TRAFFIC_DELAY",
+    "severity": "MINOR",
+    "occurred_at": "2026-10-10T12:50:00+08:00",
+    "payload": {
+      "from_place_id": "place-food-hall",
+      "to_place_id": "place-tech-art",
+      "extra_minutes": 15
+    }
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "schema": "citynexus.targeted-mutation.v1",
+  "runner": "tests/mutation_runner.py",
+  "result_file": "replay_cases/mutation_results.json",
+  "mutants": [
+    {"id":"J-ACK-RESOLVED","class":"ACK=>resolved","status":"KILLED"},
+    {"id":"J-CROSS-JOURNEY-TRIGGER","class":"broken trigger linkage","status":"KILLED"},
+    {"id":"J-ACK-CLOSES-UNRELATED","class":"unrelated accepted closes disruptions","status":"KILLED"},
+    {"id":"J-PROVENANCE-LAUNDER","class":"provenance laundering","status":"KILLED"},
+    {"id":"J-NONE-QUALITY-HARD","class":"None/unknown hard mobility","status":"KILLED"},
+    {"id":"J-MOCK-HARD-FALLBACK","class":"mock hard fallback","status":"KILLED"},
+    {"id":"J-NONE-NONE-PHYSICAL","class":"unsafe None physical identity","status":"KILLED"},
+    {"id":"J-COORDINATE-ONLY-SAME","class":"coordinate-only physical identity","status":"KILLED"},
+    {"id":"J-CROSS-PROVIDER-NUMERIC","class":"cross-provider numeric token identity","status":"KILLED"},
+    {"id":"J-AMBIGUOUS-ADMITTED","class":"ambiguous replacement admitted","status":"KILLED"},
+    {"id":"J-PROTECTED-C4-DROPPED","class":"protected commitment loss","status":"KILLED"},
+    {"id":"J-PARTIAL-BUDGET-FULL","class":"partial budget becomes full","status":"KILLED"},
+    {"id":"J-LIVE-FIXED-INDEX","class":"Live ignores current_activity_id","status":"KILLED"},
+    {"id":"J-STALE-CURSOR-FALLBACK","class":"stale cursor becomes activity[0]","status":"KILLED"},
+    {"id":"J-MATERIALITY-DIFF","class":"material replan diff erased","status":"KILLED"}
+  ],
+  "summary": {"total":15,"killed":15,"survived":0,"errors":0}
+}

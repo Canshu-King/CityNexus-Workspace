@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-09-19T06:12:53.459575+00:00",
+  "provider": "valhalla-http",
+  "base_url": "http://127.0.0.1:53311",
+  "credential_headers_sent": false,
+  "citynexus_expected_fact_quality": "LIVE_PROVIDER_CAPTURE",
+  "important_boundary": "Direct provider observations are not CityNexus frozen facts. The application capture path must persist provenance separately.",
+  "status": {
+    "http_status": 200,
+    "duration_ms": 60.92,
+    "response": {
+      "version": "stub-1",
+      "has_live_traffic": false
+    }
+  },
+  "routes": [
+    {
+      "pair_id": "stub-a-b",
+      "origin": "a",
+      "destination": "b",
+      "request": {
+        "locations": [
+          {
+            "lat": 24.4581979,
+            "lon": 118.0689473
+          },
+          {
+            "lat": 24.459,
+            "lon": 118.07
+          }
+        ],
+        "costing": "pedestrian",
+        "units": "kilometers"
+      },
+      "provider": "valhalla-http",
+      "observed_at": "2026-09-19T06:12:53.520381+00:00",
+      "ok": true,
+      "http_status": 200,
+      "duration_ms": 0.95,
+      "duration_min_ceil": 13,
+      "distance_km": 4.2,
+      "response": {
+        "trip_status": 0,
+        "summary": {
+          "time": 725,
+          "length": 4.2
+        },
+        "leg_count": 1,
+        "shape_present": true,
+        "raw": {
+          "trip": {
+            "status": 0,
+            "summary": {
+              "time": 725,
+              "length": 4.2
+            },
+            "legs": [
+              {
+                "shape": "stub"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "ok": true
+}

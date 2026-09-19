@@ -1,0 +1,424 @@
+{
+  "status": "BUILT",
+  "strategy": "native-semantic-hidden-plus-presentation-segments",
+  "routeCount": 5,
+  "routes": [
+    {
+      "id": "C4-T-A",
+      "semanticSpecId": "C4-T-A",
+      "presentationSegmentCount": 4,
+      "presentationSegments": [
+        {
+          "specId": "C4-T-A::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            3.5,
+            7.55
+          ],
+          "endCm": [
+            4.2,
+            7.55
+          ]
+        },
+        {
+          "specId": "C4-T-A::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            4.2,
+            7.55
+          ],
+          "endCm": [
+            5.2,
+            7.55
+          ]
+        },
+        {
+          "specId": "C4-T-A::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            5.2,
+            7.55
+          ],
+          "endCm": [
+            5.2,
+            4.0
+          ]
+        },
+        {
+          "specId": "C4-T-A::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            5.2,
+            4.0
+          ],
+          "endCm": [
+            8.0,
+            4.0
+          ]
+        }
+      ],
+      "plannedPointsCm": [
+        [
+          3.5,
+          7.55
+        ],
+        [
+          4.2,
+          7.55
+        ],
+        [
+          5.2,
+          7.55
+        ],
+        [
+          5.2,
+          4.0
+        ],
+        [
+          8.0,
+          4.0
+        ]
+      ]
+    },
+    {
+      "id": "C4-T-B",
+      "semanticSpecId": "C4-T-B",
+      "presentationSegmentCount": 2,
+      "presentationSegments": [
+        {
+          "specId": "C4-T-B::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            3.5,
+            8.0
+          ],
+          "endCm": [
+            4.2,
+            8.0
+          ]
+        },
+        {
+          "specId": "C4-T-B::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            4.2,
+            8.0
+          ],
+          "endCm": [
+            8.0,
+            8.0
+          ]
+        }
+      ],
+      "plannedPointsCm": [
+        [
+          3.5,
+          8.0
+        ],
+        [
+          4.2,
+          8.0
+        ],
+        [
+          8.0,
+          8.0
+        ]
+      ]
+    },
+    {
+      "id": "C4-T-C",
+      "semanticSpecId": "C4-T-C",
+      "presentationSegmentCount": 4,
+      "presentationSegments": [
+        {
+          "specId": "C4-T-C::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            3.5,
+            8.45
+          ],
+          "endCm": [
+            4.2,
+            8.45
+          ]
+        },
+        {
+          "specId": "C4-T-C::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            4.2,
+            8.45
+          ],
+          "endCm": [
+            6.0,
+            8.45
+          ]
+        },
+        {
+          "specId": "C4-T-C::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            6.0,
+            8.45
+          ],
+          "endCm": [
+            6.0,
+            12.0
+          ]
+        },
+        {
+          "specId": "C4-T-C::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            6.0,
+            12.0
+          ],
+          "endCm": [
+            8.0,
+            12.0
+          ]
+        }
+      ],
+      "plannedPointsCm": [
+        [
+          3.5,
+          8.45
+        ],
+        [
+          4.2,
+          8.45
+        ],
+        [
+          6.0,
+          8.45
+        ],
+        [
+          6.0,
+          12.0
+        ],
+        [
+          8.0,
+          12.0
+        ]
+      ]
+    },
+    {
+      "id": "C4-P-A",
+      "semanticSpecId": "C4-P-A",
+      "presentationSegmentCount": 6,
+      "presentationSegments": [
+        {
+          "specId": "C4-P-A::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            16.5,
+            7.55
+          ],
+          "endCm": [
+            15.8,
+            7.55
+          ]
+        },
+        {
+          "specId": "C4-P-A::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            15.8,
+            7.55
+          ],
+          "endCm": [
+            14.8,
+            7.55
+          ]
+        },
+        {
+          "specId": "C4-P-A::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            14.8,
+            7.55
+          ],
+          "endCm": [
+            14.8,
+            3.0
+          ]
+        },
+        {
+          "specId": "C4-P-A::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            14.8,
+            3.0
+          ],
+          "endCm": [
+            12.8,
+            3.0
+          ]
+        },
+        {
+          "specId": "C4-P-A::SEG::05",
+          "segmentIndex": 5,
+          "startCm": [
+            12.8,
+            3.0
+          ],
+          "endCm": [
+            12.8,
+            4.0
+          ]
+        },
+        {
+          "specId": "C4-P-A::SEG::06",
+          "segmentIndex": 6,
+          "startCm": [
+            12.8,
+            4.0
+          ],
+          "endCm": [
+            12.0,
+            4.0
+          ]
+        }
+      ],
+      "plannedPointsCm": [
+        [
+          16.5,
+          7.55
+        ],
+        [
+          15.8,
+          7.55
+        ],
+        [
+          14.8,
+          7.55
+        ],
+        [
+          14.8,
+          3.0
+        ],
+        [
+          12.8,
+          3.0
+        ],
+        [
+          12.8,
+          4.0
+        ],
+        [
+          12.0,
+          4.0
+        ]
+      ]
+    },
+    {
+      "id": "C4-P-C",
+      "semanticSpecId": "C4-P-C",
+      "presentationSegmentCount": 6,
+      "presentationSegments": [
+        {
+          "specId": "C4-P-C::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            16.5,
+            8.45
+          ],
+          "endCm": [
+            15.8,
+            8.45
+          ]
+        },
+        {
+          "specId": "C4-P-C::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            15.8,
+            8.45
+          ],
+          "endCm": [
+            14.0,
+            8.45
+          ]
+        },
+        {
+          "specId": "C4-P-C::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            14.0,
+            8.45
+          ],
+          "endCm": [
+            14.0,
+            13.0
+          ]
+        },
+        {
+          "specId": "C4-P-C::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            14.0,
+            13.0
+          ],
+          "endCm": [
+            12.8,
+            13.0
+          ]
+        },
+        {
+          "specId": "C4-P-C::SEG::05",
+          "segmentIndex": 5,
+          "startCm": [
+            12.8,
+            13.0
+          ],
+          "endCm": [
+            12.8,
+            12.0
+          ]
+        },
+        {
+          "specId": "C4-P-C::SEG::06",
+          "segmentIndex": 6,
+          "startCm": [
+            12.8,
+            12.0
+          ],
+          "endCm": [
+            12.0,
+            12.0
+          ]
+        }
+      ],
+      "plannedPointsCm": [
+        [
+          16.5,
+          8.45
+        ],
+        [
+          15.8,
+          8.45
+        ],
+        [
+          14.0,
+          8.45
+        ],
+        [
+          14.0,
+          13.0
+        ],
+        [
+          12.8,
+          13.0
+        ],
+        [
+          12.8,
+          12.0
+        ],
+        [
+          12.0,
+          12.0
+        ]
+      ]
+    }
+  ]
+}

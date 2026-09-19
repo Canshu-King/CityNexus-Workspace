@@ -1,0 +1,7 @@
+# Copy values into the current shell/session only. Do not commit real endpoints or credentials.
+CITYNEXUS_LIVE_VALHALLA_URL=http://VALHALLA_HOST:8002
+CITYNEXUS_ROUTING_TIMEOUT_SECONDS=10
+CITYNEXUS_ROUTING_COSTING=pedestrian
+
+# Example invocation after coordinates have been independently verified:
+# python xiamen_routing_smoke.py --allow-unverified-coordinates --output-dir .\out

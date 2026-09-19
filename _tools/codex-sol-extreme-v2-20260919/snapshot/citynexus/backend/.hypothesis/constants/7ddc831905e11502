@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\util\compat.py
+# hypothesis_version: 6.168.0
+
+[' -> ', '(', ')', '*', '**', ', ', '.', ': ', '=', 'CPython', 'Mapping[str, Any]', 'PyPy', 'Py_GIL_DISABLED', '_T_co', '__annotate__', '__annotations__', '__code__', '__module__', 'aarch', 'ascii', 'backslashreplace', 'beta', 'builtins', 'darwin', 'latin-1', 'return', 'select', 'typing', 'typing.', 'win', '~']

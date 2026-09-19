@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\pydantic\v1\env_settings.py
+# hypothesis_version: 6.168.0
+
+['BaseSettings', 'env', 'env_file', 'env_file_encoding', 'env_names', 'env_nested_delimiter', 'env_prefix_len', 'init_kwargs', 'secrets_dir', 'utf8']

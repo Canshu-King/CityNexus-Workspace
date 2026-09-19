@@ -1,0 +1,154 @@
+metadata:
+  status: VERIFIED_PARTIAL_WITNESS_NOT_FROZEN
+  plan: PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908
+  associationCount: 10
+  purpose: Optional exact 15-Association seed under dual genus-zero Mobility and City
+    Data cyclic source rotations. Upper UC04 pair and remaining blocker cluster stay mutable;
+    not a freeze.
+routes:
+- id: A-T-UC-02
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-02
+  sourceSide: RIGHT
+  sourcePortFraction: 0.0333333333333333
+  targetSide: LEFT
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.0
+    - 8.3
+  - - 5.0
+    - 4.5
+- id: A-T-UC-04
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-04
+  sourceSide: RIGHT
+  sourcePortFraction: 0.1333333333333333
+  targetSide: LEFT
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.3
+    - 8.6
+  - - 5.3
+    - 5.3
+  - - 14.4
+    - 5.3
+  - - 14.4
+    - 4.5
+- id: A-T-UC-05
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-05
+  sourceSide: RIGHT
+  sourcePortFraction: 0.2333333333333333
+  targetSide: LEFT
+  targetPortFraction: 0.5
+  waypoints:
+  - - 5.6
+    - 8.9
+  - - 5.6
+    - 5.4
+  - - 20.5
+    - 5.4
+  - - 20.5
+    - 4.5
+- id: A-T-UC-11
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-11
+  sourceSide: RIGHT
+  sourcePortFraction: 0.3333333333333333
+  targetSide: TOP
+  targetPortFraction: 0.6458333333333334
+  waypoints:
+  - - 5.9
+    - 9.2
+  - - 5.9
+    - 5.5
+  - - 24.0
+    - 5.5
+- id: A-T-UC-07
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-07
+  sourceSide: RIGHT
+  sourcePortFraction: 0.43333333333333335
+  targetSide: TOP
+  targetPortFraction: 0.6666666666666666
+  waypoints:
+  - - 6.2
+    - 9.5
+  - - 6.2
+    - 5.7
+  - - 18.0
+    - 5.7
+- id: A-T-UC-06
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-06
+  sourceSide: RIGHT
+  sourcePortFraction: 0.5333333333333333
+  targetSide: BOTTOM
+  targetPortFraction: 0.7916666666666666
+  waypoints:
+  - - 6.5
+    - 9.8
+  - - 6.5
+    - 9.9
+  - - 12.5
+    - 9.9
+- id: A-T-UC-10
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-10
+  sourceSide: RIGHT
+  sourcePortFraction: 0.6333333333333333
+  targetSide: LEFT
+  targetPortFraction: 0.5
+  waypoints:
+  - - 20.0
+    - 10.1
+  - - 20.0
+    - 11.9
+- id: A-T-UC-08
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-08
+  sourceSide: RIGHT
+  sourcePortFraction: 0.7333333333333333
+  targetSide: BOTTOM
+  targetPortFraction: 0.7916666666666666
+  waypoints:
+  - - 6.5
+    - 10.4
+  - - 6.5
+    - 13.5
+  - - 12.5
+    - 13.5
+- id: A-T-UC-12
+  connectorType: association
+  source: ACT-TRAVELER
+  target: UC-12
+  sourceSide: RIGHT
+  sourcePortFraction: 0.8333333333333334
+  targetSide: LEFT
+  targetPortFraction: 0.5
+  waypoints:
+  - - 6.0
+    - 10.7
+  - - 6.0
+    - 15.2
+- id: A-CD-UC-05
+  connectorType: association
+  source: ACT-CITY-DATA
+  target: UC-05
+  sourceSide: LEFT
+  sourcePortFraction: 0.5
+  targetSide: RIGHT
+  targetPortFraction: 0.7962962962962963
+  waypoints:
+  - - 27.0
+    - 4.0
+  - - 27.0
+    - 4.9

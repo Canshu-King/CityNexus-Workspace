@@ -1,0 +1,190 @@
+{
+  "release": "CityNexus Visio Renderer v0.3.2 C2.2 Review Package",
+  "calibration": {
+    "C1": "FROZEN_PASS",
+    "C2": "FROZEN_PASS",
+    "C3": "BLOCKED",
+    "C4": "BLOCKED"
+  },
+  "formalPagesRendered": false,
+  "historicalArtifacts": [
+    "C2_Anchored_Class_v2.vsdx (kept outside package; unchanged)"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 565,
+      "sha256": "5069458128FE1514DDAC8829469C7464722A93AA41B1CE0462DE08BEF15BA927"
+    },
+    {
+      "path": "TOOLCHAIN-BASELINE.md",
+      "bytes": 1859,
+      "sha256": "0D1C140176EEAD6AFC8CE194F5025DE1C31B1938C57F864CC79421806B970FDB"
+    },
+    {
+      "path": "build_calibrations.py",
+      "bytes": 3752,
+      "sha256": "2B16721E917225E3808A17C924013AD6AE8E5A59D538BB5663CEA5993F7067B0"
+    },
+    {
+      "path": "class_adapter.py",
+      "bytes": 589,
+      "sha256": "11A8D10EA2B7AC656C68CEF4B1B423DA21874F18111A66AB8938008B1401D9C9"
+    },
+    {
+      "path": "native-master-map.json",
+      "bytes": 48011,
+      "sha256": "68101D5871EAE8A6B6F0B6710450C54A49EE30C6CE234310C072B033F9123CD4"
+    },
+    {
+      "path": "phase1-routing.yaml",
+      "bytes": 2058,
+      "sha256": "430F886AA7FF753578101FBE99C9C2B6843E2C803EFEE5B84E85181D23E20F19"
+    },
+    {
+      "path": "presentation.py",
+      "bytes": 155,
+      "sha256": "11503F7870F72E5B11730B567D1AA20ED985C766C3DD6CFAF8C9FF5A580EBA61"
+    },
+    {
+      "path": "render-config.yaml",
+      "bytes": 176,
+      "sha256": "4FC506FE26AE3219250871694DA8FFB590450D2421532958A9FAC6F3A2C80A11"
+    },
+    {
+      "path": "render_core.py",
+      "bytes": 744,
+      "sha256": "1F2D2A2E88BFD7388227A20A4AC744E39401C17C1CA4B29C6161105C0C8A0322"
+    },
+    {
+      "path": "routing.py",
+      "bytes": 209,
+      "sha256": "0A8171F07E2AC9E73D74A66B14D01450676899A5AAC9F6DCA33023E47A9884AD"
+    },
+    {
+      "path": "style_adapter.py",
+      "bytes": 2983,
+      "sha256": "D08A9FBD7C193F0809BA6C292D8E2FB6BF8F53E2F8278BDF66D7EA2CD90ED3E5"
+    },
+    {
+      "path": "calibration/build_c2_2.py",
+      "bytes": 12115,
+      "sha256": "3EB9CCC026B80E67B4E33A783F7AE8223C9BDAE650E2D7C85EB6B73AADAE2830"
+    },
+    {
+      "path": "calibration/validate_c1.py",
+      "bytes": 4939,
+      "sha256": "7B5B1790D5CAB9906BB987A058D90DDCEEB706D0D5E9AA0686DC8A5BF5615786"
+    },
+    {
+      "path": "calibration/validate_c2_2.py",
+      "bytes": 12298,
+      "sha256": "9F74124BB72D3A01B6D94B21AC15E6F25493309CBBCDD5F2411F4BDDAEC65072"
+    },
+    {
+      "path": "calibration/write_manifest_c2_2.py",
+      "bytes": 1426,
+      "sha256": "10AC293D2352E9AD4EFF7A366A5F55D41429EA9E4270E5274241A01252B3387A"
+    },
+    {
+      "path": "calibration/out/C1_Font_Style-report.json",
+      "bytes": 4627,
+      "sha256": "4A3376C25CFF9F73D9AA7F364B58D07D54993956E3775D7E1EB89DD6849727E6"
+    },
+    {
+      "path": "calibration/out/C1_Font_Style.png",
+      "bytes": 29045,
+      "sha256": "695B41846C47D4689813E32B516E3CBA1FB275874822A7E7F635D1A2185DDD21"
+    },
+    {
+      "path": "calibration/out/C1_Font_Style.raw.svg",
+      "bytes": 62148,
+      "sha256": "EFB8E4D8991B41ECD9362FA42372528E89553F0EA5816D8F3D7F0D24F8124144"
+    },
+    {
+      "path": "calibration/out/C1_Font_Style.vsdx",
+      "bytes": 30835,
+      "sha256": "CC48CCF4062D24C90C33D2B8BBEF9988F555DA136BB9CB6153E1D9D74EFBC393"
+    },
+    {
+      "path": "calibration/out/C2_Anchored_Class_v3-report.json",
+      "bytes": 9741,
+      "sha256": "20002DC5980198AA5FBC4AD305ECFBBC7DB54E008C712085A94BABF53F93BF5D"
+    },
+    {
+      "path": "calibration/out/C2_Anchored_Class_v3.png",
+      "bytes": 6923,
+      "sha256": "29F6AA369670B3E436DFB5F67407CF69F02FAEF0E6EEE14A087D20AE4ADE4002"
+    },
+    {
+      "path": "calibration/out/C2_Anchored_Class_v3.raw.svg",
+      "bytes": 22386,
+      "sha256": "8786DE4F2486EEF9F5D4AB4C3CC0C56CA564974AAADAB95F1387963A0A90AC54"
+    },
+    {
+      "path": "calibration/out/C2_Anchored_Class_v3.vsdx",
+      "bytes": 26518,
+      "sha256": "B12D2534BBFE195803ED61286CBCD9B3E9E5FE51E58629B9A2E0D1BF90FBB2C9"
+    },
+    {
+      "path": "calibration/out/calibration-summary.json",
+      "bytes": 90,
+      "sha256": "D5226732D9CB0878AF1C137C177FE9233B15C9A671860B8AEA36548FF4B5FFF0"
+    },
+    {
+      "path": "calibration/out/route-static-test-results.json",
+      "bytes": 362,
+      "sha256": "BB660D0E6CC3D56C892E39FE25E5C71A790F2753D3560936CEF06F9EFBAEFE15"
+    },
+    {
+      "path": "calibration/out/source-input-hashes.json",
+      "bytes": 2598,
+      "sha256": "CEAC16F77EC4F115483101C32CF05A268B74E42004DE54835F500984C44ECC75"
+    },
+    {
+      "path": "calibration/out/static-test-report.json",
+      "bytes": 177,
+      "sha256": "B43F284B80E5521112E867166FF8B72217B82751A5722AD31A1A4021F34CC850"
+    },
+    {
+      "path": "tests/test_coordinate_conversion.py",
+      "bytes": 374,
+      "sha256": "6DEF408D507A763B8A665065250743D924B2944ADC24620B820E50F8EFFD2356"
+    },
+    {
+      "path": "tests/test_no_legacy_imports.py",
+      "bytes": 613,
+      "sha256": "0D2169DAEAF0169471A2BFD61642F5E2CE8B41E9C54D5B8B4AF897319EAD0C64"
+    },
+    {
+      "path": "tests/test_route_coverage.py",
+      "bytes": 610,
+      "sha256": "F8BD9893AF144FBB6B4712C08B23590392E8F8093928BA987CCADE285516A8A2"
+    },
+    {
+      "path": "tests/test_route_family.py",
+      "bytes": 333,
+      "sha256": "9FC8EDD926C49F2270116053FA766D7C51194D43B878FD1E9563402D650EC90B"
+    },
+    {
+      "path": "tests/test_route_schema.py",
+      "bytes": 450,
+      "sha256": "031C612D9B8991DBD7D08D6F0C3BAD7315BB43F37BB84BF32EECD35103A17B0A"
+    },
+    {
+      "path": "tests/test_route_side_policy.py",
+      "bytes": 531,
+      "sha256": "E9A25030421A7932A4CD4D868AE88E5A69A43111CE36029F1D03795AFFF215D5"
+    },
+    {
+      "path": "tests/test_style_resolution.py",
+      "bytes": 713,
+      "sha256": "62BF02A747C0B67BEFD670CFEFD638205F4892CC1D20E1B25B7EB429F8C92571"
+    },
+    {
+      "path": "visio-spec/style-tokens.yaml",
+      "bytes": 2107,
+      "sha256": "E62E369625A0D521A245EFABE1AB5E581C5E7C0985712FC26EC022337E11B030"
+    }
+  ]
+}

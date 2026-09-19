@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\anchors.py
+# hypothesis_version: 6.168.0
+
+['-', 'ARRIVAL', 'DEPARTURE', 'END', 'MID_TRIP', 'RESOLVED', 'START', 'STRUCTURAL_ANCHOR', 'UNKNOWN', 'UNRESOLVED', 'anchor:arrival', 'anchor:departure', 'anchor_role', 'arrival-anchor', 'departure-anchor', 'location_evidence', 'place_id', 'routable', 'scheduled_start_at', 'semantic_key', 'semantic_node_key', 'source', 'time_boundary']

@@ -1,0 +1,26 @@
+[
+  {
+    "screen": "today/mobile/dark",
+    "scanned": 170,
+    "violations": [],
+    "borderWarnings": 0
+  },
+  {
+    "screen": "live/mobile/dark",
+    "scanned": 238,
+    "violations": [],
+    "borderWarnings": 0
+  },
+  {
+    "screen": "today/mobile/light",
+    "scanned": 170,
+    "violations": [],
+    "borderWarnings": 2
+  },
+  {
+    "screen": "live/mobile/light",
+    "scanned": 238,
+    "violations": [],
+    "borderWarnings": 2
+  }
+]

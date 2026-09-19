@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\descriptor_props.py
+# hypothesis_version: 6.168.0
+
+['.', 'Column[_T]', 'MappedColumn[_T]', 'Mapped[_T]', '_CC', '_PT', '_T', '__composite_values__', '__forward_arg__', 'after_insert', 'after_update', 'comparator_factory', 'deferred', 'expire', 'instrument', 'load', 'orm.properties', 'parententity', 'parentmapper', 'property', 'proxy_key', 'refresh']

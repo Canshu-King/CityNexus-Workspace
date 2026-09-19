@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mock\commerce_providers.py
+# hypothesis_version: 6.168.0
+
+[':', 'AUTHORIZED', 'CANCELLED', 'CNY', 'CONFIRMED', 'FAILED', 'FORCED_FAILURE', 'FORCED_VOID_FAILURE', 'OK', 'REFUNDED', 'SUCCEEDED', 'VOIDED', 'activity_id', 'amount_minor', 'authorize', 'availability', 'cancel', 'cancellable', 'capture', 'create', 'currency', 'end_at', 'external_ref', 'force_failure', 'loss_minor', 'merchant_reference', 'mock-booking', 'mock-payment', 'provider_slot_ref', 'refund', 'service_id', 'start_at', 'status', 'void']

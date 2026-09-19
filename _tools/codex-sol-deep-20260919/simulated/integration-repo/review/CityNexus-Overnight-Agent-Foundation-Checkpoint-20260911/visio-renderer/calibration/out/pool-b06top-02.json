@@ -1,0 +1,42 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_O_M10_RIGHT_ESCAPE_B06_TOP",
+  "seed": 20260914,
+  "samples": 72,
+  "axisCounts": {
+    "x": 86,
+    "y": 83
+  },
+  "familyCounts": {
+    "A-T-UC-02": 12,
+    "A-T-UC-04": 32,
+    "A-T-UC-05": 31,
+    "A-T-UC-06": 18,
+    "A-T-UC-07": 5,
+    "A-T-UC-08": 19,
+    "A-T-UC-10": 20,
+    "A-T-UC-11": 43,
+    "A-T-UC-12": 19,
+    "A-CD-UC-04": 17,
+    "A-CD-UC-05": 9,
+    "A-CD-UC-10": 22,
+    "A-M-UC-04": 17,
+    "A-M-UC-08": 44,
+    "A-M-UC-10": 15,
+    "A-B-06": 17,
+    "A-PA-07": 20,
+    "A-CE-09": 25
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 4160,
+  "solverStatus": "INFEASIBLE",
+  "wallTimeSeconds": 0.09132860000000001,
+  "candidateCount": 385,
+  "conflictPairCount": 21733
+}

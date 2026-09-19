@@ -1,0 +1,65 @@
+Use the attached:
+
+CityNexus-Codex-Parallel-Readiness-Lab-20260919.zip
+
+You are working in parallel with an active Qoder integration run.
+
+READ-ONLY:
+- D:\moodle\_qoder_integration_20260919
+- D:\moodle\_qoder_th_20260918
+- D:\moodle\CityNexus
+
+DO NOT modify/reset/commit/merge/cherry-pick/clean any of those paths.
+
+Create all outputs under:
+D:\moodle\_codex_parallel_20260919
+
+Do not wait for Qoder. Use the remaining Codex quota aggressively but stay
+inside scope.
+
+Execute all four tracks:
+
+TRACK A — Integration readiness
+- read-only inspect integration/main/handoffs;
+- build owner-facing change map, risk register, reconciliation sequence,
+  rollback/repro plan;
+- classify truth/backend vs frontend visual/IA vs prerequisite type/behavior vs
+  tests/evidence/environment.
+
+TRACK B — Xiamen routing / Valhalla preflight
+- inspect existing live-routing path;
+- build isolated xiamen_routing_smoke.py, route-pair config, failure-injection
+  plan and env example;
+- do NOT deploy or enable Valhalla;
+- do NOT use secrets.
+
+TRACK C — Xiaomi 13 Ultra trial tooling
+- build final-device trial runbook and evidence template;
+- build safe Windows preflight/state-collection scripts;
+- scripts may inspect ports/IPs/health/version state only.
+
+TRACK D — Coursework + frontend performance audit
+- inspect Software Engineering and Mobile Application Programming coursework
+  materials under D:\moodle;
+- build a requirement-to-evidence traceability matrix and missing-deliverable list;
+- perform a read-only frontend bundle/performance audit, especially MapLibre/main
+  chunk debt, with safe future code-splitting candidates.
+
+Rules:
+- Prefer executable tooling + raw evidence over long prose.
+- Do NOT duplicate Qoder's current legacy-E2E repair work.
+- Do NOT edit Today/Live.
+- Do NOT edit truth contracts.
+- Do NOT deploy infrastructure.
+- Distinguish verified facts from inference.
+- Never include secrets.
+- Keep working until all four tracks are complete or an environment limitation
+  blocks a track.
+
+Target package:
+CityNexus-Codex-Parallel-Readiness-Results-20260919.zip
+
+Final verdict exactly:
+CODEX_PARALLEL_READINESS_COMPLETE
+or
+CODEX_PARALLEL_READINESS_PARTIAL

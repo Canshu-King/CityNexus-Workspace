@@ -1,0 +1,87 @@
+[
+  {
+    "file": "C1_Font_Style-report.json",
+    "sha256": "4A3376C25CFF9F73D9AA7F364B58D07D54993956E3775D7E1EB89DD6849727E6",
+    "bytes": 4627
+  },
+  {
+    "file": "C1_Font_Style.debug-nonauthoritative.svg",
+    "sha256": "D14CC6C881771C662FE657569742C5CB85C7F4E2492EA8880E4F28DB946E1448",
+    "bytes": 63675
+  },
+  {
+    "file": "C1_Font_Style.png",
+    "sha256": "695B41846C47D4689813E32B516E3CBA1FB275874822A7E7F635D1A2185DDD21",
+    "bytes": 29045
+  },
+  {
+    "file": "C1_Font_Style.raw.svg",
+    "sha256": "EFB8E4D8991B41ECD9362FA42372528E89553F0EA5816D8F3D7F0D24F8124144",
+    "bytes": 62148
+  },
+  {
+    "file": "C1_Font_Style.vsdx",
+    "sha256": "CC48CCF4062D24C90C33D2B8BBEF9988F555DA136BB9CB6153E1D9D74EFBC393",
+    "bytes": 30835
+  },
+  {
+    "file": "C2_Anchored_Class_v2-report.json",
+    "sha256": "1732DF5AA89ADB94215B3ACE32405472548EDB9FF4448016326BCBDC7176BCFD",
+    "bytes": 331
+  },
+  {
+    "file": "C2_Anchored_Class_v2.png",
+    "sha256": "E7B1B712220BA730ACD9D832B2696CE66EADDCE474C48506DA4E0801123961B7",
+    "bytes": 8330
+  },
+  {
+    "file": "C2_Anchored_Class_v2.raw.svg",
+    "sha256": "93BC19A5382A25A6A6D800D02FDD931AF31933ED4A4B60A2794DD600E301361B",
+    "bytes": 28289
+  },
+  {
+    "file": "C2_Anchored_Class_v2.vsdx",
+    "sha256": "3EBAAC9D373321DFDE3BD094A0309FDB91862AD54D6C64FD7C7663F87352FF97",
+    "bytes": 27712
+  },
+  {
+    "file": "C2_Native_Class-report.json",
+    "sha256": "63B95783EFAF5DFC6B18532377F358153653B895982F3AA52F949A2181BFAC16",
+    "bytes": 314
+  },
+  {
+    "file": "C2_Native_Class.png",
+    "sha256": "FC4F72999F83560E135CB657AB5AF25D2BA18ABBFFDB93BF134E51282EA5B2A2",
+    "bytes": 9662
+  },
+  {
+    "file": "C2_Native_Class.raw.svg",
+    "sha256": "C3DB658DF7F8230BBDBBF0493C30D88CDDA3F7754E18CC6D4647CBDC002EFA05",
+    "bytes": 28342
+  },
+  {
+    "file": "C2_Native_Class.vsdx",
+    "sha256": "CB9AEA941B7EAD8E7058D4308D609C7F483E381360D0FBCA5EA1EF4244CCE29B",
+    "bytes": 25528
+  },
+  {
+    "file": "calibration-summary.json",
+    "sha256": "B7BD2E00536ED585F758EDA0349CD4AC8565F5902C6680F76FEA36174B5FE2E5",
+    "bytes": 80
+  },
+  {
+    "file": "route-static-test-results.json",
+    "sha256": "E73C0D188A1DB40483CC5A3663AED6FD33BC89318AE947452C11AF6FEC5B80D5",
+    "bytes": 453
+  },
+  {
+    "file": "source-input-hashes.json",
+    "sha256": "D3E5DEBEAF680E9BDC96A29DDA7C6B0EBF8272C67A007C2DB8AC58CC2E2F8CE6",
+    "bytes": 1433
+  },
+  {
+    "file": "static-test-report.json",
+    "sha256": "D5EB27D257CEF588D313273B3978EDA63F14BD9D42C78F63CEE0147EA2937240",
+    "bytes": 158
+  }
+]

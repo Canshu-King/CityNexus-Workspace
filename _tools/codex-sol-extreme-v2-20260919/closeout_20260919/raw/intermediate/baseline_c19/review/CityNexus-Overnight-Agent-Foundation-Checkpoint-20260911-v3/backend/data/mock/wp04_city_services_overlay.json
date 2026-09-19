@@ -1,0 +1,28 @@
+[
+  {
+    "id": "service-river-cruise-booking",
+    "provider_key": "mock-booking",
+    "external_id": "BKG-P005",
+    "city_code": "CNX-DEMO",
+    "service_type": "bookable_experience",
+    "name": "River Cruise Booking",
+    "place_id": "place-river-cruise",
+    "availability": {
+      "status": "available",
+      "slot_source": "wp04_commerce_catalog.json"
+    }
+  },
+  {
+    "id": "service-food-preorder",
+    "provider_key": "mock-booking",
+    "external_id": "ORD-P003",
+    "city_code": "CNX-DEMO",
+    "service_type": "tradable_food",
+    "name": "Food Hall Pre-order",
+    "place_id": "place-food-hall",
+    "availability": {
+      "status": "available",
+      "catalog_source": "wp04_commerce_catalog.json"
+    }
+  }
+]

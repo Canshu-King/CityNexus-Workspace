@@ -1,0 +1,18 @@
+﻿Provenance,Operation,TestCase,Input,ExpectedOutput,Priority
+LIVE_CAPTURE,route,valid_route,origin=P1 destination=P2,duration=30 geometry=[(116.4,39.9),(116.5,39.8)],P0
+LIVE_CAPTURE,route,timeout_handling,origin=P1 destination=P2,timeout → fallback,P0
+LIVE_CAPTURE,estimate,valid_estimate,origin=P1 destination=P2,duration=30 price=5000,P1
+LIVE_CAPTURE,weather,current_weather,location=BEIJING,temp=25 condition=clear,P1
+CAPTURED_REPLAY,route,replay_consistency,origin=P1 destination=P2,deterministic same as original,P0
+CAPTURED_REPLAY,route,expired_replay,age=25 hours,trigger refresh,P1
+SYNTHETIC_FIXTURE,route,fixture_route,origin=P1 destination=P2,fixed duration=30,P1
+SYNTHETIC_FIXTURE,estimate,fixture_estimate,origin=P1 destination=P2,fixed price=5000,P2
+FALLBACK,route,mock_fallback,valhalla unavailable,use MockMobilityProvider,P0
+FALLBACK,weather,cache_fallback,api unavailable,use cached data,P1
+USER_IMPORTED,booking,ics_import,valid ICS file,create Commitment,P0
+USER_IMPORTED,booking,duplicate_import,same UID,skip duplicate,P1
+USER_IMPORTED,booking,invalid_ics,malformed ICS,show error,P0
+AI_INFERRED,route,hallucination_check,model output,validate against known data,P1
+AI_INFERRED,estimate,price_inference,no price data,mark as ESTIMATED,P1
+MIXED,route,mixed_provenance,leg1=valhalla leg2=amap,mark as MIXED provenance,P0
+MIXED,route,mixed_priority,live vs fallback,prefer LIVE_CAPTURE,P1

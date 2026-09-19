@@ -1,0 +1,2549 @@
+diff --git a/backend/tests/_qoder_explicit_demo_mobility.py b/backend/tests/_qoder_explicit_demo_mobility.py
+new file mode 100644
+index 0000000..9749ff5
+--- /dev/null
++++ b/backend/tests/_qoder_explicit_demo_mobility.py
+@@ -0,0 +1,145 @@
++"""Test-side helper: seed scenario-declared EXPLICIT mobility legs (per module).
++
++V2-B1 (closed in v3) made the real replan path refuse the mock fixture's blanket
++``default_minutes=20`` as a hard-feasibility fact.  Several pre-existing replan
++tests were written against the OLD behaviour where the offline demo silently used
++that default, so once B1 is closed they fail with ``MOBILITY_DATA_UNAVAILABLE``.
++
++The v2 helper generated a complete graph at one invented value and autoused it
++module-wide (rejected by V3 review).  The v3 helper used a single ~25-pair table
++shared by every module via autouse — still broader than needed: a module gained
++route legs unrelated to its own scenarios (V4 #5).
++
++V4 #5 narrows this to a per-module minimal subset: each module seeds only the
++exact legs its replan scenarios actually traverse (discovered empirically — see
++the module->legs mapping in TEST_RESULTS).  These are *explicit deterministic
++fixture facts* the scenario declares, each carrying the same real duration as
++the historical offline fixture.  They are NOT live/Xiamen measurements.  Any
++pair outside a module's subset stays unseeded and resolves to the mock blanket
++default, which the fail-closed classifier marks SYNTHETIC_DEFAULT and hard
++feasibility rejects — so B1 stays intact (the sentinel in
++test_qoder_mobility_replan_endpoint proves this).
++"""
++
++from __future__ import annotations
++
++from app.integrations.mock import providers as _providers
++
++# Shared leg durations.  Each value is the historical offline fixture duration
++# for that adjacency (deterministic, scenario-declared — not a live measurement).
++_FOOD_HALL__RIVER_CRUISE = 20
++_TECH_ART__CITY_PARK = 8
++_CITY_PARK__RIVERSIDE_MUSEUM = 17
++_DESIGN_LIBRARY__RIVERSIDE_MUSEUM = 15
++_OLD_TOWN__CITY_PARK = 22
++_RIVER_CRUISE__CITY_PARK = 16
++
++
++def _leg(a: str, b: str, minutes: int) -> dict[tuple[str, str], int]:
++    return {(f"place-{a}", f"place-{b}"): minutes}
++
++
++# --- per-module minimal subsets (only the legs that module's tests traverse) ---
++
++GOLDEN_CONTRACT_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++    **_leg("tech-art", "city-park", _TECH_ART__CITY_PARK),
++}
++
++GUARDIAN_MODEL_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("city-park", "riverside-museum", _CITY_PARK__RIVERSIDE_MUSEUM),
++    **_leg("design-library", "riverside-museum", _DESIGN_LIBRARY__RIVERSIDE_MUSEUM),
++}
++
++POST_GOAL_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++    **_leg("old-town", "city-park", _OLD_TOWN__CITY_PARK),
++}
++
++SOLVER_RUNTIME_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("tech-art", "city-park", _TECH_ART__CITY_PARK),
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++}
++
++SOLVER_V2_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("river-cruise", "city-park", _RIVER_CRUISE__CITY_PARK),
++    **_leg("tech-art", "city-park", _TECH_ART__CITY_PARK),
++}
++
++VERTICAL_SLICE_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++    **_leg("tech-art", "city-park", _TECH_ART__CITY_PARK),
++}
++
++WP06_FOLLOWUP_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++    **_leg("old-town", "city-park", _OLD_TOWN__CITY_PARK),
++}
++
++WP06_POSTGATE_MOBILITY: dict[tuple[str, str], int] = {
++    **_leg("food-hall", "river-cruise", _FOOD_HALL__RIVER_CRUISE),
++}
++
++
++def seed_explicit_mobility(
++    monkeypatch, pairs: dict[tuple[str, str], int]
++) -> None:
++    """Register ONLY the given exact pairs as explicit fixture facts.
++
++    Any pair not passed in stays absent from the matrix, so on a replan capture it
++    resolves to the blanket default and is (correctly) refused for hard truth.
++    """
++
++    minutes_input = {f"{a}|{b}": int(m) for (a, b), m in pairs.items()}
++    original_init = _providers.MockMobilityProvider.__init__
++
++    def patched_init(self, place_lookup=None, *, strict=False):
++        original_init(self, place_lookup, strict=strict)
++        minutes = self._fixture["minutes"]
++        for key, value in minutes_input.items():
++            minutes.setdefault(key, value)
++
++    monkeypatch.setattr(_providers.MockMobilityProvider, "__init__", patched_init)
++
++
++def seed_module_mobility(monkeypatch, table: dict[tuple[str, str], int]) -> None:
++    """Autouse hook: seed exactly one module's declared subset.
++
++    A module never gains legs outside its own table, so narrowing the shared
++    v3 table into per-module subsets keeps every scenario honest about which
++    mobility facts it actually relies on.
++    """
++
++    seed_explicit_mobility(monkeypatch, table)
++
++
++def authoritative_recovery_mobility(journey_id: str) -> dict[tuple[str, str], int]:
++    """Explicit deterministic FIXTURE legs for the authoritative V12/V13 journey.
++
++    Both tests compose the same `v12:{journey_id}:*` / `v12-test-place-*` world
++    and their (auto)nomous / predictive recovery hard-gates the selected route.
++    These are scenario fixture values (the itinerary legs mirror the offline demo
++    fixture's per-adjacency durations), NOT live/Xiamen measurements.  A pair
++    outside this table stays unseeded/synthetic, so B1 is never neutralised.
++    """
++
++    a = lambda k: f"v12:{journey_id}:{k}"  # noqa: E731
++    p = lambda i: f"v12-test-place-{i}"  # noqa: E731
++    return {
++        (a("arrival-anchor"), a("check-in")): 15,
++        (a("check-in"), p(0)): 8,
++        (a("check-in"), p(3)): 24,
++        (p(0), p(3)): 17,
++        (p(3), a("stay-night-1")): 21,
++        (a("stay-night-1"), p(1)): 12,
++        (p(1), p(4)): 19,
++        (p(4), a("stay-night-2")): 23,
++        (a("stay-night-2"), p(2)): 14,
++        (p(2), p(5)): 9,
++        (p(5), a("check-out")): 11,
++        (a("check-out"), a("departure-anchor")): 42,
++    }
++
++
++def seed_authoritative_recovery_mobility(monkeypatch, journey_id: str) -> None:
++    seed_explicit_mobility(monkeypatch, authoritative_recovery_mobility(journey_id))
+diff --git a/backend/tests/test_backend_connected_golden_contract.py b/backend/tests/test_backend_connected_golden_contract.py
+index c5e369b..9545f2c 100644
+--- a/backend/tests/test_backend_connected_golden_contract.py
++++ b/backend/tests/test_backend_connected_golden_contract.py
+@@ -131,3 +131,16 @@ def test_backend_connected_golden_scenario_contract():
+     )
+     with SessionLocal() as session:
+         assert session.get(Activity, reloaded_c4["activity_id"]).plan_version_id == new_plan_id
++
++
++# V2-B1: the F3 opportunity-window family routes through legs the demo fixture
++# only supplied via the blanket default.  Give the demo graph *explicit* mobility
++# so this replan contract test exercises trustworthy facts (B1), not a 20 that
++# replan now refuses.
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import GOLDEN_CONTRACT_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_gpt_adversarial_provider_hardening.py b/backend/tests/test_gpt_adversarial_provider_hardening.py
+index e135a7c..db71aff 100644
+--- a/backend/tests/test_gpt_adversarial_provider_hardening.py
++++ b/backend/tests/test_gpt_adversarial_provider_hardening.py
+@@ -8,7 +8,11 @@ from fastapi.testclient import TestClient
+ import app.main as main_module
+ from app.integrations.mobility.snapshot_capture import capture_mobility_snapshot
+ from app.integrations.mock.providers import MockMobilityProvider
+-from app.replanning.provider_snapshots import MobilitySnapshot, TravelEstimateFact
++from app.replanning.provider_snapshots import (
++    LIVE_PROVIDER_CAPTURE,
++    MobilitySnapshot,
++    TravelEstimateFact,
++)
+ 
+ client = TestClient(main_module.app)
+ 
+@@ -25,6 +29,17 @@ class _Provider:
+             raise RuntimeError("provider unavailable")
+         return self.mock.estimate_minutes(origin_key, destination_key)
+ 
++    def fact_quality(self, origin_key: str, destination_key: str) -> str:
++        # Provider-contract double: it stands for a healthy capturing routing
++        # provider (valhalla primary, or its degraded fallback), which attests
++        # LIVE for a measurement, mirroring app.integrations.mobility.
++        # valhalla_http.fact_quality.  A failed pair raises so the capture falls
++        # back rather than fabricating (V4 #2: doubles declare their own honest
++        # quality instead of relying on provider-name laundering).
++        if (origin_key, destination_key) in self.fail:
++            raise RuntimeError("provider unavailable")
++        return LIVE_PROVIDER_CAPTURE
++
+ 
+ def _prepare_disruption() -> tuple[str, dict]:
+     ids = client.post("/api/v1/demo/reset").json()
+@@ -169,6 +184,11 @@ class _ConstantProvider:
+     def estimate_minutes(self, origin_key: str, destination_key: str) -> int:
+         return 0 if origin_key == destination_key else self.minutes
+ 
++    def fact_quality(self, origin_key: str, destination_key: str) -> str:
++        # Healthy capturing routing provider (valhalla): attests LIVE for each
++        # measurement, mirroring app.integrations.mobility.valhalla_http.
++        return LIVE_PROVIDER_CAPTURE
++
+ 
+ def _snapshot_route_total(plan: dict, snapshot_payload: dict) -> int:
+     facts = {
+diff --git a/backend/tests/test_guardian_model_evidence.py b/backend/tests/test_guardian_model_evidence.py
+index 0379a29..860a6ba 100644
+--- a/backend/tests/test_guardian_model_evidence.py
++++ b/backend/tests/test_guardian_model_evidence.py
+@@ -234,3 +234,15 @@ def test_model_path_evidence_names_the_accepted_proposal(monkeypatch):
+         "solver evidence must describe the accepted proposal's assignment"
+     )
+     assert evidence["inference"]["controller"] == "configured_agent_runtime"
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import GUARDIAN_MODEL_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_post_goal_five_defects.py b/backend/tests/test_post_goal_five_defects.py
+index 5e10983..a67d240 100644
+--- a/backend/tests/test_post_goal_five_defects.py
++++ b/backend/tests/test_post_goal_five_defects.py
+@@ -215,3 +215,15 @@ def test_traffic_delay_honors_explicit_extra_minutes_semantics():
+         assert changed is not None
+         delta = datetime.fromisoformat(changed.start_at) - datetime.fromisoformat(tech["start_at"])
+         assert int(delta.total_seconds() // 60) == 25
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import POST_GOAL_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_provider_runtime_gate.py b/backend/tests/test_provider_runtime_gate.py
+index e225a22..7851372 100644
+--- a/backend/tests/test_provider_runtime_gate.py
++++ b/backend/tests/test_provider_runtime_gate.py
+@@ -14,6 +14,7 @@ from app.integrations.mobility.snapshot_capture import (
+ )
+ from app.integrations.mobility.valhalla_http import ValhallaHTTPMobilityProvider
+ from app.integrations.mock.providers import MockMobilityProvider
++from app.replanning.provider_snapshots import LIVE_PROVIDER_CAPTURE
+ from app.replanning.feasibility import FeasibilityActivity, build_context, evaluate_feasibility
+ 
+ client = TestClient(main_module.app)
+@@ -33,6 +34,17 @@ class _Provider:
+             raise RuntimeError("provider unavailable")
+         return self.mock.estimate_minutes(origin_key, destination_key)
+ 
++    def fact_quality(self, origin_key: str, destination_key: str) -> str:
++        # This double models a capturing routing provider (e.g. Valhalla): a
++        # duration it returns is a real measurement, so it honestly attests
++        # LIVE, mirroring app.integrations.mobility.valhalla_http.  A failed
++        # pair raises before attesting, so the capture falls back rather than
++        # fabricating a fact (V4 #2 fail-closed classifier requires the double
++        # to declare its own quality — no provider-name laundering).
++        if (origin_key, destination_key) in self.fail:
++            raise RuntimeError("provider unavailable")
++        return LIVE_PROVIDER_CAPTURE
++
+ 
+ def _prepare_disruption() -> tuple[str, dict, dict]:
+     ids = client.post("/api/v1/demo/reset").json()
+diff --git a/backend/tests/test_qoder_live_hard_fallback.py b/backend/tests/test_qoder_live_hard_fallback.py
+new file mode 100644
+index 0000000..31b52eb
+--- /dev/null
++++ b/backend/tests/test_qoder_live_hard_fallback.py
+@@ -0,0 +1,80 @@
++"""V4 #4 — a live-configured HARD capture must never launder the mock fixture.
++
++When an operator has configured a real routing provider, that provider is the
++authority.  If it fails to measure one leg:
++
++  * a *hard* replan capture (require_explicit_facts=True) has NO mock fallback,
++    so the leg stays unavailable -> the candidate becomes unavailable -> other
++    trustworthy candidates can still proceed, and only an all-untrusted result
++    reports MOBILITY_DATA_UNAVAILABLE (T2 / GPT v4 live-provider gate);
++  * a *soft* offline capture keeps the pair-level mock fallback and degrades.
++
++Before this fix the hard path silently inherited an explicit mock fixture number
++for the failed leg and let the hard replan proceed on a fabricated fact.
++"""
++
++from __future__ import annotations
++
++import types
++
++import pytest
++
++import app.integrations.mobility.runtime as runtime
++from app.integrations.mobility.snapshot_capture import MobilitySnapshotCaptureError
++
++
++class _FailingLiveProvider:
++    provider_key = "valhalla"
++
++    def __init__(self, *, failing_pairs=None, **_kwargs):
++        self.failing = set(failing_pairs or set())
++
++    def status_capabilities(self):
++        return {"status": "OK", "has_live_traffic": True}
++
++    def estimate_minutes(self, origin_key, destination_key):
++        if (origin_key, destination_key) in self.failing:
++            raise RuntimeError("live provider unavailable for leg")
++        return 5
++
++    def fact_quality(self, origin_key, destination_key):
++        return "LIVE_PROVIDER_CAPTURE"
++
++
++def _configure_live(monkeypatch, failing_pairs):
++    monkeypatch.setattr(
++        runtime, "settings", types.SimpleNamespace(live_valhalla_url="http://valhalla.test")
++    )
++    monkeypatch.setattr(runtime, "_place_lookup", lambda session, key: {"latitude": 0.0, "longitude": 0.0})
++    monkeypatch.setattr(
++        runtime,
++        "ValhallaHTTPMobilityProvider",
++        lambda **kwargs: _FailingLiveProvider(failing_pairs=failing_pairs, **{}),
++    )
++
++
++def test_live_configured_hard_capture_does_not_fall_back_to_mock(monkeypatch):
++    _configure_live(monkeypatch, {("b", "c")})
++    with pytest.raises(MobilitySnapshotCaptureError):
++        runtime.capture_runtime_mobility_snapshot(
++            None,
++            None,
++            [("a", "b"), ("b", "c")],
++            operation_key="replan:event-x",
++            require_explicit_facts=True,
++        )
++
++
++def test_live_configured_soft_capture_still_degrades_to_mock(monkeypatch):
++    _configure_live(monkeypatch, {("b", "c")})
++    result = runtime.capture_runtime_mobility_snapshot(
++        None,
++        None,
++        [("a", "b"), ("b", "c")],
++        operation_key="replan:event-y",
++        require_explicit_facts=False,
++    )
++    assert result.snapshot.degraded is True
++    # The failed leg came from the mock fallback; the good leg from the live provider.
++    assert result.snapshot.facts[("a", "b")].provider_key == "valhalla"
++    assert result.snapshot.facts[("b", "c")].provider_key == "mock-mobility"
+diff --git a/backend/tests/test_qoder_live_replans_endpoint.py b/backend/tests/test_qoder_live_replans_endpoint.py
+new file mode 100644
+index 0000000..711ee4a
+--- /dev/null
++++ b/backend/tests/test_qoder_live_replans_endpoint.py
+@@ -0,0 +1,187 @@
++"""T2 v5 blocker-1 — REAL /replans path with a live provider configured.
++
++V4 closed the *primitive* (`require_explicit_facts` hard capture never falls back
++to mock) and the *offline* endpoint (no explicit fact -> refused), but GPT found
++the real bypass: ``generate_replan`` does its initial BULK mobility capture
++through the *soft* runtime path.  With a live routing provider configured, a leg
++the live provider failed would fall back to the deterministic mock, and if that
++leg happened to be an explicit demo-matrix pair it was tagged
++``EXPLICIT_FROZEN_FIXTURE`` -> accepted by ``hard_minutes()`` -> the later strict
++per-pair recapture never fired.  Two tests each green, the composition leaky.
++
++These drive the actual ``POST /api/v1/journeys/{id}/replans`` with live routing
++configured and a fake Valhalla that fails specific legs the mock still has as
++explicit fixture facts, proving the bypass is closed and candidate behaviour is
++preserved.
++
++Layer label: API/service integration (live-provider composition).
++"""
++
++from __future__ import annotations
++
++import types
++
++from fastapi.testclient import TestClient
++
++import app.integrations.mobility.runtime as runtime
++from app.main import app
++
++client = TestClient(app)
++
++# The two legs each golden same-slot replacement candidate needs (both are
++# explicit entries in data/mock/mobility_matrix.json — exactly the fixture values
++# that used to be laundered into a hard fact when the live provider failed).
++_CITY_PARK_LEGS = ("place-food-hall|place-city-park", "place-city-park|place-river-cruise")
++_DESIGN_LEGS = ("place-food-hall|place-design-library", "place-design-library|place-river-cruise")
++
++# Mutable switch so the provider can be healthy during setup (so a plan exists)
++# and degrade only at the replan call, mirroring a live outage at incident time.
++_LIVE_STATE: dict = {"failing": set(), "fail_all": False}
++
++
++class _FakeValhalla:
++    provider_key = "valhalla"
++
++    def __init__(self, **_kwargs):
++        pass
++
++    def status_capabilities(self):
++        return {"status": "OK", "has_live_traffic": False}
++
++    def estimate_minutes(self, origin_key, destination_key):
++        if _LIVE_STATE["fail_all"] or (origin_key, destination_key) in _LIVE_STATE["failing"]:
++            raise RuntimeError("live routing unavailable for leg")
++        return 12
++
++    def fact_quality(self, origin_key, destination_key):
++        return "LIVE_PROVIDER_CAPTURE"
++
++
++def _install_live(monkeypatch):
++    _LIVE_STATE["failing"] = set()
++    _LIVE_STATE["fail_all"] = False
++    monkeypatch.setattr(
++        runtime, "settings", types.SimpleNamespace(live_valhalla_url="http://valhalla.test")
++    )
++    monkeypatch.setattr(
++        runtime, "ValhallaHTTPMobilityProvider", lambda **kwargs: _FakeValhalla(**kwargs)
++    )
++
++
++def _degrade(*legs, all_legs=False):
++    _LIVE_STATE["failing"] = {tuple(p.split("|")) for p in legs}
++    _LIVE_STATE["fail_all"] = all_legs
++
++
++def _drive_to_closure():
++    ids = client.post("/api/v1/demo/reset").json()
++    jid = ids["journey_id"]
++    generated = client.post(f"/api/v1/journeys/{jid}/plans/generate", json={"candidate_count": 1})
++    assert generated.status_code == 201, generated.text
++    plan = generated.json()[0]
++    assert client.post(f"/api/v1/journeys/{jid}/plans/{plan['id']}/select").status_code == 200
++    tech = next(a for a in plan["activities"] if a["place_id"] == "place-tech-art")
++    assert client.post(f"/api/v1/journeys/{jid}/start").status_code == 200
++    for activity in plan["activities"]:
++        if activity["id"] == tech["id"]:
++            break
++        client.post(f"/api/v1/journeys/{jid}/activities/{activity['id']}/complete")
++    event = client.post(
++        f"/api/v1/journeys/{jid}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": tech["id"],
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "v5 live endpoint"},
++        },
++    )
++    assert event.status_code == 201, event.text
++    return jid, event.json()["id"]
++
++
++def _replan(jid, event_id, count=3):
++    return client.post(
++        f"/api/v1/journeys/{jid}/replans",
++        json={"trigger_event_id": event_id, "candidate_count": count},
++    )
++
++
++def test_live_provider_healthy_control_produces_proposal(monkeypatch) -> None:
++    _install_live(monkeypatch)
++    jid, event = _drive_to_closure()
++    assert _replan(jid, event).status_code == 201
++
++
++def test_L1_live_failure_on_mock_explicit_leg_is_not_rescued(monkeypatch) -> None:
++    # city-park's legs fail live but EXIST as explicit mock matrix facts.  design-
++    # library's legs are fine on live.  The mock must not rescue city-park: the
++    # candidate is excluded even though the matrix has a number for it, while the
++    # fully-live candidate still produces a proposal (candidate-scoped).
++    _install_live(monkeypatch)
++    jid, event = _drive_to_closure()
++    _degrade(*_CITY_PARK_LEGS)
++    response = _replan(jid, event)
++    assert response.status_code == 201, response.text
++    proposals = client.get(f"/api/v1/journeys/{jid}/replans").json()
++    added = {str((p.get("diff") or {}).get("added")) for p in proposals}
++    assert not any("place-city-park" in a for a in added), (
++        "a live-failed candidate was rescued by an explicit mock fallback: " + str(added)
++    )
++
++
++def test_L3_all_candidates_unavailable_reports_data_not_no_alternative(monkeypatch) -> None:
++    # Provider fully degraded: the failure is missing travel evidence, NOT
++    # "no replacement place exists" (REPLAN_NO_ALTERNATIVE).
++    _install_live(monkeypatch)
++    jid, event = _drive_to_closure()
++    _degrade(all_legs=True)
++    response = _replan(jid, event)
++    assert response.status_code == 422, response.text
++    assert "MOBILITY_DATA_UNAVAILABLE" in response.text, response.text
++    assert "NO_ALTERNATIVE" not in response.text, response.text
++
++
++def test_L2_fully_live_candidate_survives_when_another_is_live_failed(monkeypatch) -> None:
++    # design-library's legs fail live (mock has them explicit); city-park's legs
++    # succeed on live -> 201 offering city-park only.
++    _install_live(monkeypatch)
++    jid, event = _drive_to_closure()
++    _degrade(*_DESIGN_LEGS)
++    response = _replan(jid, event)
++    assert response.status_code == 201, response.text
++    proposals = client.get(f"/api/v1/journeys/{jid}/replans").json()
++    added = {str((p.get("diff") or {}).get("added")) for p in proposals}
++    assert any("place-city-park" in a for a in added), "trustworthy live candidate dropped: " + str(added)
++    assert not any("place-design-library" in a for a in added), (
++        "a live-failed candidate was rescued by an explicit mock fallback: " + str(added)
++    )
++
++
++def test_L4_accepted_hard_evidence_contains_no_mock_fallback(monkeypatch) -> None:
++    from app.replanning.provider_snapshots import EXPLICIT_FROZEN_FIXTURE, LIVE_PROVIDER_CAPTURE
++
++    HARD_ELIGIBLE = {EXPLICIT_FROZEN_FIXTURE, LIVE_PROVIDER_CAPTURE}
++    _install_live(monkeypatch)
++    jid, event = _drive_to_closure()
++    _degrade(*_DESIGN_LEGS)
++    assert _replan(jid, event).status_code == 201
++    proposals = client.get(f"/api/v1/journeys/{jid}/replans").json()
++    accepted = [p for p in proposals if "place-city-park" in str((p.get("diff") or {}).get("added"))]
++    assert accepted, proposals
++    facts = accepted[0]["diff"]["verified_evidence"]["mobility"]["snapshot"]["facts"]
++    # No mock-sourced fact may carry a hard-eligible quality in the accepted evidence.
++    laundered = [
++        f for f in facts
++        if f.get("provider") == "mock-mobility" and f.get("fact_quality") in HARD_ELIGIBLE
++    ]
++    assert not laundered, (
++        "a live-failed leg was laundered into hard truth via an explicit mock fallback: "
++        + str([(f.get("origin_key"), f.get("destination_key")) for f in laundered])
++    )
++    # Every city-park leg that the accepted decision relies on must be live-measured.
++    city_park_facts = [
++        f for f in facts
++        if "place-city-park" in (f.get("origin_key"), f.get("destination_key"))
++    ]
++    assert city_park_facts and all(f.get("provider") == "valhalla" for f in city_park_facts), city_park_facts
+diff --git a/backend/tests/test_qoder_mobility_replan_endpoint.py b/backend/tests/test_qoder_mobility_replan_endpoint.py
+new file mode 100644
+index 0000000..f797a8f
+--- /dev/null
++++ b/backend/tests/test_qoder_mobility_replan_endpoint.py
+@@ -0,0 +1,176 @@
++"""T2 — REAL /replans endpoint path (API/service integration, B1).
++
++The v1 tests for this contract only exercised ``MockMobilityProvider(strict=True)``
++and the ``_replan_estimate`` primitive.  GPT's independent review (v2, B1) pointed
++out that the real ``generate_replan`` builds a bulk ``mobility_pairs`` set for
++replacement candidates and captures it *before* ``_replan_estimate`` runs, so a
++missing leg could be frozen at the blanket ``default_minutes=20`` and then read
++back as if it were measured — "back door locked, front door open."
++
++These tests drive the actual ``POST /api/v1/journeys/{id}/replans`` endpoint with
++a fixture in which a candidate's legs have no explicit fact (they would fall to
++the synthetic default), and assert the endpoint refuses to base a hard
++feasibility decision on that fabricated constant.
++
++Layer label (docs/TEST_AND_EVIDENCE_GATE.md): API/service integration.
++"""
++
++from __future__ import annotations
++
++import pytest
++from fastapi.testclient import TestClient
++
++from app.integrations.mock import providers as providers_mod
++from app.main import app
++
++client = TestClient(app)
++
++# Legs used by the golden same-slot replacement candidates when the tech-art
++# venue closes and the plan must route food-hall -> {candidate} -> river-cruise.
++_CANDIDATE_LEGS = (
++    "place-food-hall|place-city-park",
++    "place-city-park|place-river-cruise",
++    "place-food-hall|place-design-library",
++    "place-design-library|place-river-cruise",
++)
++
++
++@pytest.fixture()
++def _strip_explicit_legs(monkeypatch):
++    """Make named fixture pairs fall back to the blanket default (20).
++
++    Only the DATA is altered (an explicit matrix entry is deleted); no product
++    logic is patched, so the endpoint exercises its real capture + gate path.
++    """
++
++    def apply(pairs: tuple[str, ...]) -> None:
++        original_init = providers_mod.MockMobilityProvider.__init__
++
++        def patched_init(self, place_lookup=None, *, strict=False):
++            original_init(self, place_lookup, strict=strict)
++            for key in pairs:
++                self._fixture["minutes"].pop(key, None)
++
++        monkeypatch.setattr(
++            providers_mod.MockMobilityProvider, "__init__", patched_init
++        )
++
++    return apply
++
++
++def _drive_to_closure() -> tuple[str, str]:
++    ids = client.post("/api/v1/demo/reset").json()
++    jid = ids["journey_id"]
++    generated = client.post(
++        f"/api/v1/journeys/{jid}/plans/generate", json={"candidate_count": 1}
++    )
++    assert generated.status_code == 201, generated.text
++    plan = generated.json()[0]
++    assert client.post(f"/api/v1/journeys/{jid}/plans/{plan['id']}/select").status_code == 200
++    tech = next(a for a in plan["activities"] if a["place_id"] == "place-tech-art")
++    started = client.post(f"/api/v1/journeys/{jid}/start")
++    assert started.status_code == 200, started.text
++    # Advance execution to the disrupted activity's predecessor so the closure is
++    # a live, mutable replan rather than a pre-start plumbing probe.
++    for activity in plan["activities"]:
++        if activity["id"] == tech["id"]:
++            break
++        client.post(f"/api/v1/journeys/{jid}/activities/{activity['id']}/complete")
++    event = client.post(
++        f"/api/v1/journeys/{jid}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": tech["id"],
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "t2 endpoint truth test"},
++        },
++    )
++    assert event.status_code == 201, event.text
++    return jid, event.json()["id"]
++
++
++def test_replans_never_freezes_synthetic_default_as_hard_fact(_strip_explicit_legs) -> None:
++    """Endpoint regression 1 + 6: a missing leg is not priced at 20 as truth.
++
++    Control first: with the golden fixture intact the same closure yields a 201
++    proposal, so we know the endpoint *can* recover here and the failure below is
++    caused by the missing evidence, not by an unrelated broken setup.  Then every
++    candidate leg is forced to fall back to the blanket default.  Before V2-T2
++    the real ``generate_replan`` captured that default as a frozen ``20`` and fed
++    it to the gate; the endpoint must now fail closed with
++    ``MOBILITY_DATA_UNAVAILABLE`` instead.
++    """
++
++    # Control (fixture intact) -> a proposal is produced.
++    ctl_jid, ctl_event = _drive_to_closure()
++    control = client.post(
++        f"/api/v1/journeys/{ctl_jid}/replans",
++        json={"trigger_event_id": ctl_event, "candidate_count": 3},
++    )
++    assert control.status_code == 201, control.text
++
++    # Now strip every candidate leg and re-drive the real endpoint.
++    _strip_explicit_legs(_CANDIDATE_LEGS)
++    jid, event_id = _drive_to_closure()
++    response = client.post(
++        f"/api/v1/journeys/{jid}/replans",
++        json={"trigger_event_id": event_id, "candidate_count": 3},
++    )
++    assert response.status_code == 422, (
++        "the endpoint returned a proposal instead of failing closed — a synthetic "
++        f"default 20 likely reached hard feasibility: {response.text[:200]}"
++    )
++    assert "MOBILITY_DATA_UNAVAILABLE" in response.text, response.text
++
++
++def test_v3_03_seed_helper_neutralises_b1_sentinel(monkeypatch) -> None:
++    """V3-3 sentinel: only declared legs become hard-eligible; the rest stay missing.
++
++    Proves the narrowed seed helper did NOT turn the whole demo world into
++    "known mobility" — a pair outside the scenario table is still synthetic and
++    therefore unavailable for hard feasibility.
++    """
++
++    from _qoder_explicit_demo_mobility import seed_explicit_mobility
++    from app.integrations.mock.providers import MockMobilityProvider
++    from app.replanning.provider_snapshots import EXPLICIT_FROZEN_FIXTURE, SYNTHETIC_DEFAULT
++
++    seed_explicit_mobility(monkeypatch, {("place-food-hall", "place-city-park"): 14})
++    provider = MockMobilityProvider()
++    # Seeded, declared leg -> trustworthy explicit fact.
++    assert provider.fact_quality("place-food-hall", "place-city-park") == EXPLICIT_FROZEN_FIXTURE
++    # Undeclared pair -> still the refused blanket default, NOT laundered to known.
++    assert provider.fact_quality("place-old-town", "place-skyline-dinner") == SYNTHETIC_DEFAULT
++
++
++def test_replans_keeps_the_explicit_candidate_when_only_another_is_default(
++    _strip_explicit_legs,
++) -> None:
++    """V3-2 deterministic candidate-specific proof: A survives, B is refused.
++
++    city-park keeps its explicit fixture legs; ONLY design-library's legs are
++    stripped so it falls back to the refused default.  The endpoint must return
++    201 and offer the trustworthy city-park candidate — proving that one
++    candidate's missing evidence does not abort the whole recovery.  (The old
++    version accepted 422 as a pass, which proved nothing; this must be a 201.)
++    """
++
++    _strip_explicit_legs(
++        ("place-food-hall|place-design-library", "place-design-library|place-river-cruise")
++    )
++    jid, event_id = _drive_to_closure()
++    response = client.post(
++        f"/api/v1/journeys/{jid}/replans",
++        json={"trigger_event_id": event_id, "candidate_count": 3},
++    )
++    # Deterministic: the explicit candidate keeps recovery alive -> exactly 201.
++    assert response.status_code == 201, response.text
++    proposals = client.get(f"/api/v1/journeys/{jid}/replans").json()
++    added = {str((p.get("diff") or {}).get("added")) for p in proposals}
++    assert any("place-city-park" in a for a in added), (
++        "the candidate with trustworthy mobility was wrongly dropped: " + str(added)
++    )
++    assert not any("place-design-library" in a for a in added), (
++        "a candidate resting on refused synthetic-default mobility was offered: " + str(added)
++    )
+diff --git a/backend/tests/test_qoder_mobility_truth_contract.py b/backend/tests/test_qoder_mobility_truth_contract.py
+new file mode 100644
+index 0000000..253db3f
+--- /dev/null
++++ b/backend/tests/test_qoder_mobility_truth_contract.py
+@@ -0,0 +1,348 @@
++"""T2 — mobility truth contract (fail closed on missing travel evidence).
++
++The mock fixture holds nine explicit route facts plus a blanket
++``default_minutes = 20``.  That constant is not a measurement.  Before this
++contract a replan leg absent from the explicit matrix silently inherited it,
++and the fabricated 20 minutes then fed the deterministic feasibility gate,
++which correctly refused the resulting overlap — so the traveller was told no
++replacement existed when the truth was that the engine never knew the travel
++time at all.
++
++Contract: docs/MOBILITY_TRUTH_CONTRACT.md
++"""
++
++from __future__ import annotations
++
++import json
++
++import pytest
++
++from app.integrations.mock.providers import MockMobilityProvider
++
++# A pair that IS in data/mock/mobility_matrix.json (explicit fixture fact).
++EXPLICIT_PAIR = ("place-old-town", "place-riverside-museum")
++# A pair that is NOT in the matrix, so the fixture would otherwise default it.
++MISSING_PAIR = ("real-place-unknown-a", "real-place-unknown-b")
++
++
++def test_explicit_matrix_pair_returns_its_explicit_minutes() -> None:
++    provider = MockMobilityProvider()
++    assert provider.estimate_minutes(*EXPLICIT_PAIR) == 15
++
++
++def test_non_strict_provider_keeps_the_demo_default() -> None:
++    """Seeded offline demo paths intentionally rely on the fixture default."""
++
++    provider = MockMobilityProvider()
++    assert provider.estimate_minutes(*MISSING_PAIR) == 20
++
++
++def test_strict_provider_refuses_the_fabricated_default() -> None:
++    """A missing pair must never be priced at the constant on the replan path."""
++
++    provider = MockMobilityProvider(strict=True)
++    with pytest.raises(KeyError):
++        provider.estimate_minutes(*MISSING_PAIR)
++
++
++def test_strict_provider_still_serves_explicit_facts() -> None:
++    provider = MockMobilityProvider(strict=True)
++    assert provider.estimate_minutes(*EXPLICIT_PAIR) == 15
++
++
++def test_missing_pair_never_becomes_twenty_in_strict_mode() -> None:
++    """Regression 3 of the contract, stated directly."""
++
++    provider = MockMobilityProvider(strict=True)
++    try:
++        minutes = provider.estimate_minutes(*MISSING_PAIR)
++    except KeyError:
++        return
++    pytest.fail(f"missing pair was priced at a fabricated {minutes} minutes")
++
++
++def test_capture_fails_closed_when_a_pair_has_no_explicit_fact() -> None:
++    """The capture layer must raise rather than freeze a fabricated fact."""
++
++    from app.integrations.mobility.snapshot_capture import (
++        MobilitySnapshotCaptureError,
++        capture_mobility_snapshot,
++    )
++
++    provider = MockMobilityProvider(strict=True)
++    with pytest.raises(MobilitySnapshotCaptureError):
++        capture_mobility_snapshot(
++            [MISSING_PAIR],
++            primary=provider,
++            captured_at="2026-09-18T00:00:00+00:00",
++            operation_key="t2-test",
++        )
++
++
++def test_capture_freezes_an_explicit_fact_unchanged() -> None:
++    from app.integrations.mobility.snapshot_capture import capture_mobility_snapshot
++
++    provider = MockMobilityProvider(strict=True)
++    captured = capture_mobility_snapshot(
++        [EXPLICIT_PAIR],
++        primary=provider,
++        captured_at="2026-09-18T00:00:00+00:00",
++        operation_key="t2-test",
++    ).snapshot
++    assert captured.facts[EXPLICIT_PAIR].minutes == 15
++
++
++def test_mobility_data_unavailable_is_distinct_from_no_alternative() -> None:
++    """The two 422 reasons must be separate outcomes.
++
++    "We could not measure the legs" is not "no replacement place exists".
++    Reporting the first as the second tells the traveller nothing can be done
++    when the engine merely lacked evidence.
++    """
++
++    from app.main import MobilityDataUnavailable
++
++    error = MobilityDataUnavailable("origin-key", "destination-key")
++    assert str(error) == "MOBILITY_DATA_UNAVAILABLE:origin-key|destination-key"
++    assert "REPLAN_NO_ALTERNATIVE" != str(error)
++    assert isinstance(error, RuntimeError)
++
++
++def test_fixture_default_is_documented_as_a_constant() -> None:
++    """Guard the fixture shape this contract reasons about."""
++
++    from app.integrations.mock.providers import MOCK_ROOT
++
++    fixture = json.loads((MOCK_ROOT / "mobility_matrix.json").read_text(encoding="utf-8"))
++    assert fixture["default_minutes"] == 20
++    assert len(fixture["minutes"]) == 9
++    assert f"{EXPLICIT_PAIR[0]}|{EXPLICIT_PAIR[1]}" in fixture["minutes"]
++    assert f"{MISSING_PAIR[0]}|{MISSING_PAIR[1]}" not in fixture["minutes"]
++
++
++# --------------------------------------------------------------------------
++# V2-T2 fact-quality tagging + hard-feasibility gate (B1 unit layer)
++# --------------------------------------------------------------------------
++
++
++def test_provider_fact_quality_separates_explicit_from_default() -> None:
++    from app.replanning.provider_snapshots import (
++        EXPLICIT_FROZEN_FIXTURE,
++        SYNTHETIC_DEFAULT,
++    )
++
++    provider = MockMobilityProvider()
++    assert provider.fact_quality(*EXPLICIT_PAIR) == EXPLICIT_FROZEN_FIXTURE
++    assert provider.fact_quality(*MISSING_PAIR) == SYNTHETIC_DEFAULT
++
++
++def test_capture_tags_default_fact_quality_even_when_non_strict() -> None:
++    """The demo may read the constant, but the snapshot records it as synthetic.
++
++    This is the front-door fix: the value 20 stays available to demo paths via
++    ``estimate_minutes`` while the fact is *tagged* so hard feasibility can reject
++    it (V2-T2 / B1).
++    """
++
++    from app.replanning.provider_snapshots import (
++        EXPLICIT_FROZEN_FIXTURE,
++        SYNTHETIC_DEFAULT,
++    )
++    from app.integrations.mobility.snapshot_capture import capture_mobility_snapshot
++
++    captured = capture_mobility_snapshot(
++        [EXPLICIT_PAIR, MISSING_PAIR],
++        primary=MockMobilityProvider(),
++        captured_at="2026-09-18T00:00:00+00:00",
++        operation_key="t2-quality",
++    ).snapshot
++    # Both are readable (minutes present)...
++    assert captured.estimate_minutes(*MISSING_PAIR) == 20
++    # ...but the default one is flagged SYNTHETIC_DEFAULT, the explicit one not.
++    assert captured.facts[MISSING_PAIR].fact_quality == SYNTHETIC_DEFAULT
++    assert captured.facts[EXPLICIT_PAIR].fact_quality == EXPLICIT_FROZEN_FIXTURE
++
++
++def test_hard_minutes_rejects_synthetic_default_but_uses_explicit() -> None:
++    """hard_minutes is the truth gate; estimate_minutes stays the raw accessor."""
++
++    from app.integrations.mobility.snapshot_capture import capture_mobility_snapshot
++
++    captured = capture_mobility_snapshot(
++        [EXPLICIT_PAIR, MISSING_PAIR],
++        primary=MockMobilityProvider(),
++        captured_at="2026-09-18T00:00:00+00:00",
++        operation_key="t2-hard",
++    ).snapshot
++    assert captured.hard_minutes(*EXPLICIT_PAIR) == 15
++    with pytest.raises(KeyError):
++        captured.hard_minutes(*MISSING_PAIR)
++
++
++def test_hard_minutes_fails_closed_on_unrecorded_quality() -> None:
++    """V3-1: an untagged / unknown quality must NOT drive hard feasibility.
++
++    A pre-v2 snapshot can hold an untagged blanket default 20, so None cannot be
++    assumed trustworthy.  ``from_minutes`` now defaults to an honest
++    ``EXPLICIT_FROZEN_FIXTURE`` tag and is allowed; a snapshot explicitly built
++    with no provenance fails closed, as does a genuinely missing pair.
++    """
++
++    from app.replanning.provider_snapshots import MobilitySnapshot
++
++    # Explicitly-declared frozen map -> allowed (caller opts into EXPLICIT).
++    explicit = MobilitySnapshot.from_minutes(
++        source_provider_key="mock-mobility",
++        minutes={EXPLICIT_PAIR: 15},
++        captured_at="2026-09-18T00:00:00+00:00",
++        operation_key="t2-explicit",
++        fact_quality="EXPLICIT_FROZEN_FIXTURE",
++    )
++    assert explicit.facts[EXPLICIT_PAIR].fact_quality == "EXPLICIT_FROZEN_FIXTURE"
++    assert explicit.hard_minutes(*EXPLICIT_PAIR) == 15
++
++    # V4 #3: from_minutes now defaults to unknown provenance -> refused.
++    untagged = MobilitySnapshot.from_minutes(
++        source_provider_key="mock-mobility",
++        minutes={EXPLICIT_PAIR: 15},
++        captured_at="2026-09-18T00:00:00+00:00",
++        operation_key="t2-untagged",
++    )
++    assert untagged.facts[EXPLICIT_PAIR].fact_quality is None
++    assert untagged.estimate_minutes(*EXPLICIT_PAIR) == 15  # raw read still works
++    with pytest.raises(KeyError):
++        untagged.hard_minutes(*EXPLICIT_PAIR)
++
++    # Genuinely absent pair -> refused.
++    with pytest.raises(KeyError):
++        explicit.hard_minutes(*MISSING_PAIR)
++
++
++def test_sealed_legacy_synthetic_fixture_without_quality_fails_closed() -> None:
++    """V4 #1: a legacy sealed fact that only says SYNTHETIC_FIXTURE must not be
++    laundered into a hard fact; only an honest persisted quality is trusted."""
++
++    from app.replanning.provider_snapshots import MobilitySnapshot
++
++    legacy_synthetic = {
++        "source_provider": "mock-mobility",
++        "captured_at": "2026-10-10T09:00:00+00:00",
++        "facts": [
++            {
++                "origin_key": "a",
++                "destination_key": "b",
++                "minutes": 20,
++                "duration_min": 20,
++                "route_provenance": "SYNTHETIC_FIXTURE",
++                # NOTE: no "fact_quality" — exactly the ambiguous legacy shape.
++            }
++        ],
++        "selected_facts": [],
++    }
++    snapshot = MobilitySnapshot.from_evidence(legacy_synthetic)
++    assert snapshot.facts[("a", "b")].fact_quality is None
++    with pytest.raises(KeyError):
++        snapshot.hard_minutes("a", "b")
++
++
++def test_explicit_fact_quality_survives_round_trip() -> None:
++    from app.replanning.provider_snapshots import (
++        EXPLICIT_FROZEN_FIXTURE,
++        MobilitySnapshot,
++    )
++
++    original = MobilitySnapshot.from_minutes(
++        source_provider_key="mock-mobility",
++        minutes={("a", "b"): 15},
++        fact_quality=EXPLICIT_FROZEN_FIXTURE,
++    )
++    reloaded = MobilitySnapshot.from_evidence(original.to_evidence())
++    assert reloaded.facts[("a", "b")].fact_quality == EXPLICIT_FROZEN_FIXTURE
++    assert reloaded.hard_minutes("a", "b") == 15
++
++
++def test_resolve_fact_quality_is_fail_closed() -> None:
++    from app.integrations.mobility.snapshot_capture import _resolve_fact_quality
++    from app.replanning.provider_snapshots import MobilitySnapshot
++
++    class NoAttestation:
++        provider_key = "mystery"
++
++    class RaisingAttestation:
++        provider_key = "mystery"
++
++        def fact_quality(self, _o, _d):
++            raise RuntimeError("classifier blew up")
++
++    # No declared quality and a classifier exception both yield UNKNOWN (None).
++    assert _resolve_fact_quality(NoAttestation(), "a", "b", "mystery") is None
++    assert _resolve_fact_quality(RaisingAttestation(), "a", "b", "mystery") is None
++
++    # An unrecognized quality string is never trusted by the hard gate.
++    snapshot = MobilitySnapshot.from_minutes(
++        source_provider_key="p",
++        minutes={("a", "b"): 10},
++        fact_quality="SOMETHING_UNMAPPED",
++    )
++    assert snapshot.facts[("a", "b")].fact_quality == "SOMETHING_UNMAPPED"
++    with pytest.raises(KeyError):
++        snapshot.hard_minutes("a", "b")
++
++
++# --- V6: legacy provenance inference must be EXACT and fail-closed ---
++
++import pytest as _pytest  # noqa: E402
++from app.replanning.provider_snapshots import (  # noqa: E402
++    EXPLICIT_FROZEN_FIXTURE,
++    LIVE_PROVIDER_CAPTURE,
++    MobilitySnapshot as _MS,
++    _derive_fact_quality_from_provenance as _derive,
++)
++
++# Historical labels the old substring/prefix rules wrongly promoted to LIVE.
++RISKY_LEGACY_LABELS = [
++    "SEALED_REAL_REPLAY_WITH_EXPLICIT_SYNTHETIC_FALLBACK",
++    "SEALED_REPLAY_OR_SYNTHETIC_FIXTURE_EXPLICIT",
++    "CAPTURED_REPLAY",
++    "RUNTIME_CAPTURE",
++    "SEALED_INCIDENT_REPLAY",
++]
++
++
++@_pytest.mark.parametrize("label", RISKY_LEGACY_LABELS)
++def test_v6_ambiguous_legacy_provenance_fails_closed(label) -> None:
++    assert _derive({"route_provenance": label}) is None
++    assert _derive({"provenance": label}) is None
++
++
++def test_v6_only_exact_live_capture_promotes() -> None:
++    assert _derive({"route_provenance": "LIVE_CAPTURE"}) == LIVE_PROVIDER_CAPTURE
++
++
++def test_v6_explicit_quality_overrides_provenance_label() -> None:
++    # Even a legacy LIVE-looking provenance cannot override an explicit tag.
++    assert _derive(
++        {"route_provenance": "CAPTURED_REPLAY", "fact_quality": EXPLICIT_FROZEN_FIXTURE}
++    ) == EXPLICIT_FROZEN_FIXTURE
++    assert _derive({"route_provenance": "LIVE_CAPTURE", "fact_quality": None}) == LIVE_PROVIDER_CAPTURE
++
++
++def test_v6_sealed_synthetic_fallback_payload_hard_rejects() -> None:
++    payload = {
++        "source_provider": "mock-mobility",
++        "captured_at": "2026-10-10T09:00:00+00:00",
++        "facts": [
++            {
++                "origin_key": "a",
++                "destination_key": "b",
++                "minutes": 20,
++                "duration_min": 20,
++                "route_provenance": "SEALED_REAL_REPLAY_WITH_EXPLICIT_SYNTHETIC_FALLBACK",
++            }
++        ],
++        "selected_facts": [],
++    }
++    snapshot = _MS.from_evidence(payload)
++    assert snapshot.facts[("a", "b")].fact_quality is None
++    with pytest.raises(KeyError):
++        snapshot.hard_minutes("a", "b")
+diff --git a/backend/tests/test_qoder_module_mobility_subsets.py b/backend/tests/test_qoder_module_mobility_subsets.py
+new file mode 100644
+index 0000000..1ed4bf0
+--- /dev/null
++++ b/backend/tests/test_qoder_module_mobility_subsets.py
+@@ -0,0 +1,61 @@
++"""V4 #5 sentinel: prove the per-module mobility helper cannot neutralise B1.
++
++For every module subset the helper ships, assert that:
++  * the table is genuinely minimal (a handful of legs, no self-pair, no
++    accidental complete-graph / universal-value table);
++  * a declared leg becomes an EXPLICIT_FROZEN_FIXTURE fact; and
++  * a leg outside the subset stays SYNTHETIC_DEFAULT — the blanket default that
++    hard feasibility must refuse (T2 / B1).
++
++This is the per-module form of the sentinel GPT asked for (LEGACY_TEST_FIXTURE_
++GATE / v4 #5): narrowing the shared table must not have quietly turned
++"missing mobility" into "known mobility" for any module.
++"""
++
++from __future__ import annotations
++
++import pytest
++
++from _qoder_explicit_demo_mobility import (
++    GOLDEN_CONTRACT_MOBILITY,
++    GUARDIAN_MODEL_MOBILITY,
++    POST_GOAL_MOBILITY,
++    SOLVER_RUNTIME_MOBILITY,
++    SOLVER_V2_MOBILITY,
++    VERTICAL_SLICE_MOBILITY,
++    WP06_FOLLOWUP_MOBILITY,
++    WP06_POSTGATE_MOBILITY,
++    seed_explicit_mobility,
++)
++from app.integrations.mock.providers import MockMobilityProvider
++from app.replanning.provider_snapshots import EXPLICIT_FROZEN_FIXTURE, SYNTHETIC_DEFAULT
++
++MODULE_TABLES: dict[str, dict[tuple[str, str], int]] = {
++    "golden_contract": GOLDEN_CONTRACT_MOBILITY,
++    "guardian_model": GUARDIAN_MODEL_MOBILITY,
++    "post_goal": POST_GOAL_MOBILITY,
++    "solver_runtime": SOLVER_RUNTIME_MOBILITY,
++    "solver_v2": SOLVER_V2_MOBILITY,
++    "vertical_slice": VERTICAL_SLICE_MOBILITY,
++    "wp06_followup": WP06_FOLLOWUP_MOBILITY,
++    "wp06_postgate": WP06_POSTGATE_MOBILITY,
++}
++
++# Deliberately outside every module subset: must stay the synthetic default.
++UNDECLARED_PAIR = ("place-river-cruise", "place-old-town")
++
++
++@pytest.mark.parametrize("name,table", list(MODULE_TABLES.items()))
++def test_module_subset_is_minimal_and_undeclared_stays_synthetic(name, table, monkeypatch):
++    assert table, f"{name} must declare a non-empty subset"
++    assert len(table) <= 3, f"{name} subset is broader than per-module minimal"
++    for origin, destination in table:
++        assert origin != destination, f"{name} declares a self-pair (complete-graph tell)"
++    assert UNDECLARED_PAIR not in table, f"{name} unexpectedly declares the sentinel leg"
++
++    seed_explicit_mobility(monkeypatch, table)
++    provider = MockMobilityProvider()
++
++    listed_origin, listed_destination = next(iter(table))
++    assert provider.fact_quality(listed_origin, listed_destination) == EXPLICIT_FROZEN_FIXTURE
++    assert provider.fact_quality(*UNDECLARED_PAIR) == SYNTHETIC_DEFAULT
+diff --git a/backend/tests/test_qoder_physical_identity_contract.py b/backend/tests/test_qoder_physical_identity_contract.py
+new file mode 100644
+index 0000000..9d8e761
+--- /dev/null
++++ b/backend/tests/test_qoder_physical_identity_contract.py
+@@ -0,0 +1,367 @@
++"""T1 — physical venue identity contract.
++
++The predecessor predicate was `same id OR rounded coordinates equal OR token
++intersection`.  Each disjunct can produce a false positive:
++
++* ``str(None) == str(None)`` makes two id-less rows identical;
++* two businesses in one building share a geocoder centroid;
++* ``overpass:node/123`` and ``other:way/123`` share the bare number ``123``.
++
++Identity must be proven by structure.  Coordinates are supporting evidence and
++may only corroborate a matching name and compatible category.
++
++Contract: docs/PHYSICAL_IDENTITY_CONTRACT.md
++"""
++
++from __future__ import annotations
++
++import json
++
++from app.replanning.mock_replan_engine import (
++    AMBIGUOUS,
++    DIFFERENT,
++    SAME,
++    compare_physical_venue,
++    is_same_physical_venue,
++    physical_venue_identity,
++    rank_closure_replacements,
++    should_exclude_replacement_candidate,
++)
++
++# Coordinates of the real Xiamen wrapper/provider pair this contract came from.
++XIAMEN_LAT = 24.4581979
++XIAMEN_LON = 118.0689473
++
++
++class _Place:
++    """Minimal Place stand-in carrying only the identity-bearing fields."""
++
++    def __init__(
++        self,
++        place_id,
++        *,
++        provider_key="overpass",
++        external_id=None,
++        lat=None,
++        lon=None,
++        name=None,
++        category=None,
++        tags=(),
++        duration_min=60,
++        cost_minor=0,
++    ):
++        self.id = place_id
++        self.provider_key = provider_key
++        self.external_id = external_id
++        self.latitude = lat
++        self.longitude = lon
++        self.name = name
++        self.category = category
++        self.tags_json = json.dumps(list(tags))
++        self.metadata_json = json.dumps({"duration_min": duration_min, "cost_minor": cost_minor})
++
++
++def _wrapper():
++    """The domain wrapper row that names the provider row it wraps."""
++
++    return _Place(
++        "e1ced246-e238-5e48-a816-1b82e8b2953c",
++        provider_key="citynexus-v9-domain",
++        external_id="CN-XIAMEN:real-place-07e7689756fa27109a8bff96",
++        lat=XIAMEN_LAT,
++        lon=XIAMEN_LON,
++        name="OSM restaurant",
++        category="restaurant",
++        tags=("indoor",),
++    )
++
++
++def _wrapped_provider_row():
++    """The provider row the wrapper explicitly references."""
++
++    return _Place(
++        "real-place-07e7689756fa27109a8bff96",
++        provider_key="overpass",
++        external_id="overpass:node/1588295483",
++        lat=XIAMEN_LAT,
++        lon=XIAMEN_LON,
++        name="OSM restaurant",
++        category="restaurant",
++        tags=("indoor",),
++    )
++
++
++def _different_venue():
++    return _Place(
++        "real-place-1564f860645d87ceaae7949a",
++        provider_key="overpass",
++        external_id="overpass:node/999999",
++        lat=24.5,
++        lon=118.12,
++        name="必胜客",
++        category="restaurant",
++        tags=("indoor",),
++    )
++
++
++# --------------------------------------------------------------------------
++# Required regressions 1-9 (docs/TEST_MATRIX.md, docs/PHYSICAL_IDENTITY_CONTRACT.md)
++# --------------------------------------------------------------------------
++
++
++def test_regression_01_two_null_ids_are_not_the_same_venue() -> None:
++    """`str(None) == str(None)` must never establish identity.
++
++    Two id-less rows with no corroborating evidence at all are not the same
++    venue.  (A shared coordinate *plus* an identical name is a different case
++    and is covered separately below.)
++    """
++
++    left = _Place(None, external_id=None, name="A")
++    right = _Place(None, external_id=None, name="B")
++    assert compare_physical_venue(left, right) == DIFFERENT
++    assert is_same_physical_venue(left, right) is False
++
++
++def test_null_ids_with_shared_coordinate_alone_are_still_different() -> None:
++    """Null ids never become identity through coordinates on their own."""
++
++    left = _Place(None, external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name=None)
++    right = _Place(None, external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name=None)
++    assert compare_physical_venue(left, right) == DIFFERENT
++
++
++def test_regression_01b_empty_string_ids_are_not_the_same_venue() -> None:
++    left = _Place("", external_id=None, name="A")
++    right = _Place("   ", external_id=None, name="A")
++    assert compare_physical_venue(left, right) == DIFFERENT
++
++
++def test_regression_02_identical_non_empty_row_id_is_same() -> None:
++    left = _Place("place-1", external_id=None, name="A")
++    right = _Place("place-1", external_id=None, name="A")
++    assert compare_physical_venue(left, right) == SAME
++
++
++def test_regression_03_explicit_wrapper_reference_is_same() -> None:
++    """The wrapper names the provider row; that relation is structural."""
++
++    assert compare_physical_venue(_wrapper(), _wrapped_provider_row()) == SAME
++    # Order must not matter.
++    assert compare_physical_venue(_wrapped_provider_row(), _wrapper()) == SAME
++
++
++def test_regression_04_same_coordinates_different_names_are_not_same() -> None:
++    left = _Place("a", external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name="咖啡店")
++    right = _Place("b", external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name="理发店")
++    assert compare_physical_venue(left, right) == DIFFERENT
++
++
++def test_regression_05_same_building_different_shops_are_not_same() -> None:
++    """One building centroid routinely holds several distinct venues."""
++
++    shop_a = _Place(
++        "shop-a", external_id=None, lat=24.4798, lon=118.0894, name="三楼川菜", category="restaurant"
++    )
++    shop_b = _Place(
++        "shop-b", external_id=None, lat=24.4798, lon=118.0894, name="一楼便利店", category="shop"
++    )
++    assert compare_physical_venue(shop_a, shop_b) == DIFFERENT
++
++
++def test_regression_06_osm_node_and_way_with_same_number_are_not_same() -> None:
++    """`node/123` and `way/123` are different OSM objects."""
++
++    node = _Place("x", external_id="overpass:node/12345678", lat=1.0, lon=1.0, name="X")
++    way = _Place("y", external_id="overpass:way/12345678", lat=9.0, lon=9.0, name="Y")
++    assert compare_physical_venue(node, way) == DIFFERENT
++
++
++def test_regression_07_same_number_across_providers_is_not_same() -> None:
++    overpass = _Place("x", external_id="overpass:node/12345678", lat=1.0, lon=1.0, name="X")
++    other = _Place("y", external_id="otherprovider:node/12345678", lat=9.0, lon=9.0, name="Y")
++    assert compare_physical_venue(overpass, other) == DIFFERENT
++
++
++def test_regression_08_provider_scoped_identity_survives_coordinate_drift() -> None:
++    """Same provider tuple with small drift is still the same venue."""
++
++    left = _Place("a", external_id="overpass:node/1588295483", lat=XIAMEN_LAT, lon=XIAMEN_LON, name="OSM restaurant")
++    right = _Place(
++        "b",
++        external_id="overpass:node/1588295483",
++        lat=XIAMEN_LAT + 0.0004,
++        lon=XIAMEN_LON + 0.0004,
++        name="OSM restaurant",
++    )
++    assert compare_physical_venue(left, right) == SAME
++
++
++def test_regression_09_cross_reference_with_coordinate_drift_is_same() -> None:
++    drifted = _wrapped_provider_row()
++    drifted.latitude = XIAMEN_LAT + 0.0009
++    drifted.longitude = XIAMEN_LON + 0.0009
++    assert compare_physical_venue(_wrapper(), drifted) == SAME
++
++
++def test_coordinate_only_evidence_is_never_enough() -> None:
++    """Regression 4 of the contract: coordinates alone are not identity."""
++
++    left = _Place("a", external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name=None)
++    right = _Place("b", external_id=None, lat=XIAMEN_LAT, lon=XIAMEN_LON, name=None)
++    assert compare_physical_venue(left, right) == DIFFERENT
++
++
++def test_same_coordinate_same_name_incompatible_category_is_ambiguous() -> None:
++    """Ambiguity must be expressible so callers can fail safe."""
++
++    left = _Place("a", external_id=None, lat=1.0, lon=1.0, name="中心", category="restaurant")
++    right = _Place("b", external_id=None, lat=1.0, lon=1.0, name="中心", category="museum")
++    assert compare_physical_venue(left, right) == AMBIGUOUS
++    # V2-T1: identity truth is SAME-only; AMBIGUOUS is NOT "same".
++    assert is_same_physical_venue(left, right) is False
++    # ...but AMBIGUOUS still fails safe for replacement exclusion.
++    assert should_exclude_replacement_candidate(left, right) is True
++
++
++# --------------------------------------------------------------------------
++# V2-T1 hardening regressions (docs/T1_IDENTITY_HARDENING.md, HARD_BLOCKERS B2)
++# --------------------------------------------------------------------------
++
++
++def _cross_provider_same_venue():
++    """Overpass node and a different provider's place id for one restaurant."""
++
++    overpass = _Place(
++        "p1", external_id="overpass:node/555000111", lat=XIAMEN_LAT, lon=XIAMEN_LON,
++        name="沙坡尾咖啡馆", category="cafe",
++    )
++    other = _Place(
++        "p2", external_id="foursquare:place/ABC123XYZ", lat=XIAMEN_LAT, lon=XIAMEN_LON,
++        name="沙坡尾咖啡馆", category="cafe",
++    )
++    return overpass, other
++
++
++def test_v2_01_cross_provider_same_venue_is_ambiguous_not_different() -> None:
++    """Different provider ids are not proof of different physical venues."""
++
++    overpass, other = _cross_provider_same_venue()
++    verdict = compare_physical_venue(overpass, other)
++    assert verdict == AMBIGUOUS
++    # Fail-safe: excluded from replacement family, yet not claimed as same.
++    assert is_same_physical_venue(overpass, other) is False
++    assert should_exclude_replacement_candidate(overpass, other) is True
++
++
++def test_v2_02_same_provider_different_objects_clearly_different_is_different() -> None:
++    """Same namespace, different objects, no corroborating signature -> DIFFERENT."""
++
++    a = _Place("a", external_id="overpass:node/111", lat=1.0, lon=1.0, name="甲馆")
++    b = _Place("b", external_id="overpass:way/222", lat=9.0, lon=9.0, name="乙馆")
++    assert compare_physical_venue(a, b) == DIFFERENT
++    assert should_exclude_replacement_candidate(a, b) is False
++
++
++def test_v2_03_arbitrary_uppercase_external_id_is_not_a_wrapper() -> None:
++    """Only documented CN-<CODE> ids may act as a CityNexus wrapper reference."""
++
++    arbitrary = _Place("row-x", external_id="FOO-SOMETHING:real-place-abc", name="Nope")
++    identity = physical_venue_identity(arbitrary)
++    assert identity is not None
++    assert identity.wrapper_reference is None
++    # It must not falsely lock onto a provider row sharing the tail token.
++    provider_row = _Place("real-place-abc", external_id="overpass:node/777", name="Else")
++    assert compare_physical_venue(arbitrary, provider_row) == DIFFERENT
++
++
++def test_v2_04_cross_provider_alias_excluded_from_replacement_family() -> None:
++    """A closed venue re-described under another provider must not be re-offered."""
++
++    closed, alias = _cross_provider_same_venue()
++    choices = rank_closure_replacements(
++        affected_place=closed,
++        candidate_places=[alias, _different_venue()],
++        occupied_place_ids={closed.id},
++        max_duration_min=90,
++    )
++    offered = [choice.place_id for choice in choices]
++    assert alias.id not in offered, "a closed venue reappeared under a cross-provider alias"
++    assert offered == [_different_venue().id]
++
++
++# --------------------------------------------------------------------------
++# V3-4 near-coordinate identity (docs/T1_NEAR_IDENTITY_GATE.md)
++# --------------------------------------------------------------------------
++
++
++def _two_providers(name, category, lat_a, lon_a, lat_b, lon_b):
++    a = _Place("a", provider_key="overpass", external_id="overpass:node/90001",
++               lat=lat_a, lon=lon_a, name=name, category=category)
++    b = _Place("b", provider_key="foursquare", external_id="foursquare:place/XYZ7",
++               lat=lat_b, lon=lon_b, name=name, category=category)
++    return a, b
++
++
++def test_v3_04_cross_provider_near_drift_is_ambiguous_not_different() -> None:
++    """Same venue a provider geocodes a few to a few tens of metres apart."""
++
++    # ~10 m drift in latitude (~0.00009 deg).
++    a, b = _two_providers("沙坡尾小馆", "restaurant", XIAMEN_LAT, XIAMEN_LON, XIAMEN_LAT + 0.00009, XIAMEN_LON)
++    assert compare_physical_venue(a, b) == AMBIGUOUS
++    assert is_same_physical_venue(a, b) is False
++    assert should_exclude_replacement_candidate(a, b) is True
++
++
++def test_v3_04_cross_provider_far_apart_is_different() -> None:
++    """Same name/category but ~2 km apart are clearly different venues."""
++
++    a, b = _two_providers("连锁咖啡", "cafe", XIAMEN_LAT, XIAMEN_LON, XIAMEN_LAT + 0.018, XIAMEN_LON)
++    assert compare_physical_venue(a, b) == DIFFERENT
++
++
++def test_v3_04_same_chain_different_branch_beyond_threshold_is_different() -> None:
++    """A shared chain name must not merge branches separated by ~500 m."""
++
++    a, b = _two_providers("全家便利店", "convenience", XIAMEN_LAT, XIAMEN_LON, XIAMEN_LAT + 0.0045, XIAMEN_LON)
++    assert compare_physical_venue(a, b) == DIFFERENT
++
++
++def test_identity_extraction_reads_provider_tuple_not_bare_number() -> None:
++    identity = physical_venue_identity(_wrapped_provider_row())
++    assert identity is not None
++    assert identity.provider_scoped == ("overpass", "node", "1588295483")
++    wrapper_identity = physical_venue_identity(_wrapper())
++    assert wrapper_identity is not None
++    assert wrapper_identity.wrapper_reference == "real-place-07e7689756fa27109a8bff96"
++    assert wrapper_identity.provider_scoped is None
++
++
++def test_regression_10_closed_venue_is_excluded_from_its_own_replacement_family() -> None:
++    """The closed wrapper and the provider row it wraps are both excluded."""
++
++    choices = rank_closure_replacements(
++        affected_place=_wrapper(),
++        candidate_places=[_wrapped_provider_row(), _different_venue()],
++        occupied_place_ids={_wrapper().id},
++        max_duration_min=90,
++    )
++    offered = [choice.place_id for choice in choices]
++    assert _wrapped_provider_row().id not in offered, (
++        "the closed venue reappeared as its own replacement"
++    )
++    assert offered == [_different_venue().id]
++
++
++def test_occupied_venue_is_not_reused_under_another_id() -> None:
++    already_used = _wrapped_provider_row()
++    choices = rank_closure_replacements(
++        affected_place=_different_venue(),
++        candidate_places=[already_used, _wrapper()],
++        occupied_place_ids={already_used.id},
++        occupied_places=[already_used],
++        max_duration_min=90,
++    )
++    assert all(
++        choice.place_id not in {already_used.id, _wrapper().id} for choice in choices
++    ), "a venue already used in the plan was offered again under a different id"
+diff --git a/backend/tests/test_solver_runtime_gate.py b/backend/tests/test_solver_runtime_gate.py
+index a5e1ca4..9190c12 100644
+--- a/backend/tests/test_solver_runtime_gate.py
++++ b/backend/tests/test_solver_runtime_gate.py
+@@ -25,6 +25,21 @@ from app.planning.solver_runtime import SolverAttempt
+ client = TestClient(main_module.app)
+ 
+ 
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# These gate tests exercise solver/window/budget behaviour on top of a real
++# replan, so give the demo graph *explicit* mobility rather than a fabricated
++# constant (see tests/_qoder_explicit_demo_mobility.py).
++from _qoder_explicit_demo_mobility import (  # noqa: E402
++    SOLVER_RUNTIME_MOBILITY as _MODULE_MOBILITY,
++    seed_module_mobility as _seed,
++)
++
++
++@pytest.fixture(autouse=True)
++def _explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
++
++
+ def _prepare_disruption() -> tuple[str, dict[str, object], dict[str, object]]:
+     ids = client.post("/api/v1/demo/reset").json()
+     journey_id = ids["journey_id"]
+diff --git a/backend/tests/test_solver_v2_integration.py b/backend/tests/test_solver_v2_integration.py
+index 49faf41..58b0426 100644
+--- a/backend/tests/test_solver_v2_integration.py
++++ b/backend/tests/test_solver_v2_integration.py
+@@ -57,3 +57,15 @@ def test_replan_v2_materializes_multi_slot_candidates_through_the_existing_gate(
+         headers={"Idempotency-Key": f"v2-accept-{uuid4()}"},
+     )
+     assert accepted.status_code == 200, accepted.text
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import SOLVER_V2_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_v12_authoritative_trip_execution.py b/backend/tests/test_v12_authoritative_trip_execution.py
+index 478571b..1d93bd9 100644
+--- a/backend/tests/test_v12_authoritative_trip_execution.py
++++ b/backend/tests/test_v12_authoritative_trip_execution.py
+@@ -204,9 +204,16 @@ def test_v12_studio_protects_locked_order() -> None:
+     assert "PROTECTED_ACTIVITY_REORDER" in preview.json()["deterministic_gate"]["failures"]
+ 
+ 
+-def test_v12_autonomous_recovery_uses_preauthorized_envelope() -> None:
++def test_v12_autonomous_recovery_uses_preauthorized_envelope(monkeypatch) -> None:
+     client = TestClient(app)
+     journey_id, place_ids, commitment_id = _journey_with_inputs()
++    # V4 #1 (T2 hard truth gate): the grounded-recovery path re-uses the frozen
++    # baseline snapshot and hard-gates the selected route legs it evaluates.
++    # This scenario declares those legs as EXPLICIT DETERMINISTIC FIXTURE facts
++    # (test fixture values, NOT live/Xiamen mobility).  A pair outside the table
++    # stays unseeded/synthetic, so the mock blanket default is never laundered
++    # into a hard fact (B1 intact).  Shared with V13's authoritative journey.
++    seed_authoritative_recovery_mobility(monkeypatch, journey_id)
+     composed = client.post(
+         f"/api/v1/journeys/{journey_id}/plans/authoritative-compose",
+         json={"place_ids": place_ids, "candidate_count": 1, "reservation_id": commitment_id},
+@@ -295,3 +302,13 @@ def test_v12_autonomous_recovery_uses_preauthorized_envelope() -> None:
+     assert accepted.json()["decision"] == "ALLOW_AUTO"
+     assert accepted.json()["executed"] is True
+     assert accepted.json()["result"]["journey"]["active_plan_version_id"] != base_plan["id"]
++
++
++# V4 #5: V12 uses v12-scoped node keys (v12:{journey_id}:* and v12-test-place-*),
++# so the shared place-* demo table was irrelevant to it.  The autonomous-recovery
++# scenario now declares its OWN explicit deterministic fixture legs in-test
++# (seed_explicit_mobility); no module-wide autouse inheritance.
++import pytest as _pytest  # noqa: E402,F401
++from _qoder_explicit_demo_mobility import (  # noqa: E402
++    seed_authoritative_recovery_mobility,
++)
+diff --git a/backend/tests/test_v13_integrity.py b/backend/tests/test_v13_integrity.py
+index 16246cb..bf9fbfd 100644
+--- a/backend/tests/test_v13_integrity.py
++++ b/backend/tests/test_v13_integrity.py
+@@ -34,6 +34,7 @@ from app.db.models import (
+ from app.db.session import SessionLocal
+ from app.main import app
+ from test_v12_authoritative_trip_execution import _journey_with_inputs
++from _qoder_explicit_demo_mobility import seed_authoritative_recovery_mobility
+ 
+ 
+ def _started_journey() -> tuple[TestClient, str, dict, list[str]]:
+@@ -603,12 +604,17 @@ def test_v13_trip_studio_rejects_a_missing_frozen_matrix_pair() -> None:
+     assert "TRIP_STUDIO_DETERMINISTIC_GATE_FAILED" in rejected.text
+ 
+ 
+-def test_v13_authoritative_predictive_recovery_executes_through_gateway_and_offline_truth() -> None:
++def test_v13_authoritative_predictive_recovery_executes_through_gateway_and_offline_truth(monkeypatch) -> None:
+     """Provider replay -> Event -> Guardian -> gate -> accepted Plan -> projections."""
+ 
+     stop_autorun()
+     client = TestClient(app)
+     journey_id, place_ids, commitment_id = _journey_with_inputs()
++    # V5 (T2 same-env): the predictive recovery hard-gates the same v12-style
++    # authoritative journey, so this scenario declares its route legs explicitly
++    # as deterministic fixture facts (not laundered synthetic default).  A pair
++    # outside the table stays synthetic/unavailable, so B1 is not neutralised.
++    seed_authoritative_recovery_mobility(monkeypatch, journey_id)
+     composed = client.post(
+         f"/api/v1/journeys/{journey_id}/plans/authoritative-compose",
+         json={"place_ids": place_ids, "candidate_count": 1, "reservation_id": commitment_id},
+diff --git a/backend/tests/test_v6_predictive_real_city.py b/backend/tests/test_v6_predictive_real_city.py
+index 5ed66c9..5094a0f 100644
+--- a/backend/tests/test_v6_predictive_real_city.py
++++ b/backend/tests/test_v6_predictive_real_city.py
+@@ -5,6 +5,7 @@ from uuid import uuid4
+ from fastapi.testclient import TestClient
+ 
+ import app.main as main_module
++from _qoder_explicit_demo_mobility import seed_explicit_mobility
+ from app.agent.autorun import ensure_enrollment, run_once, stop_autorun
+ from app.db.models import Journey, PlanVersion
+ from app.db.session import SessionLocal
+@@ -31,8 +32,27 @@ def _autonomous_policy(traveler_id: str) -> None:
+     assert response.status_code == 200, response.text
+ 
+ 
+-def test_v6_predictive_real_city_twin_prevents_failure_before_hard_break() -> None:
++def test_v6_predictive_real_city_twin_prevents_failure_before_hard_break(monkeypatch) -> None:
+     stop_autorun()
++    # V5 (T2 same-env): the predictive recovery hard-gates the real-city replay
++    # legs plus the demo legs this offline journey traverses.  Declare them as
++    # explicit deterministic FIXTURE facts (scenario/replay values, NOT live
++    # mobility).  A leg outside this set stays unseeded/synthetic -> unavailable,
++    # so the mock blanket default is never laundered into a hard fact (B1 intact).
++    seed_explicit_mobility(
++        monkeypatch,
++        {
++            ("place-food-hall", "place-river-cruise"): 16,
++            ("place-food-hall", "real-place-2a59f43244feca0eeced4bfa"): 12,
++            ("place-old-town", "place-city-park"): 22,
++            ("place-old-town", "place-design-library"): 10,
++            ("place-old-town", "real-place-7836d8cd2e948d6d1a0773e7"): 14,
++            ("place-old-town", "real-place-b0557d41934f83a861634fe2"): 18,
++            ("real-place-2a59f43244feca0eeced4bfa", "place-river-cruise"): 16,
++            ("real-place-7836d8cd2e948d6d1a0773e7", "place-river-cruise"): 14,
++            ("real-place-b0557d41934f83a861634fe2", "place-river-cruise"): 18,
++        },
++    )
+     ids = client.post("/api/v1/demo/reset").json()
+     journey_id = ids["journey_id"]
+     generated = client.post(
+diff --git a/backend/tests/test_vertical_slice_hardening_next.py b/backend/tests/test_vertical_slice_hardening_next.py
+index 2821fdc..452e7b3 100644
+--- a/backend/tests/test_vertical_slice_hardening_next.py
++++ b/backend/tests/test_vertical_slice_hardening_next.py
+@@ -99,3 +99,15 @@ def test_aware_utc_event_is_normalized_to_journey_local_schedule_before_f3():
+     local_event = datetime.fromisoformat(evidence["window_opens_at"])
+     assert local_event.isoformat() == "2026-10-10T13:25:00+08:00"
+     assert evidence["origin_key"] == "place-tech-art"
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import VERTICAL_SLICE_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_wp06_followup_assist.py b/backend/tests/test_wp06_followup_assist.py
+index eda686a..cedd211 100644
+--- a/backend/tests/test_wp06_followup_assist.py
++++ b/backend/tests/test_wp06_followup_assist.py
+@@ -222,3 +222,15 @@ def test_f3_family_is_backed_by_next_c4_window_evidence():
+     assert verified["commitment_preservation"]["protected_count"] >= 1
+     assert verified["mobility"]["provider"] == "mock-mobility"
+     assert verified["opportunity"]["evidence"] == evidence
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import WP06_FOLLOWUP_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/backend/tests/test_wp06_postgate_candidate_provenance.py b/backend/tests/test_wp06_postgate_candidate_provenance.py
+index 49c733a..95f514b 100644
+--- a/backend/tests/test_wp06_postgate_candidate_provenance.py
++++ b/backend/tests/test_wp06_postgate_candidate_provenance.py
+@@ -105,3 +105,15 @@ def test_public_event_provenance_is_server_assigned_and_demo_time_is_determinist
+     with SessionLocal() as session:
+         stored = session.get(Event, fallback.json()["id"])
+         assert stored.provenance == "USER_REPORTED"
++
++
++# V2-B1: replan now refuses the mock fixture's blanket default 20 as a hard fact.
++# Seed the demo graph with *explicit* mobility so these replan-dependent tests
++# exercise trustworthy legs (see tests/_qoder_explicit_demo_mobility.py).
++import pytest as _pytest  # noqa: E402
++from _qoder_explicit_demo_mobility import WP06_POSTGATE_MOBILITY as _MODULE_MOBILITY, seed_module_mobility as _seed  # noqa: E402
++
++
++@_pytest.fixture(autouse=True)
++def _qoder_explicit_demo_mobility(monkeypatch):
++    _seed(monkeypatch, _MODULE_MOBILITY)
+diff --git a/frontend/e2e/qoder-ack-rendered.spec.ts b/frontend/e2e/qoder-ack-rendered.spec.ts
+new file mode 100644
+index 0000000..abc33e1
+--- /dev/null
++++ b/frontend/e2e/qoder-ack-rendered.spec.ts
+@@ -0,0 +1,334 @@
++/**
++ * T3 — acknowledgement vs resolution (docs/ACK_RESOLUTION_CONTRACT.md).
++ * LAYER: integration (RENDERED component), not unit.
++ *
++ * Unlike e2e/qoder-ack-resolution.spec.ts (which drives the pure predicate via
++ * `page.evaluate(import .../disruptionState.ts)` and is labelled unit), this
++ * spec renders the real React surface: it serves deterministic fixtures through
++ * `page.route` for every API the application actually fetches, boots the real
++ * V8Experience shell on the real `/v8/live` route, and lets the real
++ * `LiveRecovery` component (`src/features/execution/LiveRecovery.tsx`) paint.
++ * The assertions are on rendered DOM (`getByTestId` / `getByText`), never on an
++ * imported function's return value.
++ *
++ * What this pins (the V2-T3 fix — the old `acknowledgedOnly > 0 && openDisruptions
++ * === 0` guard made the "已知晓，仍待处理" notice unreachable, because an
++ * acknowledged-only event is by construction a subset of the open set):
++ *   1. An ACKNOWLEDGED disruption with NO linked ACCEPTED replan stays open, so
++ *      BOTH "发生了什么" (live-disruption) AND "已知晓，仍待处理"
++ *      (live-acknowledged) render at the same time.
++ *   2. An ACCEPTED proposal whose trigger_event_id matches the event closes it:
++ *      neither the open notice nor the acknowledged notice is shown; the event
++ *      surfaces as handled instead.
++ *   3. An ACCEPTED proposal with an UNRELATED trigger_event_id does NOT close the
++ *      event; it stays open (both notices still render).
++ *
++ * Endpoints mocked (the exact URLs LiveRecovery + its V8Experience shell fetch):
++ *   /api/v1/journeys/{id}/experience      (shell `load()` + LiveRecovery disruption
++ *                                          merge of active_plan.disruptions)
++ *   /api/v1/journeys/{id}/replans         (LiveRecovery proposals -> acceptedTriggerIds)
++ *   /api/v1/journeys/{id}/plans           (authoritative plans via useAuthoritativePlans)
++ *   /api/v1/journeys/{id}/twin            (authoritative twin via useAuthoritativeTwin)
++ *   /api/v1/travelers/{id}/agent-policy   (shell boot)
++ *   /api/v1/journeys/{id}/wallet          (shell boot)
++ *   /api/v1/journeys/{id}/offline-snapshot(shell boot; written to Dexie, needs journey_id)
++ *   /api/v1/agent/runtime-status          (shell boot)
++ *   everything else under /api/v1/        (sibling Live / V10 panels) -> {} neutral state
++ */
++
++import { expect, test, type Page } from "@playwright/test";
++
++const JOURNEY_ID = "e2e-render-journey";
++const TRAVELER_ID = "e2e-render-traveler";
++
++/**
++ * Boot the real app in a deterministic, isolated way:
++ *  - seed the journey id the shell reads from localStorage on boot, and force
++ *    the zh-CN locale so the live copy ("发生了什么" / "已知晓，仍待处理") is the
++ *    literal string the review asked to see on screen;
++ *  - neuter the PWA service worker registration so it can never serve a cached
++ *    shell and our route fixtures stay authoritative.
++ */
++async function seed(page: Page) {
++  await page.addInitScript(() => {
++    localStorage.setItem("citynexus.v8.journey_id", "e2e-render-journey");
++    localStorage.setItem("citynexus.locale", "zh-CN");
++    // Prevent the dev service worker from registering / claiming clients.
++    try {
++      // eslint-disable-next-line @typescript-eslint/no-explicit-any
++      (navigator as any).serviceWorker.register = () => Promise.resolve({});
++    } catch {
++      /* no-op */
++    }
++  });
++}
++
++type Disruption = {
++  id: string;
++  type: string;
++  severity: string;
++  status?: string | null;
++  affected_activity_id: string | null;
++  occurred_at: string;
++  resolved_at?: string | null;
++};
++
++type Proposal = {
++  id: string;
++  status: string;
++  trigger_event_id?: string | null;
++  hard_constraints_passed: boolean;
++  locked_commitments_preserved: boolean;
++  diff: { removed?: string[]; added?: string[]; moved?: string[] };
++};
++
++function experienceFixture(disruptions: Disruption[]) {
++  return {
++    journey: {
++      id: JOURNEY_ID,
++      traveler_id: TRAVELER_ID,
++      title: "厦门周末",
++      city_code: "CN-XIAMEN",
++      timezone: "Asia/Shanghai",
++      start_at: "2026-10-09T18:00:00+08:00",
++      end_at: "2026-10-11T15:00:00+08:00",
++      budget: { amount_minor: 120000, currency: "CNY" },
++    },
++    trip: {
++      arrival_anchor: { at: "2026-10-09T18:00:00+08:00", location: "厦门站" },
++      departure_anchor: { at: "2026-10-11T15:00:00+08:00", location: "厦门高崎机场" },
++      party_size: 2,
++      occupancy: { adults: 2, rooms: 1 },
++      stay_budget: { amount_minor: 70000, currency: "CNY" },
++    },
++    offers: [],
++    options: [],
++    selected_option_id: null,
++    mobility_facts: [],
++    active_plan: {
++      id: "plan-1",
++      version_no: 1,
++      status: "ACTIVE",
++      source: "E2E_RENDER",
++      current_activity_id: null,
++      // Deliberately no located activities / legs: keeps MapPanel in its honest
++      // empty state so maplibre never loads external tiles.
++      activities: [],
++      legs: [],
++      user_location: null,
++      disruptions,
++    },
++    recovery: null,
++    experience_flags: {
++      needs_review: false,
++      recovery_required: false,
++      staleness: false,
++      feasibility_failures: [],
++    },
++  };
++}
++
++function offlineFixture() {
++  return {
++    journey_id: JOURNEY_ID,
++    sequence: 1,
++    valid_until: "2026-12-31T00:00:00Z",
++    snapshot: {
++      active_plan_version_id: null,
++      current_activity_id: null,
++      next_24h: [],
++      legs: [],
++      hotel: null,
++      reservations: [],
++      read_only: true,
++      financial_actions_allowed: false,
++    },
++    provider_freshness: { latest_provider_capture_at: null, transit_realtime: "UNKNOWN" },
++    updated_at: "2026-10-09T10:00:00Z",
++  };
++}
++
++/** One dispatcher on /api/v1/ so route-registration order can never bite. */
++async function mockApi(page: Page, fx: { experience: unknown; replans: unknown }) {
++  await page.route(/\/api\/v1\//, (route) => {
++    const pathname = new URL(route.request().url()).pathname;
++    const send = (json: unknown) =>
++      route.fulfill({
++        status: 200,
++        contentType: "application/json",
++        body: JSON.stringify(json),
++      });
++    if (pathname.endsWith("/experience")) return send(fx.experience);
++    if (pathname.endsWith("/replans")) return send(fx.replans);
++    if (pathname.endsWith("/plans")) return send([]);
++    if (pathname.endsWith("/twin")) return send({ id: "twin-1", context: {} });
++    if (pathname.endsWith("/agent-policy"))
++      return send({
++        mode: "ADVISORY",
++        auto_accept_replan: false,
++        version: 1,
++        max_auto_replan_cost_delta_minor: 5000,
++        max_auto_loss_minor: 0,
++        max_auto_schedule_drift_min: 20,
++      });
++    if (pathname.endsWith("/wallet"))
++      return send({ reservations: [], commitments: [], offline_ready: true });
++    if (pathname.endsWith("/offline-snapshot")) return send(offlineFixture());
++    if (pathname.endsWith("/runtime-status")) return send({});
++    // The /v8/live route also mounts V10LiveExecutionPanel, which reads
++    // `web.data.observations.length` (not optional beyond web.data) and
++    // `new Date(clock.data.now)`, so these must be well-formed.
++    if (pathname.endsWith("/execution-clock"))
++      return send({ now: "2026-10-09T10:00:00+08:00", timezone: "Asia/Shanghai", current_activity_id: null });
++    if (pathname.endsWith("/web-observations")) return send({ observations: [] });
++    return send({});
++  });
++}
++
++const WEATHER_EVENT: Disruption = {
++  id: "evt-1",
++  type: "WEATHER",
++  severity: "MEDIUM",
++  status: "ACKNOWLEDGED",
++  affected_activity_id: null,
++  occurred_at: "2026-10-09T20:00:00+08:00",
++};
++
++test.describe("T3 acknowledgement vs resolution (rendered integration)", () => {
++  test("an ACKNOWLEDGED disruption with no linked acceptance stays open: both '发生了什么' and '已知晓，仍待处理' render", async ({
++    page,
++  }) => {
++    await seed(page);
++    // No ACCEPTED replan behind the event at all.
++    await mockApi(page, { experience: experienceFixture([WEATHER_EVENT]), replans: [] });
++    await page.goto("/v8/live", { waitUntil: "domcontentloaded" });
++
++    // The real LiveRecovery section mounted.
++    await expect(page.getByTestId("live-recovery")).toBeVisible();
++
++    // V2-T3 fix: the acknowledged-only notice is now reachable WHILE the event is
++    // still open — the two co-render (the old dead-condition could not).
++    const disruption = page.getByTestId("live-disruption");
++    await expect(disruption).toBeVisible();
++    await expect(disruption).toContainText("发生了什么");
++
++    const acknowledged = page.getByTestId("live-acknowledged");
++    await expect(acknowledged).toBeVisible();
++    await expect(acknowledged).toContainText("已知晓，仍待处理");
++
++    // The traveller has only seen it; nothing is handled yet.
++    await expect(page.getByTestId("live-handled")).toHaveCount(0);
++  });
++
++  test("an ACCEPTED proposal linked to the event by trigger_event_id closes it: no open/acknowledged notice, shown as handled", async ({
++    page,
++  }) => {
++    await seed(page);
++    const accepted: Proposal = {
++      id: "r1",
++      status: "ACCEPTED",
++      trigger_event_id: "evt-1",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await mockApi(page, { experience: experienceFixture([WEATHER_EVENT]), replans: [accepted] });
++    await page.goto("/v8/live", { waitUntil: "domcontentloaded" });
++
++    await expect(page.getByTestId("live-recovery")).toBeVisible();
++    // Exact linkage resolves the event -> it is no longer in the open set, so the
++    // "发生了什么" block and the "已知晓，仍待处理" notice both disappear.
++    await expect(page.getByTestId("live-disruption")).toHaveCount(0);
++    await expect(page.getByTestId("live-acknowledged")).toHaveCount(0);
++    await expect(page.getByTestId("live-handled")).toBeVisible();
++  });
++
++  test("an ACCEPTED proposal with an UNRELATED trigger_event_id leaves the event open", async ({
++    page,
++  }) => {
++    await seed(page);
++    const acceptedUnrelated: Proposal = {
++      id: "r2",
++      status: "ACCEPTED",
++      trigger_event_id: "evt-999",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await mockApi(page, {
++      experience: experienceFixture([WEATHER_EVENT]),
++      replans: [acceptedUnrelated],
++    });
++    await page.goto("/v8/live", { waitUntil: "domcontentloaded" });
++
++    await expect(page.getByTestId("live-recovery")).toBeVisible();
++    // Accepting a proposal for a DIFFERENT event must not silently resolve this one.
++    await expect(page.getByTestId("live-disruption")).toBeVisible();
++    await expect(page.getByTestId("live-disruption")).toContainText("发生了什么");
++    await expect(page.getByTestId("live-acknowledged")).toBeVisible();
++    await expect(page.getByTestId("live-handled")).toHaveCount(0);
++  });
++});
++
++/**
++ * V3-5: the SAME rule must hold on the Today surface, not only Live.  The
++ * `today-attention` cell in V8Experience counts OPEN disruptions via the shared
++ * `isDisruptionOpen`, so an acknowledged-only event is a countable unresolved
++ * change there too, and a matching accepted replan drops it from the count.
++ */
++test.describe("T3 ack vs resolution — Today surface (rendered integration)", () => {
++  test("an ACKNOWLEDGED event with no acceptance stays an unresolved change on Today", async ({
++    page,
++  }) => {
++    await seed(page);
++    await mockApi(page, { experience: experienceFixture([WEATHER_EVENT]), replans: [] });
++    await page.goto("/v8/today", { waitUntil: "domcontentloaded" });
++
++    const attention = page.getByTestId("today-attention");
++    await expect(attention).toBeVisible();
++    await expect(attention).toContainText("1 项变化");
++  });
++
++  test("a matching ACCEPTED replan clears the change count on Today", async ({ page }) => {
++    await seed(page);
++    const accepted: Proposal = {
++      id: "r1",
++      status: "ACCEPTED",
++      trigger_event_id: "evt-1",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await mockApi(page, { experience: experienceFixture([WEATHER_EVENT]), replans: [accepted] });
++    await page.goto("/v8/today", { waitUntil: "domcontentloaded" });
++
++    const attention = page.getByTestId("today-attention");
++    await expect(attention).toBeVisible();
++    // No longer an open/unresolved change once the linked recovery is accepted.
++    await expect(attention).not.toContainText("1 项变化");
++  });
++
++  test("an UNRELATED accepted proposal still leaves the change unresolved on Today", async ({
++    page,
++  }) => {
++    await seed(page);
++    const acceptedUnrelated: Proposal = {
++      id: "r2",
++      status: "ACCEPTED",
++      trigger_event_id: "evt-999",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await mockApi(page, {
++      experience: experienceFixture([WEATHER_EVENT]),
++      replans: [acceptedUnrelated],
++    });
++    await page.goto("/v8/today", { waitUntil: "domcontentloaded" });
++
++    const attention = page.getByTestId("today-attention");
++    await expect(attention).toBeVisible();
++    // Accepting a proposal for a DIFFERENT event must not clear this one on Today.
++    await expect(attention).toContainText("1 项变化");
++  });
++});
+diff --git a/frontend/e2e/qoder-ack-resolution.spec.ts b/frontend/e2e/qoder-ack-resolution.spec.ts
+new file mode 100644
+index 0000000..e84e161
+--- /dev/null
++++ b/frontend/e2e/qoder-ack-resolution.spec.ts
+@@ -0,0 +1,65 @@
++/**
++ * T3 — acknowledgement vs resolution semantics (docs/ACK_RESOLUTION_CONTRACT.md).
++ *
++ * `ACKNOWLEDGED != RESOLVED`.  A disruption the traveller has merely seen must
++ * stay actionable; only RESOLVED, IGNORED, or an accepted replan linked to that
++ * event closes it.  Today and Live must agree on the same event.
++ *
++ * LAYER: unit.  The shared rule lives in a dependency-free module both surfaces
++ * import, so this pins the contract's logic.  A rendered Today/Live integration
++ * test (mocking the experience API so the real components paint) is tracked as a
++ * remaining evidence gap for v2 in the handoff — it is NOT claimed here.
++ */
++
++import { expect, test } from "@playwright/test";
++
++test.describe("T3 acknowledgement vs resolution (unit)", () => {
++  test("acknowledged-only stays open; only linked acceptance resolves", async ({ page }) => {
++    // Serve the module through the Vite dev server so it is transpiled the
++    // same way the application sees it.
++    await page.goto("/");
++    const rules = await page.evaluate(async () => {
++      const mod = await import("/src/lib/disruptionState.ts");
++      const event = { id: "e1", status: "ACKNOWLEDGED", resolved_at: null };
++      const open = mod.isDisruptionOpen(event, new Set());
++      const ackOnly = mod.isDisruptionAcknowledgedOnly(event, new Set());
++      return {
++        acknowledgedOnlyOpen: open,
++        acknowledgedOnlyFlagged: ackOnly,
++        // acknowledged-only is by construction a subset of the open set; the old
++        // UI branch required open===0 too, which could never co-hold.
++        acknowledgedOnlyIsOpenSubset: open && ackOnly,
++        linkedAcceptanceResolves: mod.isDisruptionOpen(event, new Set(["e1"])),
++        resolvedIsClosed: mod.isDisruptionOpen(
++          { id: "e2", status: "RESOLVED", resolved_at: null },
++          new Set(),
++        ),
++        ignoredIsClosed: mod.isDisruptionOpen(
++          { id: "e3", status: "IGNORED", resolved_at: null },
++          new Set(),
++        ),
++        detectedIsOpen: mod.isDisruptionOpen(
++          { id: "e4", status: "DETECTED", resolved_at: null },
++          new Set(),
++        ),
++        unrelatedAcceptanceDoesNotResolve: mod.isDisruptionOpen(event, new Set(["other"])),
++        resolvedAtCloses: mod.isDisruptionOpen(
++          { id: "e5", status: "ACKNOWLEDGED", resolved_at: "2026-09-18T00:00:00Z" },
++          new Set(),
++        ),
++      };
++    });
++
++    expect(rules.acknowledgedOnlyOpen).toBe(true);
++    expect(rules.acknowledgedOnlyFlagged).toBe(true);
++    // The V2 fix drops the impossible `openDisruptions.length === 0` guard so the
++    // "已知晓，仍待处理" notice is reachable while the event is still open.
++    expect(rules.acknowledgedOnlyIsOpenSubset).toBe(true);
++    expect(rules.linkedAcceptanceResolves).toBe(false);
++    expect(rules.resolvedIsClosed).toBe(false);
++    expect(rules.ignoredIsClosed).toBe(false);
++    expect(rules.detectedIsOpen).toBe(true);
++    expect(rules.unrelatedAcceptanceDoesNotResolve).toBe(true);
++    expect(rules.resolvedAtCloses).toBe(false);
++  });
++});
+diff --git a/frontend/e2e/qoder-budget-evidence.spec.ts b/frontend/e2e/qoder-budget-evidence.spec.ts
+new file mode 100644
+index 0000000..b83a1d9
+--- /dev/null
++++ b/frontend/e2e/qoder-budget-evidence.spec.ts
+@@ -0,0 +1,135 @@
++/**
++ * T4 — budget evidence coverage (docs/BUDGET_EVIDENCE_CONTRACT.md; V2-T4 / B4).
++ *
++ * LAYER: unit.  This drives the pure functions through `page.evaluate(import
++ * .../budgetEvidence.ts)` — real logic, but NOT a rendered component test.  Per
++ * docs/TEST_AND_EVIDENCE_GATE.md it is labelled unit, not E2E.  Rendered Today/
++ * Live and rendered budget-screen integration is tracked as a remaining evidence
++ * gap in the handoff (no jsdom/RTL harness exists in this project).
++ *
++ * "At least one priced stop" is not a budget verdict.  One known price beside
++ * thirteen unknown ones does not verify a total, a zero amount can be *known
++ * free* (real evidence), and — B4 — fourteen priced activities beside an unknown
++ * hotel is NOT a verified trip budget.
++ */
++
++import { expect, test } from "@playwright/test";
++
++test.describe("T4 budget evidence coverage (unit)", () => {
++  test("NONE / PARTIAL / FULL are distinct, and only FULL allows a verdict", async ({ page }) => {
++    await page.goto("/");
++    const result = await page.evaluate(async () => {
++      const mod = await import("/src/lib/budgetEvidence.ts");
++      const unknown = { cost_status: "UNKNOWN", estimated_cost: { amount_minor: 0 } };
++      const paid = (amount) => ({
++        cost_status: "KNOWN_PAID",
++        estimated_cost: { amount_minor: amount },
++      });
++      const free = { cost_status: "KNOWN_FREE", estimated_cost: { amount_minor: 0 } };
++      const unknownList = (n) => Array.from({ length: n }, () => unknown);
++
++      const none = mod.budgetEvidenceCoverage(unknownList(14));
++      const oneOf14 = mod.budgetEvidenceCoverage([paid(3500), ...unknownList(13)]);
++      const thirteenOf14 = mod.budgetEvidenceCoverage([...Array.from({ length: 13 }, () => paid(1000)), unknown]);
++      const allKnown = mod.budgetEvidenceCoverage([paid(1000), free, paid(2000)]);
++      const empty = mod.budgetEvidenceCoverage([]);
++
++      return {
++        noneState: none.state,
++        noneVerdict: mod.budgetVerdictAllowed(none),
++        oneOf14State: oneOf14.state,
++        oneOf14Verdict: mod.budgetVerdictAllowed(oneOf14),
++        oneOf14Unknown: oneOf14.unknownCount,
++        thirteenState: thirteenOf14.state,
++        thirteenVerdict: mod.budgetVerdictAllowed(thirteenOf14),
++        allKnownState: allKnown.state,
++        allKnownVerdict: mod.budgetVerdictAllowed(allKnown),
++        knownFreeCounts: mod.hasReliableCostEvidence(free),
++        zeroWithNoStatus: mod.hasReliableCostEvidence({ estimated_cost: { amount_minor: 0 } }),
++        emptyState: empty.state,
++      };
++    });
++
++    expect(result.noneState).toBe("NONE");
++    expect(result.noneVerdict).toBe(false);
++    expect(result.oneOf14State).toBe("PARTIAL");
++    expect(result.oneOf14Verdict).toBe(false);
++    expect(result.oneOf14Unknown).toBe(13);
++    expect(result.thirteenState).toBe("PARTIAL");
++    expect(result.thirteenVerdict).toBe(false);
++    expect(result.allKnownState).toBe("FULL");
++    expect(result.allKnownVerdict).toBe(true);
++    expect(result.knownFreeCounts).toBe(true);
++    expect(result.zeroWithNoStatus).toBe(false);
++    expect(result.emptyState).toBe("NONE");
++  });
++
++  test("B4: all activities priced but an unknown hotel/booking stays PARTIAL (no trip verdict)", async ({
++    page,
++  }) => {
++    await page.goto("/");
++    const result = await page.evaluate(async () => {
++      const mod = await import("/src/lib/budgetEvidence.ts");
++      const paid = (amount) => ({ cost_status: "KNOWN_PAID", estimated_cost: { amount_minor: amount } });
++      const unknown = { cost_status: "UNKNOWN", estimated_cost: { amount_minor: 0 } };
++
++      // 14 activities, all priced -> activity coverage is FULL...
++      const activitiesOnly = mod.budgetEvidenceCoverage(
++        Array.from({ length: 14 }, () => paid(1000)),
++      );
++      // ...but the whole trip adds an unknown hotel and an unknown transport
++      // booking, so the trip budget must NOT be FULL.
++      const trip = mod.tripBudgetEvidence([
++        { label: "activities", items: Array.from({ length: 14 }, () => paid(1000)) },
++        { label: "stay", items: [unknown] },
++        { label: "transport", items: [unknown] },
++      ]);
++      // And once the hotel + transport are known, the trip can be FULL.
++      const tripComplete = mod.tripBudgetEvidence([
++        { label: "activities", items: [paid(1000)] },
++        { label: "stay", items: [paid(40000)] },
++        { label: "transport", items: [{ cost_status: "KNOWN_FREE", estimated_cost: { amount_minor: 0 } }] },
++      ]);
++      // A positive amount with NO status is displayable but not *verified*, so
++      // an all-statusless plan must not reach FULL (B4 regression 4).
++      const statuslessOnly = mod.budgetEvidenceCoverage([
++        { estimated_cost: { amount_minor: 5000 } },
++        { estimated_cost: { amount_minor: 8000 } },
++      ]);
++
++      return {
++        activitiesOnlyState: activitiesOnly.state,
++        tripState: trip.state,
++        tripVerdict: mod.budgetVerdictAllowed(trip),
++        tripUnknown: trip.unknownCount,
++        tripCompleteState: tripComplete.state,
++        tripCompleteVerdict: mod.budgetVerdictAllowed(tripComplete),
++        statuslessOnlyState: statuslessOnly.state,
++        statuslessOnlyVerdict: mod.budgetVerdictAllowed(statuslessOnly),
++        // B4 wording scope: an activity-only FULL must not be called trip budget.
++        activityScopeClaim: mod.budgetClaimScope(activitiesOnly, false),
++        tripScopeClaimWhenPartial: mod.budgetClaimScope(trip, true),
++        tripScopeClaimWhenFull: mod.budgetClaimScope(tripComplete, true),
++      };
++    });
++
++    // Activity coverage is FULL on its own...
++    expect(result.activitiesOnlyState).toBe("FULL");
++    // ...but the whole-trip aggregation is PARTIAL while hotel + transport unknown.
++    expect(result.tripState).toBe("PARTIAL");
++    expect(result.tripUnknown).toBe(2);
++    expect(result.tripVerdict).toBe(false);
++    // Only after stay + transport are known does the trip reach FULL.
++    expect(result.tripCompleteState).toBe("FULL");
++    expect(result.tripCompleteVerdict).toBe(true);
++    // An all-statusless (no explicit KNOWN status) plan is displayable but not
++    // verified -> PARTIAL, and never a trip-budget verdict (B4 regression 4).
++    expect(result.statuslessOnlyState).toBe("PARTIAL");
++    expect(result.statuslessOnlyVerdict).toBe(false);
++    // Wording scope guards: activity-only is never a trip-budget claim; a
++    // partial trip is never a trip-budget claim; only a full trip may say so.
++    expect(result.activityScopeClaim).toBe("ACTIVITY_COSTS");
++    expect(result.tripScopeClaimWhenPartial).toBe("ACTIVITY_COSTS");
++    expect(result.tripScopeClaimWhenFull).toBe("TRIP_BUDGET");
++  });
++});
+diff --git a/frontend/e2e/qoder-budget-rendered.spec.ts b/frontend/e2e/qoder-budget-rendered.spec.ts
+new file mode 100644
+index 0000000..8a454fb
+--- /dev/null
++++ b/frontend/e2e/qoder-budget-rendered.spec.ts
+@@ -0,0 +1,233 @@
++/**
++ * T4 — budget evidence coverage (docs/BUDGET_EVIDENCE_CONTRACT.md; V2-T4 / B4).
++ * LAYER: integration (RENDERED component), not unit.
++ *
++ * Unlike e2e/qoder-budget-evidence.spec.ts (which drives the pure functions via
++ * `page.evaluate(import .../budgetEvidence.ts)` and is labelled unit), this spec
++ * renders the real budget surface: it serves deterministic fixtures through
++ * `page.route` for every API the application actually fetches, boots the real
++ * V8Experience shell on the real `/v8/studio` route, and lets the real
++ * `Studio` feasibility block (data-testid="studio-feasibility") paint from the
++ * authoritative plan's activity cost evidence.
++ *
++ * The Studio feasibility block reads `budgetEvidenceCoverage(plan.activities)`
++ * (cost_status / estimated_cost live on the authoritative PlanVersion), and maps
++ * the coverage state to i18n copy:
++ *   FULL    -> studio.feasibilityPassed  ("行程约束检查已通过")
++ *            + studio.feasibilitySub     ("...所有站点的活动费用已完整；整趟行程
++ *                                          预算（含住宿与交通）未在此处验证。")
++ *   PARTIAL -> studio.feasibilityPassedPartial ("行程约束检查通过，费用证据不完整")
++ *            + studio.feasibilityPartialSub    ("...预算未验证：还有 {n} 站没有
++ *                                               供应商价格...")
++ *   NONE    -> studio.feasibilityPassedPartial + studio.feasibilityNoPrice
++ *
++ * What this pins, from the rendered DOM:
++ *   1. B4: everything priced EXCEPT an unknown stay/transport item -> the block
++ *      must NOT carry the FULL verdict wording; it must show the partial
++ *      "预算未验证" wording with the unknown count.
++ *   2. Only when every budget-relevant item is known does the FULL wording appear.
++ *   3. A KNOWN_FREE zero-amount stop counts as *known*, so it does not knock the
++ *      block back out of FULL (a 0 price is real evidence, not "unknown").
++ *
++ * Endpoints mocked: same set the shell boot + Studio consume; the cost evidence
++ * that drives the block is the /api/v1/journeys/{id}/plans response.
++ */
++
++import { expect, test, type Page } from "@playwright/test";
++
++const JOURNEY_ID = "e2e-render-journey";
++const TRAVELER_ID = "e2e-render-traveler";
++
++async function seed(page: Page) {
++  await page.addInitScript(() => {
++    localStorage.setItem("citynexus.v8.journey_id", "e2e-render-journey");
++    localStorage.setItem("citynexus.locale", "zh-CN");
++    try {
++      // eslint-disable-next-line @typescript-eslint/no-explicit-any
++      (navigator as any).serviceWorker.register = () => Promise.resolve({});
++    } catch {
++      /* no-op */
++    }
++  });
++}
++
++/** One plan activity carrying the cost evidence Studio aggregates. */
++function priced(id: string, title: string, cost_status: string, amount_minor: number) {
++  return {
++    id,
++    sequence_no: 1,
++    type: "visit",
++    title,
++    start_at: "2026-10-10T09:00:00+08:00",
++    end_at: "2026-10-10T11:00:00+08:00",
++    locked: false,
++    protected: false,
++    metadata: {},
++    cost_status,
++    estimated_cost: { amount_minor, currency: "CNY" },
++  };
++}
++
++function experienceFixture() {
++  return {
++    journey: {
++      id: JOURNEY_ID,
++      traveler_id: TRAVELER_ID,
++      title: "厦门周末",
++      city_code: "CN-XIAMEN",
++      timezone: "Asia/Shanghai",
++      start_at: "2026-10-09T18:00:00+08:00",
++      end_at: "2026-10-11T15:00:00+08:00",
++      budget: { amount_minor: 120000, currency: "CNY" },
++    },
++    trip: {
++      arrival_anchor: { at: "2026-10-09T18:00:00+08:00", location: "厦门站" },
++      departure_anchor: { at: "2026-10-11T15:00:00+08:00", location: "厦门高崎机场" },
++      party_size: 2,
++      occupancy: { adults: 2, rooms: 1 },
++      stay_budget: { amount_minor: 70000, currency: "CNY" },
++    },
++    offers: [],
++    options: [],
++    selected_option_id: null,
++    mobility_facts: [],
++    active_plan: {
++      id: "plan-1",
++      version_no: 1,
++      status: "ACTIVE",
++      source: "E2E_RENDER",
++      current_activity_id: null,
++      activities: [],
++      legs: [],
++      user_location: null,
++      disruptions: [],
++    },
++    recovery: null,
++    experience_flags: {
++      needs_review: false,
++      recovery_required: false,
++      staleness: false,
++      feasibility_failures: [],
++    },
++  };
++}
++
++function offlineFixture() {
++  return {
++    journey_id: JOURNEY_ID,
++    sequence: 1,
++    valid_until: "2026-12-31T00:00:00Z",
++    snapshot: {
++      active_plan_version_id: null,
++      current_activity_id: null,
++      next_24h: [],
++      legs: [],
++      hotel: null,
++      reservations: [],
++      read_only: true,
++      financial_actions_allowed: false,
++    },
++    provider_freshness: { latest_provider_capture_at: null, transit_realtime: "UNKNOWN" },
++    updated_at: "2026-10-09T10:00:00Z",
++  };
++}
++
++/** Authoritative plan list whose activities carry the cost evidence. */
++function plansFixture(activities: unknown[]) {
++  return [{ id: "plan-1", version_no: 1, status: "ACTIVE", activities }];
++}
++
++async function mockApi(page: Page, activities: unknown[]) {
++  await page.route(/\/api\/v1\//, (route) => {
++    const pathname = new URL(route.request().url()).pathname;
++    const send = (json: unknown) =>
++      route.fulfill({
++        status: 200,
++        contentType: "application/json",
++        body: JSON.stringify(json),
++      });
++    if (pathname.endsWith("/experience")) return send(experienceFixture());
++    if (pathname.endsWith("/plans")) return send(plansFixture(activities));
++    if (pathname.endsWith("/replans")) return send([]);
++    if (pathname.endsWith("/twin")) return send({ id: "twin-1", context: {} });
++    if (pathname.endsWith("/agent-policy"))
++      return send({
++        mode: "ADVISORY",
++        auto_accept_replan: false,
++        version: 1,
++        max_auto_replan_cost_delta_minor: 5000,
++        max_auto_loss_minor: 0,
++        max_auto_schedule_drift_min: 20,
++      });
++    if (pathname.endsWith("/wallet"))
++      return send({ reservations: [], commitments: [], offline_ready: true });
++    if (pathname.endsWith("/offline-snapshot")) return send(offlineFixture());
++    if (pathname.endsWith("/runtime-status")) return send({});
++    return send({});
++  });
++}
++
++test.describe("T4 budget evidence coverage (rendered integration)", () => {
++  test("B4: all stops priced but an unknown stay/transport -> the block refuses a verified-budget verdict and shows PARTIAL wording", async ({
++    page,
++  }) => {
++    await seed(page);
++    await mockApi(page, [
++      priced("a1", "日光岩", "KNOWN_PAID", 3500),
++      priced("a2", "曾厝垵", "KNOWN_PAID", 1200),
++      priced("a3", "南普陀", "KNOWN_PAID", 800),
++      // The hotel and the airport transfer have no provider price.
++      priced("stay", "住宿 · 酒店", "UNKNOWN", 0),
++      priced("transport", "机场往返交通", "UNKNOWN", 0),
++    ]);
++    await page.goto("/v8/studio", { waitUntil: "domcontentloaded" });
++
++    const block = page.getByTestId("studio-feasibility");
++    await expect(block).toBeVisible();
++    // PARTIAL wording (positive assertion first, so it waits for the async plan
++    // query to resolve, then the negatives are stable).
++    await expect(block).toContainText("行程约束检查通过，费用证据不完整");
++    await expect(block).toContainText("还有 2 项缺少已验证的供应商价格");
++    // The FULL verdict wording must NOT be shown while stay/transport are unknown.
++    await expect(block).not.toContainText("行程约束检查已通过");
++  });
++
++  test("only when every budget-relevant item is known does the FULL verdict wording render", async ({
++    page,
++  }) => {
++    await seed(page);
++    await mockApi(page, [
++      priced("a1", "日光岩", "KNOWN_PAID", 1000),
++      priced("a2", "环岛路骑行", "KNOWN_PAID", 2000),
++      priced("a3", "厦大参观", "KNOWN_PAID", 3000),
++    ]);
++    await page.goto("/v8/studio", { waitUntil: "domcontentloaded" });
++
++    const block = page.getByTestId("studio-feasibility");
++    await expect(block).toBeVisible();
++    await expect(block).toContainText("行程约束检查已通过");
++    await expect(block).toContainText("所有站点的活动费用已完整");
++    // None of the partial "budget not verified" wording may leak in.
++    await expect(block).not.toContainText("行程约束检查通过，费用证据不完整");
++    await expect(block).not.toContainText("站没有供应商价格");
++  });
++
++  test("a KNOWN_FREE (0 amount) stop counts as known and keeps the block at FULL", async ({
++    page,
++  }) => {
++    await seed(page);
++    await mockApi(page, [
++      priced("a1", "日光岩", "KNOWN_PAID", 1000),
++      priced("free", "南普陀（免费开放）", "KNOWN_FREE", 0),
++      priced("a2", "酒店住宿", "KNOWN_PAID", 5000),
++    ]);
++    await page.goto("/v8/studio", { waitUntil: "domcontentloaded" });
++
++    const block = page.getByTestId("studio-feasibility");
++    await expect(block).toBeVisible();
++    // If a zero-amount KNOWN_FREE fell back to "unknown", coverage would be PARTIAL
++    // and the heading would read "预算未验证". Reaching FULL proves the 0 is evidence.
++    await expect(block).toContainText("行程约束检查已通过");
++    await expect(block).not.toContainText("预算未验证");
++  });
++});

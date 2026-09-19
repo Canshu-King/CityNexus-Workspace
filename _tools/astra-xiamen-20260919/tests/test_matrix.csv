@@ -1,0 +1,65 @@
+test_id,layer,area,scenario,expected,priority,automation
+CNX-U-001,unit,score,utility weights sum to 1.0,exactly 1.0,P0,pytest
+CNX-U-002,unit,score,perfect component metrics,utility score 1.0,P0,pytest
+CNX-U-003,unit,score,metric below 0 or above 1,input clamped or rejected consistently,P1,pytest
+CNX-U-004,unit,replan,locked commitment missing,candidate hard-fails,P0,pytest
+CNX-U-005,unit,replan,locked commitment start changed,candidate hard-fails,P0,pytest
+CNX-U-006,unit,replan,activity overlaps next activity,candidate hard-fails,P0,pytest
+CNX-U-007,unit,replan,activity outside journey window,candidate hard-fails,P0,pytest
+CNX-U-008,unit,replan,hard budget exceeded,candidate hard-fails,P0,pytest
+CNX-U-009,unit,replan,closed place scheduled,candidate hard-fails,P0,pytest
+CNX-U-010,unit,replan,equal-score candidates,deterministic tie-break,P0,pytest
+CNX-U-011,unit,state,Journey DRAFT->PLANNED without feasible selected plan,transition denied,P0,pytest
+CNX-U-012,unit,state,Journey PLANNED->ACTIVE with active plan,transition succeeds,P0,pytest
+CNX-U-013,unit,state,Plan ACTIVE->SUPERSEDED without replacement activation,transition denied,P0,pytest
+CNX-U-014,unit,state,locked Activity cancellation by replanner,transition denied,P0,pytest
+CNX-U-015,unit,state,ReplanProposal accept with hard gate false,transition denied,P0,pytest
+CNX-U-016,unit,state,ReplanProposal accept with base-plan mismatch,stale conflict,P0,pytest
+CNX-U-017,unit,value,money addition same currency,integer minor-unit result,P1,pytest
+CNX-U-018,unit,value,money operation mixed currency,explicit error,P1,pytest
+CNX-U-019,unit,planning,planning_mode accepts balanced budget explore strict_schedule,all accepted,P0,pytest
+CNX-U-020,unit,planning,unknown planning_mode,rejected,P0,pytest
+CNX-I-001,integration,db,create schema from empty SQLite,all tables and indexes created,P0,pytest
+CNX-I-002,integration,db,foreign keys enabled,invalid child reference rejected,P0,pytest
+CNX-I-003,integration,traveler,create traveler then get,same data returned,P0,pytest
+CNX-I-004,integration,preferences,replace traveler preferences,subsequent GET matches,P1,pytest
+CNX-I-005,integration,journey,create valid journey,DRAFT journey persisted,P0,pytest
+CNX-I-006,integration,journey,end before start,422 validation,P0,pytest
+CNX-I-007,integration,constraint,add hard budget constraint,persisted and used by planner,P0,pytest
+CNX-I-008,integration,discovery,search CNX-DEMO places,deterministic fixture returned,P0,pytest
+CNX-I-009,integration,planning,generate plans for canonical journey,at least 2 feasible candidates,P0,pytest
+CNX-I-010,integration,planning,select candidate,Journey becomes PLANNED and active/selected reference consistent,P0,pytest
+CNX-I-011,integration,booking,create mock booking,CONFIRMED booking and commitment created,P0,pytest
+CNX-I-012,integration,payment,capture mock payment,SUCCEEDED transaction and commitment level advanced,P0,pytest
+CNX-I-013,integration,payment,repeat same idempotency key,same logical result no duplicate charge,P0,pytest
+CNX-I-014,integration,execution,start journey,Journey ACTIVE and JourneyTwin READY,P0,pytest
+CNX-I-015,integration,execution,complete current activity,twin advances to next activity,P1,pytest
+CNX-I-016,integration,event,inject closure event,DETECTED event stored,P0,pytest
+CNX-I-017,integration,replan,closure affects Tech Art Center,proposal removes/replaces unavailable activity,P0,pytest
+CNX-I-018,integration,replan,canonical closure replan,locked 15:30 River Cruise preserved,P0,pytest
+CNX-I-019,integration,replan,proposal score breakdown,all 8 components present,P0,pytest
+CNX-I-020,integration,replan,proposal generated,active plan unchanged before acceptance,P0,pytest
+CNX-I-021,integration,replan,accept proposal,new plan active old plan superseded atomically,P0,pytest
+CNX-I-022,integration,replan,accept stale proposal,409 and no state change,P0,pytest
+CNX-I-023,integration,replan,reject proposal,active plan unchanged proposal REJECTED,P1,pytest
+CNX-I-024,integration,twin,provider optional outage,twin may become DEGRADED but core state readable,P1,pytest
+CNX-I-025,integration,history,complete vertical slice,history contains create select booking payment start event replan accept,P1,pytest
+CNX-C-001,contract,openapi,OpenAPI YAML parses,no unresolved local references,P0,script
+CNX-C-002,contract,error,404 response,error envelope shape,P1,pytest
+CNX-C-003,contract,error,409 response,error envelope shape,P1,pytest
+CNX-C-004,contract,error,422 infeasible response,error envelope plus details,P1,pytest
+CNX-C-005,contract,provider,mock mobility interface,same request returns deterministic estimate,P0,pytest
+CNX-C-006,contract,provider,mock booking interface,no random outcome without fixture token,P0,pytest
+CNX-C-007,contract,provider,mock payment interface,no random outcome without fixture token,P0,pytest
+CNX-C-008,contract,ai,AI disabled,copilot returns FALLBACK mode,P0,pytest
+CNX-S-001,security,input,unexpected huge message/body,bounded/rejected,P1,pytest
+CNX-S-002,security,ownership,traveler A requests traveler B journey,forbidden after auth layer exists,P1,pytest
+CNX-S-003,security,idempotency,same key different payload,409 conflict,P0,pytest
+CNX-S-004,security,audit,proposal acceptance,audit row contains trace id,P1,pytest
+CNX-S-005,security,secrets,repository scan,no provider secrets committed,P1,script
+CNX-E-001,e2e,vertical-slice,create->generate->select->book->pay->start,happy path complete,P0,Playwright/API
+CNX-E-002,e2e,replan,inject closure->generate proposal->accept,new active plan shown,P0,Playwright/API
+CNX-E-003,e2e,commitment,closure replan,locked river cruise remains 15:30,P0,Playwright/API
+CNX-E-004,e2e,ai-outage,repeat replan with AI disabled,core flow succeeds with fallback explanation,P0,Playwright/API
+CNX-E-005,e2e,failure,force payment failure,no PAID/LOCKED commitment falsely created,P1,Playwright/API
+CNX-E-006,e2e,failure,no feasible replan,UI/API explains infeasibility and keeps current plan,P1,Playwright/API

@@ -1,0 +1,1299 @@
+{
+  "status": "SEARCH_INCOMPLETE",
+  "gridCm": 0.1,
+  "trialCountRequested": 12,
+  "trialCountExecuted": 12,
+  "bestSolvedCount": 9,
+  "associationCount": 18,
+  "bestOrder": [
+    "A-T-UC-07",
+    "A-CD-UC-04",
+    "A-T-UC-04",
+    "A-CD-UC-05",
+    "A-T-UC-10",
+    "A-CE-09",
+    "A-M-UC-04",
+    "A-T-UC-11",
+    "A-T-UC-02",
+    "A-M-UC-08",
+    "A-M-UC-10",
+    "A-PA-07",
+    "A-CD-UC-10",
+    "A-T-UC-08",
+    "A-B-06",
+    "A-T-UC-06",
+    "A-T-UC-05",
+    "A-T-UC-12"
+  ],
+  "bestFailure": {
+    "route": "A-M-UC-08",
+    "index": 9,
+    "reason": "exhausted",
+    "expanded": 18032,
+    "starts": 24,
+    "goals": 107
+  },
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "authoritativeCandidateModified": false,
+  "warning": "Do not render or promote RC6 from planner output. Copy to the official candidate only after external review, then run V2/V3 and the complete test suite.",
+  "trace": [
+    {
+      "trial": 0,
+      "order": [
+        "A-M-UC-08",
+        "A-B-06",
+        "A-PA-07",
+        "A-CE-09",
+        "A-CD-UC-10",
+        "A-M-UC-10",
+        "A-M-UC-04",
+        "A-T-UC-10",
+        "A-T-UC-12",
+        "A-T-UC-08",
+        "A-T-UC-11",
+        "A-T-UC-07",
+        "A-T-UC-06",
+        "A-T-UC-05",
+        "A-T-UC-04",
+        "A-T-UC-02",
+        "A-CD-UC-04",
+        "A-CD-UC-05"
+      ],
+      "solvedCount": 5,
+      "solvedIds": [
+        "A-M-UC-08",
+        "A-B-06",
+        "A-PA-07",
+        "A-CE-09",
+        "A-CD-UC-10"
+      ],
+      "failure": {
+        "route": "A-M-UC-10",
+        "index": 5,
+        "reason": "exhausted",
+        "expanded": 4136,
+        "starts": 24,
+        "goals": 106
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-M-UC-08",
+          "reason": "ok",
+          "expanded": 39704,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 1,
+          "route": "A-B-06",
+          "reason": "ok",
+          "expanded": 48891,
+          "pointCount": 7,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 2,
+          "route": "A-PA-07",
+          "reason": "ok",
+          "expanded": 58468,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714282,
+          "targetPortFraction": 0.5208333333333338
+        },
+        {
+          "index": 3,
+          "route": "A-CE-09",
+          "reason": "ok",
+          "expanded": 78502,
+          "pointCount": 6,
+          "targetSide": "RIGHT",
+          "sourcePortFraction": 0.7500000000000008,
+          "targetPortFraction": 0.20370370370370375
+        },
+        {
+          "index": 4,
+          "route": "A-CD-UC-10",
+          "reason": "ok",
+          "expanded": 10860,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714285,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 5,
+          "route": "A-M-UC-10",
+          "reason": "exhausted",
+          "expanded": 4136,
+          "starts": 24,
+          "goals": 106
+        }
+      ]
+    },
+    {
+      "trial": 1,
+      "order": [
+        "A-T-UC-02",
+        "A-T-UC-08",
+        "A-CD-UC-05",
+        "A-T-UC-12",
+        "A-T-UC-05",
+        "A-PA-07",
+        "A-B-06",
+        "A-T-UC-04",
+        "A-T-UC-07",
+        "A-CE-09",
+        "A-M-UC-10",
+        "A-CD-UC-04",
+        "A-CD-UC-10",
+        "A-M-UC-04",
+        "A-T-UC-06",
+        "A-M-UC-08",
+        "A-T-UC-10",
+        "A-T-UC-11"
+      ],
+      "solvedCount": 4,
+      "solvedIds": [
+        "A-T-UC-02",
+        "A-T-UC-08",
+        "A-CD-UC-05",
+        "A-T-UC-12"
+      ],
+      "failure": {
+        "route": "A-T-UC-05",
+        "index": 4,
+        "reason": "exhausted",
+        "expanded": 16702,
+        "starts": 24,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-02",
+          "reason": "ok",
+          "expanded": 2501,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.04166666666666688
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-08",
+          "reason": "ok",
+          "expanded": 9652,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 2,
+          "route": "A-CD-UC-05",
+          "reason": "ok",
+          "expanded": 199,
+          "pointCount": 2,
+          "targetSide": "RIGHT",
+          "sourcePortFraction": 0.5357142857142855,
+          "targetPortFraction": 0.20370370370370336
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-12",
+          "reason": "ok",
+          "expanded": 40093,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-05",
+          "reason": "exhausted",
+          "expanded": 16702,
+          "starts": 24,
+          "goals": 107
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "order": [
+        "A-T-UC-10",
+        "A-T-UC-05",
+        "A-T-UC-08",
+        "A-T-UC-07",
+        "A-T-UC-06",
+        "A-PA-07",
+        "A-CD-UC-05",
+        "A-T-UC-12",
+        "A-CD-UC-04",
+        "A-M-UC-10",
+        "A-T-UC-04",
+        "A-CE-09",
+        "A-M-UC-08",
+        "A-B-06",
+        "A-M-UC-04",
+        "A-CD-UC-10",
+        "A-T-UC-11",
+        "A-T-UC-02"
+      ],
+      "solvedCount": 4,
+      "solvedIds": [
+        "A-T-UC-10",
+        "A-T-UC-05",
+        "A-T-UC-08",
+        "A-T-UC-07"
+      ],
+      "failure": {
+        "route": "A-T-UC-06",
+        "index": 4,
+        "reason": "exhausted",
+        "expanded": 173096,
+        "starts": 23,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-10",
+          "reason": "ok",
+          "expanded": 2312,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.6333333333333334,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-05",
+          "reason": "ok",
+          "expanded": 4107,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 2,
+          "route": "A-T-UC-08",
+          "reason": "ok",
+          "expanded": 9260,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-07",
+          "reason": "ok",
+          "expanded": 1994,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-06",
+          "reason": "exhausted",
+          "expanded": 173096,
+          "starts": 23,
+          "goals": 107
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "order": [
+        "A-T-UC-07",
+        "A-CD-UC-04",
+        "A-T-UC-04",
+        "A-CD-UC-05",
+        "A-T-UC-10",
+        "A-CE-09",
+        "A-M-UC-04",
+        "A-T-UC-11",
+        "A-T-UC-02",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-PA-07",
+        "A-CD-UC-10",
+        "A-T-UC-08",
+        "A-B-06",
+        "A-T-UC-06",
+        "A-T-UC-05",
+        "A-T-UC-12"
+      ],
+      "solvedCount": 9,
+      "solvedIds": [
+        "A-T-UC-07",
+        "A-CD-UC-04",
+        "A-T-UC-04",
+        "A-CD-UC-05",
+        "A-T-UC-10",
+        "A-CE-09",
+        "A-M-UC-04",
+        "A-T-UC-11",
+        "A-T-UC-02"
+      ],
+      "failure": {
+        "route": "A-M-UC-08",
+        "index": 9,
+        "reason": "exhausted",
+        "expanded": 18032,
+        "starts": 24,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-07",
+          "reason": "ok",
+          "expanded": 2797,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 1,
+          "route": "A-CD-UC-04",
+          "reason": "ok",
+          "expanded": 567,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.39285714285714285,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 2,
+          "route": "A-T-UC-04",
+          "reason": "ok",
+          "expanded": 3314,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 3,
+          "route": "A-CD-UC-05",
+          "reason": "ok",
+          "expanded": 199,
+          "pointCount": 2,
+          "targetSide": "RIGHT",
+          "sourcePortFraction": 0.5357142857142855,
+          "targetPortFraction": 0.20370370370370336
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-10",
+          "reason": "ok",
+          "expanded": 2154,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.6333333333333334,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 5,
+          "route": "A-CE-09",
+          "reason": "ok",
+          "expanded": 9616,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.17857142857142927,
+          "targetPortFraction": 0.4791666666666673
+        },
+        {
+          "index": 6,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 7,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 2285,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.566666666666667,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 8,
+          "route": "A-T-UC-02",
+          "reason": "ok",
+          "expanded": 105156,
+          "pointCount": 9,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.6000000000000002,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 9,
+          "route": "A-M-UC-08",
+          "reason": "exhausted",
+          "expanded": 18032,
+          "starts": 24,
+          "goals": 107
+        }
+      ]
+    },
+    {
+      "trial": 4,
+      "order": [
+        "A-PA-07",
+        "A-T-UC-06",
+        "A-CD-UC-04",
+        "A-M-UC-04",
+        "A-CE-09",
+        "A-M-UC-10",
+        "A-T-UC-05",
+        "A-B-06",
+        "A-T-UC-04",
+        "A-CD-UC-10",
+        "A-T-UC-08",
+        "A-M-UC-08",
+        "A-T-UC-07",
+        "A-T-UC-12",
+        "A-T-UC-02",
+        "A-CD-UC-05",
+        "A-T-UC-10",
+        "A-T-UC-11"
+      ],
+      "solvedCount": 6,
+      "solvedIds": [
+        "A-PA-07",
+        "A-T-UC-06",
+        "A-CD-UC-04",
+        "A-M-UC-04",
+        "A-CE-09",
+        "A-M-UC-10"
+      ],
+      "failure": {
+        "route": "A-T-UC-05",
+        "index": 6,
+        "reason": "exhausted",
+        "expanded": 17326,
+        "starts": 26,
+        "goals": 63
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-PA-07",
+          "reason": "ok",
+          "expanded": 987,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.07142857142857116,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 5722,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 2,
+          "route": "A-CD-UC-04",
+          "reason": "ok",
+          "expanded": 567,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.39285714285714285,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 3,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 4,
+          "route": "A-CE-09",
+          "reason": "ok",
+          "expanded": 9455,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.17857142857142927,
+          "targetPortFraction": 0.4791666666666673
+        },
+        {
+          "index": 5,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 83555,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.3928571428571429,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 6,
+          "route": "A-T-UC-05",
+          "reason": "exhausted",
+          "expanded": 17326,
+          "starts": 26,
+          "goals": 63
+        }
+      ]
+    },
+    {
+      "trial": 5,
+      "order": [
+        "A-M-UC-10",
+        "A-T-UC-06",
+        "A-M-UC-04",
+        "A-T-UC-10",
+        "A-T-UC-07",
+        "A-T-UC-11",
+        "A-PA-07",
+        "A-T-UC-02",
+        "A-CD-UC-05",
+        "A-CE-09",
+        "A-T-UC-12",
+        "A-M-UC-08",
+        "A-T-UC-04",
+        "A-T-UC-05",
+        "A-CD-UC-10",
+        "A-T-UC-08",
+        "A-CD-UC-04",
+        "A-B-06"
+      ],
+      "solvedCount": 7,
+      "solvedIds": [
+        "A-M-UC-10",
+        "A-T-UC-06",
+        "A-M-UC-04",
+        "A-T-UC-10",
+        "A-T-UC-07",
+        "A-T-UC-11",
+        "A-PA-07"
+      ],
+      "failure": {
+        "route": "A-T-UC-02",
+        "index": 7,
+        "reason": "exhausted",
+        "expanded": 20834,
+        "starts": 23,
+        "goals": 108
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 8699,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 5722,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 2,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-10",
+          "reason": "ok",
+          "expanded": 2154,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.6333333333333334,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-07",
+          "reason": "ok",
+          "expanded": 2743,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.566666666666667,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 5,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 3110,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.6000000000000002,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 6,
+          "route": "A-PA-07",
+          "reason": "ok",
+          "expanded": 96514,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714282,
+          "targetPortFraction": 0.5208333333333338
+        },
+        {
+          "index": 7,
+          "route": "A-T-UC-02",
+          "reason": "exhausted",
+          "expanded": 20834,
+          "starts": 23,
+          "goals": 108
+        }
+      ]
+    },
+    {
+      "trial": 6,
+      "order": [
+        "A-M-UC-08",
+        "A-M-UC-04",
+        "A-T-UC-12",
+        "A-T-UC-06",
+        "A-CE-09",
+        "A-B-06",
+        "A-M-UC-10",
+        "A-T-UC-02",
+        "A-CD-UC-10",
+        "A-CD-UC-04",
+        "A-T-UC-08",
+        "A-T-UC-07",
+        "A-T-UC-11",
+        "A-T-UC-04",
+        "A-T-UC-05",
+        "A-PA-07",
+        "A-CD-UC-05",
+        "A-T-UC-10"
+      ],
+      "solvedCount": 5,
+      "solvedIds": [
+        "A-M-UC-08",
+        "A-M-UC-04",
+        "A-T-UC-12",
+        "A-T-UC-06",
+        "A-CE-09"
+      ],
+      "failure": {
+        "route": "A-B-06",
+        "index": 5,
+        "reason": "exhausted",
+        "expanded": 10356,
+        "starts": 25,
+        "goals": 106
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-M-UC-08",
+          "reason": "ok",
+          "expanded": 39704,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 1,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 2,
+          "route": "A-T-UC-12",
+          "reason": "ok",
+          "expanded": 2515,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 5410,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 4,
+          "route": "A-CE-09",
+          "reason": "ok",
+          "expanded": 93110,
+          "pointCount": 6,
+          "targetSide": "RIGHT",
+          "sourcePortFraction": 0.7500000000000008,
+          "targetPortFraction": 0.20370370370370375
+        },
+        {
+          "index": 5,
+          "route": "A-B-06",
+          "reason": "exhausted",
+          "expanded": 10356,
+          "starts": 25,
+          "goals": 106
+        }
+      ]
+    },
+    {
+      "trial": 7,
+      "order": [
+        "A-M-UC-10",
+        "A-T-UC-11",
+        "A-M-UC-04",
+        "A-CD-UC-05",
+        "A-T-UC-02",
+        "A-T-UC-06",
+        "A-T-UC-12",
+        "A-T-UC-10",
+        "A-PA-07",
+        "A-T-UC-04",
+        "A-CD-UC-04",
+        "A-T-UC-07",
+        "A-M-UC-08",
+        "A-T-UC-08",
+        "A-CE-09",
+        "A-T-UC-05",
+        "A-CD-UC-10",
+        "A-B-06"
+      ],
+      "solvedCount": 6,
+      "solvedIds": [
+        "A-M-UC-10",
+        "A-T-UC-11",
+        "A-M-UC-04",
+        "A-CD-UC-05",
+        "A-T-UC-02",
+        "A-T-UC-06"
+      ],
+      "failure": {
+        "route": "A-T-UC-12",
+        "index": 6,
+        "reason": "exhausted",
+        "expanded": 17778,
+        "starts": 24,
+        "goals": 108
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 8699,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 3529,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 2,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 3,
+          "route": "A-CD-UC-05",
+          "reason": "ok",
+          "expanded": 199,
+          "pointCount": 2,
+          "targetSide": "RIGHT",
+          "sourcePortFraction": 0.5357142857142855,
+          "targetPortFraction": 0.20370370370370336
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-02",
+          "reason": "ok",
+          "expanded": 2501,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.04166666666666688
+        },
+        {
+          "index": 5,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 165174,
+          "pointCount": 15,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 6,
+          "route": "A-T-UC-12",
+          "reason": "exhausted",
+          "expanded": 17778,
+          "starts": 24,
+          "goals": 108
+        }
+      ]
+    },
+    {
+      "trial": 8,
+      "order": [
+        "A-T-UC-06",
+        "A-T-UC-11",
+        "A-CD-UC-10",
+        "A-M-UC-10",
+        "A-T-UC-10",
+        "A-CD-UC-04",
+        "A-M-UC-08",
+        "A-PA-07",
+        "A-B-06",
+        "A-T-UC-12",
+        "A-T-UC-07",
+        "A-CD-UC-05",
+        "A-T-UC-04",
+        "A-T-UC-08",
+        "A-T-UC-05",
+        "A-CE-09",
+        "A-M-UC-04",
+        "A-T-UC-02"
+      ],
+      "solvedCount": 6,
+      "solvedIds": [
+        "A-T-UC-06",
+        "A-T-UC-11",
+        "A-CD-UC-10",
+        "A-M-UC-10",
+        "A-T-UC-10",
+        "A-CD-UC-04"
+      ],
+      "failure": {
+        "route": "A-M-UC-08",
+        "index": 6,
+        "reason": "exhausted",
+        "expanded": 4136,
+        "starts": 24,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 5722,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.5208333333333333
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 3573,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.566666666666667,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 2,
+          "route": "A-CD-UC-10",
+          "reason": "ok",
+          "expanded": 13849,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714285,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 3,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 64118,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-10",
+          "reason": "ok",
+          "expanded": 1614,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.6000000000000002,
+          "targetPortFraction": 0.062499999999999445
+        },
+        {
+          "index": 5,
+          "route": "A-CD-UC-04",
+          "reason": "ok",
+          "expanded": 483,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.39285714285714285,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 6,
+          "route": "A-M-UC-08",
+          "reason": "exhausted",
+          "expanded": 4136,
+          "starts": 24,
+          "goals": 107
+        }
+      ]
+    },
+    {
+      "trial": 9,
+      "order": [
+        "A-CD-UC-10",
+        "A-T-UC-02",
+        "A-M-UC-10",
+        "A-T-UC-08",
+        "A-T-UC-05",
+        "A-T-UC-04",
+        "A-M-UC-04",
+        "A-M-UC-08",
+        "A-T-UC-10",
+        "A-CE-09",
+        "A-CD-UC-05",
+        "A-T-UC-12",
+        "A-T-UC-06",
+        "A-PA-07",
+        "A-T-UC-07",
+        "A-CD-UC-04",
+        "A-B-06",
+        "A-T-UC-11"
+      ],
+      "solvedCount": 3,
+      "solvedIds": [
+        "A-CD-UC-10",
+        "A-T-UC-02",
+        "A-M-UC-10"
+      ],
+      "failure": {
+        "route": "A-T-UC-08",
+        "index": 3,
+        "reason": "exhausted",
+        "expanded": 167512,
+        "starts": 26,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-CD-UC-10",
+          "reason": "ok",
+          "expanded": 13849,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714285,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-02",
+          "reason": "ok",
+          "expanded": 2501,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.04166666666666688
+        },
+        {
+          "index": 2,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 64267,
+          "pointCount": 7,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-08",
+          "reason": "exhausted",
+          "expanded": 167512,
+          "starts": 26,
+          "goals": 107
+        }
+      ]
+    },
+    {
+      "trial": 10,
+      "order": [
+        "A-T-UC-04",
+        "A-M-UC-04",
+        "A-T-UC-11",
+        "A-T-UC-06",
+        "A-T-UC-02",
+        "A-T-UC-12",
+        "A-M-UC-10",
+        "A-CD-UC-04",
+        "A-T-UC-10",
+        "A-CD-UC-05",
+        "A-T-UC-05",
+        "A-PA-07",
+        "A-T-UC-08",
+        "A-CD-UC-10",
+        "A-T-UC-07",
+        "A-B-06",
+        "A-M-UC-08",
+        "A-CE-09"
+      ],
+      "solvedCount": 5,
+      "solvedIds": [
+        "A-T-UC-04",
+        "A-M-UC-04",
+        "A-T-UC-11",
+        "A-T-UC-06",
+        "A-T-UC-02"
+      ],
+      "failure": {
+        "route": "A-T-UC-12",
+        "index": 5,
+        "reason": "exhausted",
+        "expanded": 15974,
+        "starts": 23,
+        "goals": 108
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-04",
+          "reason": "ok",
+          "expanded": 3314,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 1,
+          "route": "A-M-UC-04",
+          "reason": "ok",
+          "expanded": 711,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.0714285714285712,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 2,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 2823,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 3,
+          "route": "A-T-UC-06",
+          "reason": "ok",
+          "expanded": 70620,
+          "pointCount": 9,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.566666666666667,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 4,
+          "route": "A-T-UC-02",
+          "reason": "ok",
+          "expanded": 116644,
+          "pointCount": 11,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 5,
+          "route": "A-T-UC-12",
+          "reason": "exhausted",
+          "expanded": 15974,
+          "starts": 23,
+          "goals": 108
+        }
+      ]
+    },
+    {
+      "trial": 11,
+      "order": [
+        "A-T-UC-11",
+        "A-T-UC-12",
+        "A-T-UC-04",
+        "A-M-UC-10",
+        "A-CE-09",
+        "A-CD-UC-04",
+        "A-T-UC-06",
+        "A-T-UC-02",
+        "A-B-06",
+        "A-T-UC-10",
+        "A-CD-UC-05",
+        "A-CD-UC-10",
+        "A-T-UC-08",
+        "A-T-UC-07",
+        "A-M-UC-04",
+        "A-M-UC-08",
+        "A-PA-07",
+        "A-T-UC-05"
+      ],
+      "solvedCount": 6,
+      "solvedIds": [
+        "A-T-UC-11",
+        "A-T-UC-12",
+        "A-T-UC-04",
+        "A-M-UC-10",
+        "A-CE-09",
+        "A-CD-UC-04"
+      ],
+      "failure": {
+        "route": "A-T-UC-06",
+        "index": 6,
+        "reason": "exhausted",
+        "expanded": 17778,
+        "starts": 24,
+        "goals": 107
+      },
+      "routes": [
+        {
+          "index": 0,
+          "route": "A-T-UC-11",
+          "reason": "ok",
+          "expanded": 3529,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.5333333333333338,
+          "targetPortFraction": 0.041666666666666546
+        },
+        {
+          "index": 1,
+          "route": "A-T-UC-12",
+          "reason": "ok",
+          "expanded": 2677,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9333333333333336,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 2,
+          "route": "A-T-UC-04",
+          "reason": "ok",
+          "expanded": 3314,
+          "pointCount": 5,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.06666666666666703,
+          "targetPortFraction": 0.0416666666666669
+        },
+        {
+          "index": 3,
+          "route": "A-M-UC-10",
+          "reason": "ok",
+          "expanded": 8699,
+          "pointCount": 5,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.9285714285714288,
+          "targetPortFraction": 0.47916666666666635
+        },
+        {
+          "index": 4,
+          "route": "A-CE-09",
+          "reason": "ok",
+          "expanded": 9616,
+          "pointCount": 3,
+          "targetSide": "BOTTOM",
+          "sourcePortFraction": 0.17857142857142927,
+          "targetPortFraction": 0.4791666666666673
+        },
+        {
+          "index": 5,
+          "route": "A-CD-UC-04",
+          "reason": "ok",
+          "expanded": 567,
+          "pointCount": 3,
+          "targetSide": "TOP",
+          "sourcePortFraction": 0.39285714285714285,
+          "targetPortFraction": 0.9583333333333335
+        },
+        {
+          "index": 6,
+          "route": "A-T-UC-06",
+          "reason": "exhausted",
+          "expanded": 17778,
+          "starts": 24,
+          "goals": 107
+        }
+      ]
+    }
+  ]
+}

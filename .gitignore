@@ -1,0 +1,49 @@
+# Dependency and virtualenv trees
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+venv/
+**/venv/
+site-packages/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Caches and build output
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+.qa-deps/
+.playwright-cli/
+
+# Local state and databases
+*.db
+*.sqlite
+*.db-wal
+*.db-shm
+*.log
+
+# Archives and release packages
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.whl
+
+# Real environment files (keep the .example templates)
+.env
+**/.env
+TEMP_*.env
+**/TEMP_*.env
+*_TEMP_*.env
+*.pem
+*.key
+id_rsa*

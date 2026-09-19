@@ -1,0 +1,26 @@
+routes:
+  P1_UC_Overview:
+    - {id: A-T-UC-02, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-1}
+    - {id: A-T-UC-04, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-2}
+    - {id: A-T-UC-05, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-3}
+    - {id: A-T-UC-06, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-4}
+    - {id: A-T-UC-07, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-5}
+    - {id: A-T-UC-08, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-6}
+    - {id: A-T-UC-10, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-7}
+    - {id: A-T-UC-11, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-8}
+    - {id: A-T-UC-12, family: traveler, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-9}
+    - {id: A-CD-UC-04, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-1}
+    - {id: A-CD-UC-05, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-2}
+    - {id: A-CD-UC-10, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-3}
+    - {id: A-M-UC-04, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-4}
+    - {id: A-M-UC-08, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-5}
+    - {id: A-M-UC-10, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-6}
+    - {id: A-B-06, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-7}
+    - {id: A-PA-07, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-8}
+    - {id: A-CE-09, family: provider, sourceSide: LEFT, targetSide: RIGHT, lane: provider-9}
+    - {id: EXT-07-06, family: extend, sourceSide: TOP, targetSide: BOTTOM, lane: extend-1}
+    - {id: EXT-09-08, family: extend, sourceSide: TOP, targetSide: BOTTOM, lane: extend-2}
+    - {id: EXT-10-09, family: extend, sourceSide: TOP, targetSide: BOTTOM, lane: extend-3}
+policy:
+  type: right-angle
+  maxCrossingsPerPage: 2

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["metadata", "mappings"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {"type": "object", "required": ["name", "version", "status"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "version": {"type": "string"}, "status": {"type": "string"}}},
+    "mappings": {"type": "array", "items": {"type": "object", "required": ["requirementId", "useCases", "domainElements", "diagrams", "testCases"], "additionalProperties": false, "properties": {"requirementId": {"type": "string", "pattern": "^(BG|FR|BR|NFR|SR|IR)-[0-9]{3}$"}, "useCases": {"type": "array", "items": {"type": "string", "pattern": "^UC-(0[1-9]|1[0-3])$"}}, "domainElements": {"type": "array", "items": {"type": "object", "required": ["name", "kind"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "kind": {"type": "string"}}}}, "diagrams": {"type": "array", "items": {"type": "object", "required": ["id", "type"], "additionalProperties": false, "properties": {"id": {"type": "string"}, "type": {"type": "string"}, "path": {"type": "string"}}}}, "testCases": {"type": "array", "items": {"type": "object", "required": ["id"], "additionalProperties": false, "properties": {"id": {"type": "string", "pattern": "^TC-[0-9]{3}$"}}}}}}}
+  }
+}

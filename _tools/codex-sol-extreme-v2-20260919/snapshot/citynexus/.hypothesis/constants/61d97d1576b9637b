@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\replanning\provider_snapshots.py
+# hypothesis_version: 6.168.0
+
+[-180, 180, 'Feature', 'LIVE_CAPTURE', 'LineString', 'MultiLineString', 'SYNTHETIC_DEFAULT', 'captured_at', 'coordinates', 'cost_provenance', 'degraded', 'destination_key', 'distance_m', 'fact_quality', 'facts', 'fallback_reason', 'geometry', 'geometry_provider', 'lat', 'latitude', 'lon', 'longitude', 'minutes', 'mobility-snapshot', 'mode', 'operation_key', 'origin_key', 'provenance', 'provider', 'route_geometry', 'route_provenance', 'selected_facts', 'snapshot_id', 'source_provider', 'time_basis', 'type', 'unknown', 'walking_distance_m', 'walking_min']

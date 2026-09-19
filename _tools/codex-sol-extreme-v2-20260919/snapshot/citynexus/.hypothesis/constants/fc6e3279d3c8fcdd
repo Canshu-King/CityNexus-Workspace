@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\delegation_policy.py
+# hypothesis_version: 6.168.0
+
+['AI_ONLY', 'C3_Guaranteed', 'C4_Anchored', 'CORROBORATED', 'CRITICAL', 'PROPOSAL_ONLY', 'READ_ONLY_TOOL', 'VALIDATED_IMPACT', '[]', 'activity', 'auto_accept_replan', 'created_at', 'max_auto_loss_minor', 'mode', 'traveler_id', 'updated_at', 'version', 'visit']

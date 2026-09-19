@@ -1,0 +1,171 @@
+{
+  "journey_id": "22222222-2222-4222-8222-222222222222",
+  "cases": [
+    {
+      "case": "cursor-absent-preexecution",
+      "oracle": {
+        "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+        "persisted_cursor": null,
+        "cursor_status": "ABSENT_FALLBACK",
+        "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+        "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792",
+        "next_leg_id": null
+      },
+      "projections": {
+        "experience": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "persisted_cursor": null
+        },
+        "twin": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "ABSENT_FALLBACK",
+          "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+          "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792"
+        },
+        "offline": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "ABSENT_FALLBACK",
+          "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+          "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792"
+        },
+        "execution_clock": {
+          "persisted_cursor": null
+        }
+      },
+      "divergences": []
+    },
+    {
+      "case": "cursor-first",
+      "oracle": {
+        "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+        "persisted_cursor": "3a58c470-524c-5854-aa39-6c37a350eb80",
+        "cursor_status": "VALID",
+        "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+        "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792",
+        "next_leg_id": null
+      },
+      "projections": {
+        "experience": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "persisted_cursor": "3a58c470-524c-5854-aa39-6c37a350eb80"
+        },
+        "twin": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+          "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792"
+        },
+        "offline": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "3a58c470-524c-5854-aa39-6c37a350eb80",
+          "next_activity_id": "abe4e842-249e-516f-ac43-b41695083792"
+        },
+        "execution_clock": {
+          "persisted_cursor": "3a58c470-524c-5854-aa39-6c37a350eb80"
+        }
+      },
+      "divergences": []
+    },
+    {
+      "case": "cursor-middle",
+      "oracle": {
+        "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+        "persisted_cursor": "abe4e842-249e-516f-ac43-b41695083792",
+        "cursor_status": "VALID",
+        "now_activity_id": "abe4e842-249e-516f-ac43-b41695083792",
+        "next_activity_id": "61e3096d-89bc-5702-ab7d-21ad8289c1ee",
+        "next_leg_id": null
+      },
+      "projections": {
+        "experience": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "persisted_cursor": "abe4e842-249e-516f-ac43-b41695083792"
+        },
+        "twin": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "abe4e842-249e-516f-ac43-b41695083792",
+          "next_activity_id": "61e3096d-89bc-5702-ab7d-21ad8289c1ee"
+        },
+        "offline": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "abe4e842-249e-516f-ac43-b41695083792",
+          "next_activity_id": "61e3096d-89bc-5702-ab7d-21ad8289c1ee"
+        },
+        "execution_clock": {
+          "persisted_cursor": "abe4e842-249e-516f-ac43-b41695083792"
+        }
+      },
+      "divergences": []
+    },
+    {
+      "case": "cursor-final",
+      "oracle": {
+        "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+        "persisted_cursor": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837",
+        "cursor_status": "VALID",
+        "now_activity_id": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837",
+        "next_activity_id": null,
+        "next_leg_id": null
+      },
+      "projections": {
+        "experience": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "persisted_cursor": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837"
+        },
+        "twin": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837",
+          "next_activity_id": null
+        },
+        "offline": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "VALID",
+          "now_activity_id": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837",
+          "next_activity_id": null
+        },
+        "execution_clock": {
+          "persisted_cursor": "2cbb2a5d-fe92-5400-b91b-7a6f69e41837"
+        }
+      },
+      "divergences": []
+    },
+    {
+      "case": "cursor-stale",
+      "oracle": {
+        "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+        "persisted_cursor": "90e831fd-f8f8-567a-b1c5-c97f11527447",
+        "cursor_status": "STALE",
+        "now_activity_id": null,
+        "next_activity_id": null,
+        "next_leg_id": null
+      },
+      "projections": {
+        "experience": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "persisted_cursor": "90e831fd-f8f8-567a-b1c5-c97f11527447"
+        },
+        "twin": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "STALE",
+          "now_activity_id": null,
+          "next_activity_id": null
+        },
+        "offline": {
+          "active_plan_id": "55523d40-cafe-5bd2-b30a-de057ec7a839",
+          "cursor_status": "STALE",
+          "now_activity_id": null,
+          "next_activity_id": null
+        },
+        "execution_clock": {
+          "persisted_cursor": "90e831fd-f8f8-567a-b1c5-c97f11527447"
+        }
+      },
+      "divergences": []
+    }
+  ],
+  "divergence_count": 0
+}

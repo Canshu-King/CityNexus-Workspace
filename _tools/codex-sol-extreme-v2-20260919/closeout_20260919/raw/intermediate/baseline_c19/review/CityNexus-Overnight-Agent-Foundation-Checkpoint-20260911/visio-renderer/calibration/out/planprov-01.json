@@ -1,0 +1,33 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_TRAVELER_SKELETON_PLANAR_GRID",
+  "seed": 20261061,
+  "samples": 32,
+  "axisCounts": {
+    "x": 96,
+    "y": 83
+  },
+  "familyCounts": {
+    "A-CD-UC-04": 23,
+    "A-CD-UC-05": 6,
+    "A-CD-UC-10": 17,
+    "A-M-UC-04": 16,
+    "A-M-UC-08": 19,
+    "A-M-UC-10": 13,
+    "A-B-06": 0,
+    "A-PA-07": 0,
+    "A-CE-09": 0
+  },
+  "emptyRoutes": [
+    "A-B-06",
+    "A-CE-09",
+    "A-PA-07"
+  ],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 42104
+}

@@ -1,0 +1,41 @@
+{
+  "status": "FAIL",
+  "stage": "route:C4-T-A:write-geometry",
+  "activeRoute": "C4-T-A",
+  "error": "RuntimeError('Geometry1 normalization did not leave component+MoveTo only: count=3')",
+  "errorType": "RuntimeError",
+  "hresult": null,
+  "excepinfo": null,
+  "routes": [],
+  "routeDiagnostics": {
+    "C4-T-A": {
+      "preWriteGeometry": [
+        {
+          "rowIndex": 1,
+          "rowType": 138,
+          "xIn": 0.0,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 2,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 3,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 1.3976377952755894
+        },
+        {
+          "rowIndex": 4,
+          "rowType": 139,
+          "xIn": 1.7716535433070868,
+          "yIn": 1.3976377952755894
+        }
+      ],
+      "preWriteRowCount": 5
+    }
+  }
+}

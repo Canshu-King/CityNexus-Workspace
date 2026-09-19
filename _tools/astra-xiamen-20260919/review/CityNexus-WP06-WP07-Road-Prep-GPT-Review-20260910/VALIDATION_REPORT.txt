@@ -1,0 +1,35 @@
+CityNexus WP06 follow-up / WP07 road-prep validation — 2026-09-10
+
+PATCH PREFLIGHT
+Command: git apply --check --verbose on the supplied WP06/WP07 road-prep patch
+Result: PASS (all 8 patch targets); patch then applied cleanly
+
+FUNCTIONAL REGRESSION
+Command: .venv/Scripts/python.exe -m pytest -q (from backend/)
+Result: 144 passed, 1 skipped, 2 warnings in 15.41s
+Skipped: optional live Valhalla smoke; CITYNEXUS_LIVE_VALHALLA_URL unset
+Required live network calls: NONE
+Packaged snapshot replay: 144 passed, 1 skipped, 2 warnings in 21.65s
+Packaged replay database: isolated temporary SQLite file outside the checkpoint
+
+STATIC VALIDATION
+Ruff check app tests: PASS
+Ruff format --check app tests: PASS (96 files already formatted)
+Python compileall app tests: PASS
+
+CONTRACT VALIDATION
+OpenAPI version: 3.1.0
+Formal operations: 38
+Runtime operations: 38
+Missing runtime operations: none
+Missing formal operations: none
+Exact operation comparison: PASS
+
+FRONTEND VALIDATION
+npm run build: PASS (Vite production build)
+npm run test:e2e: PASS (1 passed; e2e/golden.spec.ts)
+
+CHECKPOINT DECISION
+PASS — stop at the WP06/WP07 road-prep checkpoint pending external GPT review.
+No WP08 or later work was started. No SHA, file hash, archive hash, or hash
+manifest was computed.

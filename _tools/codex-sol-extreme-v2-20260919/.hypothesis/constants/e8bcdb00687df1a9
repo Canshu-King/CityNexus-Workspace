@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\inbox\vision.py
+# hypothesis_version: 6.168.0
+
+['ARRIVAL', 'DEPARTURE', 'MATCH', 'MID_TRIP', 'MISMATCH', 'UNKNOWN', 'additionalProperties', 'anchor_role', 'array', 'booking confirmation', 'confidence', 'confirmation_ref', 'content', 'currency', 'destination', 'enum', 'field_provenance', 'image_url', 'input_image', 'integer', 'items', 'low', 'match', 'maximum', 'minimum', 'null', 'number', 'object', 'origin', 'payment_status', 'price_amount_minor', 'properties', 'reason', 'reasoning_summary', 'refundability', 'required', 'reservation_type', 'role', 'scheduled_arrival_at', 'semantic_target', 'string', 'system', 'text', 'type', 'uncertain_fields', 'user']

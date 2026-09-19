@@ -1,0 +1,140 @@
+--- a/frontend/src/api/citynexus.ts
++++ b/frontend/src/api/citynexus.ts
+@@ -154,6 +154,13 @@
+     return requestJson<JourneyTwin>("/journeys/" + journeyId + "/start", { method: "POST" });
+   },
+ 
++  completeActivity(journeyId: string, activityId: string): Promise<JourneyTwin> {
++    return requestJson<JourneyTwin>(
++      "/journeys/" + journeyId + "/activities/" + activityId + "/complete",
++      { method: "POST" },
++    );
++  },
++
+   getTwin(journeyId: string, now?: string): Promise<JourneyTwin> {
+     const suffix = now ? "?now=" + encodeURIComponent(now) : "";
+     return requestJson<JourneyTwin>("/journeys/" + journeyId + "/twin" + suffix);
+@@ -180,9 +187,11 @@
+     journeyId: string,
+     eventId: string,
+     candidateCount = 3,
++    idempotencyKey?: string,
+   ): Promise<ReplanProposal> {
+     return requestJson<ReplanProposal>("/journeys/" + journeyId + "/replans", {
+       method: "POST",
++      headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+       body: JSON.stringify({ trigger_event_id: eventId, candidate_count: candidateCount }),
+     });
+   },
+--- a/frontend/src/demo/goldenScenario.ts
++++ b/frontend/src/demo/goldenScenario.ts
+@@ -35,9 +35,23 @@
+   await cityNexusApi.captureBooking(
+     ids.journey_id,
+     booking,
+-    "frontend-golden-capture-" + ids.journey_id,
++    "frontend-golden-capture-" + booking.id,
+   );
+-  const twin = await cityNexusApi.startJourney(ids.journey_id);
++  let twin = await cityNexusApi.startJourney(ids.journey_id);
++
++  // Put the deterministic demo at the actual disruption point.  A closure at
++  // 13:25 is not a meaningful execution demo if Journey.current_activity_id
++  // is still the 09:00 first stop.
++  for (const activity of plan.activities) {
++    if (activity.id === techArt.id) break;
++    if (twin.current_activity_id !== activity.id) {
++      throw new Error("Journey execution pointer drifted before the Tech Art disruption");
++    }
++    twin = await cityNexusApi.completeActivity(ids.journey_id, activity.id);
++  }
++  if (twin.current_activity_id !== techArt.id) {
++    throw new Error("Golden Scenario did not progress to Tech Art before disruption");
++  }
+   return { journeyId: ids.journey_id, plan, techArt, riverCruise, twin };
+ }
+ 
+@@ -61,7 +75,12 @@
+     session.techArt.id,
+     occurredAt,
+   );
+-  await cityNexusApi.generateReplans(session.journeyId, event.id, 3);
++  await cityNexusApi.generateReplans(
++    session.journeyId,
++    event.id,
++    3,
++    "frontend-replan-generate-" + event.id,
++  );
+   const all = await cityNexusApi.listReplans(session.journeyId);
+   return {
+     eventId: event.id,
+--- a/frontend/src/main.tsx
++++ b/frontend/src/main.tsx
+@@ -35,13 +35,19 @@
+ 
+ function formatMoney(amountMinor: number, currency: string): string {
+   try {
++    const currencyScale = new Intl.NumberFormat("en", {
++      style: "currency",
++      currency,
++    }).resolvedOptions().maximumFractionDigits;
++    const majorAmount = amountMinor / 10 ** currencyScale;
+     return new Intl.NumberFormat("zh-CN", {
+       style: "currency",
+       currency,
+-      maximumFractionDigits: 0,
+-    }).format(amountMinor);
++      minimumFractionDigits: 0,
++      maximumFractionDigits: currencyScale,
++    }).format(majorAmount);
+   } catch {
+-    return amountMinor.toLocaleString("en-US") + " " + currency;
++    return amountMinor.toLocaleString("en-US") + " minor " + currency;
+   }
+ }
+ 
+@@ -194,7 +200,7 @@
+     actor.send({ type: "EVENT_DETECTED" });
+     try {
+       const result = await injectClosureAndLoadCandidates(session, closureOccurredAt);
+-      const refreshedTwin = await cityNexusApi.getTwin(session.journeyId);
++      const refreshedTwin = await cityNexusApi.getTwin(session.journeyId, closureOccurredAt);
+       setSession({ ...session, twin: refreshedTwin });
+       setEventId(result.eventId);
+       setProposals(result.proposals);
+@@ -218,7 +224,7 @@
+     try {
+       const accepted = await cityNexusApi.acceptReplan(
+         selectedProposal.id,
+-        "frontend-golden-accept-" + session.journeyId,
++        "frontend-replan-accept-" + selectedProposal.id,
+       );
+       if (!accepted.twin.active_plan_version_id) {
+         throw new Error("Accepted backend response has no active plan");
+--- a/frontend/e2e/golden.spec.ts
++++ b/frontend/e2e/golden.spec.ts
+@@ -10,6 +10,8 @@
+   await expect(page.getByTestId(testIds.journeyMap)).toBeVisible();
+   await expect(page.getByTestId(testIds.journeyTimeline)).toContainText("Tech Art Center");
+   await expect(page.getByTestId(testIds.journeyTimeline)).toContainText("River Cruise");
++  await expect(page.getByTestId(testIds.currentActivity)).toContainText("Tech Art Center");
++  await expect(page.getByTestId(testIds.budgetRemaining)).toContainText("130");
+   await expect(page.getByTestId(testIds.feasibilityEnvelope)).toContainText("persisted backend");
+   await expect(page.getByTestId(testIds.providerDegradation)).toContainText("ready");
+   await expect(page.getByTestId(testIds.upcomingCommitments)).toContainText("River Cruise");
+@@ -39,6 +41,15 @@
+   const proposals = await (await proposalsResponse).json();
+   expect(event.event_type).toBe("CLOSURE");
+   expect(proposals.filter((item: { status: string }) => item.status === "PRESENTED").length).toBeGreaterThanOrEqual(2);
++  const f3 = proposals.find(
++    (item: { diff?: { candidate_family?: string } }) =>
++      item.diff?.candidate_family === "F3_OPPORTUNITY_WINDOW",
++  );
++  expect(f3).toBeTruthy();
++  expect(f3.diff.opportunity_window_evidence.origin_key).toBe("place-tech-art");
++  expect(f3.diff.opportunity_window_evidence.window_opens_at).toBe(
++    "2026-10-10T13:25:00+08:00",
++  );
+ 
+   await expect(page.getByTestId(testIds.replanPanel)).toBeVisible();
+   await expect(page.getByTestId(testIds.mapEventMarker)).toBeVisible();

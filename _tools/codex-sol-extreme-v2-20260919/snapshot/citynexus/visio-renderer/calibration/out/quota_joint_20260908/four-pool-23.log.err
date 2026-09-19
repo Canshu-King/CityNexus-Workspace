@@ -1,0 +1,55 @@
+Traceback (most recent call last):
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\_core\__init__.py", line 23, in <module>
+    from . import multiarray
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\_core\multiarray.py", line 10, in <module>
+    from . import overrides
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\_core\overrides.py", line 7, in <module>
+    from numpy._core._multiarray_umath import (
+ImportError: DLL load failed while importing _multiarray_umath: 页面文件太小，无法完成操作。
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\__init__.py", line 127, in <module>
+    from numpy.__config__ import show_config
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\__config__.py", line 4, in <module>
+    from numpy._core._multiarray_umath import (
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\_core\__init__.py", line 49, in <module>
+    raise ImportError(msg)
+ImportError: 
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.10 from "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\python.exe"
+  * The NumPy version is: "2.2.6"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: DLL load failed while importing _multiarray_umath: 页面文件太小，无法完成操作。
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\moodle\CityNexus\visio-renderer\calibration\search_near_four_pool.py", line 12, in <module>
+    from explore_p1_disjoint_pool import _candidate_points_cm, _candidate_pool
+  File "D:\moodle\CityNexus\visio-renderer\calibration\explore_p1_disjoint_pool.py", line 25, in <module>
+    from ortools.sat.python import cp_model
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\ortools\sat\python\cp_model.py", line 61, in <module>
+    import numpy as np
+  File "C:\Users\仓鼠王\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\__init__.py", line 132, in <module>
+    raise ImportError(msg) from e
+ImportError: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.

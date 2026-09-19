@@ -1,0 +1,2916 @@
+{
+  "status": "SEARCH_INCOMPLETE",
+  "plan": "PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT",
+  "associationCount": 18,
+  "familyCounts": {},
+  "emptyRoutes": [
+    "A-B-06",
+    "A-CD-UC-04",
+    "A-CD-UC-05",
+    "A-CD-UC-10",
+    "A-CE-09",
+    "A-M-UC-04",
+    "A-M-UC-08",
+    "A-M-UC-10",
+    "A-PA-07",
+    "A-T-UC-02",
+    "A-T-UC-04",
+    "A-T-UC-05",
+    "A-T-UC-06",
+    "A-T-UC-07",
+    "A-T-UC-08",
+    "A-T-UC-10",
+    "A-T-UC-11",
+    "A-T-UC-12"
+  ],
+  "expandedStates": 41,
+  "deadEnds": [
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 3
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 4
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 71973
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 66519
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 107270
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 61398
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 115185
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 98691
+        }
+      ],
+      "state": 6
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68739
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61990
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 113977
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 57259
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 116918
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 114517
+        }
+      ],
+      "state": 7
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68739
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61990
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 99279
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 57259
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 109716
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 114517
+        }
+      ],
+      "state": 8
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 9
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 11
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 12
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 71973
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 66519
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 96000
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 61398
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 116999
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 85939
+        }
+      ],
+      "state": 14
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68739
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61990
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 113579
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 57259
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 113701
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 114517
+        }
+      ],
+      "state": 15
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68739
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61990
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 109093
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 57259
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 111595
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 84849
+        }
+      ],
+      "state": 16
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-B-06",
+      "selectedRoutes": [
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 17
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "deadline",
+          "expanded": 70841
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 66519
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 80379
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 61398
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 109385
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 84996
+        }
+      ],
+      "state": 20
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68019
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61682
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 90736
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 56951
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 108297
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 92818
+        }
+      ],
+      "state": 21
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68019
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 61682
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 94674
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 56951
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 106808
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 96223
+        }
+      ],
+      "state": 22
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 23
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 71910
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 66491
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 100225
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 61370
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 111527
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 102220
+        }
+      ],
+      "state": 25
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 65761
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 60688
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 111436
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 55964
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 103155
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 94848
+        }
+      ],
+      "state": 26
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 65761
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 60688
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "deadline",
+          "expanded": 100527
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 55964
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 107171
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 102577
+        }
+      ],
+      "state": 27
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 28
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 1
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 1
+        }
+      ],
+      "state": 29
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 52331
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 52524
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 106648
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 104094
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 66799
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 56651
+        }
+      ],
+      "state": 5
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 47039
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 47175
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 96676
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 68418
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 61678
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 51024
+        }
+      ],
+      "state": 6
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 54671
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 54864
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 92999
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 100477
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 69124
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 59434
+        }
+      ],
+      "state": 7
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 39805
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 39878
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 81962
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 75088
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 54072
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 43226
+        }
+      ],
+      "state": 8
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 53139
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 53332
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 105775
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 104874
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 68599
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 57609
+        }
+      ],
+      "state": 10
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 47847
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 47983
+        },
+        {
+          "family": "top_outer",
+          "reason": "exhausted",
+          "expanded": 98292
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "exhausted",
+          "expanded": 70404
+        },
+        {
+          "family": "inner_left",
+          "reason": "exhausted",
+          "expanded": 63478
+        },
+        {
+          "family": "outer_right",
+          "reason": "exhausted",
+          "expanded": 51982
+        }
+      ],
+      "state": 11
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "selectedRoutes": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "familyDiagnostics": [
+        {
+          "family": "mandatory_gate",
+          "reason": "exhausted",
+          "expanded": 55479
+        },
+        {
+          "family": "default",
+          "reason": "exhausted",
+          "expanded": 55672
+        },
+        {
+          "family": "top_outer",
+          "reason": "deadline",
+          "expanded": 78811
+        },
+        {
+          "family": "bottom_outer",
+          "reason": "deadline",
+          "expanded": 23927
+        }
+      ],
+      "state": 12
+    }
+  ],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "criticalAxisCounts": {
+    "x": 339,
+    "y": 233
+  },
+  "searchAxisCounts": {
+    "x": 151,
+    "y": 180
+  },
+  "searchMode": "event-projection",
+  "familyDiagnostics": {},
+  "cycleDiagnostics": [
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "repetitions": 2,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 2,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 3,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 4,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "repetitions": 3,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "repetitions": 4,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 5,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 6,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 7,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 8,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 9,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 10,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "repetitions": 5,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 11,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 12,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 13,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-CD-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-10",
+        "A-PA-07"
+      ],
+      "repetitions": 14,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 0,
+      "failedRoute": "A-M-UC-10",
+      "blockerSet": [
+        "A-B-06",
+        "A-PA-07"
+      ],
+      "repetitions": 6,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 2,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 3,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 4,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 5,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 6,
+      "action": "backtrack-and-switch-corridor-family"
+    },
+    {
+      "trial": 1,
+      "failedRoute": "A-PA-07",
+      "blockerSet": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-T-UC-11"
+      ],
+      "repetitions": 7,
+      "action": "backtrack-and-switch-corridor-family"
+    }
+  ],
+  "solutions": [],
+  "negotiated": {
+    "status": "FAIL",
+    "expandedStates": 41,
+    "deadEnds": [
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 3
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 4
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 71973
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 66519
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 107270
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 61398
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 115185
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 98691
+          }
+        ],
+        "state": 6
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68739
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61990
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 113977
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 57259
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 116918
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 114517
+          }
+        ],
+        "state": 7
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68739
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61990
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 99279
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 57259
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 109716
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 114517
+          }
+        ],
+        "state": 8
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 9
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 11
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 12
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 71973
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 66519
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 96000
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 61398
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 116999
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 85939
+          }
+        ],
+        "state": 14
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68739
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61990
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 113579
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 57259
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 113701
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 114517
+          }
+        ],
+        "state": 15
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68739
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61990
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 109093
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 57259
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 111595
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 84849
+          }
+        ],
+        "state": 16
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-B-06",
+        "selectedRoutes": [
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 17
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "deadline",
+            "expanded": 70841
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 66519
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 80379
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 61398
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 109385
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 84996
+          }
+        ],
+        "state": 20
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68019
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61682
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 90736
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 56951
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 108297
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 92818
+          }
+        ],
+        "state": 21
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68019
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 61682
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 94674
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 56951
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 106808
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 96223
+          }
+        ],
+        "state": 22
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 23
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 71910
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 66491
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 100225
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 61370
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 111527
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 102220
+          }
+        ],
+        "state": 25
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 65761
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 60688
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 111436
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 55964
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 103155
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 94848
+          }
+        ],
+        "state": 26
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 65761
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 60688
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "deadline",
+            "expanded": 100527
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 55964
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 107171
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 102577
+          }
+        ],
+        "state": 27
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 28
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 1
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 1
+          }
+        ],
+        "state": 29
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 52331
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 52524
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 106648
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 104094
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 66799
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 56651
+          }
+        ],
+        "state": 5
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 47039
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 47175
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 96676
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 68418
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 61678
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 51024
+          }
+        ],
+        "state": 6
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 54671
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 54864
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 92999
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 100477
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 69124
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 59434
+          }
+        ],
+        "state": 7
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 39805
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 39878
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 81962
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 75088
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 54072
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 43226
+          }
+        ],
+        "state": 8
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 53139
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 53332
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 105775
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 104874
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 68599
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 57609
+          }
+        ],
+        "state": 10
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 47847
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 47983
+          },
+          {
+            "family": "top_outer",
+            "reason": "exhausted",
+            "expanded": 98292
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "exhausted",
+            "expanded": 70404
+          },
+          {
+            "family": "inner_left",
+            "reason": "exhausted",
+            "expanded": 63478
+          },
+          {
+            "family": "outer_right",
+            "reason": "exhausted",
+            "expanded": 51982
+          }
+        ],
+        "state": 11
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "selectedRoutes": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "familyDiagnostics": [
+          {
+            "family": "mandatory_gate",
+            "reason": "exhausted",
+            "expanded": 55479
+          },
+          {
+            "family": "default",
+            "reason": "exhausted",
+            "expanded": 55672
+          },
+          {
+            "family": "top_outer",
+            "reason": "deadline",
+            "expanded": 78811
+          },
+          {
+            "family": "bottom_outer",
+            "reason": "deadline",
+            "expanded": 23927
+          }
+        ],
+        "state": 12
+      }
+    ],
+    "cycleDiagnostics": [
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "repetitions": 2,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 2,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 3,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 4,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "repetitions": 3,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "repetitions": 4,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 5,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 6,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 7,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 8,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 9,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 10,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "repetitions": 5,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 11,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 12,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 13,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-CD-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-10",
+          "A-PA-07"
+        ],
+        "repetitions": 14,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 0,
+        "failedRoute": "A-M-UC-10",
+        "blockerSet": [
+          "A-B-06",
+          "A-PA-07"
+        ],
+        "repetitions": 6,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 2,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 3,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 4,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 5,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 6,
+        "action": "backtrack-and-switch-corridor-family"
+      },
+      {
+        "trial": 1,
+        "failedRoute": "A-PA-07",
+        "blockerSet": [
+          "A-B-06",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-T-UC-11"
+        ],
+        "repetitions": 7,
+        "action": "backtrack-and-switch-corridor-family"
+      }
+    ]
+  }
+}

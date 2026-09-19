@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\pydantic\v1\annotated_types.py
+# hypothesis_version: 6.168.0
+
+['BaseModel', 'NamedTuple', 'TypedDict', '__annotations__', '__required_keys__', 'typing']

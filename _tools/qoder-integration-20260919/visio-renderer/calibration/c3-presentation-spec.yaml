@@ -1,0 +1,72 @@
+calibration: C3
+name: Presentation Layer Calibration
+page:
+  widthCm: 29.7
+  heightCm: 21.0
+  canvas: '#F8FAFC'
+marginCm: 1.2
+font:
+  family: Segoe UI
+  fallback: Aptos
+presentation:
+  - id: BG-CANVAS
+    role: canvas
+    x: 14.85
+    y: 10.5
+    width: 29.7
+    height: 21.0
+    fill: '#F8FAFC'
+    stroke: null
+  - id: HDR-TITLE
+    role: title
+    x: 10.2
+    y: 1.65
+    width: 18.0
+    height: 0.9
+    text: CityNexus — Presentation Calibration
+    fill: null
+    stroke: null
+    textColor: '#0F172A'
+    fontSizePt: 18
+    horizontal: left
+  - id: HDR-SUBTITLE
+    role: subtitle
+    x: 10.2
+    y: 2.55
+    width: 18.0
+    height: 0.55
+    text: Smart City Traveler System • Renderer v0.3.2
+    fill: null
+    stroke: null
+    textColor: '#64748B'
+    fontSizePt: 9
+    horizontal: left
+  - id: HDR-STATUS
+    role: status
+    x: 25.9
+    y: 1.65
+    width: 5.2
+    height: 0.65
+    text: C3 • PRESENTATION
+    fill: '#FFFFFF'
+    stroke: '#CBD5E1'
+    lineWeightPt: 0.8
+    textColor: '#64748B'
+    fontSizePt: 8.5
+    horizontal: center
+  - id: LEGEND
+    role: legend
+    x: 25.5
+    y: 18.6
+    width: 6.0
+    height: 2.4
+    text: |-
+      Legend
+      Association  •  Composition
+      Dependency   •  <<projection>>
+    fill: '#FFFFFF'
+    stroke: '#CBD5E1'
+    lineWeightPt: 0.8
+    textColor: '#475569'
+    fontSizePt: 8.5
+    horizontal: left

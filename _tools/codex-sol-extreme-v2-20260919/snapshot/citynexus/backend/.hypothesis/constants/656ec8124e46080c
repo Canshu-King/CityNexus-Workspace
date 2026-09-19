@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\_typing.py
+# hypothesis_version: 6.168.0
+
+['AliasedClass[_T]', 'AliasedInsp[_T]', 'Mapper[_T]', '_O', '_ORMCOLEXPR', '_T', '_T_co', '__composite_values__', '__dataclass_fields__', '_is_internal_proxy', '_is_relationship', 'collection', 'is_aliased_class', 'is_attribute', 'is_mapper', 'is_property']

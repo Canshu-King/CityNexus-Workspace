@@ -1,0 +1,32 @@
+{
+  "booking_services": {
+    "service-river-cruise-booking": {
+      "provider_key": "mock-booking",
+      "place_id": "place-river-cruise",
+      "currency": "CNY",
+      "amount_minor": 12000,
+      "slots": [
+        {
+          "provider_slot_ref": "slot-river-cruise-1530",
+          "start_at": "2026-10-10T15:30:00+08:00",
+          "end_at": "2026-10-10T16:30:00+08:00"
+        }
+      ],
+      "cancellation_policy": {
+        "cancellable_before_payment": true,
+        "loss_minor": 0
+      }
+    }
+  },
+  "order_services": {
+    "service-food-preorder": {
+      "provider_key": "mock-booking",
+      "place_id": "place-food-hall",
+      "currency": "CNY",
+      "items": {
+        "local-lunch-box": {"name": "Local Lunch Box", "unit_amount_minor": 5800},
+        "jasmine-tea": {"name": "Jasmine Tea", "unit_amount_minor": 1200}
+      }
+    }
+  }
+}

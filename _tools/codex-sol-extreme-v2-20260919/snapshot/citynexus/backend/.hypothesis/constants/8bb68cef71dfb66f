@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\icalendar\param.py
+# hypothesis_version: 6.168.0
+
+[',', 'ALTREP', 'CN', 'CUTYPE', 'DELEGATED-FROM', 'DELEGATED-TO', 'DELEGATED_FROM', 'DELEGATED_TO', 'DIR', 'FALSE', 'FBTYPE', 'LANGUAGE', 'MEMBER', 'PARTSTAT', 'RANGE', 'RELATED', 'RELTYPE', 'ROLE', 'RSVP', 'SENT-BY', 'SENT_BY', 'T', 'TRUE', 'TZID', 'string_parameter']

@@ -1,0 +1,5240 @@
+{
+  "status": "POOL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "shardIndex": 5,
+  "testedPortVariants": 49,
+  "elapsedSeconds": 186.65600000000086,
+  "candidateCounts": {
+    "A-B-06": 0,
+    "A-PA-07": 80,
+    "A-CE-09": 17,
+    "A-CD-UC-10": 13,
+    "A-M-UC-08": 19,
+    "A-M-UC-10": 15
+  },
+  "fixedSeedRouteCount": 12,
+  "candidatePools": {
+    "A-B-06": [],
+    "A-PA-07": [
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            28.5,
+            12.4
+          ],
+          [
+            28.5,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.474999999999994,
+        "family": "free",
+        "tag": "A-PA-07:12"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.0,
+            12.4
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.474999999999994,
+        "family": "free",
+        "tag": "A-PA-07:18"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.474999999999994,
+        "family": "bottom",
+        "tag": "A-PA-07:2"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.474999999999998,
+        "family": "top",
+        "tag": "A-PA-07:1"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            28.5,
+            12.4
+          ],
+          [
+            28.5,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.474999999999998,
+        "family": "free",
+        "tag": "A-PA-07:24"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            28.5,
+            12.4
+          ],
+          [
+            28.5,
+            9.0
+          ],
+          [
+            14.8,
+            9.0
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 23.475,
+        "family": "free",
+        "tag": "A-PA-07:6"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.0
+          ],
+          [
+            16.3,
+            7.0
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 24.275,
+        "family": "cross",
+        "tag": "A-PA-07:35"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            14.0,
+            9.0
+          ],
+          [
+            14.0,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 25.075,
+        "family": "cross",
+        "tag": "A-PA-07:11"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            8.9
+          ],
+          [
+            20.8,
+            8.9
+          ],
+          [
+            20.8,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 15.599999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:0:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 15.599999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:0:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 15.599999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:0:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.199999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:1:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.199999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:1:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.199999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:1:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.0,
+            11.7
+          ],
+          [
+            29.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 14.799999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:2:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 14.799999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:2:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 14.799999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:2:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.5,
+            11.7
+          ],
+          [
+            29.5,
+            9.0
+          ],
+          [
+            14.8,
+            9.0
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 22.275,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:3:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 22.275,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:3:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 22.275,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:3:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            28.0,
+            11.7
+          ],
+          [
+            28.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 17.474999999999994,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:5:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 17.474999999999994,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:5:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.6,
+            9.2
+          ],
+          [
+            19.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 17.474999999999994,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:5:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            28.0,
+            11.7
+          ],
+          [
+            28.0,
+            9.2
+          ],
+          [
+            15.8,
+            9.2
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 17.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:6:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            15.8,
+            9.0
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 17.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:6:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            15.8,
+            9.2
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 17.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:6:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.0,
+            11.7
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            17.2,
+            9.2
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 16.575,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:7:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            17.2,
+            9.0
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 16.575,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:7:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            17.2,
+            9.2
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 16.575,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:7:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.0
+          ],
+          [
+            18.6,
+            9.0
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:8:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            29.8,
+            11.7
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            18.6,
+            9.0
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:8:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            11.7
+          ],
+          [
+            27.5,
+            11.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            18.6,
+            9.2
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:8:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.24999999999999975,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.0,
+            12.4
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            20.0,
+            9.2
+          ],
+          [
+            20.0,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.299999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:9:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.299999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:9:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.299999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:9:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            28.0,
+            12.4
+          ],
+          [
+            28.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.899999999999999,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:10:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.899999999999999,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:10:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 15.899999999999999,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:10:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            28.5,
+            12.4
+          ],
+          [
+            28.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 15.499999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:11:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 15.499999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:11:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 15.499999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:11:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 22.974999999999994,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:12:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 22.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:12:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.5,
+            12.4
+          ],
+          [
+            29.5,
+            9.0
+          ],
+          [
+            22.5,
+            9.0
+          ],
+          [
+            22.5,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 23.674999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:12:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            9.2
+          ],
+          [
+            19.6,
+            9.2
+          ],
+          [
+            19.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:14:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:14:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.6,
+            9.2
+          ],
+          [
+            19.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.174999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:14:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            15.8,
+            9.2
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 18.674999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:15:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            15.8,
+            9.0
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 18.675,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:15:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.0,
+            12.4
+          ],
+          [
+            29.0,
+            11.5
+          ],
+          [
+            27.5,
+            11.5
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            15.8,
+            9.2
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 19.374999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:15:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.0,
+            12.4
+          ],
+          [
+            29.0,
+            9.0
+          ],
+          [
+            17.2,
+            9.0
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.275000000000002,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:16:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            17.2,
+            9.0
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.275000000000002,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:16:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            17.2,
+            9.2
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.275000000000002,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:16:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.0,
+            12.4
+          ],
+          [
+            29.0,
+            9.0
+          ],
+          [
+            18.6,
+            9.0
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:17:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            18.6,
+            9.0
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:17:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            27.5,
+            12.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            18.6,
+            9.2
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 15.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:17:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.5000000000000001,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.0,
+            13.1
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            20.0,
+            9.2
+          ],
+          [
+            20.0,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.999999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:18:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.999999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:18:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            7.8
+          ],
+          [
+            19.6,
+            7.8
+          ]
+        ],
+        "cost": 16.999999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:18:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.2037037037037039
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.5,
+            13.1
+          ],
+          [
+            29.5,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 16.599999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:19:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 16.599999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:19:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.2
+          ],
+          [
+            19.6,
+            8.2
+          ]
+        ],
+        "cost": 16.599999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:19:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.49999999999999967
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 16.199999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:20:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.8,
+            9.2
+          ],
+          [
+            19.8,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 16.199999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:20:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.5,
+            13.1
+          ],
+          [
+            29.5,
+            10.4
+          ],
+          [
+            27.5,
+            10.4
+          ],
+          [
+            27.5,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            8.6
+          ],
+          [
+            19.6,
+            8.6
+          ]
+        ],
+        "cost": 16.9,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:20:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "RIGHT",
+          "targetPortFraction": 0.7962962962962962
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.0,
+            13.1
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 23.674999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:21:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 23.674999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:21:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            14.8,
+            9.2
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.4
+          ],
+          [
+            15.8,
+            7.525
+          ]
+        ],
+        "cost": 23.674999999999997,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:21:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            9.2
+          ],
+          [
+            20.8,
+            9.2
+          ],
+          [
+            20.8,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:23:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            8.9
+          ],
+          [
+            20.9,
+            8.9
+          ],
+          [
+            20.9,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:23:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            19.6,
+            9.2
+          ],
+          [
+            19.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.4
+          ],
+          [
+            18.6,
+            7.525
+          ]
+        ],
+        "cost": 18.874999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:23:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "TOP",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            28.0,
+            13.1
+          ],
+          [
+            28.0,
+            9.0
+          ],
+          [
+            15.8,
+            9.0
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 19.374999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:24:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            15.8,
+            9.0
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 19.374999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:24:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            15.8,
+            9.2
+          ],
+          [
+            15.8,
+            8.875
+          ]
+        ],
+        "cost": 19.375,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:24:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.2083333333333334
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.0,
+            13.1
+          ],
+          [
+            29.0,
+            9.0
+          ],
+          [
+            17.2,
+            9.0
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:25:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            17.2,
+            9.0
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.974999999999998,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:25:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            17.2,
+            9.2
+          ],
+          [
+            17.2,
+            8.875
+          ]
+        ],
+        "cost": 17.975,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:25:2",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.5000000000000001
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            27.5,
+            13.1
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            18.6,
+            9.2
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 16.574999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:26:0",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            13.1
+          ],
+          [
+            29.8,
+            13.1
+          ],
+          [
+            29.8,
+            9.0
+          ],
+          [
+            18.6,
+            9.0
+          ],
+          [
+            18.6,
+            8.875
+          ]
+        ],
+        "cost": 16.574999999999996,
+        "family": "pa-port-search",
+        "tag": "A-PA-07:port:5:26:1",
+        "portOverrides": {
+          "sourcePortFraction": 0.7499999999999999,
+          "targetSide": "BOTTOM",
+          "targetPortFraction": 0.7916666666666669
+        }
+      },
+      {
+        "points": [
+          [
+            29.9,
+            12.4
+          ],
+          [
+            29.8,
+            12.4
+          ],
+          [
+            29.8,
+            11.0
+          ],
+          [
+            32.1,
+            11.0
+          ],
+          [
+            32.1,
+            8.2
+          ],
+          [
+            25.7,
+            8.2
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            14.8,
+            8.9
+          ],
+          [
+            14.8,
+            7.4
+          ],
+          [
+            16.3,
+            7.4
+          ],
+          [
+            16.3,
+            7.525
+          ]
+        ],
+        "cost": 31.125,
+        "family": "b06-conditioned",
+        "tag": "A-PA-07:b06:5:29:1:0"
+      }
+    ],
+    "A-CE-09": [
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            21.5,
+            15.2
+          ],
+          [
+            21.5,
+            14.4
+          ],
+          [
+            14.8,
+            14.4
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "free",
+        "tag": "A-CE-09:12"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            28.5,
+            15.2
+          ],
+          [
+            28.5,
+            14.4
+          ],
+          [
+            14.8,
+            14.4
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "free",
+        "tag": "A-CE-09:18"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            14.8,
+            14.4
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "cross",
+        "tag": "A-CE-09:23"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.5,
+            15.2
+          ],
+          [
+            29.5,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "free",
+        "tag": "A-CE-09:24"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            19.6,
+            15.2
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "left",
+        "tag": "A-CE-09:3"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            20.5,
+            15.2
+          ],
+          [
+            20.5,
+            14.4
+          ],
+          [
+            14.8,
+            14.4
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "free",
+        "tag": "A-CE-09:30"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            20.9,
+            15.2
+          ],
+          [
+            20.9,
+            14.4
+          ],
+          [
+            14.8,
+            14.4
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "free",
+        "tag": "A-CE-09:6"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "top",
+        "tag": "A-CE-09:1"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            15.0
+          ],
+          [
+            19.6,
+            15.0
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "cross",
+        "tag": "A-CE-09:17"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            13.0
+          ],
+          [
+            14.8,
+            13.0
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "cross",
+        "tag": "A-CE-09:29"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            28.5,
+            15.2
+          ],
+          [
+            28.5,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "right",
+        "tag": "A-CE-09:34"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            28.0,
+            15.2
+          ],
+          [
+            28.0,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "cross",
+        "tag": "A-CE-09:35"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.0,
+            15.2
+          ],
+          [
+            29.0,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 22.274999999999995,
+        "family": "right",
+        "tag": "A-CE-09:4"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            16.5
+          ],
+          [
+            19.6,
+            16.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 24.874999999999996,
+        "family": "bottom",
+        "tag": "A-CE-09:26"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            17.0
+          ],
+          [
+            19.6,
+            17.0
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 25.874999999999996,
+        "family": "bottom",
+        "tag": "A-CE-09:2"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            17.5
+          ],
+          [
+            19.6,
+            17.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 26.874999999999996,
+        "family": "bottom",
+        "tag": "A-CE-09:8"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            15.2
+          ],
+          [
+            29.8,
+            15.2
+          ],
+          [
+            29.8,
+            18.5
+          ],
+          [
+            19.6,
+            18.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.8,
+            14.5
+          ],
+          [
+            14.8,
+            11.1
+          ],
+          [
+            15.3,
+            11.1
+          ],
+          [
+            15.3,
+            11.225
+          ]
+        ],
+        "cost": 28.874999999999996,
+        "family": "bottom",
+        "tag": "A-CE-09:14"
+      }
+    ],
+    "A-CD-UC-10": [
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            27.5,
+            4.7
+          ],
+          [
+            27.5,
+            8.9
+          ],
+          [
+            22.0,
+            8.9
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 15.474999999999998,
+        "family": "free",
+        "tag": "A-CD-UC-10:0"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.0,
+            4.7
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            22.0,
+            9.2
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 15.474999999999998,
+        "family": "cross",
+        "tag": "A-CD-UC-10:11"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            28.5,
+            4.7
+          ],
+          [
+            28.5,
+            8.9
+          ],
+          [
+            22.0,
+            8.9
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 15.474999999999998,
+        "family": "free",
+        "tag": "A-CD-UC-10:18"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            28.0,
+            4.7
+          ],
+          [
+            28.0,
+            8.9
+          ],
+          [
+            22.0,
+            8.9
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 15.474999999999998,
+        "family": "free",
+        "tag": "A-CD-UC-10:30"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.5,
+            4.7
+          ],
+          [
+            29.5,
+            9.2
+          ],
+          [
+            22.0,
+            9.2
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 15.474999999999998,
+        "family": "free",
+        "tag": "A-CD-UC-10:6"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            27.5,
+            4.7
+          ],
+          [
+            27.5,
+            5.0
+          ],
+          [
+            25.7,
+            5.0
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            22.0,
+            8.9
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.174999999999997,
+        "family": "top",
+        "tag": "A-CD-UC-10:1"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            27.5,
+            4.7
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.174999999999997,
+        "family": "right",
+        "tag": "A-CD-UC-10:16"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.5,
+            4.7
+          ],
+          [
+            29.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.174999999999997,
+        "family": "bottom",
+        "tag": "A-CD-UC-10:2"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.0,
+            4.7
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.174999999999997,
+        "family": "right",
+        "tag": "A-CD-UC-10:4"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.5,
+            4.7
+          ],
+          [
+            29.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.0
+          ],
+          [
+            22.0,
+            11.0
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.174999999999997,
+        "family": "cross",
+        "tag": "A-CD-UC-10:5"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.8,
+            4.7
+          ],
+          [
+            29.8,
+            5.3
+          ],
+          [
+            29.5,
+            5.3
+          ],
+          [
+            29.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 16.875,
+        "family": "bottom",
+        "tag": "A-CD-UC-10:20"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            27.5,
+            4.7
+          ],
+          [
+            27.5,
+            5.0
+          ],
+          [
+            25.7,
+            5.0
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            10.0
+          ],
+          [
+            20.5,
+            10.0
+          ],
+          [
+            20.5,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 21.574999999999996,
+        "family": "cross",
+        "tag": "A-CD-UC-10:35"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            4.7
+          ],
+          [
+            29.5,
+            4.7
+          ],
+          [
+            29.5,
+            14.4
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.1
+          ],
+          [
+            22.0,
+            11.225
+          ]
+        ],
+        "cost": 28.274999999999995,
+        "family": "anchor-4",
+        "tag": "A-CD-UC-10:a20"
+      }
+    ],
+    "A-M-UC-08": [
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            28.0,
+            7.5
+          ],
+          [
+            28.0,
+            14.4
+          ],
+          [
+            14.5,
+            14.4
+          ],
+          [
+            14.5,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999994,
+        "family": "free",
+        "tag": "A-M-UC-08:0"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            14.0,
+            14.4
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999994,
+        "family": "free",
+        "tag": "A-M-UC-08:12"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            27.5,
+            7.5
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            14.5,
+            14.4
+          ],
+          [
+            14.5,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999994,
+        "family": "free",
+        "tag": "A-M-UC-08:18"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            14.5,
+            14.4
+          ],
+          [
+            14.5,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999994,
+        "family": "free",
+        "tag": "A-M-UC-08:24"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            27.5,
+            7.5
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            14.0,
+            14.4
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999994,
+        "family": "left",
+        "tag": "A-M-UC-08:3"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            27.5,
+            7.5
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            14.7,
+            14.4
+          ],
+          [
+            14.7,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 26.599999999999998,
+        "family": "free",
+        "tag": "A-M-UC-08:6"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            27.5,
+            7.5
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.299999999999997,
+        "family": "top",
+        "tag": "A-M-UC-08:1"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.0,
+            7.5
+          ],
+          [
+            29.0,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.299999999999997,
+        "family": "right",
+        "tag": "A-M-UC-08:10"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.5,
+            7.5
+          ],
+          [
+            29.5,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            13.5
+          ],
+          [
+            14.0,
+            13.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.299999999999997,
+        "family": "free",
+        "tag": "A-M-UC-08:30"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            28.5,
+            7.5
+          ],
+          [
+            28.5,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.299999999999997,
+        "family": "right",
+        "tag": "A-M-UC-08:34"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            12.6
+          ],
+          [
+            14.8,
+            12.6
+          ],
+          [
+            14.8,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.299999999999997,
+        "family": "right",
+        "tag": "A-M-UC-08:4"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            13.0
+          ],
+          [
+            27.5,
+            13.0
+          ],
+          [
+            27.5,
+            14.4
+          ],
+          [
+            17.0,
+            14.4
+          ],
+          [
+            17.0,
+            13.0
+          ],
+          [
+            14.0,
+            13.0
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 27.999999999999996,
+        "family": "cross",
+        "tag": "A-M-UC-08:29"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            16.0
+          ],
+          [
+            19.6,
+            16.0
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 30.5,
+        "family": "bottom",
+        "tag": "A-M-UC-08:2"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            16.5
+          ],
+          [
+            19.6,
+            16.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 31.5,
+        "family": "bottom",
+        "tag": "A-M-UC-08:26"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            17.0
+          ],
+          [
+            19.6,
+            17.0
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 32.5,
+        "family": "bottom",
+        "tag": "A-M-UC-08:8"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            17.5
+          ],
+          [
+            19.6,
+            17.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 33.5,
+        "family": "bottom",
+        "tag": "A-M-UC-08:14"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            18.0
+          ],
+          [
+            19.6,
+            18.0
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 34.5,
+        "family": "cross",
+        "tag": "A-M-UC-08:35"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.8,
+            7.5
+          ],
+          [
+            29.8,
+            18.5
+          ],
+          [
+            19.6,
+            18.5
+          ],
+          [
+            19.6,
+            14.5
+          ],
+          [
+            14.0,
+            14.5
+          ],
+          [
+            14.0,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 35.5,
+        "family": "bottom",
+        "tag": "A-M-UC-08:20"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            7.5
+          ],
+          [
+            29.5,
+            7.5
+          ],
+          [
+            29.5,
+            11.0
+          ],
+          [
+            32.2,
+            11.0
+          ],
+          [
+            32.2,
+            0.5
+          ],
+          [
+            2.3,
+            0.5
+          ],
+          [
+            2.3,
+            16.5
+          ],
+          [
+            27.0,
+            16.5
+          ],
+          [
+            27.0,
+            14.5
+          ],
+          [
+            14.5,
+            14.5
+          ],
+          [
+            14.5,
+            12.5
+          ],
+          [
+            13.5,
+            12.5
+          ]
+        ],
+        "cost": 109.7,
+        "family": "anchor-0",
+        "tag": "A-M-UC-08:a24"
+      }
+    ],
+    "A-M-UC-10": [
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.5,
+            6.8
+          ],
+          [
+            29.5,
+            9.2
+          ],
+          [
+            22.7,
+            9.2
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.674999999999997,
+        "family": "free",
+        "tag": "A-M-UC-10:0"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            25.8,
+            6.8
+          ],
+          [
+            25.8,
+            9.2
+          ],
+          [
+            22.7,
+            9.2
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.674999999999997,
+        "family": "free",
+        "tag": "A-M-UC-10:18"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.8,
+            6.8
+          ],
+          [
+            29.8,
+            9.2
+          ],
+          [
+            22.7,
+            9.2
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.674999999999997,
+        "family": "bottom",
+        "tag": "A-M-UC-10:2"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            26.0,
+            6.8
+          ],
+          [
+            26.0,
+            9.0
+          ],
+          [
+            22.7,
+            9.0
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.674999999999997,
+        "family": "free",
+        "tag": "A-M-UC-10:30"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            25.7,
+            6.8
+          ],
+          [
+            25.7,
+            9.0
+          ],
+          [
+            22.7,
+            9.0
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.674999999999997,
+        "family": "free",
+        "tag": "A-M-UC-10:6"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            25.7,
+            6.8
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            22.7,
+            8.9
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.675,
+        "family": "top",
+        "tag": "A-M-UC-10:1"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.5,
+            6.8
+          ],
+          [
+            29.5,
+            8.9
+          ],
+          [
+            22.7,
+            8.9
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.675,
+        "family": "free",
+        "tag": "A-M-UC-10:12"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            28.0,
+            6.8
+          ],
+          [
+            28.0,
+            8.9
+          ],
+          [
+            22.7,
+            8.9
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 12.675,
+        "family": "free",
+        "tag": "A-M-UC-10:24"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            27.0,
+            6.8
+          ],
+          [
+            27.0,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.7,
+            11.1
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 13.374999999999998,
+        "family": "cross",
+        "tag": "A-M-UC-10:11"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            28.5,
+            6.8
+          ],
+          [
+            28.5,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.7,
+            11.1
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 13.374999999999998,
+        "family": "right",
+        "tag": "A-M-UC-10:16"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.8,
+            6.8
+          ],
+          [
+            29.8,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.7,
+            11.1
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 13.374999999999998,
+        "family": "cross",
+        "tag": "A-M-UC-10:17"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.0,
+            6.8
+          ],
+          [
+            29.0,
+            9.2
+          ],
+          [
+            23.0,
+            9.2
+          ],
+          [
+            23.0,
+            11.1
+          ],
+          [
+            22.7,
+            11.1
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 13.374999999999998,
+        "family": "right",
+        "tag": "A-M-UC-10:4"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.8,
+            6.8
+          ],
+          [
+            29.8,
+            7.0
+          ],
+          [
+            25.7,
+            7.0
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            22.7,
+            8.9
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 13.375,
+        "family": "cross",
+        "tag": "A-M-UC-10:5"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            25.7,
+            6.8
+          ],
+          [
+            25.7,
+            8.9
+          ],
+          [
+            20.0,
+            8.9
+          ],
+          [
+            20.0,
+            10.0
+          ],
+          [
+            20.5,
+            10.0
+          ],
+          [
+            20.5,
+            11.1
+          ],
+          [
+            22.7,
+            11.1
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 19.474999999999998,
+        "family": "cross",
+        "tag": "A-M-UC-10:35"
+      },
+      {
+        "points": [
+          [
+            29.9,
+            6.8
+          ],
+          [
+            29.5,
+            6.8
+          ],
+          [
+            29.5,
+            11.0
+          ],
+          [
+            32.2,
+            11.0
+          ],
+          [
+            32.2,
+            1.0
+          ],
+          [
+            17.2,
+            1.0
+          ],
+          [
+            17.2,
+            1.5
+          ],
+          [
+            2.3,
+            1.5
+          ],
+          [
+            2.3,
+            16.5
+          ],
+          [
+            27.5,
+            16.5
+          ],
+          [
+            27.5,
+            9.2
+          ],
+          [
+            22.7,
+            9.2
+          ],
+          [
+            22.7,
+            11.225
+          ]
+        ],
+        "cost": 106.875,
+        "family": "anchor-0",
+        "tag": "A-M-UC-10:a24"
+      }
+    ]
+  }
+}

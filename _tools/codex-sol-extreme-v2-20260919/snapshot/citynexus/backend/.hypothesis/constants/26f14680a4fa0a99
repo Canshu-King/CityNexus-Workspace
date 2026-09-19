@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\hermes\native_client.py
+# hypothesis_version: 6.168.0
+
+['/', 'Authorization', 'GET', 'Idempotency-Key', 'X-Hermes-Session-Key', 'approval', 'autonomy', 'choice', 'citynexus', 'citynexus-mcp-only', 'citynexus_journey_id', 'citynexus_mission_id', 'configured', 'data:', 'endpoints', 'event:', 'event_type', 'events', 'features', 'hermes_native_model', 'id', 'input', 'instructions', 'metadata', 'mission_plan', 'model', 'profile', 'provider', 'queued', 'reachable', 'ready', 'run_approval', 'run_events', 'run_events_sse', 'run_id', 'run_stop', 'run_submission', 'runs', 'session_id', 'status', 'stop', 'tool_surface']

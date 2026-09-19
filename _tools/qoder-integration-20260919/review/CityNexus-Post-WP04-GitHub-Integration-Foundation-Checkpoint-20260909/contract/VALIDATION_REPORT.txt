@@ -1,0 +1,59 @@
+CityNexus Post-WP04 GitHub Integration Foundation
+Validation date: 2026-09-09
+
+Policy:
+- No SHA/file/package hash checking performed.
+- No real external provider or LLM calls performed.
+
+Reference integration base:
+- CityNexus-MVP-WP00-WP03-Pre-WP04-Minimal-Repair-Checkpoint-Review-20260909(1)
+- This is used only as the latest available accepted pre-WP04 code shape while Codex is completing WP04.
+
+Validation performed:
+1. Foundation apply script executed on an isolated copy of the reference repo.
+2. Existing backend tests + new foundation tests:
+   64 passed
+   - existing reference suite: 52 tests
+   - foundation tests added: 12 tests
+3. Python compileall for backend/app after overlay: PASS.
+4. Foundation package Python compileall: PASS.
+5. HTTP provider adapters were tested with httpx.MockTransport only, never real network.
+6. routingpy adapter was tested with an injected fake client for route + matrix semantics.
+7. No optional external dependency is required for the baseline foundation tests:
+   - routingpy import is lazy
+   - OR-Tools import is lazy
+   - LiteLLM import is lazy
+   - py_webauthn is contract-only until its work package
+8. Apply tool defaults to dry-run and refuses differing existing target files rather than overwriting them.
+
+Validated foundation concepts:
+- Provider status/degradation and fallback registry
+- Verified AI ReasonCodes/evidence boundary
+- Deterministic fallback AI explanation
+- Opportunity Window calculation and next-commitment protection
+- ReplanDiff including duplicate semantic locations
+- Feasibility Envelope DTO
+- routingpy-compatible MobilityProvider shim
+- Photon response parser
+- Open-Meteo weather-risk parser
+- PlacesRecommendation-inspired discovery pipeline
+- PlannerAdapter deterministic bridge
+- OR-Tools optional boundary (module compiles; actual OR-Tools runtime not live-tested here)
+- WebAuthn step-up contract
+- Frontend MapLibre/Turf/XState/Playwright integration contracts prepared (not npm-installed here)
+
+Not claimed as validated here:
+- live Valhalla routing
+- live GraphHopper routing
+- live OpenTripPlanner/GTFS
+- live Photon service
+- live Open-Meteo service
+- live DeepSeek/LiteLLM
+- real WebAuthn ceremony
+- real/test Stripe transaction
+- OR-Tools installed runtime
+- frontend npm build
+
+Required use:
+- WP04 must receive external PASS before applying this foundation.
+- Integrate one work-package/provider at a time and keep deterministic mock regression paths green.

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\intelligence\reason_codes.py
+# hypothesis_version: 6.168.0
+
+['BUDGET_FIT', 'COMMITMENT_PRESERVED', 'INTEREST_MATCH', 'LOW_DETOUR', 'MINIMAL_DISRUPTION', 'NEXT_COMMITMENT_SAFE', 'OPEN_AT_VISIT_TIME', 'PROVIDER_DEGRADED', 'TRAVEL_TIME_REDUCED', 'WEATHER_RISK_REDUCED', 'en', 'evidence', 'locale', 'reason_codes']

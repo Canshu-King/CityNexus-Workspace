@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\annotated_types\__init__.py
+# hypothesis_version: 6.168.0
+
+['0.8.0', '<lambda>', 'BaseMetadata', 'DocInfo', 'Ge', 'GroupedMetadata', 'Gt', 'Interval', 'IsDigits', 'IsFinite', 'IsInfinite', 'IsNan', 'IsNotFinite', 'IsNotInfinite', 'IsNotNan', 'Le', 'Len', 'LowerCase', 'Lt', 'MaxLen', 'MinLen', 'MultipleOf', 'Predicate', 'T', 'Timezone', 'UpperCase', '_NumericType', '_StrType', '__name__', '__version__', 'doc']

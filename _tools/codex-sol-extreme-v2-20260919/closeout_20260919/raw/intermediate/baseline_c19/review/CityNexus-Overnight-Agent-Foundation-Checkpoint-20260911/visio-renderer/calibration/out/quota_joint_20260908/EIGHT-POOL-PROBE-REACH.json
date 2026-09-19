@@ -1,0 +1,168 @@
+{
+  "status": "FAIL",
+  "shardFiles": [
+    "out\\quota_joint_20260908\\UNION-SOLUTION.json",
+    "out\\quota_joint_20260908\\union-1.json",
+    "out\\quota_joint_20260908\\union-10.json",
+    "out\\quota_joint_20260908\\union-11.json",
+    "out\\quota_joint_20260908\\union-12.json",
+    "out\\quota_joint_20260908\\union-2.json",
+    "out\\quota_joint_20260908\\union-3.json",
+    "out\\quota_joint_20260908\\union-4.json",
+    "out\\quota_joint_20260908\\union-5.json",
+    "out\\quota_joint_20260908\\union-6.json",
+    "out\\quota_joint_20260908\\union-7.json",
+    "out\\quota_joint_20260908\\union-8.json",
+    "out\\quota_joint_20260908\\union-9.json",
+    "out\\quota_joint_20260908\\union-bundle-1.json",
+    "out\\quota_joint_20260908\\union-bundle-10.json",
+    "out\\quota_joint_20260908\\union-bundle-11.json",
+    "out\\quota_joint_20260908\\union-bundle-12.json",
+    "out\\quota_joint_20260908\\union-bundle-2.json",
+    "out\\quota_joint_20260908\\union-bundle-3.json",
+    "out\\quota_joint_20260908\\union-bundle-4.json",
+    "out\\quota_joint_20260908\\union-bundle-5.json",
+    "out\\quota_joint_20260908\\union-bundle-6.json",
+    "out\\quota_joint_20260908\\union-bundle-7.json",
+    "out\\quota_joint_20260908\\union-bundle-8.json",
+    "out\\quota_joint_20260908\\union-bundle-9.json",
+    "out\\quota_joint_20260908\\union-pa-1.json",
+    "out\\quota_joint_20260908\\union-pa-10.json",
+    "out\\quota_joint_20260908\\union-pa-11.json",
+    "out\\quota_joint_20260908\\union-pa-12.json",
+    "out\\quota_joint_20260908\\union-pa-2.json",
+    "out\\quota_joint_20260908\\union-pa-3.json",
+    "out\\quota_joint_20260908\\union-pa-4.json",
+    "out\\quota_joint_20260908\\union-pa-5.json",
+    "out\\quota_joint_20260908\\union-pa-6.json",
+    "out\\quota_joint_20260908\\union-pa-7.json",
+    "out\\quota_joint_20260908\\union-pa-8.json",
+    "out\\quota_joint_20260908\\union-pa-9.json",
+    "out\\quota_joint_20260908\\union-triple-1.json",
+    "out\\quota_joint_20260908\\union-triple-10.json",
+    "out\\quota_joint_20260908\\union-triple-11.json",
+    "out\\quota_joint_20260908\\union-triple-12.json",
+    "out\\quota_joint_20260908\\union-triple-2.json",
+    "out\\quota_joint_20260908\\union-triple-3.json",
+    "out\\quota_joint_20260908\\union-triple-4.json",
+    "out\\quota_joint_20260908\\union-triple-5.json",
+    "out\\quota_joint_20260908\\union-triple-6.json",
+    "out\\quota_joint_20260908\\union-triple-7.json",
+    "out\\quota_joint_20260908\\union-triple-8.json",
+    "out\\quota_joint_20260908\\union-triple-9.json"
+  ],
+  "sourceCounts": {
+    "A-B-06": 36,
+    "A-PA-07": 1503,
+    "A-CE-09": 198,
+    "A-CD-UC-10": 183,
+    "A-M-UC-08": 224,
+    "A-M-UC-10": 182,
+    "A-CD-UC-04": 6,
+    "A-M-UC-04": 6
+  },
+  "selectedPoolCounts": {
+    "A-B-06": 18,
+    "A-PA-07": 534,
+    "A-CE-09": 77,
+    "A-CD-UC-10": 64,
+    "A-M-UC-08": 82,
+    "A-M-UC-10": 58,
+    "A-CD-UC-04": 3,
+    "A-M-UC-04": 5
+  },
+  "impossibleRoutePairs": [],
+  "arcConsistency": {
+    "status": "FAIL",
+    "rounds": 1,
+    "emptyRoutes": [
+      "A-PA-07"
+    ],
+    "domainSizes": {
+      "A-B-06": 18,
+      "A-PA-07": 0,
+      "A-CE-09": 77,
+      "A-CD-UC-10": 64,
+      "A-M-UC-08": 82,
+      "A-M-UC-10": 58,
+      "A-CD-UC-04": 3,
+      "A-M-UC-04": 5
+    },
+    "removalCount": 534,
+    "removalBlockerCounts": {
+      "A-B-06": {
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-PA-07": {
+        "A-B-06": 301,
+        "A-CE-09": 6,
+        "A-CD-UC-10": 461,
+        "A-M-UC-08": 349,
+        "A-M-UC-10": 461,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-CE-09": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-CD-UC-10": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-M-UC-08": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-10": 0,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-M-UC-10": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-CD-UC-04": 0,
+        "A-M-UC-04": 0
+      },
+      "A-CD-UC-04": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0,
+        "A-M-UC-04": 0
+      },
+      "A-M-UC-04": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0,
+        "A-CD-UC-04": 0
+      }
+    }
+  },
+  "reason": "arc-consistency-infeasible-eight"
+}

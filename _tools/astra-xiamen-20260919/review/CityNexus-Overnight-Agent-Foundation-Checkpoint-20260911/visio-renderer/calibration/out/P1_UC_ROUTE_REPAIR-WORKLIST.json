@@ -1,0 +1,362 @@
+{
+  "status": "REPAIR_REQUIRED",
+  "frozenExtendRoutes": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "associationRepairCount": 16,
+  "repairOrder": [
+    "A-T-UC-04",
+    "A-M-UC-08",
+    "A-T-UC-05",
+    "A-B-06",
+    "A-T-UC-11",
+    "A-T-UC-07",
+    "A-T-UC-10",
+    "A-PA-07",
+    "A-CD-UC-10",
+    "A-T-UC-06",
+    "A-T-UC-08",
+    "A-T-UC-12",
+    "A-M-UC-10",
+    "A-CE-09",
+    "A-M-UC-04",
+    "A-T-UC-02"
+  ],
+  "routes": [
+    {
+      "route": "A-T-UC-04",
+      "priorityScore": 402,
+      "totalContacts": 9,
+      "frozenExtendContacts": 3,
+      "contactTypes": {
+        "shared_endpoint": 6,
+        "tjunction": 3
+      },
+      "shortSegments": 1,
+      "redundantCollinearPoints": 9,
+      "conflictsWith": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-T-UC-02",
+        "A-T-UC-05",
+        "A-T-UC-06",
+        "EXT-07-06"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-M-UC-08",
+      "priorityScore": 335,
+      "totalContacts": 12,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 10,
+        "tjunction": 2
+      },
+      "shortSegments": 1,
+      "redundantCollinearPoints": 12,
+      "conflictsWith": [
+        "A-B-06",
+        "A-CD-UC-10",
+        "A-T-UC-04",
+        "A-T-UC-05",
+        "A-T-UC-07",
+        "A-T-UC-10",
+        "A-T-UC-11",
+        "A-T-UC-12",
+        "EXT-07-06",
+        "EXT-09-08"
+      ],
+      "hint": "Prefer routing below EXT-10-09, then enter UC-08 from RIGHT."
+    },
+    {
+      "route": "A-T-UC-05",
+      "priorityScore": 324,
+      "totalContacts": 11,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 9,
+        "tjunction": 2
+      },
+      "shortSegments": 1,
+      "redundantCollinearPoints": 11,
+      "conflictsWith": [
+        "A-B-06",
+        "A-M-UC-04",
+        "A-M-UC-08",
+        "A-PA-07",
+        "A-T-UC-02",
+        "A-T-UC-04",
+        "A-T-UC-06",
+        "A-T-UC-07",
+        "EXT-07-06"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-B-06",
+      "priorityScore": 316,
+      "totalContacts": 10,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 8,
+        "tjunction": 2
+      },
+      "shortSegments": 2,
+      "redundantCollinearPoints": 10,
+      "conflictsWith": [
+        "A-CD-UC-10",
+        "A-M-UC-08",
+        "A-M-UC-10",
+        "A-PA-07",
+        "A-T-UC-04",
+        "A-T-UC-05",
+        "A-T-UC-07",
+        "A-T-UC-11",
+        "EXT-10-09"
+      ],
+      "hint": "Prefer entering the inner page above the EXT-10-09 top segment (y < 9.4)."
+    },
+    {
+      "route": "A-T-UC-11",
+      "priorityScore": 283,
+      "totalContacts": 7,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 5,
+        "tjunction": 2
+      },
+      "shortSegments": 2,
+      "redundantCollinearPoints": 7,
+      "conflictsWith": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-PA-07",
+        "A-T-UC-06",
+        "A-T-UC-07",
+        "EXT-07-06"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-T-UC-07",
+      "priorityScore": 277,
+      "totalContacts": 7,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 5,
+        "tjunction": 2
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 7,
+      "conflictsWith": [
+        "A-B-06",
+        "A-M-UC-08",
+        "A-T-UC-05",
+        "A-T-UC-08",
+        "A-T-UC-11",
+        "EXT-09-08"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-T-UC-10",
+      "priorityScore": 255,
+      "totalContacts": 5,
+      "frozenExtendContacts": 2,
+      "contactTypes": {
+        "shared_endpoint": 3,
+        "tjunction": 2
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 5,
+      "conflictsWith": [
+        "A-M-UC-08",
+        "A-PA-07",
+        "A-T-UC-08",
+        "EXT-09-08"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-PA-07",
+      "priorityScore": 155,
+      "totalContacts": 5,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 4,
+        "tjunction": 1
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 5,
+      "conflictsWith": [
+        "A-B-06",
+        "A-T-UC-05",
+        "A-T-UC-10",
+        "A-T-UC-11",
+        "EXT-10-09"
+      ],
+      "hint": "Prefer a separate lane above the EXT-10-09 top segment (y < 9.4)."
+    },
+    {
+      "route": "A-CD-UC-10",
+      "priorityScore": 144,
+      "totalContacts": 4,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 3,
+        "tjunction": 1
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 4,
+      "conflictsWith": [
+        "A-B-06",
+        "A-M-UC-04",
+        "A-M-UC-08",
+        "EXT-10-09"
+      ],
+      "hint": "Prefer UC-10 TOP with a left-half port (x < 23.3)."
+    },
+    {
+      "route": "A-T-UC-06",
+      "priorityScore": 144,
+      "totalContacts": 4,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 3,
+        "tjunction": 1
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 4,
+      "conflictsWith": [
+        "A-T-UC-04",
+        "A-T-UC-05",
+        "A-T-UC-11",
+        "EXT-07-06"
+      ],
+      "hint": "Prefer UC-06 RIGHT; the frozen EXT-07-06 blocks clean LEFT access."
+    },
+    {
+      "route": "A-T-UC-08",
+      "priorityScore": 144,
+      "totalContacts": 4,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 3,
+        "tjunction": 1
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 4,
+      "conflictsWith": [
+        "A-T-UC-07",
+        "A-T-UC-10",
+        "A-T-UC-12",
+        "EXT-09-08"
+      ],
+      "hint": "Prefer UC-08 RIGHT and approach below the frozen EXT-09-08 envelope."
+    },
+    {
+      "route": "A-T-UC-12",
+      "priorityScore": 136,
+      "totalContacts": 3,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 2,
+        "tjunction": 1
+      },
+      "shortSegments": 1,
+      "redundantCollinearPoints": 3,
+      "conflictsWith": [
+        "A-M-UC-08",
+        "A-T-UC-08",
+        "EXT-09-08"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-M-UC-10",
+      "priorityScore": 122,
+      "totalContacts": 2,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "shared_endpoint": 1,
+        "tjunction": 1
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 2,
+      "conflictsWith": [
+        "A-B-06",
+        "EXT-10-09"
+      ],
+      "hint": "Prefer a distinct UC-10 TOP port on the left half."
+    },
+    {
+      "route": "A-CE-09",
+      "priorityScore": 114,
+      "totalContacts": 1,
+      "frozenExtendContacts": 1,
+      "contactTypes": {
+        "tjunction": 1
+      },
+      "shortSegments": 1,
+      "redundantCollinearPoints": 1,
+      "conflictsWith": [
+        "EXT-10-09"
+      ],
+      "hint": "Prefer UC-09 LEFT; route below the lower obstacles before approaching."
+    },
+    {
+      "route": "A-M-UC-04",
+      "priorityScore": 22,
+      "totalContacts": 2,
+      "frozenExtendContacts": 0,
+      "contactTypes": {
+        "shared_endpoint": 2
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 2,
+      "conflictsWith": [
+        "A-CD-UC-10",
+        "A-T-UC-05"
+      ],
+      "hint": null
+    },
+    {
+      "route": "A-T-UC-02",
+      "priorityScore": 22,
+      "totalContacts": 2,
+      "frozenExtendContacts": 0,
+      "contactTypes": {
+        "shared_endpoint": 2
+      },
+      "shortSegments": 0,
+      "redundantCollinearPoints": 2,
+      "conflictsWith": [
+        "A-T-UC-04",
+        "A-T-UC-05"
+      ],
+      "hint": null
+    }
+  ],
+  "global": {
+    "contactPairCount": 46,
+    "uniqueContactCount": 55,
+    "contactCounts": {
+      "crossing": 0,
+      "overlap": 0,
+      "tjunction": 22,
+      "shared_endpoint": 33
+    },
+    "shortSegmentCount": 9,
+    "redundantCollinearPointCount": 88
+  },
+  "strategy": [
+    "Do not repair contacts one-by-one with micro-jogs.",
+    "Rip up and coherently re-plan Association routes, highest-priority first.",
+    "Treat all three Extend polylines as frozen obstacles.",
+    "Use distinct orthogonal lanes and distinct intermediate waypoints.",
+    "Re-run validate_p1_route_candidate_v3.py after each coherent batch."
+  ]
+}

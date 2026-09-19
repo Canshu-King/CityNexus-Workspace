@@ -1,0 +1,151 @@
+{
+  "calibration": "C4-PLAN",
+  "status": "PASS",
+  "routeCount": 5,
+  "orthogonalRouteCount": 5,
+  "connectorCrossingCount": 0,
+  "connectorOverlapPairCount": 0,
+  "crossings": [],
+  "overlaps": [],
+  "records": {
+    "C4-T-A": {
+      "points": [
+        [
+          3.5,
+          7.55
+        ],
+        [
+          4.2,
+          7.55
+        ],
+        [
+          5.2,
+          7.55
+        ],
+        [
+          5.2,
+          4.0
+        ],
+        [
+          8.0,
+          4.0
+        ]
+      ],
+      "orthogonal": true,
+      "throughNodes": []
+    },
+    "C4-T-B": {
+      "points": [
+        [
+          3.5,
+          8.0
+        ],
+        [
+          4.2,
+          8.0
+        ],
+        [
+          8.0,
+          8.0
+        ]
+      ],
+      "orthogonal": true,
+      "throughNodes": []
+    },
+    "C4-T-C": {
+      "points": [
+        [
+          3.5,
+          8.45
+        ],
+        [
+          4.2,
+          8.45
+        ],
+        [
+          6.0,
+          8.45
+        ],
+        [
+          6.0,
+          12.0
+        ],
+        [
+          8.0,
+          12.0
+        ]
+      ],
+      "orthogonal": true,
+      "throughNodes": []
+    },
+    "C4-P-A": {
+      "points": [
+        [
+          16.5,
+          7.55
+        ],
+        [
+          15.8,
+          7.55
+        ],
+        [
+          14.8,
+          7.55
+        ],
+        [
+          14.8,
+          3.0
+        ],
+        [
+          12.8,
+          3.0
+        ],
+        [
+          12.8,
+          4.0
+        ],
+        [
+          12.0,
+          4.0
+        ]
+      ],
+      "orthogonal": true,
+      "throughNodes": []
+    },
+    "C4-P-C": {
+      "points": [
+        [
+          16.5,
+          8.45
+        ],
+        [
+          15.8,
+          8.45
+        ],
+        [
+          14.0,
+          8.45
+        ],
+        [
+          14.0,
+          13.0
+        ],
+        [
+          12.8,
+          13.0
+        ],
+        [
+          12.8,
+          12.0
+        ],
+        [
+          12.0,
+          12.0
+        ]
+      ],
+      "orthogonal": true,
+      "throughNodes": []
+    }
+  },
+  "failures": []
+}

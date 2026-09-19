@@ -1,0 +1,147 @@
+{
+  "status": "FAIL",
+  "stage": "route:C4-T-A:write-geometry",
+  "activeRoute": "C4-T-A",
+  "error": "RuntimeError('Geometry1 row count changed unexpectedly during AddRow: before=5, after=5, addedRow=5')",
+  "errorType": "RuntimeError",
+  "hresult": null,
+  "excepinfo": null,
+  "routes": [],
+  "routeDiagnostics": {
+    "C4-T-A": {
+      "preWriteGeometry": [
+        {
+          "rowIndex": 1,
+          "rowType": 138,
+          "xIn": 0.0,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 2,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 3,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 1.3976377952755894
+        },
+        {
+          "rowIndex": 4,
+          "rowType": 139,
+          "xIn": 1.7716535433070868,
+          "yIn": 1.3976377952755894
+        }
+      ],
+      "preWriteRowCount": 5,
+      "preRewriteRowCount": 5,
+      "preRewriteRows": [
+        {
+          "rowIndex": 1,
+          "rowType": 138,
+          "xIn": 0.0,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 2,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 0.0
+        },
+        {
+          "rowIndex": 3,
+          "rowType": 139,
+          "xIn": -0.3779527559055119,
+          "yIn": 1.3976377952755894
+        },
+        {
+          "rowIndex": 4,
+          "rowType": 139,
+          "xIn": 1.7716535433070868,
+          "yIn": 1.3976377952755894
+        }
+      ],
+      "plannedLogicalPoints": [
+        [
+          3.5,
+          7.55
+        ],
+        [
+          4.2,
+          7.55
+        ],
+        [
+          5.2,
+          7.55
+        ],
+        [
+          5.2,
+          4.0
+        ],
+        [
+          8.0,
+          4.0
+        ]
+      ],
+      "plannedLocalPointsIn": [
+        [
+          1.1102230246251565e-16,
+          -2.220446049250313e-16
+        ],
+        [
+          0.27559055118110243,
+          -2.220446049250313e-16
+        ],
+        [
+          0.6692913385826772,
+          -2.220446049250313e-16
+        ],
+        [
+          0.6692913385826772,
+          1.39763779527559
+        ],
+        [
+          1.7716535433070866,
+          1.39763779527559
+        ]
+      ],
+      "desiredVertexCount": 5,
+      "existingVertexCount": 4,
+      "appendSteps": [
+        {
+          "addedRowIndex": 5,
+          "rowCountBefore": 5,
+          "rowCountAfter": 5,
+          "rowsAfterAdd": [
+            {
+              "rowIndex": 1,
+              "rowType": 138,
+              "xIn": 0.0,
+              "yIn": 0.0
+            },
+            {
+              "rowIndex": 2,
+              "rowType": 139,
+              "xIn": -0.37795275590551214,
+              "yIn": 0.0
+            },
+            {
+              "rowIndex": 3,
+              "rowType": 139,
+              "xIn": -0.37795275590551214,
+              "yIn": 1.3976377952755894
+            },
+            {
+              "rowIndex": 4,
+              "rowType": 139,
+              "xIn": 1.7716535433070868,
+              "yIn": 1.3976377952755894
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

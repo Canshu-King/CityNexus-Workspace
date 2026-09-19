@@ -1,0 +1,44 @@
+{
+  "schema": "citynexus.extreme-findings.v1",
+  "baseline_commit": "0fa1f6cba391ecbc177d8d1dcf72f422033b61b5",
+  "candidate_commit": "c19daa54ba046a92c4638aea8c1c1c69b67724b8",
+  "findings": [
+    {
+      "id": "CX-SOL-001",
+      "severity": "P1",
+      "status": "VERIFIED_CANDIDATE_PATCHED",
+      "title": "Present-but-unknown execution cursor fabricated activity[0] as Now",
+      "verified": true,
+      "evidence": ["replay_cases/projection_oracle.json", "tests/test_extreme_real_api.py", "tests/extreme-live-projection.spec.ts"],
+      "patch": "candidate_patches/0001-candidate-fail-closed-on-stale-cursors-and-serialize.patch"
+    },
+    {
+      "id": "CX-EXT-002",
+      "severity": "P1",
+      "status": "VERIFIED_CANDIDATE_PATCHED",
+      "title": "Concurrent same-key accept could raise IdempotencyKey unique-constraint IntegrityError",
+      "verified": true,
+      "evidence": ["replay_cases/concurrency_harness.json", "replay_cases/concurrency_after_fix_1.json"]
+    },
+    {
+      "id": "CX-EXT-003",
+      "severity": "P0",
+      "status": "VERIFIED_CANDIDATE_PATCHED",
+      "title": "Competing proposal accepts could persist two ACCEPTED proposals and two ACTIVE plans",
+      "verified": true,
+      "evidence": ["replay_cases/concurrency_harness.json", "replay_cases/concurrency_after_fix_1.json"]
+    },
+    {
+      "id": "CX-EXT-004",
+      "severity": "P0",
+      "status": "VERIFIED_CANDIDATE_PATCHED",
+      "title": "Booking capture racing replan accept could leave an ACTIVE C4 commitment on a superseded plan",
+      "verified": true,
+      "evidence": ["replay_cases/concurrency_harness.json", "replay_cases/concurrency_after_fix_1.json", "tests/concurrency_harness.py"]
+    }
+  ],
+  "limitations": [
+    "The candidate Journey lock is process-local. A multi-worker deployment needs a database/advisory lock or equivalent distributed serialization.",
+    "Repository-wide TypeScript typecheck remains red on four pre-existing unrelated React typing errors; the focused browser projection gate is green."
+  ]
+}

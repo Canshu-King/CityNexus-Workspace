@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\inbox\ics_parser.py
+# hypothesis_version: 6.168.0
+
+['DTEND', 'DTSTART', 'EXTRACTED', 'ICS', 'Imported itinerary', 'LOCATION', 'RAIL', 'SUMMARY', 'UID', 'UNKNOWN', 'VEVENT', 'confirmation_ref', 'destination', 'dt', 'field_provenance', 'ics-import', 'name', 'provider_key', 'reservation_type', 'scheduled_arrival_at', 'source', 'status', 'summary']

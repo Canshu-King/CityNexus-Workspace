@@ -1,0 +1,16 @@
+﻿Library,Repository,License,AdoptionStatus,Notes
+shadcn/ui,https://github.com/shadcn-ui/ui,MIT,INSTALLED,主要组件库
+shadcn/originui,https://github.com/shadcn/originui,MIT,NOT_ADOPTED,观察中
+21st-dev/agent-elements,https://github.com/21st-dev/agent-elements,MIT,REFERENCED_ONLY,R2 已验证许可证
+21st-dev/codex-plugin,https://github.com/21st-dev/codex-plugin,Apache-2.0,REFERENCED_ONLY,R2 已验证许可证
+dnd-kit,https://github.com/clauderic/dnd-kit,MIT,INSTALLED,拖拽组件库
+vaul,https://github.com/emilkowalski/vaul,MIT,INSTALLED,移动端抽屉
+motion-primitives,https://github.com/ibelick/motion-primitives,MIT,INSTALLED,动画库
+magicui,https://github.com/magicuidesign/magicui,MIT,NOT_ADOPTED,仅作灵感
+lucide-react,https://github.com/lucide-icons/lucide,ISC,INSTALLED,图标库
+storybook,https://github.com/storybookjs/storybook,MIT,INSTALLED,组件开发环境
+react-hook-form,https://github.com/react-hook-form/react-hook-form,MIT,INSTALLED,表单库
+zod,https://github.com/colinhacks/zod,MIT,INSTALLED,验证库
+TanStack Query,https://github.com/TanStack/query,MIT,INSTALLED,数据获取
+TanStack Router,https://github.com/TanStack/router,MIT,NOT_ADOPTED,评估中
+otp-ui,https://github.com/opentripplanner/otp-ui,MIT,NOT_ADOPTED,评估中

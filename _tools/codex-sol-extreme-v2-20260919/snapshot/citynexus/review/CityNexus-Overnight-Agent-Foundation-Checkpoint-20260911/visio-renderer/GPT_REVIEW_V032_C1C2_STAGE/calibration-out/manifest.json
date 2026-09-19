@@ -1,0 +1,72 @@
+[
+  {
+    "file": "C1_Font_Style-report.json",
+    "sha256": "4A3376C25CFF9F73D9AA7F364B58D07D54993956E3775D7E1EB89DD6849727E6",
+    "bytes": 4627
+  },
+  {
+    "file": "C1_Font_Style.png",
+    "sha256": "695B41846C47D4689813E32B516E3CBA1FB275874822A7E7F635D1A2185DDD21",
+    "bytes": 29045
+  },
+  {
+    "file": "C1_Font_Style.raw.svg",
+    "sha256": "EFB8E4D8991B41ECD9362FA42372528E89553F0EA5816D8F3D7F0D24F8124144",
+    "bytes": 62148
+  },
+  {
+    "file": "C1_Font_Style.svg",
+    "sha256": "D14CC6C881771C662FE657569742C5CB85C7F4E2492EA8880E4F28DB946E1448",
+    "bytes": 63675
+  },
+  {
+    "file": "C1_Font_Style.vsdx",
+    "sha256": "55DB45FE35BB08C02C38215EAA511A2CD27379177CF05B420C38D19DE4EE0C97",
+    "bytes": 30834
+  },
+  {
+    "file": "C2_Native_Class-report.json",
+    "sha256": "63B95783EFAF5DFC6B18532377F358153653B895982F3AA52F949A2181BFAC16",
+    "bytes": 314
+  },
+  {
+    "file": "C2_Native_Class.png",
+    "sha256": "FC4F72999F83560E135CB657AB5AF25D2BA18ABBFFDB93BF134E51282EA5B2A2",
+    "bytes": 9662
+  },
+  {
+    "file": "C2_Native_Class.raw.svg",
+    "sha256": "C3DB658DF7F8230BBDBBF0493C30D88CDDA3F7754E18CC6D4647CBDC002EFA05",
+    "bytes": 28342
+  },
+  {
+    "file": "C2_Native_Class.vsdx",
+    "sha256": "CB9AEA941B7EAD8E7058D4308D609C7F483E381360D0FBCA5EA1EF4244CCE29B",
+    "bytes": 25528
+  },
+  {
+    "file": "calibration-summary.json",
+    "sha256": "E063862AC6B29DDB62CA05F39570133A7214DE0E042EB40757B3E118E572B2AF",
+    "bytes": 86
+  },
+  {
+    "file": "manifest.json",
+    "sha256": "C5B248A492D87EF2F084AB5FC3158DB48402D0259F73D63EED44465DA741910F",
+    "bytes": 3566
+  },
+  {
+    "file": "route-static-test-results.json",
+    "sha256": "E73C0D188A1DB40483CC5A3663AED6FD33BC89318AE947452C11AF6FEC5B80D5",
+    "bytes": 453
+  },
+  {
+    "file": "source-input-hashes.json",
+    "sha256": "3CCF18DE8B3814EF6A5B0A4019B998C0A0EA442A32E8AFBEB2C692756836F2BB",
+    "bytes": 1064
+  },
+  {
+    "file": "static-test-report.json",
+    "sha256": "426022C97641C7583C4DB8B1D05002D3F8466AB94CBF808A126515AE37E0F16B",
+    "bytes": 158
+  }
+]

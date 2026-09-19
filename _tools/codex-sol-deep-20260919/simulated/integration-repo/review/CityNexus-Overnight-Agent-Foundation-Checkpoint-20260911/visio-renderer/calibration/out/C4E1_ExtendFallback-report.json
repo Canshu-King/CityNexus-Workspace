@@ -1,0 +1,959 @@
+{
+  "calibration": "C4E1",
+  "strategy": "native-extend-hidden-plus-presentation-segments",
+  "status": "PASS",
+  "semanticExtendCount": 3,
+  "nativeExtendRatio": 1.0,
+  "semanticFullyGluedRatio": 1.0,
+  "semanticExplicitSidePortRatio": 1.0,
+  "semanticDirectionalSidePortRatio": 1.0,
+  "semanticHiddenStrokeRatio": 1.0,
+  "presentationExpectedSegmentCount": 15,
+  "presentationActualSegmentCount": 15,
+  "presentationSegmentGeometryMatchRatio": 1.0,
+  "presentationSegmentStyleRatio": 1.0,
+  "presentationExactRouteRatio": 1.0,
+  "presentationOrthogonalRouteRatio": 1.0,
+  "presentationEndpointTangentRatio": 1.0,
+  "terminalOpenArrowRatio": 1.0,
+  "extendLabelRatio": 1.0,
+  "extendConditionRatio": 1.0,
+  "extendTextStyleRatio": 1.0,
+  "rawSvgVisibleExtendLabelCount": 3,
+  "rawSvgVisibleConditionCount": 3,
+  "rawSvgVisibleTexts": [
+    "UC-06Book & Order Services",
+    "UC-07Make Secure Payment",
+    "UC-08Execute Journey",
+    "UC-09Detect Journey Events",
+    "UC-10Replan Journey",
+    "<<extend>>",
+    "[payment required]",
+    "<<extend>>",
+    "[event detected]",
+    "<<extend>>",
+    "[replan required]"
+  ],
+  "connectorConnectorCrossingCount": 0,
+  "connectorOverlapPairCount": 0,
+  "connectorThroughUnrelatedNodeCount": 0,
+  "outOfPageCount": 0,
+  "forbiddenTokenCounts": {
+    "#VALUE!": 0,
+    "#REF!": 0,
+    "#NAME?": 0
+  },
+  "semanticConnectors": [
+    {
+      "id": "EXT-07-06",
+      "master": "Extend",
+      "nativeExtend": true,
+      "connectorType": "extend",
+      "hiddenStroke": true,
+      "beginFormula": "PAR(PNT(Use Case.2!Connections.X1,Use Case.2!Connections.Y1))",
+      "endFormula": "PAR(PNT(Use Case!Connections.X1,Use Case!Connections.Y1))",
+      "explicitSidePorts": true,
+      "directionalPorts": true,
+      "directionEvidence": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "UC-07",
+          "expectedSide": "TOP",
+          "expectedDir": [
+            0.0,
+            1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case.2!Connections.X1,Use Case.2!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 0.0,
+          "dirY": 1.0,
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "UC-06",
+          "expectedSide": "BOTTOM",
+          "expectedDir": [
+            0.0,
+            -1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case!Connections.X1,Use Case!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 0.0,
+          "dirY": -1.0,
+          "status": "PASS"
+        }
+      ],
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow"
+    },
+    {
+      "id": "EXT-09-08",
+      "master": "Extend",
+      "nativeExtend": true,
+      "connectorType": "extend",
+      "hiddenStroke": true,
+      "beginFormula": "PAR(PNT(Use Case.4!Connections.X1,Use Case.4!Connections.Y1))",
+      "endFormula": "PAR(PNT(Use Case.3!Connections.X1,Use Case.3!Connections.Y1))",
+      "explicitSidePorts": true,
+      "directionalPorts": true,
+      "directionEvidence": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "UC-09",
+          "expectedSide": "TOP",
+          "expectedDir": [
+            0.0,
+            1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case.4!Connections.X1,Use Case.4!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 0.0,
+          "dirY": 1.0,
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "UC-08",
+          "expectedSide": "BOTTOM",
+          "expectedDir": [
+            0.0,
+            -1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case.3!Connections.X1,Use Case.3!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 0.0,
+          "dirY": -1.0,
+          "status": "PASS"
+        }
+      ],
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow"
+    },
+    {
+      "id": "EXT-10-09",
+      "master": "Extend",
+      "nativeExtend": true,
+      "connectorType": "extend",
+      "hiddenStroke": true,
+      "beginFormula": "PAR(PNT(Use Case.5!Connections.X1,Use Case.5!Connections.Y1))",
+      "endFormula": "PAR(PNT(Use Case.4!Connections.X2,Use Case.4!Connections.Y2))",
+      "explicitSidePorts": true,
+      "directionalPorts": true,
+      "directionEvidence": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "UC-10",
+          "expectedSide": "TOP",
+          "expectedDir": [
+            0.0,
+            1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case.5!Connections.X1,Use Case.5!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 0.0,
+          "dirY": 1.0,
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "UC-09",
+          "expectedSide": "BOTTOM",
+          "expectedDir": [
+            0.0,
+            -1.0
+          ],
+          "endpointFormula": "PAR(PNT(Use Case.4!Connections.X2,Use Case.4!Connections.Y2))",
+          "aliasIndex": 2,
+          "rowIndex": 1,
+          "dirX": 0.0,
+          "dirY": -1.0,
+          "status": "PASS"
+        }
+      ],
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow"
+    }
+  ],
+  "routes": [
+    {
+      "id": "EXT-07-06",
+      "expectedPointsCm": [
+        [
+          17.2,
+          7.5249999999999995
+        ],
+        [
+          17.2,
+          6.6
+        ],
+        [
+          8.3,
+          6.6
+        ],
+        [
+          8.3,
+          9.7
+        ],
+        [
+          11.1,
+          9.7
+        ],
+        [
+          11.1,
+          8.875
+        ]
+      ],
+      "actualPointsCm": [
+        [
+          17.2,
+          7.525
+        ],
+        [
+          17.2,
+          6.599999999999998
+        ],
+        [
+          8.3,
+          6.599999999999998
+        ],
+        [
+          8.3,
+          9.7
+        ],
+        [
+          11.100000000000003,
+          9.7
+        ],
+        [
+          11.100000000000003,
+          8.875
+        ]
+      ],
+      "exactWaypointMatch": true,
+      "orthogonal": true,
+      "endpointTangentMatch": true,
+      "endpointTangentEvidence": {
+        "status": "PASS",
+        "sourceSide": "TOP",
+        "sourceActualDirection": [
+          0,
+          -1
+        ],
+        "sourceExpectedDirection": [
+          0,
+          -1
+        ],
+        "targetSide": "BOTTOM",
+        "targetActualApproachDirection": [
+          0,
+          -1
+        ],
+        "targetExpectedApproachDirection": [
+          0,
+          -1
+        ]
+      },
+      "segments": [
+        {
+          "index": 1,
+          "specId": "EXT-07-06::SEG::01",
+          "actualStartCm": [
+            17.2,
+            7.525
+          ],
+          "actualEndCm": [
+            17.2,
+            6.599999999999998
+          ],
+          "expectedStartCm": [
+            17.2,
+            7.5249999999999995
+          ],
+          "expectedEndCm": [
+            17.2,
+            6.6
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 2,
+          "specId": "EXT-07-06::SEG::02",
+          "actualStartCm": [
+            17.2,
+            6.599999999999998
+          ],
+          "actualEndCm": [
+            8.3,
+            6.599999999999998
+          ],
+          "expectedStartCm": [
+            17.2,
+            6.6
+          ],
+          "expectedEndCm": [
+            8.3,
+            6.6
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 3,
+          "specId": "EXT-07-06::SEG::03",
+          "actualStartCm": [
+            8.3,
+            6.599999999999998
+          ],
+          "actualEndCm": [
+            8.3,
+            9.7
+          ],
+          "expectedStartCm": [
+            8.3,
+            6.6
+          ],
+          "expectedEndCm": [
+            8.3,
+            9.7
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 4,
+          "specId": "EXT-07-06::SEG::04",
+          "actualStartCm": [
+            8.3,
+            9.7
+          ],
+          "actualEndCm": [
+            11.100000000000003,
+            9.7
+          ],
+          "expectedStartCm": [
+            8.3,
+            9.7
+          ],
+          "expectedEndCm": [
+            11.1,
+            9.7
+          ],
+          "maxEndpointDeltaCm": 3.552713678800501e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 5,
+          "specId": "EXT-07-06::SEG::05",
+          "actualStartCm": [
+            11.100000000000003,
+            9.7
+          ],
+          "actualEndCm": [
+            11.100000000000003,
+            8.875
+          ],
+          "expectedStartCm": [
+            11.1,
+            9.7
+          ],
+          "expectedEndCm": [
+            11.1,
+            8.875
+          ],
+          "maxEndpointDeltaCm": 3.552713678800501e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 1,
+          "arrowMatch": true
+        }
+      ]
+    },
+    {
+      "id": "EXT-09-08",
+      "expectedPointsCm": [
+        [
+          17.2,
+          11.225
+        ],
+        [
+          17.2,
+          10.2
+        ],
+        [
+          7.5,
+          10.2
+        ],
+        [
+          7.5,
+          13.4
+        ],
+        [
+          11.1,
+          13.4
+        ],
+        [
+          11.1,
+          12.575000000000001
+        ]
+      ],
+      "actualPointsCm": [
+        [
+          17.2,
+          11.225
+        ],
+        [
+          17.2,
+          10.199999999999998
+        ],
+        [
+          7.5,
+          10.199999999999998
+        ],
+        [
+          7.5,
+          13.399999999999999
+        ],
+        [
+          11.100000000000003,
+          13.399999999999999
+        ],
+        [
+          11.100000000000003,
+          12.575
+        ]
+      ],
+      "exactWaypointMatch": true,
+      "orthogonal": true,
+      "endpointTangentMatch": true,
+      "endpointTangentEvidence": {
+        "status": "PASS",
+        "sourceSide": "TOP",
+        "sourceActualDirection": [
+          0,
+          -1
+        ],
+        "sourceExpectedDirection": [
+          0,
+          -1
+        ],
+        "targetSide": "BOTTOM",
+        "targetActualApproachDirection": [
+          0,
+          -1
+        ],
+        "targetExpectedApproachDirection": [
+          0,
+          -1
+        ]
+      },
+      "segments": [
+        {
+          "index": 1,
+          "specId": "EXT-09-08::SEG::01",
+          "actualStartCm": [
+            17.2,
+            11.225
+          ],
+          "actualEndCm": [
+            17.2,
+            10.199999999999998
+          ],
+          "expectedStartCm": [
+            17.2,
+            11.225
+          ],
+          "expectedEndCm": [
+            17.2,
+            10.2
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 2,
+          "specId": "EXT-09-08::SEG::02",
+          "actualStartCm": [
+            17.2,
+            10.199999999999998
+          ],
+          "actualEndCm": [
+            7.5,
+            10.199999999999998
+          ],
+          "expectedStartCm": [
+            17.2,
+            10.2
+          ],
+          "expectedEndCm": [
+            7.5,
+            10.2
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 3,
+          "specId": "EXT-09-08::SEG::03",
+          "actualStartCm": [
+            7.5,
+            10.199999999999998
+          ],
+          "actualEndCm": [
+            7.5,
+            13.399999999999999
+          ],
+          "expectedStartCm": [
+            7.5,
+            10.2
+          ],
+          "expectedEndCm": [
+            7.5,
+            13.4
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 4,
+          "specId": "EXT-09-08::SEG::04",
+          "actualStartCm": [
+            7.5,
+            13.399999999999999
+          ],
+          "actualEndCm": [
+            11.100000000000003,
+            13.399999999999999
+          ],
+          "expectedStartCm": [
+            7.5,
+            13.4
+          ],
+          "expectedEndCm": [
+            11.1,
+            13.4
+          ],
+          "maxEndpointDeltaCm": 3.972054645195637e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 5,
+          "specId": "EXT-09-08::SEG::05",
+          "actualStartCm": [
+            11.100000000000003,
+            13.399999999999999
+          ],
+          "actualEndCm": [
+            11.100000000000003,
+            12.575
+          ],
+          "expectedStartCm": [
+            11.1,
+            13.4
+          ],
+          "expectedEndCm": [
+            11.1,
+            12.575000000000001
+          ],
+          "maxEndpointDeltaCm": 3.972054645195637e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 1,
+          "arrowMatch": true
+        }
+      ]
+    },
+    {
+      "id": "EXT-10-09",
+      "expectedPointsCm": [
+        [
+          23.3,
+          11.225
+        ],
+        [
+          23.3,
+          9.4
+        ],
+        [
+          27.0,
+          9.4
+        ],
+        [
+          27.0,
+          14.2
+        ],
+        [
+          17.2,
+          14.2
+        ],
+        [
+          17.2,
+          12.575000000000001
+        ]
+      ],
+      "actualPointsCm": [
+        [
+          23.3,
+          11.225
+        ],
+        [
+          23.3,
+          9.4
+        ],
+        [
+          27.000000000000004,
+          9.4
+        ],
+        [
+          27.000000000000004,
+          14.2
+        ],
+        [
+          17.2,
+          14.2
+        ],
+        [
+          17.2,
+          12.575
+        ]
+      ],
+      "exactWaypointMatch": true,
+      "orthogonal": true,
+      "endpointTangentMatch": true,
+      "endpointTangentEvidence": {
+        "status": "PASS",
+        "sourceSide": "TOP",
+        "sourceActualDirection": [
+          0,
+          -1
+        ],
+        "sourceExpectedDirection": [
+          0,
+          -1
+        ],
+        "targetSide": "BOTTOM",
+        "targetActualApproachDirection": [
+          0,
+          -1
+        ],
+        "targetExpectedApproachDirection": [
+          0,
+          -1
+        ]
+      },
+      "segments": [
+        {
+          "index": 1,
+          "specId": "EXT-10-09::SEG::01",
+          "actualStartCm": [
+            23.3,
+            11.225
+          ],
+          "actualEndCm": [
+            23.3,
+            9.4
+          ],
+          "expectedStartCm": [
+            23.3,
+            11.225
+          ],
+          "expectedEndCm": [
+            23.3,
+            9.4
+          ],
+          "maxEndpointDeltaCm": 0.0,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 2,
+          "specId": "EXT-10-09::SEG::02",
+          "actualStartCm": [
+            23.3,
+            9.4
+          ],
+          "actualEndCm": [
+            27.000000000000004,
+            9.4
+          ],
+          "expectedStartCm": [
+            23.3,
+            9.4
+          ],
+          "expectedEndCm": [
+            27.0,
+            9.4
+          ],
+          "maxEndpointDeltaCm": 3.552713678800501e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 3,
+          "specId": "EXT-10-09::SEG::03",
+          "actualStartCm": [
+            27.000000000000004,
+            9.4
+          ],
+          "actualEndCm": [
+            27.000000000000004,
+            14.2
+          ],
+          "expectedStartCm": [
+            27.0,
+            9.4
+          ],
+          "expectedEndCm": [
+            27.0,
+            14.2
+          ],
+          "maxEndpointDeltaCm": 3.552713678800501e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 4,
+          "specId": "EXT-10-09::SEG::04",
+          "actualStartCm": [
+            27.000000000000004,
+            14.2
+          ],
+          "actualEndCm": [
+            17.2,
+            14.2
+          ],
+          "expectedStartCm": [
+            27.0,
+            14.2
+          ],
+          "expectedEndCm": [
+            17.2,
+            14.2
+          ],
+          "maxEndpointDeltaCm": 3.552713678800501e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 0,
+          "arrowMatch": true
+        },
+        {
+          "index": 5,
+          "specId": "EXT-10-09::SEG::05",
+          "actualStartCm": [
+            17.2,
+            14.2
+          ],
+          "actualEndCm": [
+            17.2,
+            12.575
+          ],
+          "expectedStartCm": [
+            17.2,
+            14.2
+          ],
+          "expectedEndCm": [
+            17.2,
+            12.575000000000001
+          ],
+          "maxEndpointDeltaCm": 1.7763568394002505e-15,
+          "geometryMatch": true,
+          "orthogonal": true,
+          "styleMatch": true,
+          "beginArrow": 0,
+          "endArrow": 1,
+          "arrowMatch": true
+        }
+      ]
+    }
+  ],
+  "textShapes": [
+    {
+      "specId": "EXT-07-06::LABEL",
+      "ownerSpecId": "EXT-07-06",
+      "contentRole": "extend-label",
+      "text": "<<extend>>",
+      "expectedText": "<<extend>>",
+      "centerCm": [
+        12.7,
+        5.9499999999999975
+      ],
+      "expectedCenterCm": [
+        12.7,
+        5.95
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    },
+    {
+      "specId": "EXT-07-06::CONDITION",
+      "ownerSpecId": "EXT-07-06",
+      "contentRole": "extend-condition",
+      "text": "[payment required]",
+      "expectedText": "[payment required]",
+      "centerCm": [
+        12.7,
+        6.9499999999999975
+      ],
+      "expectedCenterCm": [
+        12.7,
+        6.95
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    },
+    {
+      "specId": "EXT-09-08::LABEL",
+      "ownerSpecId": "EXT-09-08",
+      "contentRole": "extend-label",
+      "text": "<<extend>>",
+      "expectedText": "<<extend>>",
+      "centerCm": [
+        12.6,
+        9.549999999999999
+      ],
+      "expectedCenterCm": [
+        12.6,
+        9.55
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    },
+    {
+      "specId": "EXT-09-08::CONDITION",
+      "ownerSpecId": "EXT-09-08",
+      "contentRole": "extend-condition",
+      "text": "[event detected]",
+      "expectedText": "[event detected]",
+      "centerCm": [
+        12.6,
+        10.85
+      ],
+      "expectedCenterCm": [
+        12.6,
+        10.85
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    },
+    {
+      "specId": "EXT-10-09::LABEL",
+      "ownerSpecId": "EXT-10-09",
+      "contentRole": "extend-label",
+      "text": "<<extend>>",
+      "expectedText": "<<extend>>",
+      "centerCm": [
+        25.2,
+        8.75
+      ],
+      "expectedCenterCm": [
+        25.2,
+        8.75
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    },
+    {
+      "specId": "EXT-10-09::CONDITION",
+      "ownerSpecId": "EXT-10-09",
+      "contentRole": "extend-condition",
+      "text": "[replan required]",
+      "expectedText": "[replan required]",
+      "centerCm": [
+        25.2,
+        10.05
+      ],
+      "expectedCenterCm": [
+        25.2,
+        10.05
+      ],
+      "geometryMatch": true,
+      "font": "Segoe UI",
+      "styleMatch": true
+    }
+  ],
+  "crossings": [],
+  "overlapPairs": [],
+  "throughNodes": [],
+  "failures": []
+}

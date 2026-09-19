@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\engine\cursor.py
+# hypothesis_version: 6.168.0
+
+[1000, 'Col %r', 'CursorResult[Any]', 'DBAPIType', 'List[int]', 'Row %r', '_KeyType', '_T', '_bufsize', '_echo', '_growth_factor', '_key_to_index', '_keymap', '_keys', '_max_row_buffer', '_processors', '_row_getter', '_rowbuffer', '_safe_for_cache', '_translated_indexes', '_tuplefilter', '_unpickled', 'connection', 'context', 'cursor', 'cursor_strategy', 'dialect', 'max_row_buffer']

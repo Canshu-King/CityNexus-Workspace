@@ -1,0 +1,128 @@
+# Merge into contracts/openapi.yaml AFTER the pre-WP04 WP03 repair is green.
+# The exact Commitment.level enum is generated separately from the frozen domain YAML.
+paths:
+  /city-services/{service_id}/booking-slots:
+    parameters:
+      - name: service_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: getBookingSlots
+      parameters:
+        - name: start_at
+          in: query
+          required: true
+          schema: {type: string, format: date-time}
+        - name: end_at
+          in: query
+          required: true
+          schema: {type: string, format: date-time}
+      responses:
+        '200':
+          description: Normalised provider booking slots with provenance
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/BookingSlot'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+
+  /bookings/{booking_id}:
+    parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getBooking
+      responses:
+        '200':
+          description: Current provider-normalised booking state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Booking'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /transactions/{transaction_id}:
+    parameters:
+      - name: transaction_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getTransaction
+      responses:
+        '200':
+          description: Current provider-normalised payment state and traceable reference
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Transaction'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  /commitments/{commitment_id}:
+    parameters:
+      - name: commitment_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getCommitment
+      responses:
+        '200':
+          description: Commitment state and deterministic policy evidence
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Commitment'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+components:
+  schemas:
+    BookingSlot:
+      type: object
+      required: [start_at, end_at, provider_key, provider_slot_ref]
+      properties:
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        provider_key: {type: string}
+        provider_slot_ref: {type: string}
+
+    # Merge these fields into the existing response objects rather than duplicating schemas.
+    Booking_response_fields:
+      provider_key: {type: string}
+      external_ref: {type: [string, 'null']}
+      commitment_id: {type: [string, 'null'], format: uuid}
+      cancellation_policy: {type: object, additionalProperties: true}
+
+    Transaction_response_fields:
+      booking_id: {type: [string, 'null'], format: uuid}
+      order_id: {type: [string, 'null'], format: uuid}
+      provider_key: {type: string}
+      external_ref: {type: [string, 'null']}
+
+    Commitment_response_fields:
+      external_ref: {type: [string, 'null']}
+      policy: {type: object, additionalProperties: true}
+
+contract_guards:
+  BookingCreate:
+    selected_plan_activity_only: true
+    journey_status: PLANNED
+    plan_status: SELECTED
+    provider_outcome_authoritative: true
+
+  OrderCreate:
+    selected_plan_activity_only: true
+    server_computes_total: true
+
+  TransactionCreate:
+    exactly_one_of: [booking_id, order_id]
+    authoritative_amount_currency_match: true
+    no_sensitive_card_credentials: true
+    provider_outcome_authoritative: true
+
+  idempotency:
+    header: Idempotency-Key
+    same_key_same_request: replay_same_logical_result_without_new_provider_call
+    same_key_different_request: 409_before_provider_call

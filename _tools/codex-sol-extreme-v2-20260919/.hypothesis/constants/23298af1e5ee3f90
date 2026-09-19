@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\anchor_schedule.py
+# hypothesis_version: 6.168.0
+
+[-0.02, -0.015, 0.06, 0.08, ',', '-', ':', 'ACTIVE', 'Arrival', 'C4_Anchored', 'Departure', 'END', 'NORMALIZED', 'START', 'always_available', 'anchor', 'anchor_role', 'available', 'commitment_anchor', 'cost_minor', 'duration_min', 'place-river-cruise', 'place_id', 'scheduled_start_at', 'semantic_key', 'status', 'v12-authoritative']

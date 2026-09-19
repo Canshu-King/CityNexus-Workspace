@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\tool_catalog.py
+# hypothesis_version: 6.168.0
+
+['accept_replan', 'action', 'changes_c4', 'changes_money', 'create_booking', 'inspect_journey', 'inspect_twin', 'list_replans', 'mutates_domain_truth', 'name', 'replace_activity', 'request_replan', 'reschedule_activity', 'search_city_services']

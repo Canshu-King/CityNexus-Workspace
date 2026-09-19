@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\db\session.py
+# hypothesis_version: 6.168.0
+
+["'", ',', ':memory:', ';', '?', 'C4_Anchored', 'NOT_STARTED', 'TEXT', 'amount_status', 'check_same_thread', 'compiler_confidence', 'compiler_model_key', 'confirmation_ref', 'connect', 'connect_args', 'coordinate_crs', 'crs', 'db', 'driver_connection', 'executescript', 'expires_at', 'future', 'geometry_json', 'intent_json', 'is_standing', 'kind', 'luggage_drop_json', 'maturity_stage', 'max_auto_loss_minor', 'mobility_snapshot_id', 'paid_mode', 'parent_mission_id', 'planning_mode', 'policy', 'poolclass', 'provenance', 'quarantined_ids', 'reasoning_summary', 'required_decision', 'resolved_intent_json', 'schema.sql', 'sqlite', 'sqlite://', 'sqlite:///:memory:', 'status', 'timeout', 'trigger_kind', 'utf-8', 'winner_id']

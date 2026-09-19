@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\context\weather_runtime.py
+# hypothesis_version: 6.168.0
+
+['CANCELLED', 'CAPTURED', 'COMPLETED', 'LIVE_PROVIDER', 'PROVIDER_VERIFIED', 'ProviderObservation', 'SKIPPED', 'SYSTEM', 'WEATHER', 'WEATHER_SCOPE_MATCH', 'WEATHER_TIME_OVERLAP', '[]', 'activity_end_at', 'activity_id', 'activity_start_at', 'attributions', 'capture_provenance', 'captured_at', 'created_event_ids', 'degraded', 'event_ids', 'failed_place_ids', 'forecast_run', 'forecast_runs', 'indoor', 'local_risk_end_at', 'local_risk_start_at', 'observation_ids', 'observation_type', 'open-meteo', 'open-meteo-runtime', 'outdoor', 'place_id', 'provenance', 'provider', 'provider_key', 'queried_place_ids', 'query_scope', 'reason_codes', 'snapshot', 'snapshots', 'successful_place_ids', 'target_times', 'weather_code', 'weather_fact', 'weather_sensitive', '{}']

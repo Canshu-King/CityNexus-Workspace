@@ -1,0 +1,15 @@
+{
+  "finding_id": "CX-SOL-001",
+  "severity": "P0|P1|P2|P3",
+  "category": "truth|state-machine|cross-layer|merge|degradation|performance",
+  "verified": true,
+  "affected_files": [],
+  "symbols": [],
+  "preconditions": [],
+  "minimal_repro": "",
+  "observed": "",
+  "expected": "",
+  "evidence": [],
+  "recommended_action": "",
+  "covered_by_existing_gate": false
+}

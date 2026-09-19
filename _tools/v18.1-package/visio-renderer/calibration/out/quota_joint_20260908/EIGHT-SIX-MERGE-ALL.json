@@ -1,0 +1,107 @@
+{
+  "status": "FAIL",
+  "shardFiles": [
+    "out\\quota_joint_20260908\\eight-shard-1.json",
+    "out\\quota_joint_20260908\\eight-shard-10.json",
+    "out\\quota_joint_20260908\\eight-shard-11.json",
+    "out\\quota_joint_20260908\\eight-shard-12.json",
+    "out\\quota_joint_20260908\\eight-shard-13.json",
+    "out\\quota_joint_20260908\\eight-shard-14.json",
+    "out\\quota_joint_20260908\\eight-shard-15.json",
+    "out\\quota_joint_20260908\\eight-shard-16.json",
+    "out\\quota_joint_20260908\\eight-shard-17.json",
+    "out\\quota_joint_20260908\\eight-shard-18.json",
+    "out\\quota_joint_20260908\\eight-shard-19.json",
+    "out\\quota_joint_20260908\\eight-shard-2.json",
+    "out\\quota_joint_20260908\\eight-shard-20.json",
+    "out\\quota_joint_20260908\\eight-shard-21.json",
+    "out\\quota_joint_20260908\\eight-shard-22.json",
+    "out\\quota_joint_20260908\\eight-shard-23.json",
+    "out\\quota_joint_20260908\\eight-shard-24.json",
+    "out\\quota_joint_20260908\\eight-shard-3.json",
+    "out\\quota_joint_20260908\\eight-shard-4.json",
+    "out\\quota_joint_20260908\\eight-shard-5.json",
+    "out\\quota_joint_20260908\\eight-shard-6.json",
+    "out\\quota_joint_20260908\\eight-shard-7.json",
+    "out\\quota_joint_20260908\\eight-shard-8.json",
+    "out\\quota_joint_20260908\\eight-shard-9.json"
+  ],
+  "sourceCounts": {
+    "A-B-06": 354,
+    "A-PA-07": 3681,
+    "A-CE-09": 695,
+    "A-CD-UC-10": 615,
+    "A-M-UC-08": 811,
+    "A-M-UC-10": 615
+  },
+  "selectedPoolCounts": {
+    "A-B-06": 354,
+    "A-PA-07": 899,
+    "A-CE-09": 127,
+    "A-CD-UC-10": 117,
+    "A-M-UC-08": 162,
+    "A-M-UC-10": 92
+  },
+  "impossibleRoutePairs": [],
+  "arcConsistency": {
+    "status": "FAIL",
+    "rounds": 1,
+    "emptyRoutes": [
+      "A-PA-07"
+    ],
+    "domainSizes": {
+      "A-B-06": 354,
+      "A-PA-07": 0,
+      "A-CE-09": 127,
+      "A-CD-UC-10": 117,
+      "A-M-UC-08": 162,
+      "A-M-UC-10": 92
+    },
+    "removalCount": 899,
+    "removalBlockerCounts": {
+      "A-B-06": {
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0
+      },
+      "A-PA-07": {
+        "A-B-06": 875,
+        "A-CE-09": 32,
+        "A-CD-UC-10": 490,
+        "A-M-UC-08": 26,
+        "A-M-UC-10": 472
+      },
+      "A-CE-09": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0
+      },
+      "A-CD-UC-10": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-M-UC-08": 0,
+        "A-M-UC-10": 0
+      },
+      "A-M-UC-08": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-10": 0
+      },
+      "A-M-UC-10": {
+        "A-B-06": 0,
+        "A-PA-07": 0,
+        "A-CE-09": 0,
+        "A-CD-UC-10": 0,
+        "A-M-UC-08": 0
+      }
+    }
+  },
+  "reason": "arc-consistency-infeasible-union"
+}

@@ -1,0 +1,7 @@
+# Install only when the corresponding work-package gate starts.
+# No versions are pinned here on purpose; Codex must resolve against the actual
+# post-WP04 Python environment and lockfile, one dependency group at a time.
+routingpy
+ortools
+litellm
+webauthn

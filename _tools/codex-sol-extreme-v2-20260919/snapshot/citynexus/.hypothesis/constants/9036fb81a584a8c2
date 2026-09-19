@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\contracts.py
+# hypothesis_version: 6.168.0
+
+['ACCEPT_REPLAN', 'ADVISORY', 'ALLOW_AUTO', 'ASSISTED', 'AUTONOMOUS', 'C3_Guaranteed', 'C4_Anchored', 'CREATE_BOOKING', 'DENY', 'INSPECT_JOURNEY', 'INSPECT_TWIN', 'LIST_REPLANS', 'MODIFY_C4', 'PAYMENT', 'REFUND', 'REPLACE_ACTIVITY', 'REQUEST_REPLAN', 'REQUIRE_CONFIRMATION', 'REQUIRE_STEP_UP', 'RESCHEDULE_ACTIVITY', 'SEARCH_CITY_SERVICES', 'arguments']

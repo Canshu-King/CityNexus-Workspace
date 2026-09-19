@@ -1,0 +1,18 @@
+{
+  "candidateSha256": "8c1661ebb1a9d5a371f48ef800316dd643f391beec559eb2a4b8065eed75182d",
+  "focusedTests": "8 passed in independent reconstructed workspace",
+  "v1Status": "PASS",
+  "v2Status": "FAIL",
+  "v3Status": "FAIL",
+  "contactMetrics": {
+    "contactPairCount": 46,
+    "uniqueContactCount": 55,
+    "tjunction": 22,
+    "shared_endpoint": 33,
+    "shortSegmentCount": 9,
+    "redundantCollinearPointCount": 88,
+    "properCrossingCount": 0,
+    "collinearOverlapPairCount": 0
+  },
+  "v3OwnFailures": []
+}

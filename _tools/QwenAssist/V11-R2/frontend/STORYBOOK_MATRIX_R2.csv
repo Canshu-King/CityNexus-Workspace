@@ -1,0 +1,15 @@
+﻿Component,SourceFile,StoryFile,Default,Loading,Empty,Error,Offline,Stale,Risk,Protected,Disabled,Mobile,Priority
+JourneyMap,src/components/JourneyMap.tsx,NOT_CREATED,Yes,Yes,Yes,Yes,Yes,No,Yes,No,No,Yes,P0
+Icon,src/components/v8/Icon.tsx,NOT_CREATED,Yes,No,No,No,No,No,No,No,No,Yes,P1
+StayExplorer,src/features/stay/StayExplorer.tsx,NOT_CREATED,Yes,Yes,Yes,Yes,No,No,No,No,No,Yes,P0
+MobilitySheet,src/features/mobility/MobilitySheet.tsx,NOT_CREATED,Yes,Yes,No,Yes,No,No,No,No,No,Yes,P0
+AgentComposer,src/features/agent/AgentComposer.tsx,NOT_CREATED,Yes,Yes,No,Yes,No,No,No,No,No,No,P1
+ControlTowerPanel,src/features/intelligence/ControlTowerPanel.tsx,NOT_CREATED,Yes,Yes,Yes,Yes,Yes,No,Yes,No,No,No,P1
+TwinPanel,src/features/traveler-twin/TwinPanel.tsx,NOT_CREATED,Yes,Yes,No,Yes,No,No,No,No,No,No,P1
+BookingArtifactScanner,src/features/inbox/BookingArtifactScanner.tsx,NOT_CREATED,Yes,Yes,No,Yes,No,No,No,No,No,Yes,P0
+MapPanel,src/components/v8/MapPanel.tsx,NOT_CREATED,Yes,Yes,No,Yes,Yes,No,No,No,No,Yes,P0
+JourneyInboxWorkbench,src/features/inbox/JourneyInboxWorkbench.tsx,NOT_CREATED,Yes,Yes,Yes,Yes,No,No,No,No,No,Yes,P1
+PushCapabilityCard,src/features/notifications/PushCapabilityCard.tsx,NOT_CREATED,Yes,No,No,No,No,No,No,No,No,Yes,P2
+SortableActivityList,src/features/studio/SortableActivityList.tsx,NOT_CREATED,Yes,No,No,No,No,No,No,No,No,Yes,P0
+V10LiveExecutionPanel,src/features/execution/V10LiveExecutionPanel.tsx,NOT_CREATED,Yes,Yes,No,Yes,Yes,Yes,Yes,No,No,Yes,P0
+V10Primitives,src/stories/V10Primitives.stories.tsx,src/stories/V10Primitives.stories.tsx,Yes,Yes,No,Yes,No,No,No,No,No,Yes,P1

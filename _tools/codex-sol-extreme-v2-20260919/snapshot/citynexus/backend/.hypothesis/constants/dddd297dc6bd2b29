@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py
+# hypothesis_version: 6.168.0
+
+['_adapt_connection', '_connection', '_cursor', '_execute_mutex', '_rows', 'await_', 'dbapi', 'description']

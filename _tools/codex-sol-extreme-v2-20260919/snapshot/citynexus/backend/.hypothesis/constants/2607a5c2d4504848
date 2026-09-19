@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\util\deprecations.py
+# hypothesis_version: 6.168.0
+
+['"%s"', '()', '1.4', '2.0', ':attr:', ':ref:`(.+) <.*>`', 'Callable[..., Any]', '^:(attr|func|meth):', '_F', '_T', '__dict__', '__doc__', '__init__', '__weakref__', '_sa_skip_warning', 'attr', 'attribute', 'construct', 'enable_warnings', 'func', 'function', 'meth', 'method']

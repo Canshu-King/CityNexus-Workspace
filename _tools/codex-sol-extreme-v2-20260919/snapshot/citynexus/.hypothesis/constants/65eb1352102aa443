@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\ai\web_research.py
+# hypothesis_version: 6.168.0
+
+[2000, 'OPEN_WEB', 'Web observation', 'content', 'deepseek-web-search', 'domain', 'low', 'role', 'system', 'title', 'url', 'user']

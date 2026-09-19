@@ -1,0 +1,22 @@
+Semantic implementation files:
+  backend/app/main.py
+  backend/tests/test_backend_connected_golden_contract.py
+  backend/tests/test_vertical_slice_hardening_next.py
+  frontend/src/api/citynexus.ts
+  frontend/src/demo/goldenScenario.ts
+  frontend/src/main.tsx
+  frontend/e2e/golden.spec.ts
+
+Reproducibility payload added to this checkpoint:
+  backend/db/schema.sql
+  backend/data/mock/wp04_commerce_catalog.json
+  backend/data/mock/wp04_city_services_overlay.json
+  data/mock/*
+
+Contract and review evidence included:
+  contract/vertical-slice-hardening/*
+  contracts/openapi.yaml
+  docs/implementation/*
+
+Existing generated databases, dependency directories, caches, build output,
+and Playwright result debris are excluded from the checkpoint archive.

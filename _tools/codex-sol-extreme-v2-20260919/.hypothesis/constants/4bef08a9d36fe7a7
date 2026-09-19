@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mobility\valhalla_http.py
+# hypothesis_version: 6.168.0
+
+[10.0, 60.0, -180, 180, 1000, 1000000, '/', '/route', '/sources_to_targets', 'AVAILABLE', 'cells', 'costing', 'deployment', 'distance', 'distances', 'duration', 'durations', 'has_live_traffic', 'kilometers', 'lat', 'latitude', 'legs', 'length', 'live_traffic', 'location', 'locations', 'lon', 'longitude', 'pedestrian', 'raw_status', 'shape', 'sources', 'sources_to_targets', 'status', 'summary', 'targets', 'tileset', 'time', 'to_index', 'trip', 'truncated polyline', 'units', 'valhalla-http', 'verbose', 'version']

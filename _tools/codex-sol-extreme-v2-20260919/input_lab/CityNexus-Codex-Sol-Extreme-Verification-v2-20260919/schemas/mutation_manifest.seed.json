@@ -1,0 +1,47 @@
+[
+  {
+    "id": "MUT-ACK-RESOLVE",
+    "target": "ACK handling",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-TRIGGER-LINK",
+    "target": "proposal-trigger linkage",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-HARD-UNKNOWN",
+    "target": "hard_minutes allowlist",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-LIVE-MOCK-HARD",
+    "target": "live failure mock fallback",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-ID-NONE",
+    "target": "physical identity None==None",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-ID-COORD",
+    "target": "coordinate-only identity",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-BUDGET-PARTIAL-FULL",
+    "target": "budget evidence scope",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-LIVE-CURSOR",
+    "target": "Live current_activity cursor",
+    "expected": "KILLED"
+  },
+  {
+    "id": "MUT-STALE-CURSOR-FALLBACK",
+    "target": "stale cursor fail-closed",
+    "expected": "KILLED"
+  }
+]

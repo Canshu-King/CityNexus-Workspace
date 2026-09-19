@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\geometry\geo.py
+# hypothesis_version: 6.168.0
+
+['__geo_interface__', 'coordinates', 'feature', 'geometries', 'geometry', 'geometrycollection', 'linearring', 'linestring', 'multilinestring', 'multipoint', 'multipolygon', 'point', 'polygon', 'type']

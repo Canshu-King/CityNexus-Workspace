@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\principal.py
+# hypothesis_version: 6.168.0
+
+[401, 403, 404, 503, '127.0.0.1', '::1', 'Authorization', 'bearer', 'configured_token', 'development', 'localhost', 'test', 'testclient']

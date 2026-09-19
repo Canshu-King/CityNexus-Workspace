@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\core\config.py
+# hypothesis_version: 6.168.0
+
+[',', '1', '1.0', '10', '12', '60', '65', '900', 'CITYNEXUS_AI_API_KEY', 'CITYNEXUS_AI_ENABLED', 'CITYNEXUS_AI_MODEL', 'CITYNEXUS_ENV', 'CITYNEXUS_SOLVER', 'DEEPSEEK_API_KEY', 'citynexus', 'deepseek', 'deepseek-v4-flash', 'demo', 'deterministic', 'development', 'disabled', 'false', 'hermes', 'high', 'replay', 'true']

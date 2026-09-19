@@ -1,0 +1,52 @@
+version: 0.1
+purpose: >-
+  Topology-safe Association port seeds for P1_UC_Overview. These are routing
+  seeds, not frozen semantics. They MUST NOT modify id, connectorType/source/
+  target or any C4E1 Extend field. V2/V3 remain authoritative geometry gates.
+plans:
+  PLAN_R_REVERSE_EMBEDDING:
+    note: >-
+      Genus-0 port rotation. In independent negotiated-congestion experiments
+      this seed reduced the unresolved grid conflict floor farther than PLAN_O,
+      but it can induce longer detours around the frozen/clean top-right routes.
+    routes:
+      A-T-UC-02: {sourcePortFraction: 0.10, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-04: {sourcePortFraction: 0.20, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-05: {sourcePortFraction: 0.30, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-06: {sourcePortFraction: 0.40, targetSide: RIGHT, targetPortFraction: 0.2777777778}
+      A-T-UC-07: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.2916666667}
+      A-T-UC-11: {sourcePortFraction: 0.60, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-T-UC-10: {sourcePortFraction: 0.70, targetSide: TOP, targetPortFraction: 0.7083333333}
+      A-T-UC-08: {sourcePortFraction: 0.80, targetSide: BOTTOM, targetPortFraction: 0.75}
+      A-T-UC-12: {sourcePortFraction: 0.90, targetSide: LEFT, targetPortFraction: 0.50}
+      A-M-UC-04: {sourcePortFraction: 0.2142857143, targetSide: RIGHT, targetPortFraction: 0.1296296296}
+      A-M-UC-10: {sourcePortFraction: 0.50, targetSide: TOP, targetPortFraction: 0.2916666667}
+      A-M-UC-08: {sourcePortFraction: 0.7857142857, targetSide: BOTTOM, targetPortFraction: 0.25}
+      A-CD-UC-10: {sourcePortFraction: 0.7142857143, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-B-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CE-09: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.50}
+
+  PLAN_O_PRESERVE_LOCAL_GEOMETRY:
+    note: >-
+      Genus-0 port rotation that preserves the existing City-Data clean routes
+      and Mobility source order, keeps the original Traveler ordering almost
+      intact, and locally places M04 below clean CD04. It requires CD10 to sit
+      between CD04/CD05 on the City-Data actor and swaps T07/T08 order.
+    routes:
+      A-T-UC-05: {sourcePortFraction: 0.10, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-04: {sourcePortFraction: 0.20, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-02: {sourcePortFraction: 0.30, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-11: {sourcePortFraction: 0.40, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-T-UC-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.2777777778}
+      A-T-UC-07: {sourcePortFraction: 0.60, targetSide: BOTTOM, targetPortFraction: 0.2916666667}
+      A-T-UC-08: {sourcePortFraction: 0.70, targetSide: BOTTOM, targetPortFraction: 0.8333333333}
+      A-T-UC-10: {sourcePortFraction: 0.80, targetSide: TOP, targetPortFraction: 0.2916666667}
+      A-T-UC-12: {sourcePortFraction: 0.90, targetSide: LEFT, targetPortFraction: 0.50}
+      A-CD-UC-10: {sourcePortFraction: 0.2857142857, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-M-UC-04: {sourcePortFraction: 0.2142857143, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-M-UC-08: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.6666666667}
+      A-M-UC-10: {sourcePortFraction: 0.7857142857, targetSide: TOP, targetPortFraction: 0.7083333333}
+      A-B-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CE-09: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.50}

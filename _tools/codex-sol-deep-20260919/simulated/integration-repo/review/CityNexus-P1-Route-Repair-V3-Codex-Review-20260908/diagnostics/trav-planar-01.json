@@ -1,0 +1,253 @@
+{
+  "status": "PASS",
+  "plan": "PLAN_TRAVELER_SKELETON_PLANAR_GRID",
+  "seed": 20261051,
+  "samples": 8,
+  "axisCounts": {
+    "x": 81,
+    "y": 71
+  },
+  "familyCounts": {
+    "A-T-UC-02": 8,
+    "A-T-UC-04": 8,
+    "A-T-UC-05": 9,
+    "A-T-UC-06": 7,
+    "A-T-UC-07": 8,
+    "A-T-UC-08": 8,
+    "A-T-UC-10": 6,
+    "A-T-UC-11": 7,
+    "A-T-UC-12": 7
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 46320,
+  "solverStatus": "OPTIMAL",
+  "wallTimeSeconds": 0.0081913,
+  "candidateCount": 68,
+  "conflictPairCount": 539,
+  "selection": {
+    "A-T-UC-02": "A-T-UC-02:validated-skeleton",
+    "A-T-UC-04": "A-T-UC-04:validated-skeleton",
+    "A-T-UC-05": "A-T-UC-05:validated-skeleton",
+    "A-T-UC-06": "A-T-UC-06:validated-skeleton",
+    "A-T-UC-07": "A-T-UC-07:validated-skeleton",
+    "A-T-UC-08": "A-T-UC-08:validated-skeleton",
+    "A-T-UC-10": "A-T-UC-10:0",
+    "A-T-UC-11": "A-T-UC-11:validated-skeleton",
+    "A-T-UC-12": "A-T-UC-12:0"
+  },
+  "selectionPaths": {
+    "A-T-UC-02": [
+      [
+        4.4,
+        8.3
+      ],
+      [
+        5.0,
+        8.3
+      ],
+      [
+        5.0,
+        4.5
+      ],
+      [
+        8.7,
+        4.5
+      ]
+    ],
+    "A-T-UC-04": [
+      [
+        4.4,
+        8.6
+      ],
+      [
+        5.3,
+        8.6
+      ],
+      [
+        5.3,
+        5.5
+      ],
+      [
+        14.4,
+        5.5
+      ],
+      [
+        14.4,
+        4.5
+      ],
+      [
+        14.8,
+        4.5
+      ]
+    ],
+    "A-T-UC-05": [
+      [
+        4.4,
+        8.9
+      ],
+      [
+        5.6,
+        8.9
+      ],
+      [
+        5.6,
+        5.8
+      ],
+      [
+        20.5,
+        5.8
+      ],
+      [
+        20.5,
+        4.5
+      ],
+      [
+        20.9,
+        4.5
+      ]
+    ],
+    "A-T-UC-06": [
+      [
+        4.4,
+        9.2
+      ],
+      [
+        5.9,
+        9.2
+      ],
+      [
+        5.9,
+        9.8
+      ],
+      [
+        13.8,
+        9.8
+      ],
+      [
+        13.8,
+        8.3
+      ],
+      [
+        13.5,
+        8.3
+      ]
+    ],
+    "A-T-UC-07": [
+      [
+        4.4,
+        9.5
+      ],
+      [
+        5.6,
+        9.5
+      ],
+      [
+        5.6,
+        9.9
+      ],
+      [
+        14.4,
+        9.9
+      ],
+      [
+        14.4,
+        8.2
+      ],
+      [
+        14.8,
+        8.2
+      ]
+    ],
+    "A-T-UC-08": [
+      [
+        4.4,
+        10.4
+      ],
+      [
+        6.5,
+        10.4
+      ],
+      [
+        6.5,
+        13.5
+      ],
+      [
+        12.5,
+        13.5
+      ],
+      [
+        12.5,
+        12.57
+      ]
+    ],
+    "A-T-UC-10": [
+      [
+        4.4,
+        10.1
+      ],
+      [
+        20.0,
+        10.1
+      ],
+      [
+        20.0,
+        11.9
+      ],
+      [
+        20.9,
+        11.9
+      ]
+    ],
+    "A-T-UC-11": [
+      [
+        4.4,
+        9.8
+      ],
+      [
+        5.3,
+        9.8
+      ],
+      [
+        5.3,
+        10.0
+      ],
+      [
+        20.3,
+        10.0
+      ],
+      [
+        20.3,
+        8.2
+      ],
+      [
+        20.9,
+        8.2
+      ]
+    ],
+    "A-T-UC-12": [
+      [
+        4.4,
+        10.7
+      ],
+      [
+        6.0,
+        10.7
+      ],
+      [
+        6.0,
+        15.2
+      ],
+      [
+        14.8,
+        15.2
+      ]
+    ]
+  },
+  "exportedRoutes": "D:\\moodle\\CityNexus\\visio-renderer\\calibration\\out\\trav-planar-01.yaml"
+}

@@ -1,0 +1,40 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_O_PORT_REORDER_M10_LOWER",
+  "seed": 20260911,
+  "samples": 64,
+  "axisCounts": {
+    "x": 85,
+    "y": 83
+  },
+  "familyCounts": {
+    "A-T-UC-02": 12,
+    "A-T-UC-04": 48,
+    "A-T-UC-05": 47,
+    "A-T-UC-06": 19,
+    "A-T-UC-07": 3,
+    "A-T-UC-08": 9,
+    "A-T-UC-10": 16,
+    "A-T-UC-11": 56,
+    "A-T-UC-12": 18,
+    "A-CD-UC-04": 15,
+    "A-CD-UC-05": 8,
+    "A-CD-UC-10": 24,
+    "A-M-UC-04": 0,
+    "A-M-UC-08": 39,
+    "A-M-UC-10": 40,
+    "A-B-06": 16,
+    "A-PA-07": 36,
+    "A-CE-09": 36
+  },
+  "emptyRoutes": [
+    "A-M-UC-04"
+  ],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 43364
+}

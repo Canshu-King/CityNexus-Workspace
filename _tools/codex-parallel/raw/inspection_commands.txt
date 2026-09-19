@@ -1,0 +1,15 @@
+All protected paths were inspected read-only. Representative commands:
+
+git -C D:\moodle\_qoder_integration_20260919 status --porcelain=v2 --branch
+git -C D:\moodle\_qoder_integration_20260919 log --oneline --decorate --graph -15
+git -C D:\moodle\_qoder_integration_20260919 show --name-status <commit>
+git -C D:\moodle\_qoder_integration_20260919 diff --name-status 380e6ff..HEAD
+rg -n live_valhalla_url|ValhallaHTTPMobilityProvider backend/app
+rg -n maplibre|lazy|heavy-dependency frontend/src
+Get-ChildItem D:\moodle\02 Software Engineering -Recurse -File
+pypdf text extraction plus pdftoppm visual rendering of the SE assignment brief
+python routing\xiamen_routing_smoke.py --self-test
+phone\preflight_windows.ps1
+phone\collect_host_state.ps1
+
+No reset, clean, commit, merge, cherry-pick, source edit, deployment, firewall change, ADB change or credential access was performed.

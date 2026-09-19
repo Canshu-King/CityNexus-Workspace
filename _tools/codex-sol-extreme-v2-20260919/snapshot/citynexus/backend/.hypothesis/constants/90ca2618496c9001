@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\_pytesttester.py
+# hypothesis_version: 6.168.0
+
+['-', '--cov=', '--doctest-modules', '--pyargs', '-l', '-m', '-q', 'NumPy CPU features: ', 'PytestTester', 'fast', 'full', 'not slow', 'nothing enabled', 'v']

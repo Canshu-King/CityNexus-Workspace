@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\replanning\mock_replan_engine.py
+# hypothesis_version: 6.168.0
+
+[0.25, 0.5, 1.0, 2.0, 60.0, 111320.0, 'AMBIGUOUS', 'AVOID_STAIRS', 'CANCELLED', 'COMPLETED', 'DIFFERENT', 'ESTIMATED', 'HARD', 'INDOOR_ALTERNATIVE', 'INDOOR_PREFERRED', 'KNOWN', 'QUIET_ENVIRONMENT', 'SAME', 'SKIPPED', 'SOFT', 'STEP_FREE_REQUIRED', '[]', '\\s+', 'accessibility', 'amount_minor', 'capability', 'category', 'city_service_id', 'cost_evidence', 'cost_minor', 'distance_m', 'duration_min', 'external_id', 'id', 'indoor', 'latitude', 'longitude', 'low-stimulation', 'max_m', 'metadata_json', 'name', 'namespace', 'object_id', 'object_type', 'place_id', 'preference_key', 'quiet', 'sensory-friendly', 'severity', 'status', 'tags_json', 'target', 'value_json', 'walking_distance_m', '{}']

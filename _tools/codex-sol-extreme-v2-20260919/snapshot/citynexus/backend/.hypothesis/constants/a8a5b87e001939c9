@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_utils_impl.py
+# hypothesis_version: 6.168.0
+
+['\n\nMethods:\n', '()', ',\n', ', ', '-', '=', '>', 'None', '_', '__class__', '__doc__', '__init__', '__name__', '_core', '_ppimport_attr', '_ppimport_importer', '_ppimport_module', 'aligned: ', 'baseline', 'big', 'byteorder: ', 'byteswap: ', 'class: ', 'contiguous: ', 'formats', 'fortran: ', 'found', 'get_include', 'include', 'info', 'itemsize', 'itemsize: ', 'little', 'names', 'not_found', 'numpy', 'numpy_version', 'offsets', 'python', 'shape: ', 'show_runtime', 'simd_extensions', 'strides: ', 'titles', 'uname', '|']

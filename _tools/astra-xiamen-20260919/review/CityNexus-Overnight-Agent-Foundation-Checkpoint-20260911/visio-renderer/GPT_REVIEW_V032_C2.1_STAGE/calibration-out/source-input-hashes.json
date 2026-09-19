@@ -1,0 +1,41 @@
+{
+  "rendererVersion": "v0.3.2",
+  "inputs": [
+    {
+      "path": "visio-spec\\style-tokens.yaml",
+      "sha256": "E62E369625A0D521A245EFABE1AB5E581C5E7C0985712FC26EC022337E11B030"
+    },
+    {
+      "path": "visio-renderer\\native-master-map.json",
+      "sha256": "E3CC9C9035D3B194F1DF8F86597F3937C9FEAC8E7C1B2AABDE74727DDF705E69"
+    },
+    {
+      "path": "visio-renderer\\phase1-routing.yaml",
+      "sha256": "430F886AA7FF753578101FBE99C9C2B6843E2C803EFEE5B84E85181D23E20F19"
+    },
+    {
+      "path": "visio-renderer\\TOOLCHAIN-BASELINE.md",
+      "sha256": "485BD64035DCFE9FBFC45CC35665054B76CB8BF5A4C1E4F79CBBC945E10AF3D7"
+    },
+    {
+      "path": "visio-renderer\\render-config.yaml",
+      "sha256": "4FC506FE26AE3219250871694DA8FFB590450D2421532958A9FAC6F3A2C80A11"
+    },
+    {
+      "path": "visio-renderer\\build_calibrations.py",
+      "sha256": "2B16721E917225E3808A17C924013AD6AE8E5A59D538BB5663CEA5993F7067B0"
+    },
+    {
+      "path": "visio-renderer\\calibration\\build_c2_1.py",
+      "sha256": "BD50E9CF7A11716614A4B2B6301C0204B0F2977FC27164FE8E4AEF97B427743C"
+    },
+    {
+      "path": "visio-renderer\\render_core.py",
+      "sha256": "1F2D2A2E88BFD7388227A20A4AC744E39401C17C1CA4B29C6161105C0C8A0322"
+    },
+    {
+      "path": "visio-renderer\\style_adapter.py",
+      "sha256": "D08A9FBD7C193F0809BA6C292D8E2FB6BF8F53E2F8278BDF66D7EA2CD90ED3E5"
+    }
+  ]
+}

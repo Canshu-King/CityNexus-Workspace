@@ -1,0 +1,57 @@
+{
+  "status": "ASSIST_PATCH_READY_NOT_FORMAL_ROUTE_SOLUTION",
+  "authoritativeCandidateModified": false,
+  "candidateSha256": "8c1661ebb1a9d5a371f48ef800316dd643f391beec559eb2a4b8065eed75182d",
+  "sourceReviewZipSha256": "941765ab65b2015e5f8641338e71bfd0d29bb6573501cdbfb1544365c3ea090b",
+  "testEvidence": {
+    "packageReconstructionPytest": "23 passed",
+    "compileall": "PASS",
+    "zipCacheEntries": 0
+  },
+  "currentFormalGate": {
+    "V1": "PASS",
+    "V2": "FAIL",
+    "V3": "FAIL because V2",
+    "contactPairCount": 46,
+    "uniqueContactCount": 55,
+    "selfContactCount": 0,
+    "shortSegmentCount": 9,
+    "redundantCollinearPointCount": 88
+  },
+  "newSafetyGates": [
+    "runtime genus/topology interlock",
+    "self-contact audit/rejection",
+    "route-pair compatibility precheck",
+    "AC-3 candidate-domain precheck",
+    "exact pre-staging conflict check"
+  ],
+  "newSearchTools": [
+    "diagnose_p1_candidate_pool.py",
+    "synthesize_p1_pair_families.py",
+    "search_p1_repaired_pool.py",
+    "search_p1_local_bundle_ports.py"
+  ],
+  "currentSearchFinding": "Pairwise candidate gaps can be synthesized away on genus-0 seed, but AC-3 exposes a higher-order UC-06/UC-07 bundle bottleneck centered on T06/T07/B06/PA07 (sometimes T11).",
+  "nextTarget": "Find a genus-0 local 5-route bundle witness before returning to full 18-route search.",
+  "patchedCalibrationFiles": [
+    "audit_p1_route_contacts.py",
+    "audit_p1_route_topology_v2.py",
+    "diagnose_p1_candidate_pool.py",
+    "explore_p1_disjoint_pool.py",
+    "plan_p1_associations.py",
+    "prepare_p1_corridors.py",
+    "route_candidate_selector.py",
+    "route_p1_negotiated_grid.py",
+    "search_p1_local_bundle_ports.py",
+    "search_p1_repaired_pool.py",
+    "search_planar_skeleton_ports.py",
+    "solve_p1_disjoint_cpsat.py",
+    "synthesize_p1_pair_families.py",
+    "validate_p1_route_candidate_v2.py"
+  ],
+  "addedTests": [
+    "test_p1_local_bundle_search_contract.py",
+    "test_p1_self_contact_contract.py",
+    "test_p1_topology_runtime_contract.py"
+  ]
+}

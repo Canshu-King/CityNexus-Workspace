@@ -1,0 +1,17 @@
+{
+  "snapshot_commit": "1de4e0c569349d7eee4bc22995cc49c487e3279e",
+  "principle": "truthfulness > graceful UX > convenience",
+  "cases": [
+    {"id":"H-R01","fault":"routing timeout/5xx","expected":"controlled provider error; no ETA","cache":"only previously sealed non-expired evidence","consumer":"route unavailable; retry","evidence":"test_postgate_provider_foundation","executed":"PASS"},
+    {"id":"H-R02","fault":"routing malformed payload","expected":"reject payload; no geometry/duration fabrication","cache":"no malformed cache","consumer":"route evidence unavailable","evidence":"test_postgate_provider_foundation","executed":"PASS"},
+    {"id":"H-R03","fault":"live route fails and mock fallback exists","expected":"hard operation refuses synthetic fallback","cache":"soft/offline use may retain explicit fixture label","consumer":"cannot verify route","evidence":"test_qoder_live_hard_fallback + test_qoder_live_replans_endpoint","executed":"PASS"},
+    {"id":"H-P01","fault":"duplicate physical venue alias","expected":"canonical identity blocks re-entry","cache":"canonical mappings allowed","consumer":"venue unavailable","evidence":"test_qoder_physical_identity_contract","executed":"PASS"},
+    {"id":"H-P02","fault":"ambiguous place identity","expected":"UNKNOWN/ambiguous, never definite SAME","cache":"candidate aliases may be retained as ambiguous","consumer":"needs confirmation","evidence":"test_qoder_physical_identity_contract","executed":"PASS"},
+    {"id":"H-A01","fault":"AI blank/malformed/unavailable","expected":"deterministic fallback or explicit degradation; no invented structured result","cache":"validated prior response only","consumer":"assistant unavailable / deterministic result","evidence":"test_postgate_provider_foundation","executed":"PASS"},
+    {"id":"H-B01","fault":"booking import malformed/duplicate","expected":"validation error or quarantine; no duplicate commitment","cache":"raw import evidence may be retained","consumer":"booking needs review","evidence":"test_wp04_hardening_wp05 + existing v192 gates","executed":"existing focused coverage inspected"},
+    {"id":"H-F01","fault":"frontend offline/read-only","expected":"cached snapshot; financial actions disabled","cache":"offline snapshot with freshness","consumer":"saved/offline and read-only","evidence":"V8 offline projection + v12 execution tests","executed":"static + existing focused coverage"},
+    {"id":"H-S01","fault":"stale proposal/base plan/session","expected":"409; no mutation","cache":"none","consumer":"refresh/regenerate","evidence":"_accept_replan_impl base identity gate","executed":"source proof + wp06 gate"},
+    {"id":"H-M01","fault":"map tile/render failure","expected":"journey text remains; no fake route line","cache":"map assets only","consumer":"map unavailable; itinerary remains","evidence":"MapPanel error/empty boundary","executed":"static; tile outage not network-executed"},
+    {"id":"H-D01","fault":"duplicate ACK/accept/retry","expected":"ACK stable; accept replays same stored response; conflicting key returns 409","cache":"idempotency record","consumer":"single accepted result","evidence":"test_wp06_postgate_hardening_next + model harness","executed":"PASS"}
+  ]
+}

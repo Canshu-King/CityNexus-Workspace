@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\pydantic\v1\datetime_parse.py
+# hypothesis_version: 6.168.0
+
+[20000000000.0, 3e+20, 1000, 1970, 86400, '+', '-', '0', 'Z', 'date', 'datetime', 'microsecond', 'microseconds', 'seconds', 'sign', 'time', 'tzinfo']

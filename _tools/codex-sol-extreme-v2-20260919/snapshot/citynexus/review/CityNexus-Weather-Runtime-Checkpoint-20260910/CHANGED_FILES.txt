@@ -1,0 +1,44 @@
+Weather Runtime source and contract changes:
+
+backend/app/core/config.py
+  - server-owned Open-Meteo URL and timeout settings
+
+backend/app/integrations/context/weather_snapshot.py
+  - WeatherQueryScope
+  - immutable WeatherRiskFact evidence
+  - UTC normalization and hourly validity intervals
+  - scoped WeatherSnapshot evidence
+
+backend/app/integrations/context/weather_ingestion.py
+  - exact scoped weather Event identity and idempotency
+  - idempotent provider degradation marker
+
+backend/app/integrations/context/weather_runtime.py
+  - eligible Place selection
+  - provider capture outside deterministic feasibility
+  - deterministic time, exact-scope and sensitivity attribution
+  - recovery only after all attempted scopes succeed
+
+backend/app/main.py
+  - bodyless server-owned weather refresh endpoint
+
+backend/app/pyproject.toml
+  - tzdata dependency for deterministic Windows timezone loading
+
+contracts/openapi.yaml
+  - refreshJourneyWeather operation and WeatherRuntimeRefresh schema
+
+data/mock/places.json
+  - explicit outdoor tags for Old Town Gate and Nexus River Cruise Pier
+
+backend/tests/test_weather_runtime_gate_gpt.py
+  - supplied WRT-01..WRT-12 acceptance tests
+
+backend/tests/test_weather_runtime_hardening.py
+  - UTC and exact-scope hardening tests
+
+backend/tests/test_weather_refresh_endpoint.py
+  - server-owned trigger boundary tests
+
+backend/tests/test_contract.py
+  - formal contract check for the bodyless refresh operation

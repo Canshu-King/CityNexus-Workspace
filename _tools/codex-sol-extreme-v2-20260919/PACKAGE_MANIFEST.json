@@ -1,0 +1,33 @@
+{
+  "package": "CityNexus-Codex-Sol-Extreme-Verification-v2-Results-20260919.zip",
+  "created_for": "CityNexus Sol Extreme Verification v2",
+  "baseline_commit": "0fa1f6cba391ecbc177d8d1dcf72f422033b61b5",
+  "candidate_commit": "c19daa54ba046a92c4638aea8c1c1c69b67724b8",
+  "verdict": "CODEX_SOL_EXTREME_VERIFICATION_COMPLETE",
+  "required_artifacts": [
+    "EXTREME_VERIFICATION_REPORT.md",
+    "findings.json",
+    "mutation_manifest.json",
+    "mutation_results.md",
+    "RACE_CONDITION_RESULTS.md",
+    "PROJECTION_DIVERGENCE_REPORT.md",
+    "MOBILITY_TAINT_PROOF.md",
+    "mobility_taint_graph.json",
+    "tests/",
+    "replay_cases/",
+    "candidate_patches/",
+    "raw/"
+  ],
+  "evidence_counts": {
+    "verified_findings": 4,
+    "mutants_killed": 15,
+    "mutation_survivors": 0,
+    "state_machine_max_transitions": 1800,
+    "projection_cases": 5,
+    "projection_divergences": 0,
+    "browser_cases_passed": 4,
+    "candidate_concurrency_reruns": 5,
+    "candidate_concurrency_defects": 0
+  },
+  "excluded_large_working_material": ["snapshot/", "input_lab/", "artifacts/", "reports/", "survivor_regressions/"]
+}

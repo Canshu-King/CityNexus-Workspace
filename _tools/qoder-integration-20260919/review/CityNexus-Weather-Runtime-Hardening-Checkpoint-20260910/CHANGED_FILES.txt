@@ -1,0 +1,37 @@
+Weather Runtime Hardening changes:
+
+backend/app/integrations/context/open_meteo.py
+  - reject unequal Open-Meteo hourly parallel arrays
+
+backend/app/integrations/context/weather_snapshot.py
+  - freeze and normalize snapshot_captured_at on each WeatherRiskFact
+  - keep provider capture time separate from forecast validity
+
+backend/app/integrations/context/weather_ingestion.py
+  - preserve stable Event identity while refreshing trusted evidence
+  - make provider events actionable at capture time
+  - resolve covered cleared buckets with FORECAST_CLEARED audit evidence
+
+backend/app/integrations/context/weather_runtime.py
+  - build explicit UTC observation coverage evidence
+  - invoke exact-scope coverage-aware clearing after successful provider calls
+
+backend/app/main.py
+  - use latest trusted weather snapshot capture time as Replan decision time
+
+backend/tests/test_gpt_weather_adversarial_next.py
+  - supplied WRH-01 through WRH-06 acceptance tests
+
+contracts/WEATHER_RUNTIME_HARDENING_FREEZE_GATE.md
+contracts/SOLVER_RUNTIME_GAP_ANALYSIS.md
+contracts/NEXT_SOLVER_RUNTIME_BLUEPRINT.md
+  - external freeze gate and next-stage roadmap documents
+
+CURRENT_STATUS.md
+WEATHER_RUNTIME_ARCHITECTURE.md
+TEST_RESULTS.md
+BLOCKERS.md
+NEXT_RECOMMENDATION.md
+README.md
+CHANGED_FILES.txt
+  - current review status, design, results, and package guidance

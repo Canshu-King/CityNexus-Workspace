@@ -1,0 +1,8 @@
+{
+  "command": "python -m pytest visio-renderer/tests -q",
+  "passed": 47,
+  "failed": 1,
+  "status": "FAIL",
+  "failure": "tests/test_p1_rc6_route_prep_contract.py::test_only_three_extend_routes_are_frozen",
+  "reason": "stale preparation contract expects 18 waypoints:null while the candidate has explicit geometry for all 21 routes"
+}

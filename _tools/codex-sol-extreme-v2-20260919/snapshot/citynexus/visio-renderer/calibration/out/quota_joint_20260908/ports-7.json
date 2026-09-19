@@ -1,0 +1,52 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "shardIndex": 6,
+  "testedPortVariants": 49,
+  "elapsedSeconds": 164.76599999999962,
+  "candidateCounts": {
+    "A-B-06": 1,
+    "A-PA-07": 12,
+    "A-CE-09": 18,
+    "A-CD-UC-10": 18,
+    "A-M-UC-08": 22,
+    "A-M-UC-10": 17
+  },
+  "fixedSeedRouteCount": 12,
+  "pairRepair": [
+    {
+      "round": 0,
+      "impossibleBefore": [
+        [
+          "A-PA-07",
+          "A-M-UC-08"
+        ],
+        [
+          "A-CE-09",
+          "A-M-UC-08"
+        ]
+      ],
+      "addedByRoute": {
+        "A-M-UC-08": 4
+      },
+      "impossibleAfter": []
+    }
+  ],
+  "impossibleRoutePairs": [],
+  "arcConsistency": {
+    "status": "FAIL",
+    "rounds": 1,
+    "emptyRoutes": [
+      "A-PA-07"
+    ],
+    "domainSizes": {
+      "A-B-06": 1,
+      "A-PA-07": 0,
+      "A-CE-09": 18,
+      "A-CD-UC-10": 18,
+      "A-M-UC-08": 26,
+      "A-M-UC-10": 17
+    }
+  },
+  "reason": "arc-consistency-infeasible"
+}

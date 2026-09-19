@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\typing_inspection\introspection.py
+# hypothesis_version: 6.168.0
+
+['<UNKNOWN>', 'AnnotationSource', 'ForbiddenQualifier', 'InspectedAnnotation', 'Qualifier', 'UNKNOWN', 'class_var', 'eager', 'final', 'get_literal_values', 'init_var', 'inspect_annotation', 'is_union_origin', 'lenient', 'not_required', 'read_only', 'required', 'skip']

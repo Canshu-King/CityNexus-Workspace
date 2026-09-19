@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\starlette\routing.py
+# hypothesis_version: 6.168.0
+
+[404, 405, '$', ', ', '/', '/{path:path}', ':', 'Allow', 'GET', 'HEAD', 'Method Not Allowed', 'Not Found', '^', '_T', '__name__', 'app', 'app_root_path', 'endpoint', 'host', 'http', 'lifespan', 'message', 'method', 'path', 'path_params', 'root_path', 'router', 'routes', 's', 'state', 'str', 'type', 'websocket', '{', '{%s}', '}']

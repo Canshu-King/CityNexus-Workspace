@@ -1,0 +1,1609 @@
+{
+  "stencils": {
+    "Actor": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\UUSEME_M.VSSX",
+      "masterID": 2,
+      "masterNameU": "Actor",
+      "instance": {
+        "name": "Actor",
+        "id": 1,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "PinY",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "Width",
+            "formula": "12 mm"
+          },
+          {
+            "cell": "Height",
+            "formula": "25 mm"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "THEMEVAL()"
+          }
+        ],
+        "children": []
+      }
+    },
+    "Use Case": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\UUSEME_M.VSSX",
+      "masterID": 4,
+      "masterNameU": "Use Case",
+      "instance": {
+        "name": "Use Case",
+        "id": 2,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "PinY",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "Width",
+            "formula": "MAX(TEXTWIDTH(TheText),40 mm*DropOnPageScale)"
+          },
+          {
+            "cell": "Height",
+            "formula": "MAX(TEXTHEIGHT(TheText,Width),12 mm*DropOnPageScale)"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "THEMEVAL()"
+          }
+        ],
+        "children": []
+      }
+    },
+    "Subsystem": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\UUSEME_M.VSSX",
+      "masterID": 5,
+      "masterNameU": "Subsystem",
+      "instance": {
+        "name": "Subsystem",
+        "id": 3,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "PinY",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "Width",
+            "formula": "50 mm"
+          },
+          {
+            "cell": "Height",
+            "formula": "75 mm"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "GUARD(IF(Sheet.6!LockTextEdit=FALSE,Sheet.6!Char.Font,Sheet.4!Char.Font))"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "GUARD(IF(Sheet.6!LockTextEdit=FALSE,Sheet.6!Char.Color,Sheet.4!Char.Color))"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "GUARD(IF(Sheet.6!User.HFillVisible,Sheet.6!FillForegnd,Sheet.4!FillForegnd))"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "GUARD(IF(Sheet.6!User.HLineVisible,Sheet.6!LineColor,Sheet.4!LineColor))"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "THEMEVAL()"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.4",
+            "id": 4,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "Sheet.3!Width*0.5"
+              },
+              {
+                "cell": "PinY",
+                "formula": "Sheet.3!Height*0.5"
+              },
+              {
+                "cell": "Width",
+                "formula": "Sheet.3!Width*1"
+              },
+              {
+                "cell": "Height",
+                "formula": "Sheet.3!Height*1"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEGUARD(SETATREF(User.FillForegndIn,,1)+SETATREF(User.FillPatternIn,SETATREFEVAL(FillPattern),1)+IF(FillPattern=1,User.BaseColor,SHADE(User.BaseColor,LUMDIFF(THEMEVAL(\"FillColor\"),THEMEVAL(\"FillColor2\")))))"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEGUARD(IF(LockFromGroupFormat,Sheet.6!LineColor,IF(ISTHEMED(),THEMEVAL(\"LineColor\"),0)))"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEGUARD(Sheet.3!LineWeight)"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEGUARD(Sheet.3!LinePattern)"
+              }
+            ],
+            "children": [
+              {
+                "name": "Sheet.5",
+                "id": 5,
+                "cells": [
+                  {
+                    "cell": "PinX",
+                    "formula": "Sheet.4!Width*0.5+User.OffsetX10"
+                  },
+                  {
+                    "cell": "PinY",
+                    "formula": "Sheet.4!Height*0.5+User.OffsetY10"
+                  },
+                  {
+                    "cell": "Width",
+                    "formula": "Sheet.4!Width"
+                  },
+                  {
+                    "cell": "Height",
+                    "formula": "Sheet.4!Height"
+                  },
+                  {
+                    "cell": "Char.Font",
+                    "formula": "THEMEVAL()"
+                  },
+                  {
+                    "cell": "Char.Color",
+                    "formula": "THEMEVAL()"
+                  },
+                  {
+                    "cell": "FillForegnd",
+                    "formula": "Sheet.4!FillForegnd"
+                  },
+                  {
+                    "cell": "LineColor",
+                    "formula": "Sheet.4!LineColor"
+                  },
+                  {
+                    "cell": "LineWeight",
+                    "formula": "Sheet.4!LineWeight"
+                  },
+                  {
+                    "cell": "LinePattern",
+                    "formula": "Sheet.4!LinePattern"
+                  }
+                ],
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "Sheet.6",
+            "id": 6,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "GUARD(IF(User.HSide=1,User.OffsetY11+User.OffsetY12,IF(User.HSide=3,Sheet.3!Width-User.OffsetY11-User.OffsetY12,Sheet.3!Width*0.5+User.Offset)))"
+              },
+              {
+                "cell": "PinY",
+                "formula": "GUARD(IF(OR(User.HSide=1,User.HSide=3),Sheet.3!Height*0.5+User.Offset,IF(User.HSide=2,User.OffsetY11+User.OffsetY12,Sheet.3!Height-User.OffsetY11-User.OffsetY12)))"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(IF(OR(User.HSide=1,User.HSide=3),Sheet.3!Height,Sheet.3!Width)+User.OffsetY11*2+User.Width12)"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(IF(User.Hidden,0,TxtHeight))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "IF(THEMEPROP(\"Embellishment\")=3,THEMEVAL(),User.DarkerColor)"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEGUARD(SETATREF(User.FillForegndIn,,1)+SETATREF(User.FillPatternIn,SETATREFEVAL(FillPattern),1)+IF(User.CStyle=4,Sheet.3!User.HColor4,IF(User.CStyle=11,1,Sheet.3!User.HColor2)))"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEGUARD(IF(User.CStyle=2,IF(ISTHEMED(),THEMEVAL(\"LineColor\"),0),IF(User.CStyle=3,IF(FillPattern>1,FillBkgnd,FillForegnd),IF(User.CStyle=4,Sheet.3!User.LineColor,IF(User.CStyle=5,Sheet.3!User.LineColor,IF(User.CStyle=7,FillForegnd,IF(User.CStyle=8,Sheet.3!User.LineColor,IF(User.CStyle=9,IF(ISTHEMED(),THEMEVAL(\"LineColor\"),0),IF(User.CStyle=11,Sheet.3!User.LineColor,IF(ISTHEMED(),THEMEVAL(\"LineColor\"),0))))))))))"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": [
+              {
+                "name": "Sheet.7",
+                "id": 7,
+                "cells": [
+                  {
+                    "cell": "PinX",
+                    "formula": "GUARD(Sheet.6!Width*0.5)"
+                  },
+                  {
+                    "cell": "PinY",
+                    "formula": "GUARD(IF(User.CStyle=7,IF(OR(User.HSide=0,User.HSide=1),Sheet.6!Height-User.AnchorPt7,User.AnchorPt7),Sheet.6!Height*0.5))"
+                  },
+                  {
+                    "cell": "Width",
+                    "formula": "GUARD(Sheet.6!Width*1)"
+                  },
+                  {
+                    "cell": "Height",
+                    "formula": "GUARD(IF(User.CStyle=7,User.BowHeight7*0.5,Sheet.6!Height*1))"
+                  },
+                  {
+                    "cell": "Char.Font",
+                    "formula": "THEMEVAL()"
+                  },
+                  {
+                    "cell": "Char.Color",
+                    "formula": "THEMEVAL()"
+                  },
+                  {
+                    "cell": "FillForegnd",
+                    "formula": "THEMEGUARD(Sheet.3!User.HColor2)"
+                  },
+                  {
+                    "cell": "LineColor",
+                    "formula": "THEMEGUARD(Sheet.6!LineColor)"
+                  },
+                  {
+                    "cell": "LineWeight",
+                    "formula": "THEMEVAL()"
+                  },
+                  {
+                    "cell": "LinePattern",
+                    "formula": "THEMEVAL()"
+                  }
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Association": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\UUSEME_M.VSSX",
+      "masterID": 11,
+      "masterNameU": "Association",
+      "instance": {
+        "name": "Association",
+        "id": 8,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "GUARD((BeginX+EndX)/2)"
+          },
+          {
+            "cell": "PinY",
+            "formula": "GUARD((BeginY+EndY)/2)"
+          },
+          {
+            "cell": "Width",
+            "formula": "GUARD(EndX-BeginX)"
+          },
+          {
+            "cell": "Height",
+            "formula": "GUARD(-5 mm)"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "GUARD(1)"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.9",
+            "id": 9,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle+45 deg)*3 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle+45 deg)*3 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.10",
+            "id": 10,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle-45 deg)*3 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle-45 deg)*3 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.11",
+            "id": 11,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle+135 deg)*3 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle+135 deg)*3 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.12",
+            "id": 12,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle-135 deg)*3 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle-135 deg)*3 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    },
+    "Dependency": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\USTRME_M.VSSX",
+      "masterID": 16,
+      "masterNameU": "Dependency",
+      "instance": {
+        "name": "Dependency",
+        "id": 13,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "GUARD((BeginX+EndX)/2)"
+          },
+          {
+            "cell": "PinY",
+            "formula": "GUARD((BeginY+EndY)/2)"
+          },
+          {
+            "cell": "Width",
+            "formula": "GUARD(EndX-BeginX)"
+          },
+          {
+            "cell": "Height",
+            "formula": "GUARD(EndY-BeginY)"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "GUARD(2)"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.14",
+            "id": 14,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.15",
+            "id": 15,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.16",
+            "id": 16,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.17",
+            "id": 17,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    },
+    "Composition": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\USTRME_M.VSSX",
+      "masterID": 17,
+      "masterNameU": "Composition",
+      "instance": {
+        "name": "Composition",
+        "id": 18,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "GUARD((BeginX+EndX)/2)"
+          },
+          {
+            "cell": "PinY",
+            "formula": "GUARD((BeginY+EndY)/2)"
+          },
+          {
+            "cell": "Width",
+            "formula": "GUARD(EndX-BeginX)"
+          },
+          {
+            "cell": "Height",
+            "formula": "GUARD(EndY-BeginY)"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "GUARD(IF(User.Identifying,1,2))"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.19",
+            "id": 19,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.20",
+            "id": 20,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.21",
+            "id": 21,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.22",
+            "id": 22,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    },
+    "Extend": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\UUSEME_M.VSSX",
+      "masterID": 23,
+      "masterNameU": "Extend",
+      "instance": {
+        "name": "Extend",
+        "id": 23,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "GUARD((BeginX+EndX)/2)"
+          },
+          {
+            "cell": "PinY",
+            "formula": "GUARD((BeginY+EndY)/2)"
+          },
+          {
+            "cell": "Width",
+            "formula": "GUARD(EndX-BeginX)"
+          },
+          {
+            "cell": "Height",
+            "formula": "GUARD(5 mm)"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "GUARD(2)"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.24",
+            "id": 24,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle+45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.25",
+            "id": 25,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con1X+COS(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con1Y+SIN(User.BeginAngle-45 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.26",
+            "id": 26,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle+135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.27",
+            "id": 27,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "User.Con2X+COS(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "PinY",
+                "formula": "User.Con2Y+SIN(User.EndAngle-135 deg)*2.5 mm"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(TEXTWIDTH(TheText))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(TEXTHEIGHT(TheText,Width))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    },
+    "Class": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\USTRME_M.VSSX",
+      "masterID": 2,
+      "masterNameU": "Class",
+      "instance": {
+        "name": "Class",
+        "id": 28,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "PinY",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "Width",
+            "formula": "65 mm"
+          },
+          {
+            "cell": "Height",
+            "formula": "26.7785 mm"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "THEMEVAL()"
+          }
+        ],
+        "children": [
+          {
+            "name": "Sheet.29",
+            "id": 29,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "Sheet.28!Width*0.5"
+              },
+              {
+                "cell": "PinY",
+                "formula": "Sheet.28!Height*0.5"
+              },
+              {
+                "cell": "Width",
+                "formula": "Sheet.28!Width*1"
+              },
+              {
+                "cell": "Height",
+                "formula": "Sheet.28!Height*1"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "MSOTINT(RGB(255,255,255),IF(THEMEPROP(\"Embellishment\")=1,0,-5))"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.30",
+            "id": 30,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "Sheet.28!Width*0.5"
+              },
+              {
+                "cell": "PinY",
+                "formula": "Sheet.28!Height"
+              },
+              {
+                "cell": "Width",
+                "formula": "Sheet.28!Width*1"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(MAX(11 mm,TEXTHEIGHT(Sheet.28!TheText,Width)+IF(User.StereoType,User.StereoTypeHgt,0)+IF(User.TemplateParm,User.TemplateParmHgt,0))+User.Spacer)"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "MSOTINT(THEMEVAL(),IF(THEMEPROP(\"Embellishment\")=3,-25,0))"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.31",
+            "id": 31,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "Sheet.28!Width*0.5"
+              },
+              {
+                "cell": "PinY",
+                "formula": "Sheet.28!Height-IF(User.TemplateParm,User.TemplateParmHgt,0)"
+              },
+              {
+                "cell": "Width",
+                "formula": "Sheet.28!Width*1"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(MAX(3 mm,TEXTHEIGHT(TheText,Width)))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "THEMEVAL()"
+              }
+            ],
+            "children": []
+          },
+          {
+            "name": "Sheet.32",
+            "id": 32,
+            "cells": [
+              {
+                "cell": "PinX",
+                "formula": "Sheet.28!Width-Width*INDEX(THEMEPROP(\"Embellishment\")-1,\"0.125;0.5;0.3\")-IF(THEMEPROP(\"Embellishment\")=2,3 mm*User.DOPS,0)"
+              },
+              {
+                "cell": "PinY",
+                "formula": "Sheet.28!Height"
+              },
+              {
+                "cell": "Width",
+                "formula": "GUARD(IF(User.TemplateParm,MAX(12 mm*User.DOPS,TEXTWIDTH(TheText)),0))"
+              },
+              {
+                "cell": "Height",
+                "formula": "GUARD(IF(User.TemplateParm,MAX(3 mm*User.DOPS,TEXTHEIGHT(TheText,Width)),0))"
+              },
+              {
+                "cell": "Char.Font",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "Char.Color",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "FillForegnd",
+                "formula": "MSOTINT(IF(THEMEPROP(\"Embellishment\")=1,RGB(255,255,255),THEMEVAL()),IF(THEMEPROP(\"Embellishment\")=1,0,10))"
+              },
+              {
+                "cell": "LineColor",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LineWeight",
+                "formula": "THEMEVAL()"
+              },
+              {
+                "cell": "LinePattern",
+                "formula": "IF(THEMEPROP(\"Embellishment\")=1,2,THEMEVAL())"
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    },
+    "Member": {
+      "stencil": "C:\\Program Files\\Microsoft Office\\root\\Office16\\Visio Content\\2052\\USTRME_M.VSSX",
+      "masterID": 4,
+      "masterNameU": "Member",
+      "instance": {
+        "name": "Member",
+        "id": 33,
+        "cells": [
+          {
+            "cell": "PinX",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "PinY",
+            "formula": "50.8 mm"
+          },
+          {
+            "cell": "Width",
+            "formula": "IFERROR(LISTSHEETREF()!Controls.ROW_1-User.ContainerMargin*2,User.UserWidth)"
+          },
+          {
+            "cell": "Height",
+            "formula": "GUARD(MAX(6.35 mm,TEXTHEIGHT(TheText,TxtWidth)))"
+          },
+          {
+            "cell": "Char.Font",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "Char.Color",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "FillForegnd",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineColor",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LineWeight",
+            "formula": "THEMEVAL()"
+          },
+          {
+            "cell": "LinePattern",
+            "formula": "THEMEVAL()"
+          }
+        ],
+        "children": []
+      }
+    }
+  },
+  "generatedBy": "local Visio COM"
+}

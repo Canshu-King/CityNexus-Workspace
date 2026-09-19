@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\sql\roles.py
+# hypothesis_version: 6.168.0
+
+['CTE object', 'Column expression', 'GROUP BY expression', 'Literal Python value', 'ORDER BY expression', '_T', '_T_co']

@@ -1,0 +1,28 @@
+CityNexus Post-Goal Repair + Backend Vertical Slice
+Task-scoped changed files
+
+Backend semantic repairs:
+  backend/app/main.py
+  backend/app/services.py
+  backend/app/integrations/context/open_meteo.py
+  backend/tests/test_post_goal_five_defects.py
+  backend/tests/test_backend_connected_golden_contract.py
+
+Frontend backend-connected vertical slice:
+  frontend/src/main.tsx
+  frontend/src/api/citynexus.ts
+  frontend/src/demo/goldenScenario.ts
+  frontend/src/state/journeyModeMachine.ts
+  frontend/src/contracts/journeyTwin.ts
+  frontend/src/contracts/replan.ts
+  frontend/src/styles.css
+  frontend/vite.config.ts
+  frontend/playwright.config.ts
+  frontend/e2e/golden.spec.ts
+
+Review evidence:
+  review/CityNexus-PostGoal-Vertical-Slice-Checkpoint-20260910/
+
+The repository also contains pre-existing untracked incoming packages and
+prior review artifacts. They were preserved and are not treated as task-scoped
+implementation changes.

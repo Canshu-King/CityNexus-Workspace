@@ -1,0 +1,45 @@
+{
+  "scope": "CityNexus Sol Extreme Verification v2 narrow closeout",
+  "candidate_commit": "776be4e",
+  "verification_result": "COMPLETE",
+  "merge_recommendation": "SELECTIVE_PORT_AFTER_CURRENT_LINE_RECONCILIATION",
+  "findings": [
+    {
+      "id": "CX-SOL-001",
+      "severity": "P1",
+      "verification": "CLOSED_IN_CANDIDATE",
+      "current_line": "STILL_OPEN_CURRENT_LINE",
+      "summary": "Unknown execution cursors fail closed; null cursors use first non-terminal semantics in backend and Live."
+    },
+    {
+      "id": "CX-EXT-002",
+      "severity": "P1",
+      "verification": "CLOSED_IN_SINGLE_WORKER_CANDIDATE",
+      "current_line": "STILL_OPEN_CURRENT_LINE",
+      "summary": "Same-key request serialization is proven process-locally; multi-worker replacement remains mandatory."
+    },
+    {
+      "id": "CX-EXT-003",
+      "severity": "P0",
+      "verification": "CLOSED_IN_SINGLE_WORKER_CANDIDATE",
+      "current_line": "STILL_OPEN_CURRENT_LINE",
+      "summary": "Competing proposal accepts leave exactly one ACTIVE plan and one accepted proposal in all tested schedules."
+    },
+    {
+      "id": "CX-EXT-004",
+      "severity": "P0",
+      "verification": "CLOSED_IN_SINGLE_WORKER_CANDIDATE",
+      "current_line": "PARTIALLY_FIXED",
+      "summary": "Capture/accept serialization and unique semantic C4 remap prevent dangling or arbitrary identity."
+    }
+  ],
+  "gates": {
+    "backend": {"passed": 832, "skipped": 15, "failed": 0},
+    "concurrency_schedules": {"passed": 5, "defects": 0},
+    "projection_cases": {"passed": 7, "divergences": 0},
+    "browser_cases": {"passed": 6, "failed": 0},
+    "mutation": {"killed": 17, "survivors": 0, "errors": 0},
+    "frontend_build": "PASS",
+    "typescript_candidate_delta": 0
+  }
+}

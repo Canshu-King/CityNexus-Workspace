@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\ops.py
+# hypothesis_version: 6.168.0
+
+[0.5, 1.0, '0', '0********', '1', 'GeometryCollection', 'LineString', 'LinearRing', 'Multi', 'MultiLineString', 'MultiPoint', 'MultiPolygon', 'Point', 'Polygon', '__iter__', 'clip_by_rect', 'geom_type', 'geoms', 'linemerge', 'nearest_points', 'operator', 'orient', 'polygonize', 'polygonize_full', 'shared_paths', 'snap', 'split', 'substring', 'transform', 'triangulate', 'unary_union', 'validate', 'voronoi_diagram']

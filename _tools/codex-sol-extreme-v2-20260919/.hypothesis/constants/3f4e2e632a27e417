@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mobility\runtime.py
+# hypothesis_version: 6.168.0
+
+[10.0, 1000.0, ':', ':arrival-anchor', ':departure-anchor', 'ACTIVITY', 'AUTO', 'CAPTURED', 'FAILED', 'LIVE_CAPTURE', 'NONE', 'NOT_CAPTURED', 'NOT_CONFIGURED', 'NO_RESULTS', 'UNAVAILABLE', 'WALK', 'auto', 'captured_at', 'cost_provenance', 'distance_km', 'duration_min', 'error_type', 'external_id', 'fact_quality', 'facts', 'from_key', 'has_live_traffic', 'key', 'latitude', 'longitude', 'matrix_cell', 'mode', 'nodes', 'operation_key', 'pedestrian', 'place_id', 'provider', 'role', 'route_provenance', 'route_provider', 'status', 'supported_modes', 'time_basis', 'to_key', 'valhalla']

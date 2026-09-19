@@ -1,0 +1,24 @@
+﻿File,Function,Endpoint,Method,Authentication,Notes
+src/api/citynexus.ts,createTraveler,/travelers,POST,API Key,Creates new traveler
+src/api/citynexus.ts,getTraveler,/travelers/{traveler_id},GET,API Key,Fetches traveler details
+src/api/citynexus.ts,listPreferences,/travelers/{traveler_id}/preferences,GET,API Key,Gets traveler preferences
+src/api/citynexus.ts,replacePreferences,/travelers/{traveler_id}/preferences,PUT,API Key,Updates preferences
+src/api/citynexus.ts,getAgentPolicy,/travelers/{traveler_id}/agent-policy,GET,API Key,Fetches agent policy
+src/api/citynexus.ts,setAgentPolicy,/travelers/{traveler_id}/agent-policy,PUT,API Key,Updates agent policy
+src/api/citynexus.ts,createJourney,/journeys,POST,API Key,Creates new journey
+src/api/citynexus.ts,getJourney,/journeys/{journey_id},GET,API Key,Fetches journey details
+src/api/citynexus.ts,listJourneys,/journeys,GET,API Key,Lists all journeys
+src/api/citynexus.ts,getJourneyPlan,/journeys/{journey_id}/plan,GET,API Key,Gets current plan
+src/api/citynexus.ts,createPlanVersion,/journeys/{journey_id}/plans,POST,API Key,Creates new plan version
+src/api/citynexus.ts,getPlanVersions,/journeys/{journey_id}/plans,GET,API Key,Lists plan versions
+src/api/citynexus.ts,getPlanVersion,/journeys/{journey_id}/plans/{plan_version_id},GET,API Key,Gets specific plan version
+src/api/citynexus.ts,selectPlanVersion,/journeys/{journey_id}/plans/{plan_version_id}/select,POST,API Key,Sets active plan
+src/api/citynexus.ts,getOffers,/journeys/{journey_id}/offers,GET,API Key,Gets available offers
+src/api/citynexus.ts,getMobilityFacts,/journeys/{journey_id}/mobility-facts,GET,API Key,Gets mobility facts
+src/api/citynexus.ts,getWeather,/weather,GET,API Key,Gets weather data
+src/api/v10Execution.ts,getExecutionState,/journeys/{journey_id}/execution,GET,API Key,Gets execution state
+src/api/v10Execution.ts,updateActivityStatus,/journeys/{journey_id}/activities/{activity_id}/status,PATCH,API Key,Updates activity status
+src/api/v10Execution.ts,getCurrentActivity,/journeys/{journey_id}/current-activity,GET,API Key,Gets current activity
+src/api/v10Execution.ts,updateLocation,/journeys/{journey_id}/location,PATCH,API Key,Updates user location
+src/api/citynexus.ts,resetDemo,/demo/reset,POST,API Key,Resets demo data
+src/api/citynexus.ts,getHealth,/health,GET,None,Health check endpoint

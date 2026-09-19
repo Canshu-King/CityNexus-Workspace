@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_histograms_impl.py
+# hypothesis_version: 6.168.0
+
+[-1.0, 0.5, 1.0, 2.0, 3.0, 6.0, 24.0, 100, 65536, 'Internal Shape Error', 'auto', 'c', 'doane', 'fd', 'histogram', 'histogram_bin_edges', 'histogramdd', 'left', 'numpy', 'rice', 'right', 'safe', 'scott', 'shape', 'sqrt', 'stone', 'sturges', 'unsafe']

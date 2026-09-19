@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\commerce\order_pricing.py
+# hypothesis_version: 6.168.0
+
+['currency', 'items', 'order_services', 'unit_amount_minor']

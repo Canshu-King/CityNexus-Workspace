@@ -1,0 +1,7 @@
+{
+  "default_minutes": 15,
+  "minutes": {
+    "place-food-hall|place-tech-art": 20,
+    "place-tech-art|place-food-hall": 20
+  }
+}

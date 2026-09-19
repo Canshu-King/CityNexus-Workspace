@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "seed": 20260919,
+  "sequences": 5000,
+  "steps_per_sequence": 80,
+  "transitions": 400000,
+  "invariants": 12
+}

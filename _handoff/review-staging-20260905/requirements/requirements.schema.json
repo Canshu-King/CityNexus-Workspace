@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["metadata", "business_goals", "functional_requirements", "business_rules", "non_functional_requirements", "security_requirements", "integration_requirements"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {"type": "object", "required": ["name", "version", "status", "domainModel"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "version": {"type": "string"}, "status": {"type": "string"}, "domainModel": {"type": "string"}, "useCases": {"type": "array", "items": {"$ref": "#/$defs/useCaseId"}}}},
+    "business_goals": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "functional_requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "business_rules": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "non_functional_requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "security_requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
+    "integration_requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}}
+  },
+  "$defs": {
+    "requirementId": {"type": "string", "pattern": "^(BG|FR|BR|NFR|SR|IR)-[0-9]{3}$"},
+    "useCaseId": {"type": "string", "pattern": "^UC-(0[1-9]|1[0-3])$"},
+    "domainRef": {"type": "object", "required": ["name", "kind"], "additionalProperties": false, "properties": {"name": {"type": "string", "minLength": 1}, "kind": {"type": "string", "enum": ["entity", "value_object", "enum", "state_machine", "rule"]}}},
+    "acceptanceCriterion": {"type": "object", "required": ["id", "condition", "expectedResult", "verificationMethod"], "additionalProperties": false, "properties": {"id": {"type": "string", "pattern": "^AC-[0-9]{3}$"}, "condition": {"type": "string", "minLength": 1}, "expectedResult": {"type": "string", "minLength": 1}, "verificationMethod": {"type": "string", "minLength": 1}}},
+    "testCase": {"type": "object", "required": ["id", "expectedResult", "type"], "additionalProperties": false, "properties": {"id": {"type": "string", "pattern": "^TC-[0-9]{3}$"}, "expectedResult": {"type": "string", "minLength": 1}, "type": {"type": "string", "enum": ["acceptance", "integration", "system", "performance", "security"]}}},
+    "requirement": {"type": "object", "required": ["id", "type", "title", "statement", "source", "priority", "rationale", "acceptanceCriteria", "useCases", "domainElements", "dependsOn", "conflictsWith", "verificationMethod", "testCases", "status"], "additionalProperties": false, "properties": {"id": {"$ref": "#/$defs/requirementId"}, "type": {"type": "string", "enum": ["business_goal", "functional_requirement", "business_rule", "non_functional_requirement", "security_requirement", "integration_requirement"]}, "title": {"type": "string", "minLength": 1}, "statement": {"type": "string", "minLength": 1}, "source": {"type": "string", "minLength": 1}, "priority": {"type": "string", "enum": ["must", "should", "could", "wont"]}, "rationale": {"type": "string", "minLength": 1}, "acceptanceCriteria": {"type": "array", "items": {"$ref": "#/$defs/acceptanceCriterion"}}, "useCases": {"type": "array", "items": {"$ref": "#/$defs/useCaseId"}}, "domainElements": {"type": "array", "items": {"$ref": "#/$defs/domainRef"}}, "dependsOn": {"type": "array", "items": {"$ref": "#/$defs/requirementId"}}, "conflictsWith": {"type": "array", "items": {"$ref": "#/$defs/requirementId"}}, "verificationMethod": {"type": "string", "minLength": 1}, "testCases": {"type": "array", "items": {"$ref": "#/$defs/testCase"}}, "status": {"type": "string", "enum": ["draft", "proposed", "approved", "implemented", "verified", "rejected"]}}}
+  }
+}

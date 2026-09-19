@@ -1,0 +1,16 @@
+{
+  "status": "POOL",
+  "reroute": "A-CD-UC-10",
+  "shardIndex": 5,
+  "compatiblePairCount": 5,
+  "candidatePools": {
+    "A-B-06": [],
+    "A-M-UC-10": [],
+    "A-CD-UC-10": []
+  },
+  "candidateCounts": {
+    "A-B-06": 0,
+    "A-M-UC-10": 0,
+    "A-CD-UC-10": 0
+  }
+}

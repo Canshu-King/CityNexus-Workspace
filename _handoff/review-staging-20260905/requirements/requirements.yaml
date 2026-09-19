@@ -1,0 +1,25 @@
+metadata:
+  name: CityNexus Requirements Infrastructure
+  version: 0.1.0
+  status: infrastructure-only
+  domainModel: ../domain-model/citynexus-core-domain-model-v0.4.1.yaml
+  useCases:
+    - UC-01
+    - UC-02
+    - UC-03
+    - UC-04
+    - UC-05
+    - UC-06
+    - UC-07
+    - UC-08
+    - UC-09
+    - UC-10
+    - UC-11
+    - UC-12
+    - UC-13
+business_goals: []
+functional_requirements: []
+business_rules: []
+non_functional_requirements: []
+security_requirements: []
+integration_requirements: []

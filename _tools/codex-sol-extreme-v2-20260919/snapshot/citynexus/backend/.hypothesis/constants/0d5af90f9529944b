@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\anyio\_core\_synchronization.py
+# hypothesis_version: 6.168.0
+
+['T', '__weakref__', '_fast_acquire', '_guarded', '_initial_value', '_internal_event', '_internal_limiter', '_internal_lock', '_internal_semaphore', '_is_set', '_lock', '_max_value', '_owner_task', '_total_tokens', '_waiters', 'action', 'using']

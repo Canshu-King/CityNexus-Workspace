@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_nanfunctions_impl.py
+# hypothesis_version: 6.168.0
+
+[100, 600, 'Mean of empty slice', 'NaT', 'axis', 'c', 'dtype', 'fc', 'ignore', 'initial', 'inverted_cdf', 'keepdims', 'linear', 'm', 'nanargmax', 'nanargmin', 'nancumprod', 'nancumsum', 'nanmax', 'nanmean', 'nanmedian', 'nanmin', 'nanpercentile', 'nanprod', 'nanquantile', 'nanstd', 'nansum', 'nanvar', 'numpy', 'unsafe', 'where']

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mock\providers.py
+# hypothesis_version: 6.168.0
+
+['city_services.json', 'data', 'default_minutes', 'latitude', 'location', 'longitude', 'minutes', 'mobility_matrix.json', 'mock', 'mock-city', 'mock-mobility', 'places.json', 'utf-8']

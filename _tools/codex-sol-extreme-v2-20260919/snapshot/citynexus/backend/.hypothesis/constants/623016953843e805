@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\__init__.py
+# hypothesis_version: 6.168.0
+
+[1e-05, 1.0, 2.0, 3.0, '.', '2025.12', 'NPY_PROMOTION_STATE', '__version__', '_pyinstaller', 'array_api', 'bytes', 'char', 'complex', 'complex128', 'complex192', 'complex256', 'conftest', 'core', 'ctypeslib', 'darwin', 'dtypes', 'emath', 'exceptions', 'f2py', 'fft', 'float', 'float128', 'float64', 'float96', 'ignore', 'int', 'lib', 'linalg', 'linux', 'ma', 'matlib', 'matrixlib', 'numpy.__config__', 'numpy.libs', 'object', 'polynomial', 'raise', 'random', 'rec', 'show_config', 'str', 'str_', 'strings', 'test', 'testing', 'tests', 'typing', 'version', 'weak']

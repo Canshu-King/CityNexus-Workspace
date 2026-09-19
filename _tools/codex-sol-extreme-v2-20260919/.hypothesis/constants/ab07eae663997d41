@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\ai\event_targeting.py
+# hypothesis_version: 6.168.0
+
+['+00:00', 'CURRENT_POSITION', 'FUTURE', 'NOW', 'SCHEDULE_DELAY', 'Z', '[^\\w\\u4e00-\\u9fff]+', 'effective_time', 'entities', 'subject_text']

@@ -1,0 +1,183 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+__ test_replan_accept_requires_header_and_same_key_replay_is_audit_idempotent __
+
+    def test_replan_accept_requires_header_and_same_key_replay_is_audit_idempotent():
+        ids, _ = _active()
+        event, proposal = _proposal(ids["journey_id"])
+>       assert client.post(f"/api/v1/replans/{proposal['id']}/accept").status_code == 422
+E       AssertionError: assert 200 == 422
+E        +  where 200 = <Response [200 OK]>.status_code
+E        +    where <Response [200 OK]> = post('/api/v1/replans/8e0232b3-86ad-4536-aef9-8d6a274ae616/accept')
+E        +      where post = <starlette.testclient.TestClient object at 0x7f9a3c2be120>.post
+
+tests/_review_postgate_hardening.py:60: AssertionError
+______________ test_accepted_event_cannot_generate_another_replan ______________
+
+    def test_accepted_event_cannot_generate_another_replan():
+        ids, _ = _active()
+        event, proposal = _proposal(ids["journey_id"])
+        accepted = client.post(
+            f"/api/v1/replans/{proposal['id']}/accept",
+            headers={"Idempotency-Key": "replan-event-handled-0001"},
+        )
+        assert accepted.status_code == 200
+        again = client.post(
+            f"/api/v1/journeys/{ids['journey_id']}/replans",
+            json={"trigger_event_id": event["id"]},
+        )
+>       assert again.status_code == 409
+E       assert 201 == 409
+E        +  where 201 = <Response [201 Created]>.status_code
+
+tests/_review_postgate_hardening.py:100: AssertionError
+__ test_accept_invalidates_competing_presented_proposals_and_candidate_plans ___
+
+    def test_accept_invalidates_competing_presented_proposals_and_candidate_plans():
+        ids, _ = _active()
+        jid = ids["journey_id"]
+        event = client.post(
+            f"/api/v1/journeys/{jid}/events",
+            json={"event_type": "SCHEDULE_DELAY", "payload": {"delay_minutes": 5}},
+        ).json()
+        p1 = client.post(f"/api/v1/journeys/{jid}/replans", json={"trigger_event_id": event["id"]}).json()
+        p2 = client.post(f"/api/v1/journeys/{jid}/replans", json={"trigger_event_id": event["id"]}).json()
+        accepted = client.post(
+            f"/api/v1/replans/{p1['id']}/accept",
+            headers={"Idempotency-Key": "replan-invalidate-0001"},
+        )
+        assert accepted.status_code == 200
+        with SessionLocal() as session:
+            other = session.get(ReplanProposal, p2["id"])
+            other_plan = session.get(PlanVersion, other.proposed_plan_version_id)
+>           assert other.status == "INVALIDATED"
+E           AssertionError: assert 'PRESENTED' == 'INVALIDATED'
+E             
+E             - INVALIDATED
+E             + PRESENTED
+
+tests/_review_postgate_hardening.py:120: AssertionError
+_____________ test_reject_retires_candidate_plan_and_is_idempotent _____________
+
+    def test_reject_retires_candidate_plan_and_is_idempotent():
+        ids, _ = _active()
+        _event, proposal = _proposal(ids["journey_id"])
+        first = client.post(f"/api/v1/replans/{proposal['id']}/reject")
+        assert first.status_code == 200
+        assert first.json()["status"] == "REJECTED"
+        second = client.post(f"/api/v1/replans/{proposal['id']}/reject")
+        assert second.status_code == 200
+        with SessionLocal() as session:
+            row = session.get(ReplanProposal, proposal["id"])
+            candidate = session.get(PlanVersion, row.proposed_plan_version_id)
+>           assert candidate.status == "REJECTED"
+E           AssertionError: assert 'CANDIDATE' == 'REJECTED'
+E             
+E             - REJECTED
+E             + CANDIDATE
+
+tests/_review_postgate_hardening.py:142: AssertionError
+_ test_twin_aggregates_unresolved_provider_degradation_and_marks_projection_degraded _
+
+    def test_twin_aggregates_unresolved_provider_degradation_and_marks_projection_degraded():
+        ids, _ = _active()
+        jid = ids["journey_id"]
+        first = client.post(
+            f"/api/v1/journeys/{jid}/events",
+            json={"event_type": "OTHER", "payload": {"degraded_providers": ["valhalla"]}},
+        ).json()
+        client.post(f"/api/v1/journeys/{jid}/events", json={"event_type": "OTHER", "payload": {}})
+        twin = client.get(
+            f"/api/v1/journeys/{jid}/twin", params={"now": "2026-10-10T13:00:00+08:00"}
+        ).json()
+>       assert twin["projection_status"] == "DEGRADED"
+E       AssertionError: assert 'READY' == 'DEGRADED'
+E         
+E         - DEGRADED
+E         + READY
+
+tests/_review_postgate_hardening.py:162: AssertionError
+_____________ test_replan_recomputes_duration_metadata_after_delay _____________
+
+    def test_replan_recomputes_duration_metadata_after_delay():
+        ids, plan = _active(c4=True)
+        jid = ids["journey_id"]
+        tech = next(a for a in plan["activities"] if a["place_id"] == "place-tech-art")
+        event = client.post(
+            f"/api/v1/journeys/{jid}/events",
+            json={
+                "event_type": "SCHEDULE_DELAY",
+                "affected_activity_id": tech["id"],
+                "payload": {"delay_minutes": 15},
+            },
+        ).json()
+        proposal = client.post(
+            f"/api/v1/journeys/{jid}/replans", json={"trigger_event_id": event["id"]}
+        ).json()
+        with SessionLocal() as session:
+            row = session.get(ReplanProposal, proposal["id"])
+            proposed = session.get(PlanVersion, row.proposed_plan_version_id)
+            activities = session.scalars(
+                select(Activity)
+                .where(Activity.plan_version_id == proposed.id)
+                .order_by(Activity.sequence_no)
+            ).all()
+            actual = int(
+                (
+                    max(datetime.fromisoformat(item.end_at) for item in activities)
+                    - min(datetime.fromisoformat(item.start_at) for item in activities)
+                ).total_seconds()
+                // 60
+            )
+>           assert proposed.estimated_duration_min == actual
+E           assert 570 == 585
+E            +  where 570 = <app.db.models.PlanVersion object at 0x7f9a2d962f70>.estimated_duration_min
+
+tests/_review_postgate_hardening.py:206: AssertionError
+_ test_replan_diff_marks_durable_c4_protection_even_if_activity_lock_flag_is_false _
+
+    def test_replan_diff_marks_durable_c4_protection_even_if_activity_lock_flag_is_false():
+        ids, plan = _active(c4=True)
+        jid = ids["journey_id"]
+        cruise = next(a for a in plan["activities"] if a["place_id"] == "place-river-cruise")
+        tech = next(a for a in plan["activities"] if a["place_id"] == "place-tech-art")
+        with SessionLocal() as session:
+            row = session.get(Activity, cruise["id"])
+            row.locked = False
+            session.commit()
+        event = client.post(
+            f"/api/v1/journeys/{jid}/events",
+            json={"event_type": "CLOSURE", "affected_activity_id": tech["id"]},
+        ).json()
+        proposal = client.post(
+            f"/api/v1/journeys/{jid}/replans", json={"trigger_event_id": event["id"]}
+        )
+        assert proposal.status_code == 201, proposal.text
+        assert proposal.json()["locked_commitments_preserved"] is True
+>       assert "place-river-cruise" in proposal.json()["diff"]["preserved_protected"]
+E       AssertionError: assert 'place-river-cruise' in []
+
+tests/_review_postgate_hardening.py:227: AssertionError
+=========================== short test summary info ============================
+FAILED tests/_review_postgate_hardening.py::test_replan_accept_requires_header_and_same_key_replay_is_audit_idempotent - AssertionError: assert 200 == 422
+ +  where 200 = <Response [200 OK]>.status_code
+ +    where <Response [200 OK]> = post('/api/v1/replans/8e0232b3-86ad-4536-aef9-8d6a274ae616/accept')
+ +      where post = <starlette.testclient.TestClient object at 0x7f9a3c2be120>.post
+FAILED tests/_review_postgate_hardening.py::test_accepted_event_cannot_generate_another_replan - assert 201 == 409
+ +  where 201 = <Response [201 Created]>.status_code
+FAILED tests/_review_postgate_hardening.py::test_accept_invalidates_competing_presented_proposals_and_candidate_plans - AssertionError: assert 'PRESENTED' == 'INVALIDATED'
+  
+  - INVALIDATED
+  + PRESENTED
+FAILED tests/_review_postgate_hardening.py::test_reject_retires_candidate_plan_and_is_idempotent - AssertionError: assert 'CANDIDATE' == 'REJECTED'
+  
+  - REJECTED
+  + CANDIDATE
+FAILED tests/_review_postgate_hardening.py::test_twin_aggregates_unresolved_provider_degradation_and_marks_projection_degraded - AssertionError: assert 'READY' == 'DEGRADED'
+  
+  - DEGRADED
+  + READY
+FAILED tests/_review_postgate_hardening.py::test_replan_recomputes_duration_metadata_after_delay - assert 570 == 585
+ +  where 570 = <app.db.models.PlanVersion object at 0x7f9a2d962f70>.estimated_duration_min
+FAILED tests/_review_postgate_hardening.py::test_replan_diff_marks_durable_c4_protection_even_if_activity_lock_flag_is_false - AssertionError: assert 'place-river-cruise' in []
+7 failed in 4.12s

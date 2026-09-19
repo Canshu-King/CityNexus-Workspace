@@ -1,0 +1,30 @@
+{
+  "package": "CityNexus Baseline Freeze + Requirements Infrastructure",
+  "baselineVersion": "0.4.1 RC2",
+  "commit": "096d857",
+  "files": [
+    ".gitignore",
+    "domain-model\\BASELINE.md",
+    "domain-model\\CHANGELOG.md",
+    "domain-model\\README.md",
+    "domain-model\\citynexus-core-domain-model-v0.4.1.yaml",
+    "domain-model\\citynexus-domain-model.schema.json",
+    "domain-model\\qa\\domain-model-v0.4.1-report.json",
+    "domain-model\\qa\\validator-self-test.json",
+    "domain-model\\scripts\\validate-domain-model.py",
+    "domain-model\\scripts\\self-test-validator.py",
+    "requirements\\README.md",
+    "requirements\\requirements.yaml",
+    "requirements\\requirements.schema.json",
+    "requirements\\traceability.yaml",
+    "requirements\\traceability.schema.json",
+    "requirements\\scripts\\validate-requirements.py",
+    "requirements\\qa\\requirements-report.json"
+  ],
+  "excluded": [
+    "v0.2/v0.3/v0.4 legacy models",
+    "legacy zip packages",
+    "Visio/Demo artifacts",
+    "requirements concrete entries"
+  ]
+}

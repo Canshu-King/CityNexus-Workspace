@@ -1,0 +1,64 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_TRAVELER_SKELETON_PROVIDER_GRID",
+  "seed": 20261046,
+  "samples": 64,
+  "axisCounts": {
+    "x": 82,
+    "y": 78
+  },
+  "familyCounts": {
+    "A-T-UC-02": 15,
+    "A-T-UC-04": 29,
+    "A-T-UC-05": 37,
+    "A-T-UC-06": 21,
+    "A-T-UC-07": 25,
+    "A-T-UC-08": 23,
+    "A-T-UC-10": 11,
+    "A-T-UC-11": 24,
+    "A-T-UC-12": 23,
+    "A-CD-UC-04": 20,
+    "A-CD-UC-05": 11,
+    "A-CD-UC-10": 32,
+    "A-M-UC-04": 23,
+    "A-M-UC-08": 45,
+    "A-M-UC-10": 27,
+    "A-B-06": 17,
+    "A-PA-07": 25,
+    "A-CE-09": 33
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 34756,
+  "solverStatus": "INFEASIBLE",
+  "wallTimeSeconds": 0.1671118,
+  "candidateCount": 441,
+  "conflictPairCount": 35267,
+  "maximalDisjointSubset": [
+    "A-CD-UC-04",
+    "A-CD-UC-05",
+    "A-CE-09",
+    "A-M-UC-04",
+    "A-PA-07",
+    "A-T-UC-02",
+    "A-T-UC-04",
+    "A-T-UC-06",
+    "A-T-UC-07",
+    "A-T-UC-08",
+    "A-T-UC-10",
+    "A-T-UC-11",
+    "A-T-UC-12"
+  ],
+  "missingFromMaximalSubset": [
+    "A-B-06",
+    "A-CD-UC-10",
+    "A-M-UC-08",
+    "A-M-UC-10",
+    "A-T-UC-05"
+  ]
+}

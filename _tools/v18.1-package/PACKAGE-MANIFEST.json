@@ -1,0 +1,28 @@
+{
+  "package": "CityNexus V18 Native Hermes Journey Experience",
+  "version": "v18-2026-09-14",
+  "artifact": "CityNexus-V18-Native-Hermes-Journey-Experience-20260914.zip",
+  "scope": "V17 semantic core extended with future-event authority, bounded fact verification, native Hermes Runs/SSE boundary, and desktop/mobile Copilot experience",
+  "authoritativeReport": "reports/product-v18/FINAL_REPORT.md",
+  "status": "V18_EXPERIENCE_GREEN_NATIVE_HERMES_PROVIDER_NOT_CONFIGURED",
+  "verification": {
+    "futureEventAuthority": "Asserted future events use Journey, Booking, Commitment, or Activity facts; unresolved targets remain review-only and are not persisted as current events",
+    "factVerification": "VERIFY_FACT captures bounded official-source observations as non-authoritative evidence and never creates an Event by itself",
+    "nativeHermesBoundary": "Official Hermes 0.21.2 profile is outside the repository, the CityNexus MCP V2 surface is allowlisted to eleven tools, and Runs/SSE endpoints are server-side only",
+    "runtimeTruth": "The frontend displays DIRECT or HERMES_NATIVE_MCP from the server response; it does not infer Hermes activity",
+    "backendRegression": "421 passed, 2 skipped, 2 dependency warnings",
+    "frontend": "Vite 7.3.6 production build; fresh desktop and mobile Copilot flows completed",
+    "nativeAgentProof": "Not configured in this process because no DeepSeek provider credential or loopback Hermes API server key is present",
+    "freshExtractGate": "PASS; 22 focused semantic, contract, and MCP tests from the fresh extraction"
+  },
+  "excludedRuntimeArtifacts": [
+    ".git", ".venv", "node_modules", "dist", "build", "__pycache__", ".pytest_cache", ".ruff_cache",
+    "*.db", "*.sqlite", "*.zip", "*.env", "*.log", "*.err", "*.out", "storybook-static",
+    "_incoming*", "_package_v4*", "_v5*", "_v6*", "_fresh*", "review", ".playwright-cli"
+  ],
+  "notes": [
+    "The release is assembled from an allowlisted staging tree and contains no credential values or Hermes user-profile files.",
+    "The official Hermes executable and dedicated CityNexus profile remain outside the repository at the Windows user profile.",
+    "The existing OpenAI-compatible Hermes adapter remains labeled HERMES_COMPAT_ENDPOINT and is not presented as native Hermes MCP."
+  ]
+}

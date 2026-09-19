@@ -1,0 +1,31 @@
+{
+  "CN-TIANJIN": {
+    "timezone": "Asia/Shanghai",
+    "center": {"latitude": 39.124, "longitude": 117.205, "crs": "WGS84"},
+    "provider": {"provider_key": "amap-captured-v9", "provenance": "CAPTURED_REPLAY", "captured_at": "2026-09-12T08:00:00Z"},
+    "activities": [
+      {"key": "italian-style-town", "title": "Italian Style Town", "category": "neighborhood", "day_offset": 0, "start": "11:00", "end": "12:30", "latitude": 39.1435, "longitude": 117.2021, "cost_amount_minor": 0, "cost_status": "FREE_KNOWN"},
+      {"key": "five-great-avenues", "title": "Five Great Avenues", "category": "neighborhood", "day_offset": 1, "start": "09:30", "end": "11:00", "latitude": 39.1117, "longitude": 117.1974, "cost_amount_minor": 0, "cost_status": "FREE_KNOWN"},
+      {"key": "tianjin-museum", "title": "Tianjin Museum", "category": "museum", "day_offset": 1, "start": "13:00", "end": "15:00", "latitude": 39.0832, "longitude": 117.2184, "cost_amount_minor": 0, "cost_status": "FREE_KNOWN"},
+      {"key": "tianjin-eye", "title": "Tianjin Eye", "category": "landmark", "day_offset": 1, "start": "18:30", "end": "20:00", "latitude": 39.1535, "longitude": 117.1948, "cost_amount_minor": 8000, "cost_status": "KNOWN"}
+    ],
+    "stays": [
+      {"external_offer_id": "haihe-riverside", "property_name": "Haihe Riverside Hotel", "latitude": 39.1321, "longitude": 117.2056, "room_type": "City twin", "nightly_amount_minor": 18000, "refundable": true, "luggage_drop": {"available": true, "open_from": "07:00", "open_to": "23:00", "pickup_deadline": "22:30"}},
+      {"external_offer_id": "central-station-courtyard", "property_name": "Central Station Courtyard", "latitude": 39.1368, "longitude": 117.2101, "room_type": "Courtyard queen", "nightly_amount_minor": 21000, "refundable": true, "luggage_drop": {"available": true, "open_from": "06:30", "open_to": "23:30", "pickup_deadline": "23:00"}},
+      {"external_offer_id": "five-avenues-house", "property_name": "Five Avenues House", "latitude": 39.1129, "longitude": 117.1988, "room_type": "Heritage king", "nightly_amount_minor": 26000, "refundable": true, "luggage_drop": {"available": true, "open_from": "08:00", "open_to": "22:00", "pickup_deadline": "21:30"}},
+      {"external_offer_id": "north-canal-guesthouse", "property_name": "North Canal Guesthouse", "latitude": 39.1641, "longitude": 117.1887, "room_type": "Compact double", "nightly_amount_minor": 15500, "refundable": false, "luggage_drop": {"available": false}}
+    ]
+  },
+  "CN-BEIJING": {
+    "timezone": "Asia/Shanghai",
+    "center": {"latitude": 39.9042, "longitude": 116.4074, "crs": "WGS84"},
+    "provider": {"provider_key": "amap-captured-v9", "provenance": "CAPTURED_REPLAY", "captured_at": "2026-09-12T08:00:00Z"},
+    "activities": [
+      {"key": "temple-of-heaven", "title": "Temple of Heaven", "category": "heritage", "day_offset": 0, "start": "15:30", "end": "17:00", "latitude": 39.8822, "longitude": 116.4066, "cost_amount_minor": 3400, "cost_status": "KNOWN"},
+      {"key": "national-museum", "title": "National Museum of China", "category": "museum", "day_offset": 1, "start": "09:30", "end": "12:00", "latitude": 39.9035, "longitude": 116.3953, "cost_amount_minor": 0, "cost_status": "FREE_KNOWN"}
+    ],
+    "stays": [
+      {"external_offer_id": "beijing-south-courtyard", "property_name": "Beijing South Courtyard", "latitude": 39.8788, "longitude": 116.3831, "room_type": "Standard twin", "nightly_amount_minor": 28500, "refundable": true, "luggage_drop": {"available": true, "open_from": "07:00", "open_to": "23:00", "pickup_deadline": "22:30"}}
+    ]
+  }
+}

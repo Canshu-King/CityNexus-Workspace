@@ -1,0 +1,137 @@
+{
+  "calibration": "C4",
+  "status": "FAIL",
+  "failureCode": "WAYPOINT_REALIZATION_UNSUPPORTED",
+  "connectorCount": 5,
+  "fullyGluedRatio": 1.0,
+  "explicitSidePortRatio": 1.0,
+  "orthogonalRouteRatio": 0.2,
+  "connectorConnectorCrossingCount": 0,
+  "connectorThroughUnrelatedNodeCount": 0,
+  "endpointIntrusionCount": 0,
+  "outOfPageCount": 0,
+  "nativeAssociationConnectorRatio": 1.0,
+  "svgPathCount": 7,
+  "svgBytes": 25232,
+  "routes": [
+    {
+      "id": "C4-T-A",
+      "master": "Association",
+      "beginIn": [
+        1.220472440944882,
+        3.297244094488189
+      ],
+      "endIn": [
+        3.149606299212599,
+        4.724409448818896
+      ],
+      "geometryRowCount": 3,
+      "beginFormula": "PAR(PNT(Actor!Connections.X1,Actor!Connections.Y1))",
+      "endFormula": "PAR(PNT(Use Case!Connections.X1,Use Case!Connections.Y1))",
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "explicitSidePort": true,
+      "orthogonal": false
+    },
+    {
+      "id": "C4-T-B",
+      "master": "Association",
+      "beginIn": [
+        1.220472440944882,
+        3.149606299212598
+      ],
+      "endIn": [
+        3.149606299212599,
+        3.149606299212598
+      ],
+      "geometryRowCount": 3,
+      "beginFormula": "PAR(PNT(Actor!Connections.X2,Actor!Connections.Y2))",
+      "endFormula": "PAR(PNT(Use Case.3!Connections.X1,Use Case.3!Connections.Y1))",
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "explicitSidePort": true,
+      "orthogonal": true
+    },
+    {
+      "id": "C4-T-C",
+      "master": "Association",
+      "beginIn": [
+        1.220472440944882,
+        3.001968503937007
+      ],
+      "endIn": [
+        3.149606299212599,
+        1.574803149606299
+      ],
+      "geometryRowCount": 3,
+      "beginFormula": "PAR(PNT(Actor!Connections.X3,Actor!Connections.Y3))",
+      "endFormula": "PAR(PNT(Use Case.4!Connections.X1,Use Case.4!Connections.Y1))",
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "explicitSidePort": true,
+      "orthogonal": false
+    },
+    {
+      "id": "C4-P-A",
+      "master": "Association",
+      "beginIn": [
+        6.653543307086615,
+        3.297244094488189
+      ],
+      "endIn": [
+        4.724409448818898,
+        4.724409448818896
+      ],
+      "geometryRowCount": 3,
+      "beginFormula": "PAR(PNT(Actor.5!Connections.X1,Actor.5!Connections.Y1))",
+      "endFormula": "PAR(PNT(Use Case!Connections.X2,Use Case!Connections.Y2))",
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "explicitSidePort": true,
+      "orthogonal": false
+    },
+    {
+      "id": "C4-P-C",
+      "master": "Association",
+      "beginIn": [
+        6.653543307086615,
+        3.001968503937007
+      ],
+      "endIn": [
+        4.724409448818898,
+        1.574803149606299
+      ],
+      "geometryRowCount": 3,
+      "beginFormula": "PAR(PNT(Actor.5!Connections.X2,Actor.5!Connections.Y2))",
+      "endFormula": "PAR(PNT(Use Case.4!Connections.X2,Use Case.4!Connections.Y2))",
+      "glued": {
+        "source": true,
+        "target": true
+      },
+      "explicitSidePort": true,
+      "orthogonal": false
+    }
+  ],
+  "crossings": [],
+  "overlapPairs": [],
+  "throughNodes": [],
+  "forbiddenTokenCounts": {
+    "#VALUE!": 0,
+    "#REF!": 0
+  },
+  "failures": [
+    "non-orthogonal actual route:C4-T-A",
+    "non-orthogonal actual route:C4-T-C",
+    "non-orthogonal actual route:C4-P-A",
+    "non-orthogonal actual route:C4-P-C",
+    "WAYPOINT_REALIZATION_UNSUPPORTED"
+  ]
+}

@@ -1,0 +1,264 @@
+version: 0.1
+purpose: >-
+  Topology-safe Association port seeds for P1_UC_Overview. These are routing
+  seeds, not frozen semantics. They MUST NOT modify id, connectorType/source/
+  target or any C4E1 Extend field. V2/V3 remain authoritative geometry gates.
+plans:
+  PLAN_R_REVERSE_EMBEDDING:
+    note: >-
+      Genus-0 port rotation. In independent negotiated-congestion experiments
+      this seed reduced the unresolved grid conflict floor farther than PLAN_O,
+      but it can induce longer detours around the frozen/clean top-right routes.
+    routes:
+      A-T-UC-02: {sourcePortFraction: 0.10, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-04: {sourcePortFraction: 0.20, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-05: {sourcePortFraction: 0.30, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-06: {sourcePortFraction: 0.40, targetSide: RIGHT, targetPortFraction: 0.2777777778}
+      A-T-UC-07: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.2916666667}
+      A-T-UC-11: {sourcePortFraction: 0.60, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-T-UC-10: {sourcePortFraction: 0.70, targetSide: TOP, targetPortFraction: 0.7083333333}
+      A-T-UC-08: {sourcePortFraction: 0.80, targetSide: BOTTOM, targetPortFraction: 0.75}
+      A-T-UC-12: {sourcePortFraction: 0.90, targetSide: LEFT, targetPortFraction: 0.50}
+      A-M-UC-04: {sourcePortFraction: 0.2142857143, targetSide: RIGHT, targetPortFraction: 0.1296296296}
+      A-M-UC-10: {sourcePortFraction: 0.50, targetSide: TOP, targetPortFraction: 0.2916666667}
+      A-M-UC-08: {sourcePortFraction: 0.7857142857, targetSide: BOTTOM, targetPortFraction: 0.25}
+      A-CD-UC-10: {sourcePortFraction: 0.7142857143, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-B-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CE-09: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.50}
+
+  PLAN_O_PRESERVE_LOCAL_GEOMETRY:
+    note: >-
+      Genus-0 port rotation that preserves the existing City-Data clean routes
+      and Mobility source order, keeps the original Traveler ordering almost
+      intact, and locally places M04 below clean CD04. It requires CD10 to sit
+      between CD04/CD05 on the City-Data actor and swaps T07/T08 order.
+    routes:
+      A-T-UC-05: {sourcePortFraction: 0.10, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-04: {sourcePortFraction: 0.20, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-02: {sourcePortFraction: 0.30, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-11: {sourcePortFraction: 0.40, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-T-UC-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.2777777778}
+      A-T-UC-07: {sourcePortFraction: 0.60, targetSide: BOTTOM, targetPortFraction: 0.2916666667}
+      A-T-UC-08: {sourcePortFraction: 0.70, targetSide: BOTTOM, targetPortFraction: 0.8333333333}
+      A-T-UC-10: {sourcePortFraction: 0.80, targetSide: TOP, targetPortFraction: 0.2916666667}
+      A-T-UC-12: {sourcePortFraction: 0.90, targetSide: LEFT, targetPortFraction: 0.50}
+      A-CD-UC-10: {sourcePortFraction: 0.2857142857, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-M-UC-04: {sourcePortFraction: 0.2142857143, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-M-UC-08: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.6666666667}
+      A-M-UC-10: {sourcePortFraction: 0.7857142857, targetSide: TOP, targetPortFraction: 0.7083333333}
+      A-B-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CE-09: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.50}
+
+  PLAN_O_M10_RIGHT_ESCAPE:
+    basePlan: PLAN_O_PRESERVE_LOCAL_GEOMETRY
+    note: >-
+      Genus-0 PLAN_O derivative. The original PLAN_O M10 TOP endpoint lies
+      inside the frozen EXT-10-09/U10 pocket. This legal port allocation puts
+      M10 at the upper-right U10 terminal, with a distinct Mobility source
+      lane, so the route can enter through the lower-left opening and pass
+      beneath U10 without touching the frozen Extend.
+    routes:
+      A-M-UC-10: {sourcePortFraction: 0.55, targetSide: RIGHT, targetPortFraction: 0.10}
+      A-B-06: {sourcePortFraction: 0.30, targetSide: BOTTOM, targetPortFraction: 0.70}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE
+    note: >-
+      Alternate genus-0 seed for negotiated routing: retain the M10 escape,
+      but restore the legal UC-06 RIGHT entry.  It is a mutable port-allocation
+      search seed only; no Association identity or Extend field is changed.
+    routes:
+      A-B-06: {sourcePortFraction: 0.30, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_TOP:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE
+    note: >-
+      Alternate search seed moving the Booking association to a TOP entry on
+      UC-06.  It remains mutable until the complete geometry gates pass.
+    routes:
+      A-B-06: {sourcePortFraction: 0.30, targetSide: TOP, targetPortFraction: 0.70}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT_LOWER_SOURCE:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: >-
+      Alternate search seed using the lower half of the Booking actor source
+      side.  The actor has no other incident route, so this preserves the
+      genus-0 rotation while changing the available source fan-out lane.
+    routes:
+      A-B-06: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT_PA_BOTTOM:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable topology-search seed with Payment/Auth entering UC-07 from below.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.50}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT_PA_TOP:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable topology-search seed with Payment/Auth entering UC-07 from above.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: TOP, targetPortFraction: 0.50}
+
+  PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT_PA_LEFT:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable topology-search seed with Payment/Auth entering UC-07 from the left.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.50}
+
+  PLAN_O_SEARCH_LANE_SPACING:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: >-
+      Genus-0 lane-spacing search seed.  It keeps every incident route in the
+      same clockwise side order while spreading source fan-out ports and
+      mutable target ports to expose additional rectilinear corridors.
+    routes:
+      A-CD-UC-04: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.25}
+      A-CD-UC-10: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CD-UC-05: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.75}
+      A-M-UC-04: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.60}
+      A-M-UC-08: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.66}
+      A-M-UC-10: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.10}
+      A-B-06: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.80}
+      A-PA-07: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.25}
+      A-CE-09: {sourcePortFraction: 0.60, targetSide: LEFT, targetPortFraction: 0.60}
+
+  PLAN_O_M10_B06_PA_HIGH:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable genus-0 seed placing Payment/Auth at the high end of UC-07 RIGHT.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.10}
+
+  PLAN_O_M10_B06_PA_LOW:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable genus-0 seed placing Payment/Auth at the low end of UC-07 RIGHT.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.90}
+
+  PLAN_O_M10_B06_PA_LOWER_SOURCE:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable genus-0 seed using the lower Payment/Auth source lane.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.50}
+
+  PLAN_O_M10_B06_PA_UPPER_SOURCE:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable genus-0 seed using the upper Payment/Auth source lane.
+    routes:
+      A-PA-07: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.50}
+
+  PLAN_O_PORT_REORDER_M10_LOWER:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: >-
+      Mutable genus-0 source-lane seed for the coupled City-Data/Mobility
+      routes.  Source fractions preserve each actor's clockwise order while
+      opening a lower Mobility-10 departure lane.
+    routes:
+      A-CD-UC-04: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.25}
+      A-CD-UC-10: {sourcePortFraction: 0.30, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CD-UC-05: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.75}
+      A-M-UC-04: {sourcePortFraction: 0.10, targetSide: RIGHT, targetPortFraction: 0.60}
+      A-M-UC-08: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.66}
+      A-M-UC-10: {sourcePortFraction: 0.90, targetSide: RIGHT, targetPortFraction: 0.10}
+
+  PLAN_O_M10_TOP_ROUTE_SEARCH:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable target-side search seed for Mobility-10.
+    routes:
+      A-M-UC-10: {sourcePortFraction: 0.55, targetSide: TOP, targetPortFraction: 0.70}
+
+  PLAN_O_CD10_TOP_ROUTE_SEARCH:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable target-side search seed for City-Data-10.
+    routes:
+      A-CD-UC-10: {sourcePortFraction: 0.2857142857, targetSide: TOP, targetPortFraction: 0.70}
+
+  PLAN_O_M10_CD10_TOP_SEARCH:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: Mutable target-side search seed for the coupled UC-10 routes.
+    routes:
+      A-M-UC-10: {sourcePortFraction: 0.55, targetSide: TOP, targetPortFraction: 0.70}
+      A-CD-UC-10: {sourcePortFraction: 0.2857142857, targetSide: TOP, targetPortFraction: 0.30}
+
+  PLAN_O_GRID10_NEGOTIATED:
+    basePlan: PLAN_O_M10_RIGHT_ESCAPE_B06_RIGHT
+    note: >-
+      Genus-0 PLAN_O derivative whose mutable port lanes lie on the legal
+      0.10-cm negotiated-congestion grid.  The clockwise incident order is
+      unchanged; only spacing within that order is adjusted.  This avoids
+      sub-0.10 bends next to three-decimal ellipse boundaries.
+    routes:
+      A-CD-UC-04: {sourcePortFraction: 0.2142857143, targetSide: RIGHT, targetPortFraction: 0.2777777778}
+      A-CD-UC-10: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-CD-UC-05: {sourcePortFraction: 0.7857142857, targetSide: RIGHT, targetPortFraction: 0.50}
+      A-B-06: {sourcePortFraction: 0.2857142857, targetSide: RIGHT, targetPortFraction: 0.7222222222}
+      A-M-UC-10: {sourcePortFraction: 0.7857142857, targetSide: RIGHT, targetPortFraction: 0.1296296296}
+
+  PLAN_TRAVELER_SKELETON_PROVIDER_GRID:
+    basePlan: PLAN_O_GRID10_NEGOTIATED
+    note: >-
+      Uses the independently validated nine-route Traveler corridor skeleton
+      as a port/corridor seed only. Provider spacing remains mutable and on
+      the 0.10-cm global grid. This is not a frozen truth and must pass the
+      topology gate plus all geometry validators before any promotion.
+    routes:
+      A-T-UC-02: {sourcePortFraction: 0.0333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-04: {sourcePortFraction: 0.1333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-05: {sourcePortFraction: 0.2333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-06: {sourcePortFraction: 0.3333333333333333, targetSide: RIGHT, targetPortFraction: 0.5740740740740741}
+      A-T-UC-07: {sourcePortFraction: 0.4333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-11: {sourcePortFraction: 0.5333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-10: {sourcePortFraction: 0.6333333333333333, targetSide: LEFT, targetPortFraction: 0.50}
+      A-T-UC-08: {sourcePortFraction: 0.7333333333333333, targetSide: BOTTOM, targetPortFraction: 0.7916666666666666}
+      A-T-UC-12: {sourcePortFraction: 0.8333333333333334, targetSide: LEFT, targetPortFraction: 0.50}
+
+  PLAN_TRAVELER_SKELETON_PLANAR_GRID:
+    basePlan: PLAN_TRAVELER_SKELETON_PROVIDER_GRID
+    note: >-
+      Genus-zero completion of the Traveler skeleton seed. Provider ports were
+      searched globally, then snapped within the same clockwise port order to
+      V3-normalizable 0.10-cm lanes. It remains a staging plan until all
+      Association geometry and contact gates pass.
+    routes:
+      A-CD-UC-04: {sourcePortFraction: 0.50, targetSide: LEFT, targetPortFraction: 0.7962962962962963}
+      A-CD-UC-05: {sourcePortFraction: 0.75, targetSide: RIGHT, targetPortFraction: 0.7962962962962963}
+      A-CD-UC-10: {sourcePortFraction: 0.25, targetSide: TOP, targetPortFraction: 0.2291666666666667}
+      A-M-UC-04: {sourcePortFraction: 0.50, targetSide: BOTTOM, targetPortFraction: 0.0833333333333333}
+      A-M-UC-08: {sourcePortFraction: 0.25, targetSide: RIGHT, targetPortFraction: 0.9444444444444444}
+      A-M-UC-10: {sourcePortFraction: 0.75, targetSide: TOP, targetPortFraction: 0.375}
+      A-B-06: {sourcePortFraction: 0.50, targetSide: RIGHT, targetPortFraction: 0.0555555555555556}
+      A-PA-07: {sourcePortFraction: 0.50, targetSide: TOP, targetPortFraction: 0.3125}
+      A-CE-09: {sourcePortFraction: 0.50, targetSide: TOP, targetPortFraction: 0.625}
+
+  # Exploratory provider-entry variants.  These retain the validated
+  # Traveler rotation and are deliberately search seeds, not frozen truth.
+  PLAN_TRAVELER_SKELETON_B06_TOP:
+    basePlan: PLAN_TRAVELER_SKELETON_PROVIDER_GRID
+    note: Keep the Traveler skeleton optional while moving Booking into the
+      upper UC-06 entry corridor; this is a topology-search seed only.
+    routes:
+      A-B-06: {targetSide: TOP, targetPortFraction: 0.70}
+
+  PLAN_TRAVELER_SKELETON_M08_BOTTOM:
+    basePlan: PLAN_TRAVELER_SKELETON_PROVIDER_GRID
+    note: Keep the Traveler skeleton optional while moving Mobility-08 into
+      the lower UC-08 entry corridor; this is a topology-search seed only.
+    routes:
+      A-M-UC-08: {targetSide: BOTTOM, targetPortFraction: 0.50}
+
+  PLAN_TRAVELER_SKELETON_M10_RIGHT:
+    basePlan: PLAN_TRAVELER_SKELETON_PROVIDER_GRID
+    note: Keep the Traveler skeleton optional while moving Mobility-10 into
+      the right UC-10 entry corridor; this is a topology-search seed only.
+    routes:
+      A-M-UC-10: {targetSide: RIGHT, targetPortFraction: 0.50}
+
+  PLAN_TRAVELER_SKELETON_PROVIDER_ESCAPE:
+    basePlan: PLAN_TRAVELER_SKELETON_PROVIDER_GRID
+    note: Combined provider-side escape seed. It is never promoted without
+      topology, contact, V2, V3, and full pytest gates.
+    routes:
+      A-B-06: {targetSide: TOP, targetPortFraction: 0.70}
+      A-M-UC-08: {targetSide: BOTTOM, targetPortFraction: 0.50}
+      A-M-UC-10: {targetSide: RIGHT, targetPortFraction: 0.50}

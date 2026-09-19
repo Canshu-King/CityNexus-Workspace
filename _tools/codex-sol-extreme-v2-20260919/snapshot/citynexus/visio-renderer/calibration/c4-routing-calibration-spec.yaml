@@ -1,0 +1,112 @@
+calibration: C4
+name: Explicit Port and Waypoint Routing Calibration
+page:
+  widthCm: 20.0
+  heightCm: 16.0
+  canvas: '#F8FAFC'
+policy:
+  routing: explicit-waypoints
+  requireOrthogonal: true
+  requireExplicitSidePorts: true
+  maxConnectorCrossings: 0
+  maxConnectorThroughNode: 0
+  toleranceMm: 0.5
+nodes:
+  - id: C4-TRAVELER
+    kind: actor
+    x: 2.5
+    y: 8.0
+    width: 2.0
+    height: 3.0
+  - id: C4-UC-A
+    kind: use-case
+    x: 10.0
+    y: 4.0
+    width: 4.0
+    height: 1.4
+  - id: C4-UC-B
+    kind: use-case
+    x: 10.0
+    y: 8.0
+    width: 4.0
+    height: 1.4
+  - id: C4-UC-C
+    kind: use-case
+    x: 10.0
+    y: 12.0
+    width: 4.0
+    height: 1.4
+  - id: C4-PROVIDER
+    kind: actor
+    x: 17.5
+    y: 8.0
+    width: 2.0
+    height: 3.0
+routes:
+  - id: C4-T-A
+    source: C4-TRAVELER
+    target: C4-UC-A
+    connectorType: association
+    sourceSide: RIGHT
+    targetSide: LEFT
+    sourcePortFraction: 0.35
+    targetPortFraction: 0.50
+    waypoints:
+      - [4.2, 7.55]
+      - [5.2, 7.55]
+      - [5.2, 4.0]
+      - [8.0, 4.0]
+  - id: C4-T-B
+    source: C4-TRAVELER
+    target: C4-UC-B
+    connectorType: association
+    sourceSide: RIGHT
+    targetSide: LEFT
+    sourcePortFraction: 0.50
+    targetPortFraction: 0.50
+    waypoints:
+      - [4.2, 8.0]
+      - [8.0, 8.0]
+  - id: C4-T-C
+    source: C4-TRAVELER
+    target: C4-UC-C
+    connectorType: association
+    sourceSide: RIGHT
+    targetSide: LEFT
+    sourcePortFraction: 0.65
+    targetPortFraction: 0.50
+    waypoints:
+      - [4.2, 8.45]
+      - [6.0, 8.45]
+      - [6.0, 12.0]
+      - [8.0, 12.0]
+  - id: C4-P-A
+    source: C4-PROVIDER
+    target: C4-UC-A
+    connectorType: association
+    sourceSide: LEFT
+    targetSide: RIGHT
+    sourcePortFraction: 0.35
+    targetPortFraction: 0.50
+    waypoints:
+      - [15.8, 7.55]
+      - [14.8, 7.55]
+      - [14.8, 3.0]
+      - [12.8, 3.0]
+      - [12.8, 4.0]
+      - [12.0, 4.0]
+  - id: C4-P-C
+    source: C4-PROVIDER
+    target: C4-UC-C
+    connectorType: association
+    sourceSide: LEFT
+    targetSide: RIGHT
+    sourcePortFraction: 0.65
+    targetPortFraction: 0.50
+    waypoints:
+      - [15.8, 8.45]
+      - [14.0, 8.45]
+      - [14.0, 13.0]
+      - [12.8, 13.0]
+      - [12.8, 12.0]
+      - [12.0, 12.0]

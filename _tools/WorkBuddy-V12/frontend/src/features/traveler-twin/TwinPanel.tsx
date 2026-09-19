@@ -1,0 +1,8 @@
+import { Icon } from "../../components/v8/Icon";
+import type { V8Data } from "../../app/v8Types";
+
+export function TwinPanel({ data }: { data: V8Data }) {
+  const explicit = data.traveler_twin?.explicit_dimensions ?? ["low_walking"];
+  const learned = data.traveler_twin?.learned_soft_dimensions ?? ["indoor_stops"];
+  return <section className="v8-page"><div className="v8-page-intro compact"><div><p className="v8-kicker">Traveler Twin · soft context</p><h1>Personalization with a boundary.</h1><p className="v8-lede">Explicit intent wins. Learned evidence helps rank a plan, but never expands budget, payment, commitment, or autonomy authority.</p></div></div><div className="v8-twin-grid"><article className="v8-twin-card"><span className="v8-twin-label explicit">EXPLICIT</span><h2>{explicit.join(" · ")}</h2><p>From this Journey request</p><div className="v8-strength"><span style={{ width: "88%" }} /><b>0.88</b></div><small>Applied directly to the current plan objective.</small></article><article className="v8-twin-card"><span className="v8-twin-label learned">LEARNED_SOFT</span><h2>{learned.join(" · ")}</h2><p>From completed Journey outcomes</p><div className="v8-strength learned"><span style={{ width: "42%" }} /><b>0.42</b></div><small>Ranking input only · expires with evidence freshness.</small></article><aside className="v8-boundary-card"><Icon name="spark" /><b>Authority boundary</b><p>Twin evidence can improve a route or hotel ranking. It cannot create a booking, spend money, or weaken a C4 commitment.</p><span>Inspectable provenance available</span></aside></div></section>;
+}

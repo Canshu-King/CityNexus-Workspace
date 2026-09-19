@@ -1,0 +1,4 @@
+(20.0, 3.16)->(28.0, 3.16): occupancy_count=0 sample=[]
+(26.0, 2.0)->(26.0, 4.23): occupancy_count=23 sample=[(260, 20), (260, 21), (260, 22), (260, 23), (260, 24)]
+(20.0, 3.2)->(28.0, 3.2): occupancy_count=81 sample=[(200, 32), (201, 32), (202, 32), (203, 32), (204, 32)]
+Interpretation: the original helper records a segment only when its constant coordinate lies exactly on the 0.10 cm lattice. Thus horizontal y=3.16 vanishes completely; a vertical x=8.875 would vanish for the same reason. A grid-aligned horizontal y=3.20 is recorded normally.

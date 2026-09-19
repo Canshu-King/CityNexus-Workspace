@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\agent\orchestrator.py
+# hypothesis_version: 6.168.0
+
+[1200, 'Authorization', 'app.agent.runtime', 'auto', 'choices', 'hermes', 'max_tokens', 'message', 'messages', 'model', 'temperature', 'tool_choice', 'tools']

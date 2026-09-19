@@ -1,0 +1,854 @@
+{
+  "status": "PASS",
+  "plan": "PLAN_O_M10_RIGHT_ESCAPE",
+  "vertices": 16,
+  "edges": 21,
+  "faces": 7,
+  "faceCount": 7,
+  "orientableGenus": 0.0,
+  "rotationRoutesCW": {
+    "ACT-TRAVELER": [
+      "A-T-UC-05",
+      "A-T-UC-04",
+      "A-T-UC-02",
+      "A-T-UC-11",
+      "A-T-UC-06",
+      "A-T-UC-07",
+      "A-T-UC-08",
+      "A-T-UC-10",
+      "A-T-UC-12"
+    ],
+    "UC-02": [
+      "A-T-UC-02"
+    ],
+    "UC-04": [
+      "A-CD-UC-04",
+      "A-M-UC-04",
+      "A-T-UC-04"
+    ],
+    "UC-05": [
+      "A-CD-UC-05",
+      "A-T-UC-05"
+    ],
+    "UC-06": [
+      "A-T-UC-06",
+      "A-B-06",
+      "EXT-07-06"
+    ],
+    "UC-07": [
+      "EXT-07-06",
+      "A-PA-07",
+      "A-T-UC-07"
+    ],
+    "UC-08": [
+      "A-T-UC-08",
+      "A-M-UC-08",
+      "EXT-09-08"
+    ],
+    "UC-10": [
+      "A-T-UC-10",
+      "EXT-10-09",
+      "A-M-UC-10",
+      "A-CD-UC-10"
+    ],
+    "UC-11": [
+      "A-T-UC-11"
+    ],
+    "UC-12": [
+      "A-T-UC-12"
+    ],
+    "ACT-CITY-DATA": [
+      "A-CD-UC-05",
+      "A-CD-UC-10",
+      "A-CD-UC-04"
+    ],
+    "ACT-MOBILITY": [
+      "A-M-UC-10",
+      "A-M-UC-08",
+      "A-M-UC-04"
+    ],
+    "ACT-BOOKING": [
+      "A-B-06"
+    ],
+    "ACT-PAYAUTH": [
+      "A-PA-07"
+    ],
+    "ACT-CONTEXT": [
+      "A-CE-09"
+    ],
+    "UC-09": [
+      "EXT-09-08",
+      "EXT-10-09",
+      "A-CE-09"
+    ]
+  },
+  "rotationNeighboursCW": {
+    "ACT-TRAVELER": [
+      "UC-05",
+      "UC-04",
+      "UC-02",
+      "UC-11",
+      "UC-06",
+      "UC-07",
+      "UC-08",
+      "UC-10",
+      "UC-12"
+    ],
+    "UC-02": [
+      "ACT-TRAVELER"
+    ],
+    "UC-04": [
+      "ACT-CITY-DATA",
+      "ACT-MOBILITY",
+      "ACT-TRAVELER"
+    ],
+    "UC-05": [
+      "ACT-CITY-DATA",
+      "ACT-TRAVELER"
+    ],
+    "UC-06": [
+      "ACT-TRAVELER",
+      "ACT-BOOKING",
+      "UC-07"
+    ],
+    "UC-07": [
+      "UC-06",
+      "ACT-PAYAUTH",
+      "ACT-TRAVELER"
+    ],
+    "UC-08": [
+      "ACT-TRAVELER",
+      "ACT-MOBILITY",
+      "UC-09"
+    ],
+    "UC-10": [
+      "ACT-TRAVELER",
+      "UC-09",
+      "ACT-MOBILITY",
+      "ACT-CITY-DATA"
+    ],
+    "UC-11": [
+      "ACT-TRAVELER"
+    ],
+    "UC-12": [
+      "ACT-TRAVELER"
+    ],
+    "ACT-CITY-DATA": [
+      "UC-05",
+      "UC-10",
+      "UC-04"
+    ],
+    "ACT-MOBILITY": [
+      "UC-10",
+      "UC-08",
+      "UC-04"
+    ],
+    "ACT-BOOKING": [
+      "UC-06"
+    ],
+    "ACT-PAYAUTH": [
+      "UC-07"
+    ],
+    "ACT-CONTEXT": [
+      "UC-09"
+    ],
+    "UC-09": [
+      "UC-08",
+      "UC-10",
+      "ACT-CONTEXT"
+    ]
+  },
+  "portDetail": {
+    "ACT-TRAVELER": [
+      {
+        "route": "A-T-UC-05",
+        "endpoint": 0,
+        "neighbor": "UC-05",
+        "side": "RIGHT",
+        "fraction": 0.1,
+        "perimeterCW": 2.3000000000000007
+      },
+      {
+        "route": "A-T-UC-04",
+        "endpoint": 0,
+        "neighbor": "UC-04",
+        "side": "RIGHT",
+        "fraction": 0.2,
+        "perimeterCW": 2.6000000000000005
+      },
+      {
+        "route": "A-T-UC-02",
+        "endpoint": 0,
+        "neighbor": "UC-02",
+        "side": "RIGHT",
+        "fraction": 0.3,
+        "perimeterCW": 2.9000000000000004
+      },
+      {
+        "route": "A-T-UC-11",
+        "endpoint": 0,
+        "neighbor": "UC-11",
+        "side": "RIGHT",
+        "fraction": 0.4,
+        "perimeterCW": 3.2000000000000006
+      },
+      {
+        "route": "A-T-UC-06",
+        "endpoint": 0,
+        "neighbor": "UC-06",
+        "side": "RIGHT",
+        "fraction": 0.5,
+        "perimeterCW": 3.5000000000000004
+      },
+      {
+        "route": "A-T-UC-07",
+        "endpoint": 0,
+        "neighbor": "UC-07",
+        "side": "RIGHT",
+        "fraction": 0.6,
+        "perimeterCW": 3.8000000000000003
+      },
+      {
+        "route": "A-T-UC-08",
+        "endpoint": 0,
+        "neighbor": "UC-08",
+        "side": "RIGHT",
+        "fraction": 0.7,
+        "perimeterCW": 4.1
+      },
+      {
+        "route": "A-T-UC-10",
+        "endpoint": 0,
+        "neighbor": "UC-10",
+        "side": "RIGHT",
+        "fraction": 0.8,
+        "perimeterCW": 4.4
+      },
+      {
+        "route": "A-T-UC-12",
+        "endpoint": 0,
+        "neighbor": "UC-12",
+        "side": "RIGHT",
+        "fraction": 0.9,
+        "perimeterCW": 4.700000000000001
+      }
+    ],
+    "UC-02": [
+      {
+        "route": "A-T-UC-02",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 11.625
+      }
+    ],
+    "UC-04": [
+      {
+        "route": "A-CD-UC-04",
+        "endpoint": 1,
+        "neighbor": "ACT-CITY-DATA",
+        "side": "RIGHT",
+        "fraction": 0.3,
+        "perimeterCW": 5.204999999999999
+      },
+      {
+        "route": "A-M-UC-04",
+        "endpoint": 1,
+        "neighbor": "ACT-MOBILITY",
+        "side": "RIGHT",
+        "fraction": 0.7222222222,
+        "perimeterCW": 5.774999999969999
+      },
+      {
+        "route": "A-T-UC-04",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 11.624999999999996
+      }
+    ],
+    "UC-05": [
+      {
+        "route": "A-CD-UC-05",
+        "endpoint": 1,
+        "neighbor": "ACT-CITY-DATA",
+        "side": "RIGHT",
+        "fraction": 0.5,
+        "perimeterCW": 5.474999999999997
+      },
+      {
+        "route": "A-T-UC-05",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 11.624999999999993
+      }
+    ],
+    "UC-06": [
+      {
+        "route": "A-T-UC-06",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "RIGHT",
+        "fraction": 0.2777777778,
+        "perimeterCW": 5.175000000030001
+      },
+      {
+        "route": "A-B-06",
+        "endpoint": 1,
+        "neighbor": "ACT-BOOKING",
+        "side": "BOTTOM",
+        "fraction": 0.7,
+        "perimeterCW": 7.590000000000002
+      },
+      {
+        "route": "EXT-07-06",
+        "endpoint": 1,
+        "neighbor": "UC-07",
+        "side": "BOTTOM",
+        "fraction": 0.5,
+        "perimeterCW": 8.55
+      }
+    ],
+    "UC-07": [
+      {
+        "route": "EXT-07-06",
+        "endpoint": 0,
+        "neighbor": "UC-06",
+        "side": "TOP",
+        "fraction": 0.5,
+        "perimeterCW": 2.3999999999999995
+      },
+      {
+        "route": "A-PA-07",
+        "endpoint": 1,
+        "neighbor": "ACT-PAYAUTH",
+        "side": "RIGHT",
+        "fraction": 0.5,
+        "perimeterCW": 5.475
+      },
+      {
+        "route": "A-T-UC-07",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "BOTTOM",
+        "fraction": 0.2916666667,
+        "perimeterCW": 9.549999999839999
+      }
+    ],
+    "UC-08": [
+      {
+        "route": "A-T-UC-08",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "BOTTOM",
+        "fraction": 0.8333333333,
+        "perimeterCW": 6.950000000160002
+      },
+      {
+        "route": "A-M-UC-08",
+        "endpoint": 1,
+        "neighbor": "ACT-MOBILITY",
+        "side": "BOTTOM",
+        "fraction": 0.6666666667,
+        "perimeterCW": 7.749999999840003
+      },
+      {
+        "route": "EXT-09-08",
+        "endpoint": 1,
+        "neighbor": "UC-09",
+        "side": "BOTTOM",
+        "fraction": 0.5,
+        "perimeterCW": 8.550000000000002
+      }
+    ],
+    "UC-10": [
+      {
+        "route": "A-T-UC-10",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "TOP",
+        "fraction": 0.2916666667,
+        "perimeterCW": 1.4000000001599993
+      },
+      {
+        "route": "EXT-10-09",
+        "endpoint": 0,
+        "neighbor": "UC-09",
+        "side": "TOP",
+        "fraction": 0.5,
+        "perimeterCW": 2.3999999999999986
+      },
+      {
+        "route": "A-M-UC-10",
+        "endpoint": 1,
+        "neighbor": "ACT-MOBILITY",
+        "side": "RIGHT",
+        "fraction": 0.1,
+        "perimeterCW": 4.934999999999997
+      },
+      {
+        "route": "A-CD-UC-10",
+        "endpoint": 1,
+        "neighbor": "ACT-CITY-DATA",
+        "side": "RIGHT",
+        "fraction": 0.5,
+        "perimeterCW": 5.474999999999998
+      }
+    ],
+    "UC-11": [
+      {
+        "route": "A-T-UC-11",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "RIGHT",
+        "fraction": 0.5,
+        "perimeterCW": 5.474999999999998
+      }
+    ],
+    "UC-12": [
+      {
+        "route": "A-T-UC-12",
+        "endpoint": 1,
+        "neighbor": "ACT-TRAVELER",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 11.625
+      }
+    ],
+    "ACT-CITY-DATA": [
+      {
+        "route": "A-CD-UC-05",
+        "endpoint": 0,
+        "neighbor": "UC-05",
+        "side": "LEFT",
+        "fraction": 0.4,
+        "perimeterCW": 8.880000000000006
+      },
+      {
+        "route": "A-CD-UC-10",
+        "endpoint": 0,
+        "neighbor": "UC-10",
+        "side": "LEFT",
+        "fraction": 0.2857142857,
+        "perimeterCW": 9.200000000040006
+      },
+      {
+        "route": "A-CD-UC-04",
+        "endpoint": 0,
+        "neighbor": "UC-04",
+        "side": "LEFT",
+        "fraction": 0.2,
+        "perimeterCW": 9.440000000000007
+      }
+    ],
+    "ACT-MOBILITY": [
+      {
+        "route": "A-M-UC-10",
+        "endpoint": 0,
+        "neighbor": "UC-10",
+        "side": "LEFT",
+        "fraction": 0.55,
+        "perimeterCW": 8.460000000000004
+      },
+      {
+        "route": "A-M-UC-08",
+        "endpoint": 0,
+        "neighbor": "UC-08",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 8.600000000000005
+      },
+      {
+        "route": "A-M-UC-04",
+        "endpoint": 0,
+        "neighbor": "UC-04",
+        "side": "LEFT",
+        "fraction": 0.2142857143,
+        "perimeterCW": 9.399999999960004
+      }
+    ],
+    "ACT-BOOKING": [
+      {
+        "route": "A-B-06",
+        "endpoint": 0,
+        "neighbor": "UC-06",
+        "side": "LEFT",
+        "fraction": 0.3,
+        "perimeterCW": 9.160000000000007
+      }
+    ],
+    "ACT-PAYAUTH": [
+      {
+        "route": "A-PA-07",
+        "endpoint": 0,
+        "neighbor": "UC-07",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 8.600000000000007
+      }
+    ],
+    "ACT-CONTEXT": [
+      {
+        "route": "A-CE-09",
+        "endpoint": 0,
+        "neighbor": "UC-09",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 8.600000000000005
+      }
+    ],
+    "UC-09": [
+      {
+        "route": "EXT-09-08",
+        "endpoint": 0,
+        "neighbor": "UC-08",
+        "side": "TOP",
+        "fraction": 0.5,
+        "perimeterCW": 2.3999999999999995
+      },
+      {
+        "route": "EXT-10-09",
+        "endpoint": 1,
+        "neighbor": "UC-10",
+        "side": "BOTTOM",
+        "fraction": 0.5,
+        "perimeterCW": 8.55
+      },
+      {
+        "route": "A-CE-09",
+        "endpoint": 1,
+        "neighbor": "ACT-CONTEXT",
+        "side": "LEFT",
+        "fraction": 0.5,
+        "perimeterCW": 11.625
+      }
+    ]
+  },
+  "faceCycles": [
+    [
+      {
+        "route": "A-T-UC-02",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-T-UC-02",
+        "endpoint": 1,
+        "vertex": "UC-02"
+      },
+      {
+        "route": "A-T-UC-11",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-T-UC-11",
+        "endpoint": 1,
+        "vertex": "UC-11"
+      },
+      {
+        "route": "A-T-UC-06",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-B-06",
+        "endpoint": 1,
+        "vertex": "UC-06"
+      },
+      {
+        "route": "A-B-06",
+        "endpoint": 0,
+        "vertex": "ACT-BOOKING"
+      },
+      {
+        "route": "EXT-07-06",
+        "endpoint": 1,
+        "vertex": "UC-06"
+      },
+      {
+        "route": "A-PA-07",
+        "endpoint": 1,
+        "vertex": "UC-07"
+      },
+      {
+        "route": "A-PA-07",
+        "endpoint": 0,
+        "vertex": "ACT-PAYAUTH"
+      },
+      {
+        "route": "A-T-UC-07",
+        "endpoint": 1,
+        "vertex": "UC-07"
+      },
+      {
+        "route": "A-T-UC-08",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-M-UC-08",
+        "endpoint": 1,
+        "vertex": "UC-08"
+      },
+      {
+        "route": "A-M-UC-04",
+        "endpoint": 0,
+        "vertex": "ACT-MOBILITY"
+      },
+      {
+        "route": "A-T-UC-04",
+        "endpoint": 1,
+        "vertex": "UC-04"
+      }
+    ],
+    [
+      {
+        "route": "A-T-UC-04",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-CD-UC-04",
+        "endpoint": 1,
+        "vertex": "UC-04"
+      },
+      {
+        "route": "A-CD-UC-05",
+        "endpoint": 0,
+        "vertex": "ACT-CITY-DATA"
+      },
+      {
+        "route": "A-T-UC-05",
+        "endpoint": 1,
+        "vertex": "UC-05"
+      }
+    ],
+    [
+      {
+        "route": "A-T-UC-05",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-CD-UC-05",
+        "endpoint": 1,
+        "vertex": "UC-05"
+      },
+      {
+        "route": "A-CD-UC-10",
+        "endpoint": 0,
+        "vertex": "ACT-CITY-DATA"
+      },
+      {
+        "route": "A-T-UC-10",
+        "endpoint": 1,
+        "vertex": "UC-10"
+      },
+      {
+        "route": "A-T-UC-12",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "A-T-UC-12",
+        "endpoint": 1,
+        "vertex": "UC-12"
+      }
+    ],
+    [
+      {
+        "route": "A-T-UC-06",
+        "endpoint": 1,
+        "vertex": "UC-06"
+      },
+      {
+        "route": "A-T-UC-07",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "EXT-07-06",
+        "endpoint": 0,
+        "vertex": "UC-07"
+      }
+    ],
+    [
+      {
+        "route": "A-T-UC-08",
+        "endpoint": 1,
+        "vertex": "UC-08"
+      },
+      {
+        "route": "A-T-UC-10",
+        "endpoint": 0,
+        "vertex": "ACT-TRAVELER"
+      },
+      {
+        "route": "EXT-10-09",
+        "endpoint": 0,
+        "vertex": "UC-10"
+      },
+      {
+        "route": "A-CE-09",
+        "endpoint": 1,
+        "vertex": "UC-09"
+      },
+      {
+        "route": "A-CE-09",
+        "endpoint": 0,
+        "vertex": "ACT-CONTEXT"
+      },
+      {
+        "route": "EXT-09-08",
+        "endpoint": 0,
+        "vertex": "UC-09"
+      }
+    ],
+    [
+      {
+        "route": "A-CD-UC-04",
+        "endpoint": 0,
+        "vertex": "ACT-CITY-DATA"
+      },
+      {
+        "route": "A-M-UC-04",
+        "endpoint": 1,
+        "vertex": "UC-04"
+      },
+      {
+        "route": "A-M-UC-10",
+        "endpoint": 0,
+        "vertex": "ACT-MOBILITY"
+      },
+      {
+        "route": "A-CD-UC-10",
+        "endpoint": 1,
+        "vertex": "UC-10"
+      }
+    ],
+    [
+      {
+        "route": "A-M-UC-08",
+        "endpoint": 0,
+        "vertex": "ACT-MOBILITY"
+      },
+      {
+        "route": "EXT-09-08",
+        "endpoint": 1,
+        "vertex": "UC-08"
+      },
+      {
+        "route": "EXT-10-09",
+        "endpoint": 1,
+        "vertex": "UC-09"
+      },
+      {
+        "route": "A-M-UC-10",
+        "endpoint": 1,
+        "vertex": "UC-10"
+      }
+    ]
+  ],
+  "edgeFaceIncidence": {
+    "A-T-UC-02": [
+      0,
+      0
+    ],
+    "A-T-UC-04": [
+      1,
+      0
+    ],
+    "A-T-UC-05": [
+      2,
+      1
+    ],
+    "A-T-UC-06": [
+      0,
+      3
+    ],
+    "A-T-UC-07": [
+      3,
+      0
+    ],
+    "A-T-UC-08": [
+      0,
+      4
+    ],
+    "A-T-UC-10": [
+      4,
+      2
+    ],
+    "A-T-UC-11": [
+      0,
+      0
+    ],
+    "A-T-UC-12": [
+      2,
+      2
+    ],
+    "A-CD-UC-04": [
+      5,
+      1
+    ],
+    "A-CD-UC-05": [
+      1,
+      2
+    ],
+    "A-CD-UC-10": [
+      2,
+      5
+    ],
+    "A-M-UC-04": [
+      0,
+      5
+    ],
+    "A-M-UC-08": [
+      6,
+      0
+    ],
+    "A-M-UC-10": [
+      5,
+      6
+    ],
+    "A-B-06": [
+      0,
+      0
+    ],
+    "A-PA-07": [
+      0,
+      0
+    ],
+    "A-CE-09": [
+      4,
+      4
+    ],
+    "EXT-07-06": [
+      3,
+      0
+    ],
+    "EXT-09-08": [
+      4,
+      6
+    ],
+    "EXT-10-09": [
+      4,
+      6
+    ]
+  },
+  "allowedOverrideKeys": [
+    "sourcePortFraction",
+    "targetPortFraction",
+    "targetSide"
+  ],
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "failures": []
+}

@@ -1,0 +1,24 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "seed": 3044803439,
+  "attempts": 120000,
+  "topologyPasses": 400,
+  "best": {
+    "attempt": 23323,
+    "trial": 3,
+    "routed": 7,
+    "failure": "A-PA-07",
+    "order": [
+      "A-M-UC-10",
+      "A-CD-UC-10",
+      "A-CE-09",
+      "A-M-UC-04",
+      "A-CD-UC-04",
+      "A-B-06",
+      "A-M-UC-08",
+      "A-PA-07"
+    ]
+  },
+  "authoritativeCandidateModified": false
+}

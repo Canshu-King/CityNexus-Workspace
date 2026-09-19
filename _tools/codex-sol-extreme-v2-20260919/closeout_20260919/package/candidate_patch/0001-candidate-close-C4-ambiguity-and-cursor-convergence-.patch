@@ -1,0 +1,395 @@
+From 776be4e94450a6ee529a6fed7c0541f67b974220 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E4=BB=93=E9=BC=A0=E7=8E=8B?= <yjianbin419@gmail.com>
+Date: Sat, 19 Sep 2026 22:28:20 +0800
+Subject: [PATCH] candidate: close C4 ambiguity and cursor convergence gaps
+
+---
+ backend/app/commerce/service_impl.py         |  53 ++++++--
+ backend/app/concurrency_guards.py            |  10 +-
+ backend/tests/test_sol_v2_closeout.py        | 124 +++++++++++++++++++
+ frontend/e2e/extreme-live-projection.spec.ts |  35 ++++--
+ frontend/src/app/V8Experience.tsx            |  23 ++--
+ frontend/src/app/v8Types.ts                  |   2 +-
+ 6 files changed, 214 insertions(+), 33 deletions(-)
+ create mode 100644 backend/tests/test_sol_v2_closeout.py
+
+diff --git a/backend/app/commerce/service_impl.py b/backend/app/commerce/service_impl.py
+index c65043b..f1bea5d 100644
+--- a/backend/app/commerce/service_impl.py
++++ b/backend/app/commerce/service_impl.py
+@@ -75,34 +75,65 @@ def _remap_commitment_to_active_plan(session: Session, commitment: Commitment) -
+     if current is None or current.plan_version_id == journey.active_plan_version_id:
+         return
+     policy = json.loads(commitment.policy_json or "{}")
+-    wanted = {
++    current_metadata = json.loads(current.metadata_json or "{}")
++    strong_wanted = {
+         str(policy.get("semantic_key") or ""),
+         str(policy.get("semantic_node_key") or ""),
++        str(current_metadata.get("semantic_node_key") or ""),
++        str(current_metadata.get("semantic_key") or ""),
++    }
++    strong_wanted = {item for item in strong_wanted if item}
++    generic_wanted = {
++        str(policy.get("semantic_key") or ""),
+         str(current.place_id or ""),
+         str(current.city_service_id or ""),
+     }
+-    wanted = {item for item in wanted if item}
++    generic_wanted = {item for item in generic_wanted if item}
+     scheduled_start = str(policy.get("scheduled_start_at") or "")
+     boundary = "END" if str(policy.get("anchor_role") or "").upper() == "DEPARTURE" else "START"
+     candidates = session.scalars(
+         select(Activity).where(Activity.plan_version_id == journey.active_plan_version_id)
+     ).all()
++    strong_matches: list[Activity] = []
++    generic_matches: list[Activity] = []
+     for candidate in candidates:
+         metadata = json.loads(candidate.metadata_json or "{}")
+-        tokens = {
++        candidate_strong = {
++            str(metadata.get("semantic_node_key") or ""),
++            str(metadata.get("semantic_key") or ""),
++        }
++        candidate_strong = {item for item in candidate_strong if item}
++        candidate_generic = {
+             str(candidate.place_id or ""),
+             str(candidate.city_service_id or ""),
+-            str(metadata.get("semantic_key") or ""),
+-            str(metadata.get("semantic_node_key") or ""),
+         }
++        candidate_generic = {item for item in candidate_generic if item}
+         moment = candidate.end_at if boundary == "END" else candidate.start_at
+-        if wanted.intersection(tokens) and scheduled_start and moment:
+-            try:
+-                if datetime.fromisoformat(moment) == datetime.fromisoformat(scheduled_start):
+-                    commitment.activity_id = candidate.id
+-                    return
+-            except ValueError:
++        if not scheduled_start or not moment:
++            continue
++        try:
++            if datetime.fromisoformat(moment) != datetime.fromisoformat(scheduled_start):
+                 continue
++        except ValueError:
++            continue
++        if strong_wanted.intersection(candidate_strong):
++            strong_matches.append(candidate)
++            continue
++        # Generic place/service overlap is a compatibility fallback only when
++        # the candidate does not carry a conflicting stronger semantic identity.
++        if generic_wanted.intersection(candidate_generic) and not (
++            strong_wanted and candidate_strong
++        ):
++            generic_matches.append(candidate)
++
++    matches = strong_matches if strong_matches else generic_matches
++    if len(matches) == 1:
++        commitment.activity_id = matches[0].id
++        return
++    if len(matches) > 1:
++        raise CommerceConflict(
++            "captured booking remap is AMBIGUOUS on the active Journey plan"
++        )
+     raise CommerceConflict("captured booking cannot be attached to the active Journey plan")
+ 
+ 
+diff --git a/backend/app/concurrency_guards.py b/backend/app/concurrency_guards.py
+index 29e10ca..00c37c9 100644
+--- a/backend/app/concurrency_guards.py
++++ b/backend/app/concurrency_guards.py
+@@ -9,14 +9,15 @@ deployment must replace or supplement it with a database/advisory lock.
+ 
+ from __future__ import annotations
+ 
+-from collections import defaultdict
+ from contextlib import contextmanager
+ from threading import RLock
+ from typing import Iterator
++from weakref import WeakValueDictionary
+ 
+ 
++PROCESS_LOCAL_ONLY = True
+ _registry_guard = RLock()
+-_journey_locks: defaultdict[str, RLock] = defaultdict(RLock)
++_journey_locks: WeakValueDictionary[str, RLock] = WeakValueDictionary()
+ 
+ 
+ @contextmanager
+@@ -25,6 +26,9 @@ def journey_write_lock(journey_id: str) -> Iterator[None]:
+ 
+     key = str(journey_id)
+     with _registry_guard:
+-        lock = _journey_locks[key]
++        lock = _journey_locks.get(key)
++        if lock is None:
++            lock = RLock()
++            _journey_locks[key] = lock
+     with lock:
+         yield
+diff --git a/backend/tests/test_sol_v2_closeout.py b/backend/tests/test_sol_v2_closeout.py
+new file mode 100644
+index 0000000..4edcb8d
+--- /dev/null
++++ b/backend/tests/test_sol_v2_closeout.py
+@@ -0,0 +1,124 @@
++from __future__ import annotations
++
++import gc
++import json
++from types import SimpleNamespace
++
++import pytest
++
++from app import concurrency_guards
++from app.commerce.service_impl import CommerceConflict, _remap_commitment_to_active_plan
++from app.db.models import Activity, Journey
++
++
++START = "2026-10-09T10:00:00+08:00"
++
++
++class _Scalars:
++    def __init__(self, rows: list[object]) -> None:
++        self.rows = rows
++
++    def all(self) -> list[object]:
++        return self.rows
++
++
++class _Session:
++    def __init__(self, journey: object, current: object, candidates: list[object]) -> None:
++        self.journey = journey
++        self.current = current
++        self.candidates = candidates
++
++    def get(self, model: object, key: str) -> object | None:
++        if model is Journey and key == self.journey.id:
++            return self.journey
++        if model is Activity and key == self.current.id:
++            return self.current
++        return None
++
++    def scalars(self, _statement: object) -> _Scalars:
++        return _Scalars(self.candidates)
++
++
++def _activity(
++    activity_id: str,
++    plan_id: str,
++    *,
++    semantic: str | None,
++    place: str = "place-shared",
++    start: str = START,
++) -> object:
++    metadata = {"semantic_node_key": semantic} if semantic else {}
++    return SimpleNamespace(
++        id=activity_id,
++        plan_version_id=plan_id,
++        place_id=place,
++        city_service_id=None,
++        start_at=start,
++        end_at="2026-10-09T11:00:00+08:00",
++        metadata_json=json.dumps(metadata),
++    )
++
++
++def _fixture(candidates: list[object]) -> tuple[_Session, object]:
++    journey = SimpleNamespace(id="journey", active_plan_version_id="active")
++    current = _activity("old", "superseded", semantic="node:cruise")
++    commitment = SimpleNamespace(
++        journey_id=journey.id,
++        activity_id=current.id,
++        policy_json=json.dumps(
++            {"semantic_node_key": "node:cruise", "scheduled_start_at": START}
++        ),
++    )
++    return _Session(journey, current, candidates), commitment
++
++
++def test_unique_exact_semantic_identity_remaps_to_current_active_plan() -> None:
++    candidate = _activity("new", "active", semantic="node:cruise")
++    session, commitment = _fixture([candidate])
++
++    _remap_commitment_to_active_plan(session, commitment)
++
++    assert commitment.activity_id == candidate.id
++    assert candidate.plan_version_id == session.journey.active_plan_version_id
++
++
++def test_no_equivalent_activity_fails_closed() -> None:
++    session, commitment = _fixture(
++        [_activity("different", "active", semantic="node:museum", place="other")]
++    )
++    with pytest.raises(CommerceConflict, match="cannot be attached"):
++        _remap_commitment_to_active_plan(session, commitment)
++    assert commitment.activity_id == "old"
++
++
++def test_same_place_and_time_but_different_semantics_do_not_remap() -> None:
++    session, commitment = _fixture(
++        [
++            _activity("museum", "active", semantic="node:museum"),
++            _activity("dinner", "active", semantic="node:dinner"),
++        ]
++    )
++    with pytest.raises(CommerceConflict, match="cannot be attached"):
++        _remap_commitment_to_active_plan(session, commitment)
++    assert commitment.activity_id == "old"
++
++
++def test_two_semantically_matching_candidates_fail_closed_as_ambiguous() -> None:
++    session, commitment = _fixture(
++        [
++            _activity("new-a", "active", semantic="node:cruise"),
++            _activity("new-b", "active", semantic="node:cruise"),
++        ]
++    )
++    with pytest.raises(CommerceConflict, match="AMBIGUOUS"):
++        _remap_commitment_to_active_plan(session, commitment)
++    assert commitment.activity_id == "old"
++
++
++def test_process_local_lock_registry_releases_unused_journey_keys() -> None:
++    assert concurrency_guards.PROCESS_LOCAL_ONLY is True
++    key = "closeout-ephemeral-journey"
++    with concurrency_guards.journey_write_lock(key):
++        assert key in concurrency_guards._journey_locks
++    gc.collect()
++    assert key not in concurrency_guards._journey_locks
+diff --git a/frontend/e2e/extreme-live-projection.spec.ts b/frontend/e2e/extreme-live-projection.spec.ts
+index 4f8a972..bc98e3d 100644
+--- a/frontend/e2e/extreme-live-projection.spec.ts
++++ b/frontend/e2e/extreme-live-projection.spec.ts
+@@ -2,23 +2,27 @@ import { expect, test, type Page } from "@playwright/test";
+ 
+ const JID = "extreme-projection";
+ 
+-function activity(id: string, title: string, sequence_no: number) {
+-  return { id, sequence_no, type: "visit", title, start_at: `2026-10-09T${9 + sequence_no}:00:00+08:00`, end_at: `2026-10-09T${10 + sequence_no}:00:00+08:00`, locked: false, protected: false, metadata: {} };
++function activity(id: string, title: string, sequence_no: number, status = "NOT_STARTED") {
++  return { id, sequence_no, type: "visit", title, start_at: `2026-10-09T${9 + sequence_no}:00:00+08:00`, end_at: `2026-10-09T${10 + sequence_no}:00:00+08:00`, status, locked: false, protected: false, metadata: {} };
+ }
+ 
+-async function open(page: Page, cursor: string | null) {
++async function open(page: Page, cursor: string | null, statuses = ["NOT_STARTED", "NOT_STARTED", "NOT_STARTED"], empty = false) {
+   await page.addInitScript(() => {
+     localStorage.setItem("citynexus.v8.journey_id", "extreme-projection");
+     localStorage.setItem("citynexus.locale", "en-US");
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     (navigator as any).serviceWorker.register = () => Promise.resolve({});
+   });
+-  const activities = [activity("a", "Alpha", 1), activity("b", "Bravo", 2), activity("c", "Charlie", 3)];
++  const activities = empty ? [] : [activity("a", "Alpha", 1, statuses[0]), activity("b", "Bravo", 2, statuses[1]), activity("c", "Charlie", 3, statuses[2])];
++  const legs = empty ? [] : [
++    { id: "leg-a", from_key: "a", to_key: "b", mode: "TRANSIT", duration_min: 71, provider_key: "fixture", provenance: "LIVE_CAPTURE", crs: "WGS84", geometry: { type: "Feature", geometry: { type: "LineString", coordinates: [] } } },
++    { id: "leg-b", from_key: "b", to_key: "c", mode: "WALK", duration_min: 72, provider_key: "fixture", provenance: "LIVE_CAPTURE", crs: "WGS84", geometry: { type: "Feature", geometry: { type: "LineString", coordinates: [] } } },
++  ];
+   const experience = {
+     journey: { id: JID, traveler_id: "t", title: "Projection", city_code: "CN-XIAMEN", timezone: "Asia/Shanghai", start_at: "2026-10-09T09:00:00+08:00", end_at: "2026-10-10T09:00:00+08:00", budget: { amount_minor: 100000, currency: "CNY" } },
+     trip: { arrival_anchor: {}, departure_anchor: {}, party_size: 1, occupancy: {}, stay_budget: { amount_minor: 0, currency: "CNY" }, baggage: { present: false, luggage_drop_required: false } },
+     offers: [], options: [], selected_option_id: null, mobility_facts: [],
+-    active_plan: { id: "p", version_no: 1, status: "ACTIVE", source: "EXTREME", current_activity_id: cursor, activities, legs: [], user_location: null, disruptions: [] },
++    active_plan: { id: "p", version_no: 1, status: "ACTIVE", source: "EXTREME", current_activity_id: cursor, activities, legs, user_location: null, disruptions: [] },
+     recovery: null, experience_flags: { needs_review: false, recovery_required: false, staleness: cursor === "stale", feasibility_failures: [] },
+   };
+   await page.route(/\/api\/v1\//, route => {
+@@ -37,25 +41,40 @@ async function open(page: Page, cursor: string | null) {
+ }
+ 
+ test("middle cursor drives Live Now and Next", async ({ page }) => {
+-  await open(page, "b");
++  await open(page, "b", ["COMPLETED", "ACTIVE", "NOT_STARTED"]);
+   await expect(page.getByTestId("live-journey-current")).toHaveText("Bravo");
+   await expect(page.locator("body")).toContainText("Charlie");
+ });
+ 
+ test("final cursor has no fabricated Next", async ({ page }) => {
+-  await open(page, "c");
++  await open(page, "c", ["COMPLETED", "COMPLETED", "ACTIVE"]);
+   await expect(page.getByTestId("live-journey-current")).toHaveText("Charlie");
+   await expect(page.getByText(/Alpha|Bravo/)).toHaveCount(0);
+ });
+ 
+-test("absent cursor permits pre-execution fallback", async ({ page }) => {
++test("null cursor with all pending selects the first non-terminal", async ({ page }) => {
+   await open(page, null);
+   await expect(page.getByTestId("live-journey-current")).toHaveText("Alpha");
+   await expect(page.getByText(/Bravo/).first()).toBeVisible();
+ });
+ 
++test("null cursor skips terminal activities like the backend", async ({ page }) => {
++  await open(page, null, ["COMPLETED", "ACTIVE", "NOT_STARTED"]);
++  await expect(page.getByTestId("live-journey-current")).toHaveText("Bravo");
++  await expect(page.locator("body")).toContainText("Charlie");
++  await expect(page.locator("body")).toContainText("72 min");
++});
++
+ test("present but unknown cursor fails closed", async ({ page }) => {
+   await open(page, "stale");
+   await expect(page.getByTestId("live-journey-current")).not.toHaveText(/Alpha|Bravo|Charlie/);
+   await expect(page.getByText(/Alpha|Bravo|Charlie/)).toHaveCount(0);
++  await expect(page.locator("body")).not.toContainText(/71 min|72 min/);
++});
++
++test("no activities produces no fabricated window", async ({ page }) => {
++  await open(page, null, [], true);
++  await expect(page.getByTestId("live-journey-current")).not.toHaveText(/Alpha|Bravo|Charlie/);
++  await expect(page.getByText(/Alpha|Bravo|Charlie/)).toHaveCount(0);
++  await expect(page.locator("body")).not.toContainText(/71 min|72 min/);
+ });
+diff --git a/frontend/src/app/V8Experience.tsx b/frontend/src/app/V8Experience.tsx
+index e7be59f..3451948 100644
+--- a/frontend/src/app/V8Experience.tsx
++++ b/frontend/src/app/V8Experience.tsx
+@@ -252,21 +252,24 @@ function nextActivityOf(plan: V8Data["active_plan"]) {
+ 
+ function liveActivityWindow(plan: V8Data["active_plan"]) {
+   if (!plan) return { now: null, next: null, nextLeg: null };
++  const terminalStatuses = new Set(["COMPLETED", "SKIPPED", "CANCELLED"]);
+   const cursor =
+     plan.current_activity_id == null
+-      ? 0
++      ? plan.activities.findIndex((item) => !terminalStatuses.has(item.status))
+       : plan.activities.findIndex((item) => item.id === plan.current_activity_id);
+   if (cursor < 0) {
+     // Present-but-unknown is stale/corrupt state.  Fail closed instead of
+-    // fabricating the first activity as Now.  A null cursor is handled above
+-    // as the explicitly permitted pre-execution fallback.
+-    return { now: null, next: null, nextLeg: null };
+-  }
+-  return {
+-    now: plan.activities[cursor] ?? null,
+-    next: plan.activities[cursor + 1] ?? null,
+-    nextLeg: plan.legs[cursor] ?? null,
+-  };
++      // fabricating the first activity as Now.  A null cursor uses the same
++      // first-non-terminal fallback as the backend projection.
++      return { now: null, next: null, nextLeg: null };
++    }
++    const current = plan.activities[cursor] ?? null;
++    const next = plan.activities.slice(cursor + 1).find((item) => !terminalStatuses.has(item.status)) ?? null;
++    return {
++      now: current && !terminalStatuses.has(current.status) ? current : null,
++      next,
++      nextLeg: plan.legs[cursor] ?? null,
++    };
+ }
+ 
+ export function V8Experience() {
+diff --git a/frontend/src/app/v8Types.ts b/frontend/src/app/v8Types.ts
+index a4ac933..10e0225 100644
+--- a/frontend/src/app/v8Types.ts
++++ b/frontend/src/app/v8Types.ts
+@@ -7,7 +7,7 @@ export type V8Data = {
+   options: Array<{ id: string; rank: number; status: string; score: number; stay: V8Data["offers"][number]; stay_total_minor: number; daily_travel_minor: number; mobility_total_minor: number; walking_min: number; protected_margin_min: number; arrival_fit: number; departure_fit: number; cancellation_score: number; days: Array<{ day: number; label: string; anchor: string; activities: string[]; mode: string }>; leg_modes: string[]; leg_mode_map: Array<{ from_key: string; to_key: string; mode: string; mobility_fact_id?: string }>; journey_impact: Record<string, any>; hard_constraints_passed: boolean; optimizer_kind: string; weather_state: string; materialized_plan_version_id?: string | null }>;
+   selected_option_id: string | null;
+   mobility_facts: Array<{ id?: string; mode: string; from_key: string; to_key: string; duration_min: number; cost_amount_minor: number | null; currency: string | null; cost_status: string; walking_min: number; transfers: number; weather_exposure: string; reliability_score: number; provider_key?: string; provenance?: string; crs?: string; geometry?: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>;
+-  active_plan: null | { id: string; version_no: number; status: string; source: string; mobility_snapshot_id?: string | null; mobility_evidence?: { snapshot_id?: string | null; expires_at?: string | null; aggregate_provenance?: string; replayable?: boolean }; current_activity_id: string | null; activities: Array<{ id: string; sequence_no: number; type: string; title: string; start_at: string; end_at: string; locked: boolean; protected: boolean; metadata: { latitude?: number; longitude?: number; crs?: string; role?: string } }>; legs: Array<{ id: string; from_key: string; to_key: string; mode: string; duration_min: number; provider_key: string; provenance: string; crs: string; geometry: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>; user_location: null | { latitude: number; longitude: number; accuracy_m: number; captured_at: string; source: string }; disruptions: Array<{ id: string; type: string; severity: string; status?: string; affected_activity_id: string | null; occurred_at: string; resolved_at?: string | null }> };
++  active_plan: null | { id: string; version_no: number; status: string; source: string; mobility_snapshot_id?: string | null; mobility_evidence?: { snapshot_id?: string | null; expires_at?: string | null; aggregate_provenance?: string; replayable?: boolean }; current_activity_id: string | null; activities: Array<{ id: string; sequence_no: number; type: string; title: string; start_at: string; end_at: string; status: string; locked: boolean; protected: boolean; metadata: { latitude?: number; longitude?: number; crs?: string; role?: string } }>; legs: Array<{ id: string; from_key: string; to_key: string; mode: string; duration_min: number; provider_key: string; provenance: string; crs: string; geometry: { type: "Feature"; properties?: Record<string, unknown>; geometry: { type: "LineString"; coordinates: number[][] } } }>; user_location: null | { latitude: number; longitude: number; accuracy_m: number; captured_at: string; source: string }; disruptions: Array<{ id: string; type: string; severity: string; status?: string; affected_activity_id: string | null; occurred_at: string; resolved_at?: string | null }> };
+   traveler_twin?: { explicit_dimensions: string[]; learned_soft_dimensions: string[]; authority: string; explicit_capabilities?: TravelerCapability[]; capability_summary?: Record<string, unknown> };
+   provider_mesh?: Record<string, any>;
+   recovery?: RecoveryState | null;
+-- 
+2.45.1.windows.1
+

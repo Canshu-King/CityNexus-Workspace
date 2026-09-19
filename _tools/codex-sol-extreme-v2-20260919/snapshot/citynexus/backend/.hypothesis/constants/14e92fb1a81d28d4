@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\geometry\__init__.py
+# hypothesis_version: 6.168.0
+
+['CAP_STYLE', 'GeometryCollection', 'JOIN_STYLE', 'LineString', 'LinearRing', 'MultiLineString', 'MultiPoint', 'MultiPolygon', 'Point', 'Polygon', 'box', 'mapping', 'shape']

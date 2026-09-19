@@ -1,0 +1,9 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "seed": 101,
+  "attempts": 25,
+  "topologyPasses": 0,
+  "best": {},
+  "authoritativeCandidateModified": false
+}

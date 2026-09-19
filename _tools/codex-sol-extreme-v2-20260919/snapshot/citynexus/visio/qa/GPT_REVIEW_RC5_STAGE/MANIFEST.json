@@ -1,0 +1,137 @@
+[
+  {
+    "path": "CityNexus_Visio_Model_Baseline_v1.0.4_RC5.vsdx",
+    "sha256": "B2F2A42D9FDE2BFB0256FB4401FDDD62D40F3C92903782F493A3270848564909",
+    "bytes": 99641
+  },
+  {
+    "path": "phase1-render-report-v1.0.4-RC5.json",
+    "sha256": "0F026829F9EED9C54F2D3F550310779C12E29E00093953656366E96D86FCF5F3",
+    "bytes": 4805
+  },
+  {
+    "path": "phase1-rc5\\00_Style_Guide_v1.0.4-RC5.png",
+    "sha256": "E2718E02A5D9C77B578C1C771433D55FC68B729A50860C3CD07233538A39CB9F",
+    "bytes": 123896
+  },
+  {
+    "path": "phase1-rc5\\00_Style_Guide_v1.0.4-RC5.svg",
+    "sha256": "36646E09D7220CB95024FF3085874DD0805F897E709EC695F908E44E2B0B331C",
+    "bytes": 44526
+  },
+  {
+    "path": "phase1-rc5\\P1_Domain_Overview_v1.0.4-RC5.png",
+    "sha256": "9BB141C303CC0E088F3308E19DEE944EF7DBE12007C67C3A21526569305B0D3C",
+    "bytes": 205696
+  },
+  {
+    "path": "phase1-rc5\\P1_Domain_Overview_v1.0.4-RC5.svg",
+    "sha256": "1638B8BF366C036BCE435E97751D434DCD7B562CD4E312D79550431B35A6AB9F",
+    "bytes": 149743
+  },
+  {
+    "path": "phase1-rc5\\P1_UC_Overview_v1.0.4-RC5.png",
+    "sha256": "0CE2F7346C30EB22DBC986A836A77064E467E0084AF9F46A0FF7B8A3F1117F85",
+    "bytes": 415121
+  },
+  {
+    "path": "phase1-rc5\\P1_UC_Overview_v1.0.4-RC5.svg",
+    "sha256": "4ECEC81D44998290E1B73B6030098228CF402B1AA0DBDEB2899CE123996163A9",
+    "bytes": 74330
+  },
+  {
+    "path": "visio-renderer\\apply_font_rc4.py",
+    "sha256": "8D10B03FA149F69EF01EDC94DC0DC02F52F244D4C0B048187E02C708A90089A6",
+    "bytes": 522
+  },
+  {
+    "path": "visio-renderer\\apply_palette_rc4.py",
+    "sha256": "63C36D9211C64E0F0199A539EDB36AD291A914223C5FD12CAE9F692333765B9A",
+    "bytes": 967
+  },
+  {
+    "path": "visio-renderer\\build_phase1.py",
+    "sha256": "E55165B7EEDB3A38A82928C68971AEBDC6651A6265D6B7452BEC50AFAC7B2D65",
+    "bytes": 663
+  },
+  {
+    "path": "visio-renderer\\class_adapter.py",
+    "sha256": "11A8D10EA2B7AC656C68CEF4B1B423DA21874F18111A66AB8938008B1401D9C9",
+    "bytes": 589
+  },
+  {
+    "path": "visio-renderer\\export_phase1_rc4.py",
+    "sha256": "991E0BF23022340FABD04F49DE759CBCB785D4F5E305F02D94C78543EE774164",
+    "bytes": 514
+  },
+  {
+    "path": "visio-renderer\\export_rc5.py",
+    "sha256": "779D82CA9C0BAE131C24B201C594FE545583D8B43CEC9B7543199BE970DC0421",
+    "bytes": 576
+  },
+  {
+    "path": "visio-renderer\\generate_rc5_report.py",
+    "sha256": "C5F99F6EF48C3249CB7250A75D8C545CB303AC8C345B66BE740A7A42036010F8",
+    "bytes": 1542
+  },
+  {
+    "path": "visio-renderer\\master_calibration.py",
+    "sha256": "CDE44E8C0CC5C4B787231EBFD48DDC94C41BFE3B6ED0D65A1BEB7CDB2B14D959",
+    "bytes": 1812
+  },
+  {
+    "path": "visio-renderer\\native-master-map.json",
+    "sha256": "16FB8311A07E54EF751B691CD9D7F5793FAE6BB39F07CB9D9D453F5C7ED0E85D",
+    "bytes": 47553
+  },
+  {
+    "path": "visio-renderer\\phase1-routing.yaml",
+    "sha256": "AE19F796063C77E08D47B97C24429F61210A411E66BBB17A7E59DA3662260556",
+    "bytes": 64
+  },
+  {
+    "path": "visio-renderer\\presentation.py",
+    "sha256": "11503F7870F72E5B11730B567D1AA20ED985C766C3DD6CFAF8C9FF5A580EBA61",
+    "bytes": 155
+  },
+  {
+    "path": "visio-renderer\\README.md",
+    "sha256": "5069458128FE1514DDAC8829469C7464722A93AA41B1CE0462DE08BEF15BA927",
+    "bytes": 565
+  },
+  {
+    "path": "visio-renderer\\render_core.py",
+    "sha256": "E99C3213735AFCC95284E5D82D26A63926C80D8F230902E1D6EEDFA453F59408",
+    "bytes": 317
+  },
+  {
+    "path": "visio-renderer\\render_phase1.py",
+    "sha256": "82830FD799E7E8D801D32361046C20530B237642B76BA52CFEBFAC5E1FDBA028",
+    "bytes": 5518
+  },
+  {
+    "path": "visio-renderer\\render-config.yaml",
+    "sha256": "4FC506FE26AE3219250871694DA8FFB590450D2421532958A9FAC6F3A2C80A11",
+    "bytes": 176
+  },
+  {
+    "path": "visio-renderer\\routing.py",
+    "sha256": "0A8171F07E2AC9E73D74A66B14D01450676899A5AAC9F6DCA33023E47A9884AD",
+    "bytes": 209
+  },
+  {
+    "path": "visio-renderer\\style_adapter.py",
+    "sha256": "01FD7BDCF499DE77AD0A907BC22D45B133D91ABE4201700BEF7C3E3A271F19D0",
+    "bytes": 846
+  },
+  {
+    "path": "visio-renderer\\validate_rendered_svg.py",
+    "sha256": "6AF29D380E98A3203034CA8DFE0B06F8FCD23470C2C333D14AF18A71F2C1306F",
+    "bytes": 657
+  },
+  {
+    "path": "visio-renderer\\validate_rendered_vsdx.py",
+    "sha256": "5B319BFB1441151674C91CDDB21AA98201096A45A792666ACCB2295AEDF95E68",
+    "bytes": 1769
+  }
+]

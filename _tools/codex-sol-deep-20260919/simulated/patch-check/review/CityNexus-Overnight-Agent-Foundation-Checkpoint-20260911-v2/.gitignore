@@ -1,0 +1,27 @@
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+**/.pytest_cache/
+*.pyc
+**/tmp/
+**/temp/
+**/*.tmp
+**/*.part
+
+# CityNexus MVP implementation outputs
+.env
+*.db
+*.sqlite
+ruff_cache/
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+_implementation_blueprint_v0.1/
+*.egg-info/
+review/_checkpoint_clean_*/
+review/_checkpoint_repair_clean_*/
+review/_checkpoint_pre_wp04_repair_clean_*/

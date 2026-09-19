@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\sql\annotation.py
+# hypothesis_version: 6.168.0
+
+['Annotated%s', 'SupportsAnnotations', '_SA', '_annotations', '_generate_cache_key', '_traverse_internals', 'detect_subquery_cols', 'entity_namespace', 'inherit_cache', 'proxy_set']

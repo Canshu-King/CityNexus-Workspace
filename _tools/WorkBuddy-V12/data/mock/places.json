@@ -1,0 +1,87 @@
+[
+  {
+    "id": "place-001",
+    "provider_key": "mock-city",
+    "external_id": "poi-001",
+    "city_code": "TJ",
+    "name": "Tianjin Eye",
+    "category": "attraction",
+    "location": {
+      "latitude": 39.1289,
+      "longitude": 117.2154
+    },
+    "open": "09:00",
+    "close": "21:00",
+    "tags": ["landmark", "photo"],
+    "duration_min": 60,
+    "cost_minor": 0
+  },
+  {
+    "id": "place-002",
+    "provider_key": "mock-city",
+    "external_id": "poi-002",
+    "city_code": "TJ",
+    "name": "Ancient Culture Street",
+    "category": "attraction",
+    "location": {
+      "latitude": 39.1276,
+      "longitude": 117.1234
+    },
+    "open": "00:00",
+    "close": "23:59",
+    "tags": ["culture", "shopping"],
+    "duration_min": 120,
+    "cost_minor": 0
+  },
+  {
+    "id": "place-river-cruise",
+    "provider_key": "mock-city",
+    "external_id": "poi-river-cruise",
+    "city_code": "CNX-DEMO",
+    "name": "River Cruise Pier",
+    "category": "attraction",
+    "location": {
+      "latitude": 39.1300,
+      "longitude": 117.2000
+    },
+    "open": "10:00",
+    "close": "18:00",
+    "tags": ["water", "scenic"],
+    "duration_min": 90,
+    "cost_minor": 15000
+  },
+  {
+    "id": "place-food-hall",
+    "provider_key": "mock-city",
+    "external_id": "poi-food-hall",
+    "city_code": "CNX-DEMO",
+    "name": "Demo City Food Hall",
+    "category": "restaurant",
+    "location": {
+      "latitude": 39.1250,
+      "longitude": 117.2100
+    },
+    "open": "11:00",
+    "close": "21:00",
+    "tags": ["food", "local"],
+    "duration_min": 60,
+    "cost_minor": 8000
+  },
+  {
+    "id": "place-tech-art",
+    "provider_key": "mock-city",
+    "external_id": "poi-tech-art",
+    "city_code": "CNX-DEMO",
+    "name": "Tech Art Museum",
+    "category": "attraction",
+    "location": {
+      "latitude": 39.1350,
+      "longitude": 117.2200
+    },
+    "open": "10:00",
+    "close": "19:00",
+    "tags": ["art", "tech", "interactive"],
+    "duration_min": 120,
+    "cost_minor": 12000
+  }
+]

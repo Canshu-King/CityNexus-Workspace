@@ -1,0 +1,18 @@
+721fa35 feat(frontend): Live A+ gates — dark L1/L2, map height by state, first screen (GPT pass-5 Phase 4)
+dc806da refactor(frontend): Live A+ state-prioritised DOM order (GPT pass-5)
+2ebe9f7 test(frontend): Live accepted-transition order gate (GPT pass-5 Phase 3)
+01dc5ef feat(frontend): Live Current->Map->Disruption->Replan order + structure gate (GPT pass-5)
+7c50c19 test(frontend): Live state-coverage matrix, Phase 1 (GPT A-controlled precondition)
+45706e9 feat(frontend): single-focus Today Now/Next Hero + acceptance gate (GPT pass-3)
+fb27990 feat(frontend): Today hero reads as a single Now/Next moment (presentation-only)
+0041b6a test(frontend): focus-ring tier completes GPT's dark gate (focus FAIL)
+82d879d feat(frontend): tier-2 semantic dark gate (control boundary / state indicator)
+9b0330d feat(frontend): attention band "无事就闭嘴" three-state footprint (GPT micro-ruling)
+89d420e feat(frontend): Live replan accept motion (presentation-only) + replan dark pass
+6957818 feat(frontend): Today structural refinement + mobile-overflow gate (invariant-preserving)
+9180ab2 feat(frontend): durable dark-mode audit gate + controlled Today/Live convergence
+e8cc26f feat(frontend): extend bounded dark pass to LIVE surfaces + classless buttons (dark sweep 11->0 light surfaces)
+f6d5759 feat(frontend): bounded dark-mode pass driven by getComputedStyle diagnostic
+d5f9ebf feat(frontend): Apple-inspired design-token + motion layer (Today/Live pass 1)
+e64544e fix(frontend): restore React typechecking and clear the 6 real type errors
+ac436e0 chore(frontend): clear pre-existing app-wide TypeScript errors (parallel track, NOT v6)

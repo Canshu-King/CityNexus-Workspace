@@ -1,0 +1,1466 @@
+diff --git a/INTEGRATION_REPORT.md b/INTEGRATION_REPORT.md
+index 5378de6..fb24439 100644
+--- a/INTEGRATION_REPORT.md
++++ b/INTEGRATION_REPORT.md
+@@ -911,3 +911,138 @@ River Cruise 仍在，且 `scanRequests == 0`（测试自己没去要决策，
+    还是记为已知限制？它影响任何"同一地点仍被保护"的当前表面证明。
+ 4. 四条 port-first 已清三条，剩 D。`INTEGRATION_CANDIDATE_READY_FOR_MAIN` 的签发条件现在是否可以
+    定义为"authoritative current-product 0 unexpected + D 有 owner"，还是另有条件？
++
++---
++
++# pass-16（回应 §51 请判 1/2/3）：身份契约、真承诺、预防的表面主人
++
++## 52. C `place_id`：先诊断到层，再修那一层
++
++§51.3 那个"`/experience` 里 place_id 为 null"的问题判为契约缺陷并修掉。诊断是一次测量，
++不是猜测：同一次运行里，canonical 子计划 `GET /api/v1/plans/{id}` 报 6/6 活动带 place_id，
++同一个计划经 `GET /journeys/{id}/experience` 报 0/6。
++所以身份没有丢在 solver 或 accept 里，是丢在**投影层**。
++
++修在 `backend/app/stay_mobility.py::_active_plan_payload`：把 `place_id` 和 `city_service_id`
++放进活动投影。回归不是"字段存在"这种断言，而是整条链
++（generate → select → start → closure → request_replan → accept）跑完后比较两个投影的
++place_id 集合，`backend/tests/test_qoder_activity_identity_contract.py`，2 passed。
++第二条测试防的是反向偷懒：替代活动也必须带真 place_id，不能靠 null 蒙过比较。
++
++前端四条 spec 里所有 `/river cruise/i` 之类的标题匹配全部换成 place_id + protected。
++标题可翻译、可改名，不是键。
++
++## 53. A/B 承诺：fixture 里原本没有可保护的东西
++
++写 §48 时我用了 `locked_commitments_preserved`。测量结果说明那三个案例都是空转：
++demo 计划上的游船活动是 `locked: true` 而 `protected: false`——`protected` 由 ACTIVE
++Commitment 行推导，必须有 booking 且付款已 CAPTURE。也就是说"受保护承诺被保住了"
++在一个根本没有受保护承诺的 fixture 上恒真。
++
++现在三条（golden / envelope / zero-touch）加上预防案例，都通过公开端点先建真承诺：
++`POST /bookings` → `POST /transactions` CAPTURE（带 `Idempotency-Key`），
++而且必须在 `/start` 之前——行程中预订活动会被 422 拒绝（这也是测出来的）。
++共享 helper `protectCommitment()` 放在 `frontend/e2e/_qoderFreshJourney.ts`，
++它建完会回读 `/experience`，若 `protected` 没落地就抛错——四个各写一份、
++各自漂移成"大概受保护"正是仲裁要我避免的事。
++
++## 54. 一条我没能证明的主张，如实撤回
++
++预防案例里我加了"预防后的计划必须含 `real-place-*` 活动"，想证明预防 grounded 在真实城市。
++**跑出来是假的**：`place-tech-art → place-city-park`，六个活动仍是 demo 命名空间。
++原因也是查出来的：pytest 版 `test_v6_predictive_real_city.py` 之所以有 real-place，
++是因为它用 `seed_explicit_mobility` 把特定 leg 声明成显式 replay 事实，改变了 solver
++认为可负担的替代集；不带那层种子的真实 mobility 下，预防买到的是时间余量而不是换点。
++在这里硬断言就是在测 fixture，不是测产品。所以删掉该断言，改成两条可证的：
++`/provider-mesh` 必须含 `openstreetmap-replay` 的真城市候选，
++以及把 recomposition 前后 (place_id, start_at) 指纹打进运行日志。
++`v13-5-fully-grounded` 才是"真地点被选进计划"的所有者，这条不抢它的活。
++
++## 55. D/E 预防的表面主人（§51.1、§51.2 的处置）
++
++新增 `frontend/src/features/recovery/V14PreventivePanel.tsx`，挂在 `/v8/authoritative`
++的反应式恢复面板之上。它读的是 `GuardianRun` 本身而不是计划 diff，这样就不可能把
++reactive recovery 换个标签冒充 prevention：TRIGGER 行是 run 的 `trigger_kind`，
++TIMING 行是 `evidence.observation.forecast_before_hard_failure`，FORECAST 行是 run
++据以行动的那张快照，PLAN 行带 before/after 两个计划 id 的 data 属性，
++并显式写明"反应式结果由下面的面板负责"。
++
++§49 承认的那个可被无关文案骗过的文本哨兵已删除，换成按 testid + `data-run-id === run.id`
++的结构化断言。案例同时要求：跑动前无 CLOSURE/CRITICAL、真实 forecast payload 的
++`components.forecast_risk === 88`、`solver.kind === ORTOOLS_CP_SAT_V2`、承诺按身份仍在且
++仍 protected、`scanRequests === 0`。
++
++两个只有真跑才暴露的事实：
++1. 韧性**总分饱和**——提交 forecast 88 渲染成 `risk 100`，所以面板和测试都看
++   `forecast_risk` 分量，不看总分；
++2. `GuardianRun` 行先以 `status=RUNNING / action_status=PLANNING` 落库，重排完才变 EXECUTED。
++   只 poll"行出现"就会读到半成品并按 PLANNING 失败——补了一条按同一 run id 等终态的
++   poll，两条失败信息各自准确（从未出现 vs 出现但没完成）。
++3. 面板发现 run 后停止轮询：run 是持久证据，继续 3 秒一次只是和 autopilot 的写抢 SQLite。
++
++## 56. 归档套件的一个真实不确定性（新发现，非门禁）
++
++legacy 套件带 host `DEEPSEEK_API_KEY` 跑：3 passed / 1 failed，
++`Proactive Guardian …` 得到 `action_status=MODEL_NO_MUTATION`。
++同一棵树关掉 AI 开关跑：4 passed / 21.2s。
++所以那一条依赖外部模型回合，不是本轮改动引入。归档套件不签门禁，
++但它的数字以后必须连着 AI 开关状态一起报——已写进 `docs/LEGACY_E2E_MIGRATION.md`。
++
++## 57. 文档与事实对齐
++
++`docs/E2E_ACCEPTANCE_POLICY.md` 的 "Known-red by design" 列着四条现在已绿的案例，
++`docs/LEGACY_E2E_MIGRATION.md` 结尾还说它们"still red, deliberately"。两处按现状改写，
++并保留原则（红测试命名缺口 > 绿测试掩盖缺口）与将来留红时的写法要求。
++
++## 58. 证据卫生：一张"通过却空白"的截图（本轮自查发现）
++
++第一次 authoritative 全量跑（`p16full1`，tree `6311382`）是 45/0，但我按惯例去比对
++门禁重截的 PNG 时，`reports/product-v13.5/fully-grounded-discovery.png` 从 133910 字节
++掉到 91550 字节。看图：页面只剩发现表单，结果卡片整块不见。
++而这条 spec 是 **passed** 的——`v13-discovery-result`、`FULLY GROUNDED`、`valhalla`、
++`SELECTED` 全部断言过。
++
++原因不是功能退化，是**截图时机**：结果卡片淡入，而 `toBeVisible()` 在 opacity 0 就已经为真。
++上一轮恰好截在半透明（图上能看见卡片但发灰），这一轮截在淡入之前（完全空白）。
++一张在过渡中拍的图不是"已稳定表面"的证据——这正是 §29 那次 fullPage 假证据的同类错误，
++只是这次藏在通过状态里。
++
++修法（`1d922ef`）：截图前等该子树的动画进入终态，作用域限定在结果卡片，
++因为应用别处有无限循环的 pulse 点，文档级等待永远不收敛。修完这张图 178816 字节，
++内容比历史上任何一版都完整（候选列表含 `天津文化中心 · Eligible · openstreetmap-replay`、
++证据面板、`FULLY GROUNDED`、`SELECTED`）。
++
++其余 8 张 PNG 我做了像素级 diff 而不是只看字节：
++`mobility-sheet-desktop` 37.6% 变化但内容同构（同一模态、同一横幅、同一五种模式数据），
++差异是 fullPage 画布上模态的垂直锚点 + 时间戳 + 地图节点位置；
++其余在 0.02%–3.8%，为地图瓦片与动态时间文本。没有一张变成空白。
++
++## 59. 门禁数字（同一次 authoritative 运行 `p16full2`，tree `1d922ef`）
++
++| 门禁 | 结果 |
++|---|---|
++| authoritative 当前产品套件 | **45 expected / 0 unexpected / 0 flaky / 0 skipped**（123.8s） |
++| 为什么不是 §58 那次 | `p16full1` 也是 45/0，但它产出的截图证据不合格；修 v13-5 的截图时机改变了树，所以整套重跑并只引用这一次 |
++| 与 §50 的 44/1 之差 | D 从红转绿：不是删断言，是补了表面主人；总数 45 不变 |
++| `qoder-*`（视觉/对比/几何/无障碍预算） | 31 results / 0 failed（对比 4、dock 几何 3、live 结构 9、移动溢出 1、today hero 2、ack 7、budget 5） |
++| SQLite 争用告警 | 0 次 |
++| `typecheck` / `typecheck:all` / `vite build` | 全部干净（build 4.70s） |
++| 后端套件（同环境，单跑） | 836 passed / 15 skipped / 0 failed（56.7s；比 §50 多 2 条 = 身份契约回归） |
++| legacy 非门禁套件 | AI 关闭 4 passed（21.2s）；继承 host `DEEPSEEK_API_KEY` 时 3 passed / 1 failed（§56） |
++
++## 60. 请判
++
++1. §54 那条撤回是否接受：预防在真实 mobility 下买到时间余量而非换点，
++   "真地点进入计划"的所有者仍是 v13-5。若你认为预防本身就必须引入 real-place，
++   那是产品语义要求，需要另开的实现线而不是测试里断言。
++2. §55 的 `V14PreventivePanel` 是我按 §51.1 批准边界做的最小承接（读 run、不改语义、
++   不复活旧控件）。是否接受为 D 的关闭，还是要它同时出现在 `/v8/live`？
++3. §53 之后 `locked_commitments_preserved` 这个 proposal 级 flag 仍被 envelope/zero-touch
++   两条读着（我已在其后加身份断言）。要不要把它降级为信息字段、以 plan 身份为准？
++4. 四条 port-first 全绿、0 unexpected、0 flaky。§51.4 提的签发条件
++   （authoritative 0 unexpected + D 有 owner）现已同时满足，是否签发
++   `INTEGRATION_CANDIDATE_READY_FOR_MAIN`，还是仍有 RC 项（OSM fallback、live-AI 韧性）挡在前面？
++5. §58 那个截图时机缺陷我只修了暴露出来的这一张（v13-5）。另 8 张我做了像素 diff 确认
++   内容未退化，但它们的 spec 里没有同样的"等动画终态"步骤。是否要求我把 settled 等待
++   推广成截图门的通用前置，还是留在"发现即修"的粒度（我倾向通用前置，但那属于宽泛
++   视觉工作线，pass-14 之后你两次让我不要重开）。
+diff --git a/backend/app/stay_mobility.py b/backend/app/stay_mobility.py
+index 40279ad..83e8146 100644
+--- a/backend/app/stay_mobility.py
++++ b/backend/app/stay_mobility.py
+@@ -1489,6 +1489,16 @@ def _active_plan_payload(session: Session, journey: Journey) -> dict[str, Any] |
+                 "sequence_no": item.sequence_no,
+                 "type": item.activity_type,
+                 "title": item.title,
++                # Stable identity.  The canonical plan projection
++                # (GET /api/v1/plans/{id}) has always carried these, and a
++                # consumer of /experience has the same right to know *which
++                # place* an activity is.  Without them the only handle left is
++                # the title, which is localisable, renameable, and not a key —
++                # so "is the protected commitment still here?" silently becomes
++                # a string match.  Fix at this layer: the child PlanVersion
++                # created by an accepted replan keeps place_id intact.
++                "place_id": item.place_id,
++                "city_service_id": item.city_service_id,
+                 "start_at": item.start_at,
+                 "end_at": item.end_at,
+                 "locked": bool(item.locked),
+diff --git a/backend/tests/test_qoder_activity_identity_contract.py b/backend/tests/test_qoder_activity_identity_contract.py
+new file mode 100644
+index 0000000..fdae95d
+--- /dev/null
++++ b/backend/tests/test_qoder_activity_identity_contract.py
+@@ -0,0 +1,196 @@
++"""Activity identity contract across a replan (pass-16 C).
++
++Measured in the field, not theorised: pass-15 found that after an accepted
++recovery, `GET /api/v1/journeys/{id}/experience` reported `place_id: null` for
++**every** activity while `GET /api/v1/plans/{id}` for the very same child plan
++version still had all six.  The identity was not lost when the child plan was
++created — it was dropped by the consumer projection, which left the phone with
++titles as its only handle.  A title is localisable, renameable, can collide, and
++is not a key, so "is the protected commitment still here?" silently degraded into
++a string match.
++
++Contract this pins:
++
++* every projected activity exposes a stable `place_id`;
++* an activity the recovery did not touch keeps the *same* `place_id` it had on the
++  plan the traveller selected;
++* a replacement activity is not left anonymous — it exposes its real `place_id`;
++* the canonical plan projection and the /experience projection agree, because they
++  describe the same rows.
++
++Fixing this in the frontend by looking a title up in a place table is explicitly
++not acceptable, and this test is the reason: it compares the two server
++projections, so a client-side patch would leave it red.
++"""
++
++from __future__ import annotations
++
++from fastapi.testclient import TestClient
++
++from app.main import app
++
++client = TestClient(app)
++
++
++def _activities(payload: dict) -> list[dict]:
++    return payload.get("activities") or []
++
++
++def _by_place(activities: list[dict]) -> dict[str, str]:
++    return {a["id"]: a.get("place_id") for a in activities}
++
++
++def test_experience_and_canonical_plan_agree_on_activity_identity() -> None:
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++
++    plans = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()
++    assert plans, "the deterministic generator produced no plan"
++    selected = plans[0]
++    assert client.post(
++        f"/api/v1/journeys/{journey_id}/plans/{selected['id']}/select"
++    ).status_code == 200
++    assert client.post(f"/api/v1/journeys/{journey_id}/start").status_code == 200
++
++    selected_by_place = {a["place_id"]: a["id"] for a in _activities(selected)}
++    assert "place-river-cruise" in selected_by_place, "the fixture lost its protected place"
++    closed_activity_id = selected_by_place["place-tech-art"]
++
++    event = client.post(
++        f"/api/v1/journeys/{journey_id}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": closed_activity_id,
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "identity contract regression"},
++        },
++    )
++    assert event.status_code == 201, event.text
++    event_id = event.json()["id"]
++
++    requested = client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"identity-{event_id}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event_id,
++            "candidate_count": 3,
++        },
++    )
++    assert requested.status_code == 200, requested.text
++
++    proposals = client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++    presented = [
++        item
++        for item in proposals
++        if item.get("trigger_event_id") == event_id and item.get("status") == "PRESENTED"
++    ]
++    assert presented, "the closure produced no proposal to accept"
++    proposal = presented[0]
++
++    accepted = client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"identity-accept-{proposal['id']}"},
++    )
++    assert accepted.status_code == 200, accepted.text
++
++    child_id = proposal["proposed_plan_version_id"]
++    canonical = client.get(f"/api/v1/plans/{child_id}").json()
++    experience = client.get(f"/api/v1/journeys/{journey_id}/experience").json()["active_plan"]
++
++    assert experience["id"] == child_id, "/experience is projecting a different plan"
++
++    canonical_activities = _activities(canonical)
++    experience_activities = _activities(experience)
++
++    # 1. nothing anonymous in either projection.
++    anonymous = [a["id"] for a in experience_activities if not a.get("place_id")]
++    assert not anonymous, (
++        "/experience dropped place_id for these activities, leaving titles as the only "
++        f"identity a consumer can match on: {anonymous}"
++    )
++    assert not [a["id"] for a in canonical_activities if not a.get("place_id")]
++
++    # 2. the two server views of the same rows agree.
++    assert _by_place(experience_activities) == _by_place(canonical_activities), (
++        "the canonical plan and the consumer projection disagree about which place an "
++        "activity is; one of them is lying to the phone"
++    )
++
++    # 3. an untouched place keeps its identity across the replan.  Matched by
++    #    place_id, not activity id: an accepted recovery writes a child
++    #    PlanVersion whose activity rows are new objects, which is exactly why
++    #    stable place identity is the contract and activity id is not.
++    canonical_places = {a["place_id"] for a in canonical_activities}
++    for place_id in selected_by_place:
++        if place_id == "place-tech-art":
++            continue  # this is the one the recovery is allowed to replace
++        assert place_id in canonical_places, (
++            f"{place_id} vanished from the accepted plan; it held "
++            f"{sorted(canonical_places)}"
++        )
++
++    # 4. the protected commitment is still identifiable by key, not by name.
++    cruise = [a for a in experience_activities if a.get("place_id") == "place-river-cruise"]
++    assert len(cruise) == 1, "the River Cruise commitment cannot be found by place_id"
++
++
++def test_replacement_activity_is_not_left_anonymous() -> None:
++    """The point of a recovery is a *different* place, so the new row must carry a
++    real identity too — otherwise the surface can only say "something was
++    substituted here"."""
++    journey_id = client.post("/api/v1/demo/reset").json()["journey_id"]
++    plans = client.post(
++        f"/api/v1/journeys/{journey_id}/plans/generate", json={"candidate_count": 1}
++    ).json()
++    selected = plans[0]
++    client.post(f"/api/v1/journeys/{journey_id}/plans/{selected['id']}/select")
++    client.post(f"/api/v1/journeys/{journey_id}/start")
++
++    original_ids = {a["id"] for a in _activities(selected)}
++    closed = next(a for a in _activities(selected) if a["place_id"] == "place-tech-art")
++
++    event = client.post(
++        f"/api/v1/journeys/{journey_id}/events",
++        json={
++            "event_type": "CLOSURE",
++            "severity": "MAJOR",
++            "affected_activity_id": closed["id"],
++            "occurred_at": "2026-10-10T13:25:00+08:00",
++            "payload": {"reason": "replacement identity"},
++        },
++    ).json()
++    client.post(
++        "/api/v1/agent/tools/request_replan",
++        json={
++            "request_id": f"replacement-{event['id']}",
++            "agent_id": "citynexus-local-agent",
++            "journey_id": journey_id,
++            "trigger_event_id": event["id"],
++            "candidate_count": 3,
++        },
++    )
++    proposals = client.get(f"/api/v1/journeys/{journey_id}/replans").json()
++    proposal = next(
++        item
++        for item in proposals
++        if item.get("trigger_event_id") == event["id"] and item.get("status") == "PRESENTED"
++    )
++    client.post(
++        f"/api/v1/replans/{proposal['id']}/accept",
++        headers={"Idempotency-Key": f"replacement-accept-{proposal['id']}"},
++    )
++
++    activities = _activities(
++        client.get(f"/api/v1/journeys/{journey_id}/experience").json()["active_plan"]
++    )
++    replacements = [a for a in activities if a["id"] not in original_ids]
++    assert replacements, "the accepted recovery introduced no new activity to check"
++    for item in replacements:
++        assert item.get("place_id"), (
++            f"the substituted activity {item['title']!r} has no place_id, so the surface "
++            "can only describe it by name"
++        )
+diff --git a/docs/E2E_ACCEPTANCE_POLICY.md b/docs/E2E_ACCEPTANCE_POLICY.md
+index f5686f0..6b3294e 100644
+--- a/docs/E2E_ACCEPTANCE_POLICY.md
++++ b/docs/E2E_ACCEPTANCE_POLICY.md
+@@ -83,14 +83,19 @@ authoritative: passing the flag there is reported and ignored.  Archiving means
+ default suite stops counting a test — moving it to another project that the default
+ run still executes would be a reorganisation, not a retirement.
+ 
+-## Known-red by design
+-
+-Four port-first legacy cases stay in the current suite and stay failing until
+-pass-15 replaces them with current-surface equivalents: `golden.spec.ts`,
+-`live-autopilot-v5.spec.ts`, `predictive-real-city-v6.spec.ts`, and
+-`product-hardening.spec.ts` (autonomous envelope-safe recovery).  They are not
+-skipped, and their capability mapping is in `docs/LEGACY_E2E_MIGRATION.md`.
+-A red test that names unfinished work is worth more than a green test that hides it.
++## Known-red by design (currently none)
++
++Pass-14 shipped with four deliberate reds: `golden.spec.ts`,
++`live-autopilot-v5.spec.ts`, `product-hardening.spec.ts` (autonomous envelope-safe
++recovery) and `predictive-real-city-v6.spec.ts`.  They were ported, not skipped and not
++deleted — pass-15 re-expressed three of them on the current V8 surface and pass-16 gave
++prevention a current owner — so the acceptance suite is now 45 expected / 0 unexpected.
++
++The principle stands and is the reason this section exists rather than being deleted
++with the reds: a red test that names unfinished work is worth more than a green test that
++hides it.  If a future pass leaves a case red, its failure message has to name the
++product gap it is standing for and the shortcut that would falsely green it (relabelling,
++narrowing the assertion, or moving the proof to a layer the user never sees).
+ 
+ ## Explicitly not required
+ 
+diff --git a/docs/LEGACY_E2E_MIGRATION.md b/docs/LEGACY_E2E_MIGRATION.md
+index fe01a18..562df11 100644
+--- a/docs/LEGACY_E2E_MIGRATION.md
++++ b/docs/LEGACY_E2E_MIGRATION.md
+@@ -94,9 +94,26 @@ Per-case record required by the ruling:
+ | Assisted acceptance is policy-driven; route/feed evidence survive reload | a replan under ASSISTED requires confirmation, the approval receipt is consumed exactly once, and route evidence is provider-backed | the legacy event simulator / accept button and `.maplibre-container` route layers are not part of V8's acknowledgement flow | `POST /agent/tools/request_replan`, `/accept_replan`, `POST /agent/approvals/{id}`, `GET /route-evidence` | covered **in the current surface**: `frontend/e2e/qoder-ack-rendered.spec.ts`, `qoder-ack-resolution.spec.ts`, `backend/tests/test_qoder_live_replans_endpoint.py` | same |
+ | Proactive Guardian launches the flagship recovery without a new chat prompt | a standing mission plus a scan can recover the flagship leg with CP-SAT V2 evidence, without the traveller asking | the Guardian console (`guardian-flagship-scan`, `guardian-decision`, `guardian-trace`) lives in the legacy tree | `PUT /guardian/mission`, `POST /guardian/scan`, solver `ORTOOLS_CP_SAT_V2` | `backend/tests/test_guardian_v4.py`, `test_guardian_model_evidence.py`, `test_v10_flagship_e2e.py` | same |
+ 
+-Still in the acceptance suite, still red, deliberately (pass-15's work list):
+-`golden.spec.ts` (reload persistence not yet handed over), `live-autopilot-v5.spec.ts`
+-(zero-touch UI trigger), `predictive-real-city-v6.spec.ts` (autonomous prevention), and
+-`product-hardening.spec.ts` → autonomous envelope-safe recovery through the Agent
+-Gateway.  These four guard capabilities CityNexus is still building, so the behaviour
+-check has to be re-expressed on the current surface before the legacy one is dropped.
++Those four Port-first verdicts were executed, not re-litigated: pass-15 re-expressed
++`golden.spec.ts`, `live-autopilot-v5.spec.ts` and the Agent-Gateway envelope case in
++`product-hardening.spec.ts` on the current V8 surface, and pass-16 gave
++`predictive-real-city-v6.spec.ts` a current owner (`V14PreventivePanel` on
++`/v8/authoritative`).  All four pass in the authoritative acceptance suite, which
++therefore has **no known-red case**; the table above is the historical judgement each
++was archived or ported under, kept as the record of why.
++
++What each one now asserts on the current surface, briefly: golden — accepted closure
++recovery is backend truth, survives reload, and the browser never held the plan;
++live-autopilot-v5 — the plan changes with no click or fill at all, and the audit feed
++names the actor as `AI_AGENT`; product-hardening — an AUTONOMOUS envelope executes the
++recovery and the panel shows the child version; predictive-real-city-v6 — a forecast
++alone produces `PREEMPTIVE_RECOVERY` before any hard failure, with the run's evidence
++rendered field by field.
++
++One measured caveat about the *archived* set: with a real `DEEPSEEK_API_KEY` present,
++the Proactive Guardian case is non-deterministic, because its flagship scan goes
++through the model and the model may return no mutation
++(`action_status = MODEL_NO_MUTATION`, where the assertion wants `EXECUTED`).  Measured
++on the same tree: 4 passed with the AI switch disabled, 3 passed / 1 failed with the
++host key inherited.  That suite is non-gating in any case, but its numbers must always
++be quoted together with the AI switch state.
+diff --git a/frontend/e2e/_qoderFreshJourney.ts b/frontend/e2e/_qoderFreshJourney.ts
+index 71fea76..589dd47 100644
+--- a/frontend/e2e/_qoderFreshJourney.ts
++++ b/frontend/e2e/_qoderFreshJourney.ts
+@@ -20,15 +20,20 @@ const API =
+   process.env.CITYNEXUS_API_BASE_URL ??
+   `http://127.0.0.1:${Number(process.env.CITYNEXUS_BACKEND_PORT ?? 8000)}`;
+ 
+-async function post(request: APIRequestContext, url: string, data?: unknown) {
+-  const res = await request.post(`${API}${url}`, { data });
++async function post<T = any>(
++  request: APIRequestContext,
++  url: string,
++  data?: unknown,
++  headers?: Record<string, string>,
++): Promise<T> {
++  const res = await request.post(`${API}${url}`, { data, headers });
+   if (!res.ok()) {
+     throw new Error(`${url} -> HTTP ${res.status()}: ${(await res.text()).slice(0, 180)}`);
+   }
+   return res.json();
+ }
+ 
+-async function get(request: APIRequestContext, url: string) {
++async function get<T = any>(request: APIRequestContext, url: string): Promise<T> {
+   const res = await request.get(`${API}${url}`);
+   if (!res.ok()) throw new Error(`${url} -> HTTP ${res.status()}`);
+   return res.json();
+@@ -82,3 +87,76 @@ export async function useJourney(page: import("@playwright/test").Page, journeyI
+     localStorage.setItem("citynexus.demo.journey_id", id);
+   }, journeyId);
+ }
++
++export type ProtectedCommitment = {
++  activityId: string;
++  placeId: string;
++  bookingId: string;
++  commitmentId: string | null;
++  amount: unknown;
++};
++
++/**
++ * Create a real protected commitment through the path a traveller would use.
++ *
++ * Measured, not assumed: on the demo plan the cruise activity is `locked: true`
++ * but `protected: false` until a booking exists and its payment is captured —
++ * `protected` is derived from ACTIVE Commitment rows.  So a spec that asserts
++ * "the protected commitment survived the recovery" without creating one is
++ * asserting on a fixture that has nothing to protect, and the flag it reads is
++ * true for the wrong reason.
++ *
++ * Must run before `/start`: booking an activity on a journey that is already
++ * travelling is refused with 422.
++ */
++export async function protectCommitment(
++  request: APIRequestContext,
++  journeyId: string,
++  placeId = "place-river-cruise",
++): Promise<ProtectedCommitment> {
++  const experience = await get<{ active_plan?: { activities?: any[] } }>(
++    request,
++    `/api/v1/journeys/${journeyId}/experience`,
++  );
++  const activity = (experience.active_plan?.activities ?? []).find(
++    (item) => item.place_id === placeId,
++  );
++  if (!activity) {
++    throw new Error(`no activity for ${placeId} on journey ${journeyId} to protect`);
++  }
++
++  const booking = await post<{
++    id: string;
++    commitment_id?: string | null;
++    amount?: unknown;
++  }>(request, `/api/v1/journeys/${journeyId}/bookings`, { activity_id: activity.id });
++  await post(
++    request,
++    `/api/v1/journeys/${journeyId}/transactions`,
++    { booking_id: booking.id, transaction_type: "CAPTURE", amount: booking.amount },
++    { "Idempotency-Key": `protect-${booking.id}` },
++  );
++
++  /* Prove it landed before anything else leans on it. */
++  const after = await get<{ active_plan?: { activities?: any[] } }>(
++    request,
++    `/api/v1/journeys/${journeyId}/experience`,
++  );
++  const projected = (after.active_plan?.activities ?? []).find(
++    (item) => item.place_id === placeId,
++  );
++  if (!projected?.protected) {
++    throw new Error(
++      `booking ${booking.id} + CAPTURE did not make ${placeId} a protected commitment ` +
++        `(locked=${projected?.locked}, protected=${projected?.protected})`,
++    );
++  }
++
++  return {
++    activityId: activity.id,
++    placeId,
++    bookingId: booking.id,
++    commitmentId: booking.commitment_id ?? null,
++    amount: booking.amount,
++  };
++}
+diff --git a/frontend/e2e/golden.spec.ts b/frontend/e2e/golden.spec.ts
+index 799e324..07e32b4 100644
+--- a/frontend/e2e/golden.spec.ts
++++ b/frontend/e2e/golden.spec.ts
+@@ -1,4 +1,5 @@
+ import { expect, test } from "@playwright/test";
++import { protectCommitment } from "./_qoderFreshJourney";
+ 
+ /* golden — backend truth for a closure recovery, and the persistence half of it.
+  *
+@@ -71,6 +72,20 @@ test("an accepted closure recovery is backend truth on V8 Live and survives relo
+   );
+   expect(plans.length, "the demo plan generator produced nothing").toBeGreaterThan(0);
+   await api(`/api/v1/journeys/${journeyId}/plans/${plans[0].id}/select`, "POST");
++
++  const techArt = plans[0].activities.find((a) => a.place_id === "place-tech-art");
++  const cruise = plans[0].activities.find((a) => a.place_id === "place-river-cruise");
++  expect(techArt, "the plan has no Tech Art activity to close").toBeTruthy();
++  expect(cruise, "the plan has no River Cruise commitment to protect").toBeTruthy();
++
++  /* The commitment this recovery is not allowed to spend has to exist.  On the
++     demo plan the cruise is `locked: true` but `protected: false` until a booking
++     is created and its payment captured — `protected` is derived from ACTIVE
++     Commitment rows — so without this step the case would be asserting that
++     nothing was disturbed.  Booking is refused once the journey is travelling, so
++     it goes here, before /start, through the public endpoints. */
++  const commitment = await protectCommitment(request, journeyId, "place-river-cruise");
++
+   /* Selecting a plan only makes it the current draft; the recovery machinery
+      refuses a journey that is not travelling.  /start is the product's own
+      transition (the client calls it startJourney), so the fixture goes the way a
+@@ -81,11 +96,6 @@ test("an accepted closure recovery is backend truth on V8 Live and survives relo
+   );
+   expect(twinAfterStart.active_plan_version_id, "starting the journey produced no active plan").toBeTruthy();
+ 
+-  const techArt = plans[0].activities.find((a) => a.place_id === "place-tech-art");
+-  const cruise = plans[0].activities.find((a) => a.place_id === "place-river-cruise");
+-  expect(techArt, "the plan has no Tech Art activity to close").toBeTruthy();
+-  expect(cruise, "the plan has no River Cruise commitment to protect").toBeTruthy();
+-
+   const before = await api<{ active_plan: { id: string } }>(
+     `/api/v1/journeys/${journeyId}/experience`,
+   );
+@@ -183,32 +193,43 @@ test("an accepted closure recovery is backend truth on V8 Live and survives relo
+   await expect(page.getByTestId("live-handled")).toBeVisible();
+ 
+   const reloaded = await api<{
+-    active_plan: { id: string; activities?: { title?: string; place_id?: string | null }[] };
++    active_plan: {
++      id: string;
++      activities?: {
++        title?: string;
++        place_id?: string | null;
++        locked?: boolean;
++        protected?: boolean;
++      }[];
++    };
+   }>(`/api/v1/journeys/${journeyId}/experience`);
+   expect(reloaded.active_plan.id, "the accepted plan did not survive a reload")
+     .toBe(after.active_plan.id);
+ 
+-  /* 6. The commitment the recovery was not allowed to spend.
+-     Matched by title, not place id, because of what this run measured:
+-     /journeys/{id}/plans/generate populates activity.place_id, but the accepted
+-     plan served by /experience reports place_id as null for every activity.  The
+-     traveller-facing surface therefore cannot prove "the same place is still
+-     protected" from the experience payload — printed here so the gap is recorded
+-     rather than papered over by a looser assertion. */
++  /* 6. The commitment the recovery was not allowed to spend — compared by
++     identity, not wording.  `place_id` is the stable key and an accepted replan
++     mints new activity ids, so a title match could pass while the place changed
++     and fail while nothing did.  Pass-16 fixed the projection that made this
++     impossible: /experience used to report place_id as null on the accepted plan,
++     which pushed consumers onto titles; GET /plans/{id} and /experience now agree.
++     `protected` is only true because step 1 filed a real booking and captured it. */
+   const activities = reloaded.active_plan.activities ?? [];
+-  const rendered = activities.map(
+-    (item: { title?: string; place_id?: string | null }) =>
+-      `${String(item.title ?? "?")}@${String(item.place_id ?? "no-place")}`,
+-  );
+-  const missingPlaceIds = activities.filter(
+-    (item: { place_id?: string | null }) => !item.place_id,
+-  ).length;
++  const missingPlaceIds = activities.filter((item) => !item.place_id).length;
++  const preserved = activities.find((item) => item.place_id === "place-river-cruise");
+   console.log(
+-    `[golden] accepted plan reports ${activities.length} activities, ` +
+-      `${missingPlaceIds} of them with no place_id: ${JSON.stringify(rendered)}`,
++    `[golden] accepted plan ${reloaded.active_plan.id} reports ${activities.length} activities, ` +
++      `${missingPlaceIds} without a place_id; commitment booking=${commitment.bookingId} ` +
++      `commitment=${commitment.commitmentId ?? "n/a"} ` +
++      `cruise(locked=${preserved?.locked},protected=${preserved?.protected})`,
+   );
++  expect(missingPlaceIds, "the accepted plan is still hiding activity identity")
++    .toBe(0);
+   expect(
+-    activities.some((item: { title?: string }) => /river cruise/i.test(String(item.title ?? ""))),
+-    `the protected River Cruise commitment is not on the accepted plan; it holds ${JSON.stringify(rendered)}`,
+-  ).toBe(true);
++    preserved,
++    `the committed River Cruise is not on the accepted plan; it holds ${JSON.stringify(
++      activities.map((item) => item.place_id),
++    )}`,
++  ).toBeTruthy();
++  expect(preserved?.protected, "the surviving cruise activity is no longer a protected commitment")
++    .toBe(true);
+ });
+diff --git a/frontend/e2e/live-autopilot-v5.spec.ts b/frontend/e2e/live-autopilot-v5.spec.ts
+index a085a21..c638ac1 100644
+--- a/frontend/e2e/live-autopilot-v5.spec.ts
++++ b/frontend/e2e/live-autopilot-v5.spec.ts
+@@ -1,4 +1,5 @@
+ import { expect, test } from "@playwright/test";
++import { protectCommitment } from "./_qoderFreshJourney";
+ 
+ /* PORT-FIRST (pass-15 C) — zero-touch means nobody presses anything.
+  *
+@@ -82,6 +83,12 @@ test("the guardian autopilot recovers a live journey from a provider event with
+     { candidate_count: 1 },
+   );
+   await api(request, `/api/v1/journeys/${journeyId}/plans/${plans[0].id}/select`, "POST");
++  /* The autopilot is being trusted with a commitment, so there has to be one.
++     The demo cruise is `locked` but not `protected` until a booking is filed and
++     its payment captured, so without this step `locked_commitments_preserved`
++     would be true for the wrong reason.  Before /start, because booking a
++     travelling activity is refused with 422. */
++  const commitment = await protectCommitment(request, journeyId, "place-river-cruise");
+   await api(request, `/api/v1/journeys/${journeyId}/start`, "POST");
+ 
+   const mission = await api<{ id: string; status: string }>(
+@@ -175,6 +182,25 @@ test("the guardian autopilot recovers a live journey from a provider event with
+     "the automatic recovery spent a locked commitment",
+   ).toBe(true);
+ 
++  /* And the flag has to mean something on the plan the autopilot installed:
++     this journey owns a real captured booking now, so the cruise must still be
++     on the recovered plan by place id, still flagged protected. */
++  const recovered = await api<{
++    active_plan: { id: string; activities?: { place_id?: string | null; protected?: boolean }[] };
++  }>(request, `/api/v1/journeys/${journeyId}/experience`, "GET");
++  const preservedCruise = (recovered.active_plan.activities ?? []).find(
++    (a) => a.place_id === "place-river-cruise",
++  );
++  expect(
++    preservedCruise,
++    `the autopilot's recovered plan has no committed cruise (booking ${commitment.bookingId}); ` +
++      `it holds ${JSON.stringify((recovered.active_plan.activities ?? []).map((a) => a.place_id))}`,
++  ).toBeTruthy();
++  expect(
++    preservedCruise?.protected,
++    "the recovered plan carries the cruise activity but no longer treats it as protected",
++  ).toBe(true);
++
+   /* The record has to say it was the system, not the traveller.  No .catch here:
+      a swallowed 404 would arrive as an empty list and quietly turn the proof into
+      nothing, which is the failure mode this whole pass exists to remove. */
+diff --git a/frontend/e2e/predictive-real-city-v6.spec.ts b/frontend/e2e/predictive-real-city-v6.spec.ts
+index 5751cda..ceae62a 100644
+--- a/frontend/e2e/predictive-real-city-v6.spec.ts
++++ b/frontend/e2e/predictive-real-city-v6.spec.ts
+@@ -1,28 +1,31 @@
+ import { expect, test } from "@playwright/test";
++import { protectCommitment } from "./_qoderFreshJourney";
+ 
+-/* PORT-FIRST (pass-15 D) — prevention, not detection, and not recovery-after-the-fact.
++/* PORT-FIRST (pass-15 D, real evidence chain in pass-16 A/B/D) — prevention, not
++ * detection, and not recovery-after-the-fact.
+  *
+  * `v13-5-fully-grounded` already proves grounded discovery and that a weakness can
+  * be *seen*.  What this case must still prove is the half nothing else covers:
+  * CityNexus acts before the failure happens, and the traveller can see why.
+  *
+  * So the assertions are deliberately shaped as:
++ *   - the alternative it would move to is a real, replay-provenanced city POI, so
++ *     prevention is grounded in the city twin rather than in demo placeholders;
++ *   - a genuine protected commitment exists *before* the forecast — created with
++ *     the public booking + CAPTURE path, because `locked` alone is not a promise;
+  *   - no hard failure exists at the moment of action (checked, not assumed);
+- *   - a forecast pulse alone produces a preventive run, with predictive evidence;
+- *   - the plan really changes, and locked commitments stay intact;
++ *   - a forecast pulse with a real payload alone produces a preventive run, whose
++ *     evidence carries the predictive status, the solver that recomposed the plan
++ *     and `forecast_before_hard_failure`;
++ *   - the plan really changes, and the commitment is still on it by place id;
+  *   - nobody clicked anything (a scan request would make this reactive, not predictive);
+- *   - the current product surface explains it.
++ *   - a current V8 surface owns the result, asserted field by field.
+  *
+- * The last bullet is where this test is expected to fail today, and it is left
+- * failing on purpose.  The backend implements preventive recovery end to end
+- * (`decision=PREEMPTIVE_RECOVERY`, `trigger_kind=PREDICTIVE`, evidence carries
+- * `forecast_before_hard_failure`), but every guardian testid that renders it —
+- * `guardian-decision`, `guardian-predictive-resilience`, `guardian-provenance`,
+- * `guardian-trace` — exists only in `src/main.tsx`, i.e. the legacy surface under
+- * `/legacy`.  Nothing in V8 owns the result.  Per the ruling, that is reported as
+- * a product integration gap by a red test rather than converted into a
+- * backend-only green one, and it must not be "fixed" by relabelling a reactive
+- * recovery as prevention.
++ * The last bullet is what was missing in pass-15: the run existed and the plan
++ * changed, but only `src/main.tsx` (i.e. `/legacy`) rendered it.  Pass-16 added
++ * `V14PreventivePanel` to `/v8/authoritative`, so the assertions below bind to
++ * structured testids and to the guardian run id rather than to the body-text
++ * sentinel this file used while the gap was open.
+  */
+ 
+ const API =
+@@ -50,7 +53,17 @@ async function api<T>(
+   return (await response.json()) as T;
+ }
+ 
++type Activity = {
++  id: string;
++  place_id: string | null;
++  title?: string | null;
++  start_at?: string | null;
++  locked?: boolean;
++  protected?: boolean;
++};
++
+ type GuardianRun = {
++  id: string;
+   decision: string;
+   status: string;
+   action_status: string;
+@@ -60,8 +73,13 @@ type GuardianRun = {
+   active_plan_after_id: string | null;
+   evidence?: {
+     observation?: { trigger_kind?: string; forecast_before_hard_failure?: boolean };
+-    prediction?: { weakness?: string | null; score?: number | null } & Record<string, unknown>;
++    prediction?: {
++      status?: string | null;
++      risk_score?: number | null;
++      evidence_provenance?: { provider_key: string; provenance: string }[];
++    } & Record<string, unknown>;
+     inference?: { decision?: string; reason?: string };
++    solver?: { kind?: string } | null;
+   };
+ };
+ 
+@@ -93,13 +111,22 @@ test("a forecast is prevented before the failure happens, and the traveller can
+     allow_auto_on_critical_event: false,
+   });
+ 
+-  const plans = await api<{ id: string; activities: { id: string; place_id: string | null; title: string }[] }[]>(
++  const plans = await api<{ id: string; activities: Activity[] }[]>(
+     request,
+     `/api/v1/journeys/${journeyId}/plans/generate`,
+     "POST",
+     { candidate_count: 1 },
+   );
+   await api(request, `/api/v1/journeys/${journeyId}/plans/${plans[0].id}/select`, "POST");
++
++  /* A commitment has to exist before prevention can be credited with keeping it.
++     Measured in pass-16: the demo cruise is `locked: true` but `protected: false`
++     until a booking is created and its payment captured, so asserting on
++     `protected` without this step asserts on a fixture with nothing to protect.
++     `/bookings` refuses an activity whose journey is already travelling, so this
++     is deliberately before `/start`. */
++  const commitment = await protectCommitment(request, journeyId, "place-river-cruise");
++
+   await api(request, `/api/v1/journeys/${journeyId}/start`, "POST");
+   const mission = await api<{ status: string }>(
+     request,
+@@ -119,11 +146,27 @@ test("a forecast is prevented before the failure happens, and the traveller can
+     { interval_seconds: 0.5 },
+   );
+ 
+-  const before = await api<{ active_plan: { id: string } }>(
+-    request,
+-    `/api/v1/journeys/${journeyId}/experience`,
+-    "GET",
+-  );
++  /* Ground the prevention in the real city twin first: the alternative the
++     guardian will move to must exist as a replay-provenanced POI, otherwise a
++     green preventive run would only prove the mock could edit the mock. */
++  const discovered = await api<{
++    provenance: string;
++    mode: string;
++    candidates: { name: string; provider_key?: string }[];
++  }>(request, `/api/v1/journeys/${journeyId}/real-city/discover`, "POST", {
++    query: "indoor",
++    mode: "replay",
++    limit: 3,
++  });
++  expect(discovered.provenance, "real-city discovery was not replay-provenanced").toBe("REPLAY");
++  expect(
++    discovered.candidates.some((item) => /Tianjin|Haihe/i.test(item.name)),
++    `no real-city POI in ${JSON.stringify(discovered.candidates.map((c) => c.name))}`,
++  ).toBe(true);
++
++  const before = await api<{
++    active_plan: { id: string; activities?: Activity[] };
++  }>(request, `/api/v1/journeys/${journeyId}/experience`, "GET");
+ 
+   /* "Before the failure" has to be a measured fact.  A hard failure here means a
+      CLOSURE or CRITICAL event on the journey; none is injected in this test, and
+@@ -149,11 +192,20 @@ test("a forecast is prevented before the failure happens, and the traveller can
+     if (entry.url().endsWith("/guardian/scan")) scanRequests += 1;
+   });
+ 
++  /* A real forecast, not an empty pulse: these numbers are what the resilience
++     snapshot has to reproduce, so the run cannot pass on a default. */
+   const fixture = await api<{ state: string }>(
+     request,
+     `/api/v1/journeys/${journeyId}/guardian/provider-fixture`,
+     "POST",
+-    { state: "RISK_FORECAST", payload: {} },
++    {
++      state: "RISK_FORECAST",
++      payload: {
++        risk_score: 88,
++        forecast_horizon_min: 45,
++        expected_route_delay_min: 18,
++      },
++    },
+   );
+   expect(fixture.state).toBe("RISK_FORECAST");
+ 
+@@ -182,38 +234,154 @@ test("a forecast is prevented before the failure happens, and the traveller can
+     )
+     .toBe(true);
+ 
++  const appeared = preventive as unknown as GuardianRun;
++  /* The row is written before the work finishes: measured, it appears with
++     status=RUNNING / action_status=PLANNING and only later carries EXECUTED and
++     the solver evidence.  Waiting for the same run id to reach a terminal state
++     is not a retry — reading it mid-flight would just assert on a half-truth. */
++  await expect
++    .poll(
++      async () => {
++        const status = await api<{ runs: GuardianRun[] }>(
++          request,
++          `/api/v1/journeys/${journeyId}/guardian/status`,
++          "GET",
++        );
++        const fresh = status.runs.find((run) => run.id === appeared.id) ?? null;
++        if (fresh) preventive = fresh;
++        return fresh?.status ?? "MISSING";
++      },
++      {
++        message:
++          "the preventive run never left PLANNING — prevention started and did not reach a terminal " +
++          "state, so nothing was actually done about the forecast",
++        timeout: 60_000,
++        intervals: [1000],
++      },
++    )
++    .toBe("COMPLETED");
++
+   const run = preventive as unknown as GuardianRun;
+   expect(run.action_status, "the preventive run never executed").toBe("EXECUTED");
+   expect(run.evidence?.observation?.forecast_before_hard_failure, "the run does not claim to be pre-failure")
+     .toBe(true);
++  expect(
++    run.evidence?.prediction?.status,
++    "the forecast pulse did not produce a predictive weakness",
++  ).toBe("PREDICTIVE_WEAKNESS");
++  expect(
++    run.evidence?.solver?.kind,
++    "the preventive plan did not come from the CP-SAT solver the twin validates",
++  ).toBe("ORTOOLS_CP_SAT_V2");
+   expect(run.active_plan_after_id, "the preventive action left no plan identity behind").toBeTruthy();
+   expect(
+     run.active_plan_before_id,
+     "the preventive run did not record which plan it moved away from",
+   ).toBe(before.active_plan.id);
+ 
+-  const after = await api<{ active_plan: { id: string; activities?: { title?: string }[] } }>(
+-    request,
+-    `/api/v1/journeys/${journeyId}/experience`,
+-    "GET",
+-  );
++  const after = await api<{
++    active_plan: { id: string; current_activity_id?: string | null; activities?: Activity[] };
++  }>(request, `/api/v1/journeys/${journeyId}/experience`, "GET");
+   expect(after.active_plan.id, "the authoritative plan did not change after prevention")
+     .not.toBe(before.active_plan.id);
++
++  /* Identity, not wording: `place_id` is the stable key and an accepted replan
++     mints new activity ids, so this is the only comparison that can fail. */
++  const activities = after.active_plan.activities ?? [];
++  const cruise = activities.find((item) => item.place_id === "place-river-cruise");
+   expect(
+-    (after.active_plan.activities ?? []).some((a) => /river cruise/i.test(String(a.title ?? ""))),
+-    "the protected River Cruise commitment was spent by a preventive action",
++    cruise,
++    `the committed River Cruise is not on the prevented plan; it holds ${JSON.stringify(
++      activities.map((item) => item.place_id),
++    )}`,
++  ).toBeTruthy();
++  expect(cruise?.protected, "the commitment survived prevention but is no longer protected").toBe(true);
++  expect(
++    activities.some((item) => item.place_id),
++    "the prevented plan exposes no activity identity at all",
+   ).toBe(true);
+ 
++  /* What the recomposition actually did, printed rather than assumed.  This is
++     the honest record of a claim pass-16 tried to make and could not: the
++     preventive plan does NOT gain a `real-place-*` activity in this environment.
++     The v6 pytest case only gets one because it seeds specific legs as explicit
++     replay facts, which changes which alternatives the solver finds affordable;
++     with live mobility the recomposition keeps the demo places and buys slack
++     instead.  Asserting otherwise here would test the fixture, not the product. */
++  const signature = (items: Activity[]) =>
++    JSON.stringify(items.map((item) => [item.place_id, item.start_at ?? "?"]));
++  console.log(
++    `[prevention] recomposition changed: ${
++      signature(before.active_plan.activities ?? []) !== signature(activities)
++    }\n` +
++      `  before ${signature(before.active_plan.activities ?? [])}\n` +
++      `  after  ${signature(activities)}`,
++  );
++
++  /* The real-city half that IS provable here: the providers the guardian reasons
++     over are replay-provenanced OpenStreetMap candidates for this journey, not a
++     demo-only namespace. */
++  const mesh = await api<{
++    real_place_candidates: { provider_key: string; name: string; status: string }[];
++  }>(request, `/api/v1/journeys/${journeyId}/provider-mesh`, "GET");
++  expect(
++    mesh.real_place_candidates.some((item) => item.provider_key === "openstreetmap-replay"),
++    `no replay-provenanced real-city candidate in the mesh: ${JSON.stringify(
++      mesh.real_place_candidates.map((item) => [item.provider_key, item.name]),
++    )}`,
++  ).toBe(true);
++
++  /* `trigger_kind=PREDICTIVE` is not proof of a grounded prediction, so the run's
++     own evidence is checked: it must name recorded provider observations, and every
++     one of them must be REPLAY rather than a mock default that got laundered into a
++     hard fact.  Measured on this journey: open-meteo-replay (CITY_SIGNAL) and
++     city-signal-fixture (MOBILITY), both provenance REPLAY. */
++  const evidenceProvenance = run.evidence?.prediction?.evidence_provenance ?? [];
++  expect(
++    evidenceProvenance.length,
++    "the preventive run acted on no recorded provider evidence at all",
++  ).toBeGreaterThan(0);
++  expect(
++    evidenceProvenance.every((item) => item.provenance === "REPLAY"),
++    `the prediction leaned on non-replay evidence: ${JSON.stringify(
++      evidenceProvenance.map((item) => [item.provider_key, item.provenance]),
++    )}`,
++  ).toBe(true);
++  expect(
++    evidenceProvenance.some((item) => /replay$/.test(item.provider_key)),
++    "no replay provider backs the prediction the prevention acted on",
++  ).toBe(true);
++
++  /* The forecast the run acted on has to be the forecast that was filed. */
++  const resilience = await api<{ status: string; components: Record<string, number> }>(
++    request,
++    `/api/v1/journeys/${journeyId}/resilience`,
++    "GET",
++  );
++  expect(resilience.status).toBe("PREDICTIVE_WEAKNESS");
++  expect(resilience.components.forecast_risk, "the snapshot ignored the supplied forecast payload")
++    .toBe(88);
++
+   expect(scanRequests, "the test itself asked for the decision, so this is not zero-touch").toBe(0);
++  /* The ruling refuses `trigger_kind=PREDICTIVE` alone as proof of a grounded
++     real-city prediction, so the run record carries what the evidence actually
++     names rather than what the case's title claims. */
++  console.log(
++    `[prevention] prediction provenance ${JSON.stringify(
++      ((run.evidence?.prediction ?? {}) as { evidence_provenance?: unknown }).evidence_provenance ?? [],
++    )} · mesh candidates ${mesh.real_place_candidates.length}`,
++  );
+   console.log(
+-    `[prevention] decision=${run.decision} trigger=${run.trigger_kind} action=${run.action_status} ` +
++    `[prevention] run=${run.id} decision=${run.decision} trigger=${run.trigger_kind} ` +
++      `action=${run.action_status} solver=${run.evidence?.solver?.kind} ` +
++      `booking=${commitment.bookingId} commitment=${commitment.commitmentId ?? "n/a"} ` +
+       `plan ${before.active_plan.id} -> ${after.active_plan.id} with no hard failure on the journey ` +
+       `and ${scanRequests} scan requests`,
+   );
+ 
+-  /* The traveller has to be able to see it.  This is the missing link: the run
+-     exists, the plan changed, and no V8 surface renders a preventive recovery —
+-   */
++  /* A current surface has to own it.  Pass-15 left this red with a body-text
++     sentinel; pass-16 added V14PreventivePanel on /v8/authoritative, so the
++     assertions below are structured and bound to the guardian run id. */
+   await page.addInitScript((id) => {
+     localStorage.setItem("citynexus.v8.journey_id", id);
+     localStorage.setItem("citynexus.demo.journey_id", id);
+@@ -221,14 +389,40 @@ test("a forecast is prevented before the failure happens, and the traveller can
+   await page.setViewportSize({ width: 1280, height: 900 });
+   await page.goto("/v8/authoritative");
+   await expect(page.getByTestId("v14-recovery-truth")).toBeVisible();
+-  await expect(
+-    page.locator("body"),
+-    "PRODUCT INTEGRATION GAP: the backend prevented a failure (PREEMPTIVE_RECOVERY / " +
+-      "trigger_kind=PREDICTIVE / forecast_before_hard_failure=true) and changed the authoritative " +
+-      "plan, but no current V8 surface says so. The only components that render a preventive " +
+-      "recovery are guardian-decision / guardian-predictive-resilience / guardian-provenance / " +
+-      "guardian-trace, and all of them exist solely in src/main.tsx behind /legacy. " +
+-      "Fix by giving V8 an owner for the preventive result — do not turn this test into a " +
+-      "backend-only assertion, and do not relabel a reactive recovery as prevention.",
+-  ).toContainText(/PREEMPTIVE|predictive|before it happened|forecast/i);
++  await expect(page.getByTestId("v14-preventive")).toBeVisible();
++  await expect(page.getByTestId("v14-preventive-decision")).toHaveText("PREEMPTIVE_RECOVERY");
++  await expect(page.getByTestId("v14-preventive-trigger")).toHaveAttribute("data-run-id", run.id);
++  await expect(page.getByTestId("v14-preventive-action")).toHaveText("EXECUTED");
++  await expect(page.getByTestId("v14-preventive-timing")).toHaveAttribute("data-pre-failure", "true");
++  await expect(page.getByTestId("v14-preventive-resilience")).toContainText("PREDICTIVE_WEAKNESS");
++  /* The component, not the aggregate: measured in this run, a filed forecast of 88
++     produces an aggregate score of 100 once the other components stack, so only
++     forecast_risk can show the panel is rendering this journey's forecast. */
++  await expect(page.getByTestId("v14-preventive-resilience")).toContainText("forecast 88");
++  await expect(page.getByTestId("v14-preventive-evidence")).toContainText("ORTOOLS_CP_SAT_V2");
++  await expect(page.getByTestId("v14-preventive-reason")).not.toHaveText("—");
++  await expect(page.getByTestId("v14-preventive-plan-change")).toHaveAttribute(
++    "data-plan-before-id",
++    before.active_plan.id,
++  );
++  await expect(page.getByTestId("v14-preventive-plan-change")).toHaveAttribute(
++    "data-plan-after-id",
++    after.active_plan.id,
++  );
++  await expect(page.getByTestId("v14-preventive-protected")).toContainText("place-river-cruise");
++
++  /* The traveller's own view of the same fact.  Live has no plan id on screen, so
++     the strongest thing it can prove is that it is rendering the prevented plan:
++     its current-activity heading comes from the same /experience payload, matched
++     by activity id rather than by wording invented in this test. */
++  const current = activities.find((item) => item.id === after.active_plan.current_activity_id);
++  await page.goto("/v8/live");
++  if (current?.title) {
++    await expect(page.getByTestId("live-journey-current")).toHaveText(current.title);
++  } else {
++    await expect(page.getByTestId("live-journey-current")).toBeVisible();
++  }
++  /* Prevention is owned by the authoritative surface; Live must not grow a second,
++     drifting copy of the same claim. */
++  await expect(page.getByTestId("v14-preventive")).toHaveCount(0);
+ });
+diff --git a/frontend/e2e/product-hardening.spec.ts b/frontend/e2e/product-hardening.spec.ts
+index b02925c..f321e66 100644
+--- a/frontend/e2e/product-hardening.spec.ts
++++ b/frontend/e2e/product-hardening.spec.ts
+@@ -1,4 +1,5 @@
+ import { expect, test } from "@playwright/test";
++import { protectCommitment } from "./_qoderFreshJourney";
+ 
+ /* PORT-FIRST (pass-15 B) — autonomous recovery that stays inside its envelope.
+  *
+@@ -122,6 +123,11 @@ test("an autonomous recovery executes inside its envelope and is observable on t
+     { candidate_count: 1 },
+   );
+   await api(request, `/api/v1/journeys/${journeyId}/plans/${plans[0].id}/select`, "POST");
++  /* The envelope promises it will not spend a protected commitment, so this case
++     has to own one: the demo cruise is only `locked` until a booking exists and
++     its payment is captured, and `protected` is derived from ACTIVE Commitment
++     rows.  Before /start, because booking a travelling activity is refused. */
++  const commitment = await protectCommitment(request, journeyId, "place-river-cruise");
+   await api(request, `/api/v1/journeys/${journeyId}/start`, "POST");
+   const before = await api<{ active_plan: { id: string } }>(
+     request,
+@@ -201,13 +207,26 @@ test("an autonomous recovery executes inside its envelope and is observable on t
+ 
+   /* And the plan that is now authoritative really is the child it executed. */
+   const after = await api<{
+-    active_plan: { id: string; activities?: { title?: string }[] };
++    active_plan: {
++      id: string;
++      activities?: { title?: string; place_id?: string | null; protected?: boolean }[];
++    };
+   }>(request, `/api/v1/journeys/${journeyId}/experience`, "GET");
+   expect(after.active_plan.id).not.toBe(before.active_plan.id);
+   expect(after.active_plan.id).toBe(proposal.proposed_plan_version_id);
++  /* Identity, not wording: an executed replan mints new activity ids, so only
++     place_id can show the committed place is the same one. */
++  const preservedCruise = (after.active_plan.activities ?? []).find(
++    (a) => a.place_id === "place-river-cruise",
++  );
++  expect(
++    preservedCruise,
++    `the committed River Cruise disappeared from the executed plan (booking ${commitment.bookingId}); ` +
++      `it holds ${JSON.stringify((after.active_plan.activities ?? []).map((a) => a.place_id))}`,
++  ).toBeTruthy();
+   expect(
+-    (after.active_plan.activities ?? []).some((a) => /river cruise/i.test(String(a.title ?? ""))),
+-    "the protected River Cruise commitment disappeared from the executed plan",
++    preservedCruise?.protected,
++    "the commitment survived the envelope but is no longer protected",
+   ).toBe(true);
+ 
+   /* Observation on the surface a traveller can actually reach. */
+diff --git a/frontend/e2e/v13-5-fully-grounded.spec.ts b/frontend/e2e/v13-5-fully-grounded.spec.ts
+index e5a7744..76595e6 100644
+--- a/frontend/e2e/v13-5-fully-grounded.spec.ts
++++ b/frontend/e2e/v13-5-fully-grounded.spec.ts
+@@ -64,9 +64,30 @@ test("City Discovery renders the fully grounded Journey proof", async ({ page, r
+   await page.goto("/v8/discover");
+   await expect(page.getByTestId("v13-discovery")).toBeVisible();
+   await page.getByTestId("v13-discover-submit").click();
+-  await expect(page.getByTestId("v13-discovery-result")).toBeVisible();
++  const result = page.getByTestId("v13-discovery-result");
++  await expect(result).toBeVisible();
+   await expect(page.getByText("FULLY GROUNDED", { exact: true })).toBeVisible();
+   await expect(page.getByText("valhalla", { exact: true })).toBeVisible();
+   await expect(page.getByTestId("v13-discovery-selected-plan")).toContainText("SELECTED");
++  /* The screenshot is the artefact a human reviews, so it has to be taken once the
++     surface has settled.  Measured on this pass: every assertion above passed and
++     the shipped PNG still showed an empty page — the card fades in, and
++     `toBeVisible()` is true at opacity 0.  Scoped to this subtree on purpose: the
++     app runs infinite pulse animations elsewhere, so a document-wide wait could
++     never finish. */
++  await expect
++    .poll(
++      () =>
++        result.evaluate((element) =>
++          element
++            .getAnimations({ subtree: true })
++            .every((animation) => animation.playState === "finished"),
++        ),
++      {
++        message: "the discovery result never stopped animating, so a capture of it is not evidence",
++        timeout: 10_000,
++      },
++    )
++    .toBe(true);
+   await page.screenshot({ path: "../reports/product-v13.5/fully-grounded-discovery.png", fullPage: true });
+ });
+diff --git a/frontend/src/app/V8Experience.tsx b/frontend/src/app/V8Experience.tsx
+index b2e051c..ac34cd2 100644
+--- a/frontend/src/app/V8Experience.tsx
++++ b/frontend/src/app/V8Experience.tsx
+@@ -20,6 +20,7 @@ import { TwinPanel } from "../features/traveler-twin/TwinPanel";
+ import { SortableActivityList } from "../features/studio/SortableActivityList";
+ import { V12AuthoritativeJourneyPanel } from "../features/execution/V12AuthoritativeJourneyPanel";
+ import { V14RecoveryTruthPanel } from "../features/recovery/V14RecoveryTruthPanel";
++import { V14PreventivePanel } from "../features/recovery/V14PreventivePanel";
+ import { RecoveryRequiredPanel } from "../features/recovery/RecoveryRequiredPanel";
+ import { V12TripStudioPanel } from "../features/studio/V12TripStudioPanel";
+ import { RealCityDiscoveryPanel } from "../features/discovery/RealCityDiscoveryPanel";
+@@ -2001,6 +2002,7 @@ function AuthoritativeExecution({
+             onTransition={onRefresh}
+           />
+           <V12TripStudioPanel journeyId={journeyId} plan={plan} onAccepted={onRefresh} />
++          <V14PreventivePanel journeyId={journeyId} refreshKey={plan?.id} />
+           <V14RecoveryTruthPanel journeyId={journeyId} policy={policy} currency={currency} onAccepted={onRefresh} />
+         </>
+       )}
+diff --git a/frontend/src/features/recovery/V14PreventivePanel.tsx b/frontend/src/features/recovery/V14PreventivePanel.tsx
+new file mode 100644
+index 0000000..18f1a24
+--- /dev/null
++++ b/frontend/src/features/recovery/V14PreventivePanel.tsx
+@@ -0,0 +1,223 @@
++import { useEffect, useMemo, useState } from "react";
++
++/* V14 · PREVENTIVE owner (pass-16 D/E).
++ *
++ * `V14RecoveryTruthPanel` is the reactive half: reality already changed, a
++ * proposal exists, and the traveller (or the envelope) accepts it.  Nothing in
++ * V8 owned the other half, even though the backend has implemented it since v6:
++ * a forecast pulse produces a `GuardianRun` with `decision=PREEMPTIVE_RECOVERY`
++ * and `trigger_kind=PREDICTIVE` *before* any hard failure, and that run changes
++ * the authoritative plan.
++ *
++ * This panel is deliberately NOT a relabelled recovery.  It reads the guardian
++ * run itself, so every line is bound to durable evidence rather than to a plan
++ * diff, and it distinguishes the two on the axis that matters:
++ *   - trigger: a forecast, not an event;
++ *   - timing: before the failure, `forecast_before_hard_failure`;
++ *   - authority: executed autonomously inside the policy envelope, or gated.
++ *
++ * The testids are structured (one fact per node, plus run/plan ids as data
++ * attributes) so an acceptance case can assert the evidence fields directly
++ * instead of pattern-matching body text.
++ */
++
++type ResilienceSnapshot = {
++  id?: string;
++  status?: string | null;
++  score?: number | null;
++  risk_score?: number | null;
++  components?: Record<string, number> | null;
++  dominant_failure_modes?: { label?: string; place_id?: string | null }[] | null;
++  evidence_provenance?: string[] | null;
++};
++
++type GuardianRun = {
++  id: string;
++  decision: string;
++  status: string;
++  action_status: string;
++  trigger_kind: string | null;
++  trigger_event_id: string | null;
++  proposal_id: string | null;
++  reasoning_summary?: string | null;
++  active_plan_before_id: string | null;
++  active_plan_after_id: string | null;
++  created_at?: string | null;
++  evidence?: {
++    observation?: {
++      trigger_kind?: string;
++      forecast_before_hard_failure?: boolean;
++      predictive_event_id?: string | null;
++    };
++    prediction?: ResilienceSnapshot | null;
++    inference?: { decision?: string; reason?: string; controller?: string };
++    solver?: { kind?: string } | null;
++    policy?: { decision?: string; reason?: string; mode?: string } | null;
++  };
++};
++
++type Experience = {
++  active_plan?: {
++    id?: string;
++    activities?: {
++      id: string;
++      place_id?: string | null;
++      title?: string | null;
++      locked?: boolean;
++      protected?: boolean;
++    }[];
++  };
++};
++
++type Props = { journeyId: string; refreshKey?: unknown };
++
++const PREVENTIVE = (run: GuardianRun) =>
++  run.decision === "PREEMPTIVE_RECOVERY" && run.trigger_kind === "PREDICTIVE";
++
++async function readJson<T>(url: string): Promise<T | null> {
++  try {
++    const response = await fetch(url);
++    if (!response.ok) return null;
++    return (await response.json()) as T;
++  } catch {
++    return null;
++  }
++}
++
++export function V14PreventivePanel({ journeyId, refreshKey }: Props) {
++  const [run, setRun] = useState<GuardianRun | null>(null);
++  const [experience, setExperience] = useState<Experience | null>(null);
++  const [available, setAvailable] = useState(false);
++
++  useEffect(() => {
++    let cancelled = false;
++    let timer: number | undefined;
++    const load = async () => {
++      const status = await readJson<{ runs?: GuardianRun[] }>(
++        `/api/v1/journeys/${journeyId}/guardian/status`,
++      );
++      const preventive = (status?.runs ?? []).filter(PREVENTIVE)[0] ?? null;
++      if (cancelled) return;
++      setAvailable(preventive !== null);
++      setRun(preventive);
++      if (preventive) {
++        setExperience(await readJson<Experience>(`/api/v1/journeys/${journeyId}/experience`));
++        /* A run is durable evidence: once it exists there is nothing left to poll
++           for, and a 3-second poll beside the autopilot's own writes buys nothing
++           but SQLite contention. */
++        if (timer !== undefined) window.clearInterval(timer);
++        timer = undefined;
++      }
++    };
++    void load();
++    timer = window.setInterval(() => void load(), 3000);
++    return () => {
++      cancelled = true;
++      if (timer !== undefined) window.clearInterval(timer);
++    };
++  }, [journeyId, refreshKey]);
++
++  const protectedPlaces = useMemo(
++    () => (experience?.active_plan?.activities ?? []).filter((item) => item.protected),
++    [experience],
++  );
++
++  if (!available || !run) return null;
++
++  const prediction = run.evidence?.prediction ?? null;
++  const preFailure = run.evidence?.observation?.forecast_before_hard_failure === true;
++  const solver = run.evidence?.solver?.kind ?? "unavailable";
++  const score = prediction?.risk_score ?? prediction?.score ?? null;
++  const planChanged =
++    !!run.active_plan_before_id &&
++    !!run.active_plan_after_id &&
++    run.active_plan_before_id !== run.active_plan_after_id;
++  /* "Nothing had failed yet" is only true if this run was not started by a hard
++     event AND no CLOSURE/CRITICAL event preceded it.  The backend records
++     `predictive_prevented` on the forecast signal rather than a failure event;
++     a null trigger_event_id is the honest marker of a pure forecast pulse. */
++  return (
++    <section className="v12-authoritative-panel v14-preventive" data-testid="v14-preventive">
++      <header className="v12-panel-header">
++        <div>
++          <span className="v8-kicker">V14 · BEFORE REALITY CHANGED</span>
++          <h2>Preventive recovery</h2>
++          <small>
++            A forecast, not a failure, triggered this. Reactive recoveries are owned by the
++            grounded adaptive recovery panel below.
++          </small>
++        </div>
++        <span className="v8-status-pill" data-testid="v14-preventive-timing" data-pre-failure={preFailure}>
++          {preFailure ? "acted before the failure" : "acted after a failure"}
++        </span>
++      </header>
++
++      <div className="v12-now-next">
++        <article className="v12-state-card now" data-testid="v14-preventive-trigger" data-run-id={run.id}>
++          <span className="v12-state-kicker">TRIGGER</span>
++          <strong>{run.trigger_kind ?? "—"}</strong>
++          <small>
++            decision{" "}
++            <b data-testid="v14-preventive-decision">{run.decision}</b> ·{" "}
++            <span data-testid="v14-preventive-action">{run.action_status}</span>
++          </small>
++        </article>
++        <article className="v12-state-card next">
++          <span className="v12-state-kicker">FORECAST</span>
++          <strong data-testid="v14-preventive-resilience">
++            {prediction?.status ?? "unavailable"}
++            {score != null ? ` · risk ${score}` : ""}
++            {prediction?.components?.forecast_risk != null
++              ? ` · forecast ${prediction.components.forecast_risk}`
++              : ""}
++          </strong>
++          <small data-testid="v14-preventive-evidence">
++            solver {solver} · snapshot {prediction?.id ?? "—"} ·{" "}
++            {(prediction?.dominant_failure_modes ?? [])
++              .map((mode) => mode.label ?? mode.place_id ?? "?")
++              .slice(0, 2)
++              .join(", ") || "no dominant mode"}
++          </small>
++        </article>
++      </div>
++
++      <div className="v8-cost-lines">
++        <div>
++          <span>Why it acted</span>
++          <b data-testid="v14-preventive-reason">
++            {run.evidence?.inference?.reason ?? run.reasoning_summary ?? "—"}
++          </b>
++        </div>
++        <div>
++          <span>Plan</span>
++          <b
++            data-testid="v14-preventive-plan-change"
++            data-plan-before-id={run.active_plan_before_id ?? ""}
++            data-plan-after-id={run.active_plan_after_id ?? ""}
++            data-changed={planChanged}
++          >
++            {planChanged
++              ? `recomposed ${run.active_plan_before_id?.slice(0, 8)}… → ${run.active_plan_after_id?.slice(0, 8)}…`
++              : "unchanged · action stayed inside the envelope"}
++          </b>
++        </div>
++        <div>
++          <span>Protected commitments</span>
++          <b data-testid="v14-preventive-protected" data-count={protectedPlaces.length}>
++            {protectedPlaces.length
++              ? `${protectedPlaces.length} preserved: ${protectedPlaces
++                  .map((item) => item.place_id ?? item.id)
++                  .join(", ")}`
++              : "none on this journey"}
++          </b>
++        </div>
++        <div>
++          <span>Authorization</span>
++          <b data-testid="v14-preventive-policy">
++            {run.evidence?.policy?.decision ?? run.evidence?.inference?.controller ?? "guardian envelope"}
++          </b>
++        </div>
++      </div>
++    </section>
++  );
++}
+diff --git a/reports/dock-geometry/live-390x844-bottom.png b/reports/dock-geometry/live-390x844-bottom.png
+index c643a40..daaced7 100644
+Binary files a/reports/dock-geometry/live-390x844-bottom.png and b/reports/dock-geometry/live-390x844-bottom.png differ
+diff --git a/reports/e2e-provenance/authoritative.json b/reports/e2e-provenance/authoritative.json
+index e8967c1..d73dbc9 100644
+--- a/reports/e2e-provenance/authoritative.json
++++ b/reports/e2e-provenance/authoritative.json
+@@ -1,16 +1,16 @@
+ {
+   "authoritative": true,
+   "suite": "current-product",
+-  "runId": "p15full1",
++  "runId": "p16full2",
+   "python": "D:\\moodle\\CityNexus\\.venv\\Scripts\\python.exe",
+   "pythonResolved": "D:\\moodle\\CityNexus\\.venv\\Scripts\\python.exe",
+-  "frontendPort": 4219,
+-  "backendPort": 8047,
+-  "databaseUrl": "sqlite:///./_p15full1.db",
++  "frontendPort": 4223,
++  "backendPort": 8052,
++  "databaseUrl": "sqlite:///./_p16full2.db",
+   "ai": "disabled",
+   "reuseExistingServer": false,
+   "workers": 1,
+   "retries": 0,
+-  "recordedAt": "2026-09-19T14:11:07.331Z",
+-  "provenanceLine": "[citynexus e2e] suite=current-product authoritative=true python=D:\\moodle\\CityNexus\\.venv\\Scripts\\python.exe frontend=:4219 backend=:8047 db=sqlite:///./_p15full1.db ai=disabled reuseExistingServer=false"
++  "recordedAt": "2026-09-19T15:21:50.777Z",
++  "provenanceLine": "[citynexus e2e] suite=current-product authoritative=true python=D:\\moodle\\CityNexus\\.venv\\Scripts\\python.exe frontend=:4223 backend=:8052 db=sqlite:///./_p16full2.db ai=disabled reuseExistingServer=false"
+ }
+diff --git a/reports/product-v13.5/fully-grounded-discovery.png b/reports/product-v13.5/fully-grounded-discovery.png
+index 521669b..c013c85 100644
+Binary files a/reports/product-v13.5/fully-grounded-discovery.png and b/reports/product-v13.5/fully-grounded-discovery.png differ
+diff --git a/reports/product-v8/ui/after/journey-hub-desktop.png b/reports/product-v8/ui/after/journey-hub-desktop.png
+index 8b1e35d..8adad0c 100644
+Binary files a/reports/product-v8/ui/after/journey-hub-desktop.png and b/reports/product-v8/ui/after/journey-hub-desktop.png differ
+diff --git a/reports/product-v8/ui/after/mobility-sheet-desktop.png b/reports/product-v8/ui/after/mobility-sheet-desktop.png
+index 36de845..31a955c 100644
+Binary files a/reports/product-v8/ui/after/mobility-sheet-desktop.png and b/reports/product-v8/ui/after/mobility-sheet-desktop.png differ
+diff --git a/reports/product-v8/ui/after/mobility-sheet-mobile.png b/reports/product-v8/ui/after/mobility-sheet-mobile.png
+index 7b25bae..56c9d7d 100644
+Binary files a/reports/product-v8/ui/after/mobility-sheet-mobile.png and b/reports/product-v8/ui/after/mobility-sheet-mobile.png differ
+diff --git a/reports/product-v8/ui/after/stay-explorer-desktop.png b/reports/product-v8/ui/after/stay-explorer-desktop.png
+index 6a8ce48..891d1ec 100644
+Binary files a/reports/product-v8/ui/after/stay-explorer-desktop.png and b/reports/product-v8/ui/after/stay-explorer-desktop.png differ
+diff --git a/reports/product-v8/ui/after/trip-studio-desktop.png b/reports/product-v8/ui/after/trip-studio-desktop.png
+index c7212ba..788acbe 100644
+Binary files a/reports/product-v8/ui/after/trip-studio-desktop.png and b/reports/product-v8/ui/after/trip-studio-desktop.png differ
+diff --git a/reports/product-v9/ui/live-journey-mobile.png b/reports/product-v9/ui/live-journey-mobile.png
+index a999035..8b9676f 100644
+Binary files a/reports/product-v9/ui/live-journey-mobile.png and b/reports/product-v9/ui/live-journey-mobile.png differ
+diff --git a/reports/product-v9/ui/offline-journey-mobile.png b/reports/product-v9/ui/offline-journey-mobile.png
+index 73e2423..a1295ab 100644
+Binary files a/reports/product-v9/ui/offline-journey-mobile.png and b/reports/product-v9/ui/offline-journey-mobile.png differ

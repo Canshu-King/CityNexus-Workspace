@@ -1,0 +1,97 @@
+[
+  {
+    "path": "AUDIT-RESULT.md",
+    "size": 483,
+    "sha256": "6EB4E6BB2077840D99D108DCF3583DBAA469CD138DEC3736C447A8F166ABA4F9"
+  },
+  {
+    "path": "GPT-OPINION.md",
+    "size": 2167,
+    "sha256": "5261DAA4CC5D29074FCB87B94CA3EF4885C3085955DE955438F0335A1F3BA99F"
+  },
+  {
+    "path": "README.md",
+    "size": 348,
+    "sha256": "184E22C21E94D8B2F89A1A1644DEE4DBD8BC2A0F4B9AA927667F91B08DBAD7F6"
+  },
+  {
+    "path": "visio-renderer/phase1-routing-rc6-candidate.yaml",
+    "size": 9417,
+    "sha256": "8C1661EBB1A9D5A371F48EF800316DD643F391BEEC559EB2A4B8065EED75182D"
+  },
+  {
+    "path": "visio-renderer/routing_geometry.py",
+    "size": 4961,
+    "sha256": "E289F47C5BCD1138F989962D39B8F4E5E1C75AE19B45BBA5F4C2CE532EB3D42B"
+  },
+  {
+    "path": "visio-renderer/calibration/analyze_p1_route_conflicts.py",
+    "size": 4597,
+    "sha256": "C5F03A657FA3F2068E442B18ADE7DF9DABBC466166A2CC9EF6375C03738111DC"
+  },
+  {
+    "path": "visio-renderer/calibration/audit_p1_route_contacts.py",
+    "size": 7547,
+    "sha256": "3CCC8B74387938774BA9F65C9520083C0630E230D6513FA60E01ADACACE1E5E2"
+  },
+  {
+    "path": "visio-renderer/calibration/validate_p1_route_candidate_v2.py",
+    "size": 2466,
+    "sha256": "AAC508C33336E6349242C7302BD8BA687C3DC00A66426BD21F96DA86C75D2CE4"
+  },
+  {
+    "path": "visio-renderer/calibration/validate_p1_route_candidate_v3.py",
+    "size": 5775,
+    "sha256": "A4D211821460BB12E1786381AA5F8DAA4AF0B86D5F703A0E0938098239660D64"
+  },
+  {
+    "path": "visio-renderer/calibration/validate_p1_route_candidate.py",
+    "size": 4537,
+    "sha256": "874EE5783C6C67B066186C2DEBC210FC91DDB4FA81AF3EE9F80E0C917E1C3E73"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-report.json",
+    "size": 3081,
+    "sha256": "3892ED7134F75009D05208571B11252035D24AF9FC31F1CD090B2CC392CAAE99"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v2-report.json",
+    "size": 625,
+    "sha256": "B1BF4F8947600537EA014ABFF8C42BD8F470A5C8F7319BE2C878D8C13DEDC3AA"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v3-report.json",
+    "size": 358,
+    "sha256": "AAE02E2A0561BD3168A4DDA4F8A4ED211DAF77029DF15407B3A1B9E527BA04FA"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_CONTACT-AUDIT.json",
+    "size": 25177,
+    "sha256": "D8C545743BB004445E178A768B2C3F1A634F2584FA4565D90F2D5C8D1C9E7FF1"
+  },
+  {
+    "path": "visio-renderer/calibration/out/P1_UC_ROUTE_REPAIR-WORKLIST.json",
+    "size": 8708,
+    "sha256": "E74262E0B39DE1879DBEE0792ACC28A03F3FFDF15F6313EC4D08F737F7E6746D"
+  },
+  {
+    "path": "visio-renderer/tests/test_p1_rc6_route_prep_contract.py",
+    "size": 1479,
+    "sha256": "2C595A35951F5C5EEEFA4270EE2EB0A0D2E4EF8E933786B01EE4B6DCCB15F064"
+  },
+  {
+    "path": "visio-renderer/tests/test_p1_route_contact_gate_contract.py",
+    "size": 750,
+    "sha256": "24DFEB4BAF1F01CF873E1BE1970AAC706037F9C30F96B142A9DE26AA5DEB424C"
+  },
+  {
+    "path": "visio-renderer/tests/test_p1_route_v3_contract.py",
+    "size": 1106,
+    "sha256": "562B88A70A02103DD23C766BAD5D599088CD24C5B474350C55873FC341715E18"
+  },
+  {
+    "path": "visio-spec/pages/p1_uc_overview.yaml",
+    "size": 5722,
+    "sha256": "6E2B9876177803F05A9397DFA6D4D64DA1D2FEAC01F3946925864F64FC6D24C5"
+  }
+]

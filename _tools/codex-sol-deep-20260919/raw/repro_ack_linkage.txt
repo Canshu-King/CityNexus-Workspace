@@ -1,0 +1,1 @@
+PASS: ACKNOWLEDGED remains open; only the linked accepted trigger closes.

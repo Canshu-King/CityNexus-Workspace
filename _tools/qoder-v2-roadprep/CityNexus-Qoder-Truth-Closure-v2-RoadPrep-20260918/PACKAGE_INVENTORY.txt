@@ -1,0 +1,11 @@
+COPY_PASTE_TO_QODER.txt
+README_FIRST.md
+docs/HARD_BLOCKERS.md
+docs/INDEPENDENT_REVIEW.md
+docs/MERGE_AND_XIAOMI_GATE.md
+docs/T1_IDENTITY_HARDENING.md
+docs/T2_REAL_REPLAN_PATH_GATE.md
+docs/T3_T4_INTEGRATION_GATE.md
+docs/TEST_AND_EVIDENCE_GATE.md
+reference/CityNexus-EAC-Review-20260918.zip
+reference/CityNexus-Qoder-Xiaomi-Truth-Hardening-20260918.zip

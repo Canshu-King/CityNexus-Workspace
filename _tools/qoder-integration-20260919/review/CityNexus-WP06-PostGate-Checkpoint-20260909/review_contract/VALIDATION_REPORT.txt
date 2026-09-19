@@ -1,0 +1,36 @@
+CityNexus WP06 Post-Gate Deep Assist Validation
+Date: 2026-09-09
+
+Reviewed checkpoint original tests, stable split execution:
+- foundation/core group: 38 passed
+- WP01-WP03: 29 passed
+- WP04 endpoints: 10 passed
+- WP04 hardening/WP05: 5 passed
+- WP04 reference/validator/bridge: 25 passed
+- WP05 integrity + WP06 Twin v2: 12 passed
+TOTAL ORIGINAL: 119 passed
+
+Adversarial test file on unmodified checkpoint:
+- 7 tests executed
+- 7 failed as intended, demonstrating uncovered post-gate defects
+
+Prepared hardening/provider work:
+- new post-gate/provider tests: 12 passed
+- stable split aggregate after patch:
+  - group 1: 43 passed
+  - group 2: 69 passed
+  - group 3: 19 passed
+  - total: 131 passed
+- python -m compileall -q app: PASS
+- patch --dry-run -p1 against reviewed checkpoint: PASS
+- git apply --check against reviewed checkpoint: PASS
+- OpenAPI 3.1 parse: PASS
+- runtime/formal operations: 38/38 after applying OpenAPI server base
+- live network calls required: NO
+- SHA/file/archive hash checks: NONE
+
+Review-environment note:
+A large single-process Linux pytest invocation can reach full test-dot output but sometimes does not return before harness timeout. Split suites exit normally. Treat as P2 test-harness cleanup unless reproduced as an application defect.
+
+Ruff note:
+Ruff was not installed in the independent review runtime, so no independent Ruff result is claimed. The reviewed Codex README reports Ruff check/format passing.

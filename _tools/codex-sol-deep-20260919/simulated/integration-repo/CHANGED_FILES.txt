@@ -1,0 +1,19 @@
+CityNexus V19.2.1 Real-Phone Shadow-Trial Gate changes
+
+Backend
+- backend/app/capabilities.py
+- backend/app/db/models.py
+- backend/app/db/session.py
+- backend/app/main.py
+- backend/app/operations/v9.py
+- backend/app/replanning/feasibility.py
+- backend/app/services.py
+- backend/db/schema.sql
+- backend/tests/test_v19_traveler_capability.py
+
+Release truth and trial evidence
+- CURRENT_STATUS.md
+- TEST_RESULTS.md
+- NEXT_RECOMMENDATION.md
+- PHONE_TRIAL_RUNBOOK.md
+- reports/product-v19-2-1/

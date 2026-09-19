@@ -1,0 +1,74 @@
+{
+  "reviewPackage": "CityNexus-P1-Route-Repair-V3-GPT-Opinion-20260907-continued.zip",
+  "officialCandidateModified": false,
+  "focusedTestsReproduced": {
+    "passed": 8,
+    "failed": 0
+  },
+  "officialGateSnapshot": {
+    "historicalBase": "PASS",
+    "contactAudit": "FAIL",
+    "v2": "FAIL",
+    "v3": "FAIL",
+    "contactPairCount": 46,
+    "uniqueContactCount": 55,
+    "tjunction": 22,
+    "shared_endpoint": 33,
+    "shortSegmentCount": 9,
+    "redundantCollinearPointCount": 88
+  },
+  "preparePathBug": {
+    "found": true,
+    "originalHardcodedPath": "ROOT.parent / 'handoff_20260907/traveler-corridor-skeleton.yaml'",
+    "fixedScriptReproduced": {
+      "abstractGraphPlanar": true,
+      "subgraphRouteCount": 12,
+      "failures": [],
+      "contactPairs": [],
+      "globalGeometrySolved": false
+    }
+  },
+  "plannerExperiments": {
+    "allAssociationsIndividuallyRoutableAgainstFrozenExtend": true,
+    "providerOnlyBestSequentialPartial": {
+      "solved": 8,
+      "total": 9,
+      "lastBlocked": "A-CD-UC-10"
+    },
+    "singleRouteRipupFreedLastProvider": false,
+    "twoRouteRipupCasesThatFreedACDUC10": [
+      [
+        "A-PA-07",
+        "A-CE-09"
+      ],
+      [
+        "A-M-UC-10",
+        "A-M-UC-08"
+      ]
+    ],
+    "removedPairsSuccessfullyReinsertedAfterACDUC10": false,
+    "naiveRipupCycle": [
+      "A-M-UC-08",
+      "A-CE-09"
+    ],
+    "smokeBoundedPlanner": {
+      "trials": 12,
+      "bestSolved": 9,
+      "total": 18,
+      "status": "SEARCH_INCOMPLETE"
+    }
+  },
+  "recommendations": {
+    "providerFanoutBandCm": [
+      28.0,
+      29.9
+    ],
+    "travelerFanoutBandCm": [
+      4.4,
+      5.6
+    ],
+    "allowAllTargetSides": true,
+    "needAlternateHomotopyCandidates": true,
+    "doNotWeakenGate": true
+  }
+}

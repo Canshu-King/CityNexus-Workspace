@@ -1,0 +1,49 @@
+Use the attached:
+
+CityNexus-Qoder-Truth-Closure-v2-RoadPrep-20260918.zip
+
+Continue from your isolated Qoder implementation copy.
+
+Do NOT merge to D:\moodle\CityNexus yet.
+Do NOT start Frontend vNext.
+
+Read:
+
+README_FIRST.md
+
+then execute the full v2 closure defined in:
+
+docs/HARD_BLOCKERS.md
+docs/T2_REAL_REPLAN_PATH_GATE.md
+docs/T1_IDENTITY_HARDENING.md
+docs/T3_T4_INTEGRATION_GATE.md
+docs/TEST_AND_EVIDENCE_GATE.md
+
+Most important correction:
+
+Your T2 strict provider primitive is good, but the real generate_replan path can
+pre-capture replacement mobility pairs non-strict and freeze default_minutes=20
+before _replan_estimate() reaches the strict path.
+
+Prove the fix through the actual replan API/service path.
+
+Also:
+- separate SAME from AMBIGUOUS exclusion semantics;
+- cover cross-provider same-venue ambiguity;
+- fix the dead acknowledged-only UI condition and add rendered integration proof;
+- make budget coverage describe the whole claimed scope, including stay/booking
+  when the UI says the trip budget is verified;
+- do not leak unmapped raw replan error strings to traveler UI;
+- include raw focused/full test logs.
+
+Target:
+
+CityNexus-Qoder-Xiaomi-Truth-Hardening-v2-20260918.zip
+
+Final verdict exactly:
+
+QODER_V2_PATCH_READY_FOR_INTEGRATION
+
+or
+
+QODER_V2_BLOCKED

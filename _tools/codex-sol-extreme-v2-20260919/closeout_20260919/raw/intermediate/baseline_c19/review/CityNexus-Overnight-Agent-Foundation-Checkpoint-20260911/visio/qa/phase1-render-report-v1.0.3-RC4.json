@@ -1,0 +1,17 @@
+{
+  "release": "v1.0.3-RC4",
+  "status": "PASS",
+  "independentValidator": "visio-renderer/validate_rendered_vsdx.py",
+  "pages": {
+    "00_Style_Guide": {"semanticShapes": 6, "semanticConnectors": 3, "specIdValidation": "PASS", "presentation": ["HDR-TITLE", "HDR-SUBTITLE", "HDR-STATUS", "LEGEND"]},
+    "P1_UC_Overview": {"semanticShapes": 17, "semanticConnectors": 21, "specIdValidation": "PASS", "presentation": ["HDR-TITLE", "HDR-SUBTITLE", "HDR-STATUS"]},
+    "P1_Domain_Overview": {"semanticShapes": 11, "semanticConnectors": 14, "specIdValidation": "PASS", "presentation": ["HDR-TITLE", "HDR-SUBTITLE", "HDR-STATUS"]}
+  },
+  "geometry": {"coordinateConvention": "YAML cm, shape center, top-left logical origin", "positionMaxDeltaMm": 0.0, "sizeMaxDeltaMm": 0.0, "pageBounds": {"00_Style_Guide": "29.7 x 21.0 cm", "P1_UC_Overview": "33.87 x 19.05 cm", "P1_Domain_Overview": "33.87 x 19.05 cm"}},
+  "relations": {"sourceTargetResolution": "SpecId dictionary", "glue": "GlueTo PinX endpoints", "typeParity": "PASS", "endpointMultiplicity": "PASS (independent PRES-MULT labels)", "crossings": "0 (deterministic lane routing; visual review recommended)"},
+  "font": {"family": "Segoe UI", "documentFontId": 228},
+  "styleTokens": {"canvas": "#F8FAFC", "verified": ["#2563EB", "#7C3AED", "#0F766E", "#059669", "Segoe UI", "#F8FAFC"]},
+  "forbiddenCells": {"#VALUE!": 0, "#REF!": 0},
+  "artifacts": {"vsdx": "visio/CityNexus_Visio_Model_Baseline_v1.0.3_RC4.vsdx", "svgDirectory": "visio/exports/phase1-rc4"},
+  "scope": "Phase 1 only; Part 2 not rendered; source domain/requirements/use-cases/visio-spec unchanged"
+}

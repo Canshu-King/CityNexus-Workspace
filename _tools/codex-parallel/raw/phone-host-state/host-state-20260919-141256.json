@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-09-19T06:12:55.7974614Z",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "powershell": "7.6.5",
+  "node": "v24.14.0",
+  "python": "Python 3.10.11",
+  "integration": {
+    "path": "D:\\moodle\\_qoder_integration_20260919",
+    "head": "1a8462dbc0108585266f637350202f9587ca532c",
+    "branch": "HEAD",
+    "dirty_count": 0,
+    "dirty_paths": []
+  },
+  "addresses": [
+    {
+      "InterfaceAlias": "以太网 4",
+      "IPAddress": "192.168.1.100",
+      "PrefixLength": 24
+    }
+  ],
+  "listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8000,
+      "OwningProcess": 5044
+    }
+  ],
+  "environment_names_only": []
+}

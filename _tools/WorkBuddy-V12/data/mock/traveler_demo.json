@@ -1,0 +1,17 @@
+{
+  "id": "demo-traveler-001",
+  "display_name": "Demo User",
+  "email": "demo@example.com",
+  "locale": "zh-CN",
+  "timezone": "Asia/Shanghai",
+  "preferences": [
+    {
+      "id": "pref-001",
+      "category": "budget",
+      "key": "daily_limit",
+      "value": "500",
+      "weight": 1.0,
+      "priority": 1
+    }
+  ]
+}

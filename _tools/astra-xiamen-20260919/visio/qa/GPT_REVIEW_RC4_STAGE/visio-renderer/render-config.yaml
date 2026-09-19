@@ -1,0 +1,9 @@
+coordinateOrigin: top-left
+coordinateUnit: cm
+toleranceMm: 0.5
+background: '#F8FAFC'
+fontFamily: 'Segoe UI'
+pages:
+  - 00_style_guide
+  - p1_uc_overview
+  - p1_domain_overview

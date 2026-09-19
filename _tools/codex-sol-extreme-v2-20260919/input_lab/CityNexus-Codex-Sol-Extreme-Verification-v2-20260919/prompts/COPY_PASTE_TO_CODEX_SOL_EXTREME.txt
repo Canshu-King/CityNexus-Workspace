@@ -1,0 +1,73 @@
+Continue CityNexus work with a harder GPT-5.6 Sol mission.
+
+Use:
+CityNexus-Codex-Sol-Extreme-Verification-v2-20260919.zip
+
+This task is intentionally harder than the previous Sol Deep Mission.
+
+The previous run found CX-SOL-001, but its 400,000-transition state-machine
+result was mostly abstract-model consistency. This time, attack the REAL
+CityNexus implementation.
+
+READ-ONLY INPUTS:
+- D:\moodle\_qoder_integration_20260919
+- D:\moodle\_qoder_th_20260918
+- D:\moodle\CityNexus
+
+ALL WRITES:
+- D:\moodle\_codex_sol_extreme_v2_20260919
+
+Do not modify/reset/clean/merge/cherry-pick the input trees.
+Do not duplicate Qoder's active legacy-E2E repair work.
+Create a disposable committed snapshot/clone inside your own output directory.
+
+Execute ALL tracks:
+
+I — REAL API STATEFUL FUZZING
+Drive actual backend endpoints + actual persistence with Hypothesis/stateful or
+equivalent. Exercise journey/plan/disruption/ACK/replan/accept/reject/booking/
+provider-failure/retry sequences. Shrink real failures to replayable cases.
+
+J — TARGETED MUTATION TESTING
+Inject dangerous semantic regressions in disposable clones:
+ACK=>resolved, broken trigger linkage, provenance laundering, None/unknown hard
+mobility, mock hard fallback, unsafe physical identity, broken materiality,
+protected-commitment loss, partial-budget=>full, Live cursor ignored, stale
+cursor=>activity[0].
+Every catastrophic mutant must be KILLED. If a mutant survives, add the missing
+real regression test.
+
+K — CONCURRENCY / RACE AUDIT
+Attack ACK+accept races, duplicate accepts, competing proposals, stale proposal
+accept, booking-vs-replan, read-during-accept, provider-result-after-stale, app
+restart + retry. Use real backend/persistence.
+
+L — DIFFERENTIAL PROJECTION ORACLE
+Build an authoritative semantic snapshot and compare it with Journey/V8/Today/
+Live/Trips/Map/V10 projections across generated fixtures. Catch contradictions
+even when each component's local tests pass.
+
+M — MOBILITY TRUTH TAINT PROOF
+Trace fact_quality/provenance from provider -> capture -> normalization ->
+evidence -> candidate -> replan -> projection. Prove synthetic/unknown/mock
+cannot become hard truth. Use both static tracing and dynamic focused tests.
+
+Hard rules:
+- Do not spend most of the run rerunning broad green suites.
+- Do not replace real-code tests with a hand-written toy model.
+- Prefer minimized counterexamples, mutation survivors, race schedules and
+  executable regressions.
+- Candidate patches only for VERIFIED defects.
+- Keep CX-SOL-001 stale-cursor hardening in scope:
+  absent cursor may pre-execution fallback; PRESENT BUT UNKNOWN cursor must fail
+  closed and must not fabricate activity[0] as Now.
+
+Final package:
+CityNexus-Codex-Sol-Extreme-Verification-v2-Results-20260919.zip
+
+Final verdict exactly:
+CODEX_SOL_EXTREME_VERIFICATION_COMPLETE
+or
+CODEX_SOL_EXTREME_VERIFICATION_PARTIAL
+
+If PARTIAL, finish all unblocked tracks before stopping.

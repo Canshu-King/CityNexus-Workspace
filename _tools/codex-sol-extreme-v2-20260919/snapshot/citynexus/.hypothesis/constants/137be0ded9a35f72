@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\context\weather_ingestion.py
+# hypothesis_version: 6.168.0
+
+['ACKNOWLEDGED', 'CRITICAL', 'DEGRADED', 'DETECTED', 'EXTREME', 'Event', 'FORECAST_CLEARED', 'HIGH', 'INFO', 'LOW', 'MAJOR', 'MEDIUM', 'MINOR', 'PROVIDER_VERIFIED', 'RESOLVED', 'SERVICE_UNAVAILABLE', 'SYSTEM_DERIVED', 'WEATHER', 'affected_activity_id', 'degraded_providers', 'detail', 'forecast_valid_from', 'forecast_valid_until', 'journey_id', 'latitude', 'longitude', 'open-meteo', 'payload', 'place_id', 'provenance', 'provider_evidence', 'provider_key', 'provider_status', 'query_scope', 'reason', 'reason_code', 'resolved_at', 'scope_latitude', 'scope_longitude', 'scope_place_id', 'severity', 'snapshot_captured_at', 'status', 'weather_identity', 'weather_resolution', '{}']

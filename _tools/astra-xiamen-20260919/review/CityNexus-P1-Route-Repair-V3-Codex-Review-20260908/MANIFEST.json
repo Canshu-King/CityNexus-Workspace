@@ -1,0 +1,457 @@
+[
+  {
+    "path": "calibration/analyze_p1_route_conflicts.py",
+    "size": 4597,
+    "sha256": "C5F03A657FA3F2068E442B18ADE7DF9DABBC466166A2CC9EF6375C03738111DC"
+  },
+  {
+    "path": "calibration/audit_c4_fallback_openxml.py",
+    "size": 5693,
+    "sha256": "C0B8479F3B0E2ECF3BF412FE18E79C599C6438E63120743338E0DA67F68C4388"
+  },
+  {
+    "path": "calibration/audit_p1_route_contacts.py",
+    "size": 7547,
+    "sha256": "3CCC8B74387938774BA9F65C9520083C0630E230D6513FA60E01ADACACE1E5E2"
+  },
+  {
+    "path": "calibration/audit_p1_route_topology_v2.py",
+    "size": 8109,
+    "sha256": "E1A423A193B8D5B88368B850B628C413D6D59A4F61D460D3D740D70C77E20540"
+  },
+  {
+    "path": "calibration/build_c2_1.py",
+    "size": 4301,
+    "sha256": "BD50E9CF7A11716614A4B2B6301C0204B0F2977FC27164FE8E4AEF97B427743C"
+  },
+  {
+    "path": "calibration/build_c2_2.py",
+    "size": 12115,
+    "sha256": "3EB9CCC026B80E67B4E33A783F7AE8223C9BDAE650E2D7C85EB6B73AADAE2830"
+  },
+  {
+    "path": "calibration/build_c2.py",
+    "size": 2185,
+    "sha256": "4FBBAD2A66A14BA4E5D5E20ED9788D5732BB41DAC23F2301D75F0DF4686184B8"
+  },
+  {
+    "path": "calibration/build_c3.py",
+    "size": 5033,
+    "sha256": "3183B4FAE21275BF62A2C00033C0C601BF56B4A987CA2200452227B19F03B839"
+  },
+  {
+    "path": "calibration/build_c4_1.py",
+    "size": 13636,
+    "sha256": "4479D7512389B325250BFB3FFA8F60D5B153020144EFAA0E75C21036F1FFEE56"
+  },
+  {
+    "path": "calibration/build_c4_1a.py",
+    "size": 17099,
+    "sha256": "048139B2875A9CBEECD4480470E942077CCB2CC88AA05B40E0749CD9D887EF85"
+  },
+  {
+    "path": "calibration/build_c4_1b.py",
+    "size": 19577,
+    "sha256": "F6C22295F0E44461377293C950F26CF8FC2E2143F6D2B5C4324DA05B8D14E241"
+  },
+  {
+    "path": "calibration/build_c4_1c.py",
+    "size": 21724,
+    "sha256": "38F424FBA88A2ED4D9DB5665D93C5E10BA19BAF1EECE21093168AFC3AAABB2CC"
+  },
+  {
+    "path": "calibration/build_c4_1d.py",
+    "size": 23457,
+    "sha256": "62826DC331D47D2906FAB667BAF4219A3D36FB2C4CDB29E802F0642F804F2C9C"
+  },
+  {
+    "path": "calibration/build_c4_extend_1.py",
+    "size": 15505,
+    "sha256": "F79F946782BB27C3F63A45846A6FEC29E24969EDA8BDCD027C1419AE9662469F"
+  },
+  {
+    "path": "calibration/build_c4_extend.py",
+    "size": 15493,
+    "sha256": "6630867FDB6B50B2DB247010C52DDCA6C6F749DFA23275C374431548AEDB809F"
+  },
+  {
+    "path": "calibration/build_c4_fallback.py",
+    "size": 14088,
+    "sha256": "E7DB100E6E6DC66B42D29AF04C2FA3CE3E96108AC7648C7E2E7866DC3DCE401E"
+  },
+  {
+    "path": "calibration/build_c4.py",
+    "size": 8550,
+    "sha256": "701A8F151B76C21A4A42B98C37A12E3DBD9EA63AD8B74EE13CF86EA3E053AC7F"
+  },
+  {
+    "path": "calibration/critical_grid_geometry.py",
+    "size": 2767,
+    "sha256": "51A3924E7F2E6B496AFFE033935523711A887A48A01D6481808A7F7B5EF48743"
+  },
+  {
+    "path": "calibration/explore_p1_disjoint_pool.py",
+    "size": 20587,
+    "sha256": "C15748A0D29886D3618BE38C730D4A1D7268D5E53B2ADE68FF48F4CE20472AE7"
+  },
+  {
+    "path": "calibration/freeze_c4.py",
+    "size": 1018,
+    "sha256": "23D53B07473EF091135C0D3C78ED87F40F82805A84AD1A88D0190F6A1AE3B485"
+  },
+  {
+    "path": "calibration/P1_ROUTE_PORT_PLANS.yaml",
+    "size": 15414,
+    "sha256": "B9EF9F1DCA763603B9CEC344D1418D78F344B0D4D413C7C43488797ED3033B4C"
+  },
+  {
+    "path": "calibration/package_review.py",
+    "size": 7366,
+    "sha256": "A14798977CBB30E74092F9987FAFE0E38323F87D14F69D3748166BF6B9C0C86D"
+  },
+  {
+    "path": "calibration/plan_p1_associations_legacy.py",
+    "size": 16529,
+    "sha256": "DBD8221FDDE48F8F349C04633D41A46CB5A6BDBB58E3A10A81A20762BF9CCE41"
+  },
+  {
+    "path": "calibration/plan_p1_associations.py",
+    "size": 33242,
+    "sha256": "52AC640AE916C2EBE1D8DC22522FF3433DF7402326197318091D08382998D9DA"
+  },
+  {
+    "path": "calibration/prepare_p1_corridors.py",
+    "size": 3597,
+    "sha256": "3309633928C2C46EFD3EFB25D7AB4B2D5096E14BE8FE9063C88B3DEE8B84610F"
+  },
+  {
+    "path": "calibration/route_candidate_selector.py",
+    "size": 7987,
+    "sha256": "A2BFE78098D9360A860C46BE83F58F4956E8A454E116CE6D2A8A3B19B12A6C86"
+  },
+  {
+    "path": "calibration/route_p1_negotiated_grid.py",
+    "size": 15445,
+    "sha256": "2517AF421AC7DFF91A92BC332D705E557A13A585FDAE3F44405297934D1C6874"
+  },
+  {
+    "path": "calibration/routing_geometry.py",
+    "size": 4961,
+    "sha256": "E289F47C5BCD1138F989962D39B8F4E5E1C75AE19B45BBA5F4C2CE532EB3D42B"
+  },
+  {
+    "path": "calibration/run_calibrations.py",
+    "size": 1514,
+    "sha256": "DBA7A77AD135B4AB5667401BEA99B79F8DB7CBA31E9C72A68441731305E0A573"
+  },
+  {
+    "path": "calibration/search_p1_global_port_rotations.py",
+    "size": 6747,
+    "sha256": "4F206E5C597A232C301D0016A62489EC41165C31FA5C1C52A9AE35438594F650"
+  },
+  {
+    "path": "calibration/search_p1_hard_ripup.py",
+    "size": 4014,
+    "sha256": "CD6330B40455E5DAA8DBAC5B54733E21218555C43A5CACF74B5AB916BC1C1C4C"
+  },
+  {
+    "path": "calibration/search_planar_skeleton_ports.py",
+    "size": 6386,
+    "sha256": "93E74695D1BF7B9489DF49EB8FA50881C12C554773605A67B40147D958B5E282"
+  },
+  {
+    "path": "calibration/select_p1_candidate_pool.py",
+    "size": 5375,
+    "sha256": "6AF44A22AA8A901436D645DA29DBCA04C6424F9BAAA8E3DC030E05F347F505C8"
+  },
+  {
+    "path": "calibration/solve_p1_disjoint_cpsat.py",
+    "size": 10136,
+    "sha256": "334F11412497683B8EE1D2544E03C3C4AB9F65C9048B1B0E7ECABCEC97801D53"
+  },
+  {
+    "path": "calibration/update_source_input_hashes.py",
+    "size": 2468,
+    "sha256": "8A8A59BFDDB0B57986B81A9B8F43E0D238F617A2AC11D2DF36629EB7C9DBF049"
+  },
+  {
+    "path": "calibration/validate_c1.py",
+    "size": 4939,
+    "sha256": "7B5B1790D5CAB9906BB987A058D90DDCEEB706D0D5E9AA0686DC8A5BF5615786"
+  },
+  {
+    "path": "calibration/validate_c2_1.py",
+    "size": 1485,
+    "sha256": "443ABFA5523C55FBEEE2039D4D90CB15A76112AFBE67F36CEFD3F22D79CB545C"
+  },
+  {
+    "path": "calibration/validate_c2_2.py",
+    "size": 17104,
+    "sha256": "B38AB25663DEAAA6ABBBD0B9627158182EAD3B1F6AF1B90E62ACB2C104ABA0B2"
+  },
+  {
+    "path": "calibration/validate_c2.py",
+    "size": 997,
+    "sha256": "71C24FC35CF3F97C280FF2E91B0CC0367B053D3273C39B531754FAA6DDF6244D"
+  },
+  {
+    "path": "calibration/validate_c3.py",
+    "size": 9386,
+    "sha256": "BE6E7432AFB86E7F35C1B41E93DF3E27FE078BCA0B106EFB9083F2EC315E2BB7"
+  },
+  {
+    "path": "calibration/validate_c4_1.py",
+    "size": 14577,
+    "sha256": "E92E7DECA27BD0E0E37B98E802B194D08169E55AFE21115E40EB6815DF678CA8"
+  },
+  {
+    "path": "calibration/validate_c4_1a.py",
+    "size": 14591,
+    "sha256": "51A9DA59753E5714703711476144EBF2C3872E089241A1CEEE82704788540D0A"
+  },
+  {
+    "path": "calibration/validate_c4_1b.py",
+    "size": 15492,
+    "sha256": "E2FB1E82B3904A3130F244667B11818D2E3B4DFBB4279D3A4945048DEEA11B68"
+  },
+  {
+    "path": "calibration/validate_c4_1c.py",
+    "size": 15492,
+    "sha256": "6AC12045FC5BA139A528CDA8CFB93BEFA76DDDF5EBA0E59F37C52F6C7838AFBB"
+  },
+  {
+    "path": "calibration/validate_c4_1d.py",
+    "size": 15492,
+    "sha256": "EEEA1BABDC65A946E9EC24DCDCFC9F7DAE41B8DDCA9AAB1FD0C28B4224F50107"
+  },
+  {
+    "path": "calibration/validate_c4_extend_1.py",
+    "size": 24112,
+    "sha256": "3347A0ACA98821A1292EA8005D0BAAA4366271F38615FB1936F936C090C284AA"
+  },
+  {
+    "path": "calibration/validate_c4_extend.py",
+    "size": 20732,
+    "sha256": "779BD7973F6246C989C208EF1DACEF334C1F0CB93C7D3EF52002BAB3C27F37DF"
+  },
+  {
+    "path": "calibration/validate_c4_fallback.py",
+    "size": 20231,
+    "sha256": "E72213345F6B705F75BABC334A2F10ED5988BB08FE6EDCD228373B0F267933FC"
+  },
+  {
+    "path": "calibration/validate_c4_freeze.py",
+    "size": 3545,
+    "sha256": "0C0CB94D620D8E4BFF8181D021146206A1BAB5909E207FC5F47EB87E46DB301C"
+  },
+  {
+    "path": "calibration/validate_c4_plan.py",
+    "size": 2753,
+    "sha256": "F61A6117940C9E094183BFDD1927515D1B966A578ED9A324FCCD420C94BB5FC2"
+  },
+  {
+    "path": "calibration/validate_c4.py",
+    "size": 9895,
+    "sha256": "95E00822D7EEDA7356F60E04BD64AE620173926697665F82971E1EB8E81B7548"
+  },
+  {
+    "path": "calibration/validate_p1_route_candidate_v2.py",
+    "size": 2466,
+    "sha256": "AAC508C33336E6349242C7302BD8BA687C3DC00A66426BD21F96DA86C75D2CE4"
+  },
+  {
+    "path": "calibration/validate_p1_route_candidate_v3.py",
+    "size": 5775,
+    "sha256": "A4D211821460BB12E1786381AA5F8DAA4AF0B86D5F703A0E0938098239660D64"
+  },
+  {
+    "path": "calibration/validate_p1_route_candidate.py",
+    "size": 4537,
+    "sha256": "874EE5783C6C67B066186C2DEBC210FC91DDB4FA81AF3EE9F80E0C917E1C3E73"
+  },
+  {
+    "path": "calibration/write_manifest_c2_2.py",
+    "size": 1426,
+    "sha256": "10AC293D2352E9AD4EFF7A366A5F55D41429EA9E4270E5274241A01252B3387A"
+  },
+  {
+    "path": "calibration/write_manifest.py",
+    "size": 1620,
+    "sha256": "5E0A5903B6798F136D4750CF026DD5953826BEFE14AC755A4296AE2C3F161B8B"
+  },
+  {
+    "path": "candidate/p1_uc_overview.yaml",
+    "size": 5722,
+    "sha256": "6E2B9876177803F05A9397DFA6D4D64DA1D2FEAC01F3946925864F64FC6D24C5"
+  },
+  {
+    "path": "candidate/phase1-routing-rc6-candidate.yaml",
+    "size": 9417,
+    "sha256": "8C1661EBB1A9D5A371F48EF800316DD643F391BEEC559EB2A4B8065EED75182D"
+  },
+  {
+    "path": "candidate/visio-renderer-README.md",
+    "size": 565,
+    "sha256": "5069458128FE1514DDAC8829469C7464722A93AA41B1CE0462DE08BEF15BA927"
+  },
+  {
+    "path": "diagnostics/joint64-01.json",
+    "size": 1266,
+    "sha256": "28B4E28DEA38A81E9351AF10373F361FFD3519E96F93D97761DB894ED75D1DA1"
+  },
+  {
+    "path": "diagnostics/joint64-02.json",
+    "size": 1266,
+    "sha256": "8F2593135E2E100487E50D55705EE237959A57A0E2BEC8D1C8E9C94698D23262"
+  },
+  {
+    "path": "diagnostics/joint64-03.json",
+    "size": 1275,
+    "sha256": "CD600D3BB9DBC5AEF3195D08EAD3F3DE5151A40075E999CAF59789557EE25C09"
+  },
+  {
+    "path": "diagnostics/joint64-04.json",
+    "size": 1266,
+    "sha256": "96145101B1159C4A0A2C24B2126AAC957BF20ED37369937BC487621DF24AFEBA"
+  },
+  {
+    "path": "diagnostics/joint64-05.json",
+    "size": 1265,
+    "sha256": "014A2813C4D758CFDAE156C91B8F35EBC544081215917CBF09DCDF25DBE87853"
+  },
+  {
+    "path": "diagnostics/joint64-06.json",
+    "size": 1266,
+    "sha256": "A5E7E87A71470B602D43383EEA28DD514415409E258153B592A988238AF75B54"
+  },
+  {
+    "path": "diagnostics/joint64-07.json",
+    "size": 1266,
+    "sha256": "37BD502A544122C35AFE2E5BB9A0A62EF7163034165E169E609C1EB837673C03"
+  },
+  {
+    "path": "diagnostics/joint64-08.json",
+    "size": 1266,
+    "sha256": "B384E6A8A9A1FB678AFBE1AC18728EFC69C55A3DD88D50F3D6F3DEB5E6FF6D5D"
+  },
+  {
+    "path": "diagnostics/P1-CANDIDATE-FAMILY-DIAGNOSTICS.json",
+    "size": 68027,
+    "sha256": "5C302EC2C7E137FA602EEB959B1492C884EFABD85B5E0A8DDC5155E2854B4535"
+  },
+  {
+    "path": "diagnostics/P1-NEGOTIATED-GRID-TRACE.json",
+    "size": 377,
+    "sha256": "D33CCCA9F7F6DFC95CDC05AAB6F3B0A576F52B10E27724E94C2AE862D91D1B9A"
+  },
+  {
+    "path": "diagnostics/P1-TRAVELER-EXACT-REFERENCE.yaml",
+    "size": 3805,
+    "sha256": "9F592C2EABE962487D7493DCB4DF8F179869524E984042A0CEF7B8DA4FCE43E7"
+  },
+  {
+    "path": "diagnostics/planprov-01.json",
+    "size": 596,
+    "sha256": "7E851E6A9F4F3E5A699E0741AEC54F39ECD3DF24C9A0544D57BCDB8F457ABC15"
+  },
+  {
+    "path": "diagnostics/planprov-02.json",
+    "size": 596,
+    "sha256": "7CDCAC0D117C9CFE49F77C8C92B6ECFF3C5902451533BA1D41522447E8BD813D"
+  },
+  {
+    "path": "diagnostics/planprov-03.json",
+    "size": 596,
+    "sha256": "4C436FA2FF619B8CE5C6160781DE3E6DC15F71938D387ED723FED076A016651C"
+  },
+  {
+    "path": "diagnostics/planprov-04.json",
+    "size": 596,
+    "sha256": "C6BBB4C64DEFFC4C19E0C30ADD6FD09715D631DEC5EA3E0C282162CED4DC8D43"
+  },
+  {
+    "path": "diagnostics/planprov-05.json",
+    "size": 596,
+    "sha256": "70273D2EE94A2D01DDE2B19DC8DB126536C5DEE0FB7DA5568FCD2E22250F4F04"
+  },
+  {
+    "path": "diagnostics/planprov-06.json",
+    "size": 596,
+    "sha256": "7B041EA61424A53C1B513643F6A0AB3B9E4BE585698F6A12E5612A64541E2840"
+  },
+  {
+    "path": "diagnostics/planprov-07.json",
+    "size": 596,
+    "sha256": "CB3486BB3E4E7B8FB88EF2827CDB431AC63E3A109D6229CCAF41B6E441553D4B"
+  },
+  {
+    "path": "diagnostics/planprov-08.json",
+    "size": 596,
+    "sha256": "1EF76BEAF3E3C3C94DBD5163050D5244EF8F57C7C297099DBA39A017C3FC22AD"
+  },
+  {
+    "path": "diagnostics/trav-planar-01.json",
+    "size": 3671,
+    "sha256": "46EB4D2B7FB504E2DB895C74C273246FDF36941FB54A2FAB07248ACB4FDFCEF6"
+  },
+  {
+    "path": "diagnostics/trav-planar-01.yaml",
+    "size": 3376,
+    "sha256": "A1AEAEDC42499EBAA6724A12234215A3AAC34C01514F2EAD36C33E32FF85BB35"
+  },
+  {
+    "path": "incoming-review/CODEX_NEXT_INSTRUCTION.md",
+    "size": 2263,
+    "sha256": "F456D50F1B675333BC63CF03CB92E4299FB4D873753F8FD0F3BA4FC1CF664F72"
+  },
+  {
+    "path": "incoming-review/CODEX-NEXT-INSTRUCTIONS.md",
+    "size": 4665,
+    "sha256": "B3C724E0D18C73B61B5E41E480A9F788C83C85472E5FE54825B55C526752A6A0"
+  },
+  {
+    "path": "incoming-review/EXPERIMENT-NOTES.md",
+    "size": 4461,
+    "sha256": "10BD0F0B186F94684636AEFAF70CB540DDF91E5A1DA6994A8DA9DCD3A543B3F2"
+  },
+  {
+    "path": "incoming-review/GPT-AID-README.md",
+    "size": 5307,
+    "sha256": "EBE008E35988DB3D1914F6AB47688E2E026676E89A534DF806055359E9F1357C"
+  },
+  {
+    "path": "incoming-review/prior-topology-review-README.md",
+    "size": 1439,
+    "sha256": "30583E0B085CBF0CCAF60B71F78E511927B4DC1EA2A5CD364069841A811FC110"
+  },
+  {
+    "path": "incoming-review/README.md",
+    "size": 1562,
+    "sha256": "1F8CDB93FACA52448829BFBFC0458853361BC92AC177026A5CF4E0CE885744C9"
+  },
+  {
+    "path": "PACKAGE-README.md",
+    "size": 1906,
+    "sha256": "E1958DFC3169BF7EFD82A1564D7CACD65B519B860159A334EE1182949677B4B6"
+  },
+  {
+    "path": "tests/test_p1_planner_normalization.py",
+    "size": 968,
+    "sha256": "196CF3F524245C51DF2DA7D837287F3258E29ECC3F8022E3B145DF719ACE24BA"
+  },
+  {
+    "path": "tests/test_p1_rc6_route_prep_contract.py",
+    "size": 1479,
+    "sha256": "2C595A35951F5C5EEEFA4270EE2EB0A0D2E4EF8E933786B01EE4B6DCCB15F064"
+  },
+  {
+    "path": "tests/test_p1_route_contact_gate_contract.py",
+    "size": 750,
+    "sha256": "24DFEB4BAF1F01CF873E1BE1970AAC706037F9C30F96B142A9DE26AA5DEB424C"
+  },
+  {
+    "path": "tests/test_p1_route_v3_contract.py",
+    "size": 1106,
+    "sha256": "562B88A70A02103DD23C766BAD5D599088CD24C5B474350C55873FC341715E18"
+  }
+]

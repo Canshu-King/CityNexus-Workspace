@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_npyio_impl.py
+# hypothesis_version: 6.168.0
+
+[b'PK\x03\x04', b'PK\x05\x06', 50000, '"', '#', '# ', '%', '%.18e', '+-', ',', ', ', '-', '...', '.npy', '.npz', 'ASCII', 'M8', 'No data left in file', 'O', 'S', 'S0', 'SUM', 'U0', '_', '_obj', 'allowZip64', 'argument', 'bytes', 'encoding', 'f%i', 'fix_imports', 'fromregex', 'genfromtxt', 'j', 'latin1', 'load', 'loadtxt', 'm8', 'match', 'name', 'numpy', 'numpy.lib.npyio', 'object', 'packbits', 'rb', 'read', 'rt', 'save', 'savetxt', 'savez', 'savez_compressed', 'unpackbits', 'w', 'wb', 'write', 'wt']

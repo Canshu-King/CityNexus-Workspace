@@ -1,0 +1,36 @@
+{
+  "stage": "P1_UC_Overview Association route repair",
+  "verdict": "OFFICIAL_CANDIDATE_STILL_BLOCKED",
+  "uploadedReviewSha256": "0acebae96da413492271a9ff3c31d6f6abaf7b06917378610645ddbccec53caf",
+  "officialCandidateSha256": "8c1661ebb1a9d5a371f48ef800316dd643f391beec559eb2a4b8065eed75182d",
+  "topology": {
+    "candidate": {
+      "genus": 2,
+      "status": "FAIL"
+    },
+    "PLAN_O_PRESERVE_LOCAL_GEOMETRY": {
+      "genus": 0,
+      "status": "PASS",
+      "role": "PRIMARY_GEOMETRY_SEED"
+    },
+    "PLAN_R_REVERSE_EMBEDDING": {
+      "genus": 0,
+      "status": "PASS",
+      "role": "BOUNDED_FALLBACK"
+    }
+  },
+  "geometryGate": {
+    "V1": "PASS",
+    "V2": "FAIL",
+    "V3": "FAIL_DUE_TO_V2",
+    "contactPairCount": 46,
+    "uniqueContactCount": 55,
+    "tjunction": 22,
+    "shared_endpoint": 33,
+    "shortSegmentCount": 9,
+    "redundantCollinearPointCount": 88
+  },
+  "newCriticalFinding": "Original 0.10-cm raster can silently omit an off-grid orthogonal segment when the segment constant coordinate is not 0.10-aligned.",
+  "recommendedArchitecture": "genus-0 port plan -> critical-coordinate family generation -> exact candidate conflict graph -> MRV/backtracking selection -> normalization -> existing V2/V3/pytest",
+  "hardStop": "First full V2 PASS + V3 PASS + zero-failure complete pytest => package for external freeze; no formal Visio/RC6 in same run."
+}

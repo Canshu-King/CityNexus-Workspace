@@ -1,0 +1,2410 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\moodle\\_qoder_integration_20260919\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--reporter=json"
+    ],
+    "configFile": "D:\\moodle\\_qoder_integration_20260919\\frontend\\playwright.config.ts",
+    "rootDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/moodle/_qoder_integration_20260919/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "real-seed",
+        "name": "real-seed",
+        "testDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/_qoderRealSeed\\.setup\\.ts/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "D:/moodle/_qoder_integration_20260919/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "_qoderRealSeed.setup.ts",
+      "file": "_qoderRealSeed.setup.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "seed a real journey through the product API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "real-seed",
+              "projectName": "real-seed",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4491,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[qoder-real-seed] journey=da31cbc8-f81d-469e-b9d8-ab3aaf131c78 options=4 chosen=62cf1905-9cfe-4036-83a1-875c85249cac (Haihe Riverside Hotel)\n"
+                    },
+                    {
+                      "text": "[qoder-real-seed] trialWizard=false live-journey-current=true\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:19:11.430Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e5b963f3c8f6099f74d0-d425156f0efa8e024368",
+          "file": "_qoderRealSeed.setup.ts",
+          "line": 110,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "golden.spec.ts",
+      "file": "golden.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Journey Mode uses backend truth for closure recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10378,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\golden.spec.ts:8:24",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\golden.spec.ts",
+                      "column": 24,
+                      "line": 8
+                    },
+                    "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m\n \u001b[90m  7 |\u001b[39m   \u001b[36mconst\u001b[39m status \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m expect(status)\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m expect(status)\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"ACTIVE\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyMap))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyTimeline))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\golden.spec.ts",
+                        "column": 24,
+                        "line": 8
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n   6 |\n   7 |   const status = page.getByTestId(testIds.journeyStatus);\n>  8 |   await expect(status).toHaveAttribute(\"data-source\", \"backend\");\n     |                        ^\n   9 |   await expect(status).toContainText(\"ACTIVE\");\n  10 |   await expect(page.getByTestId(testIds.journeyMap)).toBeVisible();\n  11 |   await expect(page.getByTestId(testIds.journeyTimeline)).toContainText(\"Tech Art Center\");\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\golden.spec.ts:8:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:19:16.545Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\golden-Journey-Mode-uses-backend-truth-for-closure-recovery-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\golden.spec.ts",
+                    "column": 24,
+                    "line": 8
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "368b625b608da03d5a27-8459259d7254737740db",
+          "file": "golden.spec.ts",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "live-autopilot-v5.spec.ts",
+      "file": "live-autopilot-v5.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V5 zero-touch Autopilot recovers through provider pulse, CP-SAT V2, and reload",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10440,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts:31:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts:31:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:19:27.558Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\live-autopilot-v5-V5-zero--e4a6d--pulse-CP-SAT-V2-and-reload-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\live-autopilot-v5.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "94ed269759f25bdd5975-100a531069f2683bc6e3",
+          "file": "live-autopilot-v5.spec.ts",
+          "line": 21,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "predictive-real-city-v6.spec.ts",
+      "file": "predictive-real-city-v6.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V6 Predictive Real-City Twin prevents a Journey weakness autonomously",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10408,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\predictive-real-city-v6.spec.ts:23:52",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\predictive-real-city-v6.spec.ts",
+                      "column": 52,
+                      "line": 23
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 21 |\u001b[39m\n \u001b[90m 22 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m\"journey-status\"\u001b[39m))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m   \u001b[36mconst\u001b[39m modeResponse \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mwaitForResponse(\n \u001b[90m 25 |\u001b[39m     (item) \u001b[33m=>\u001b[39m\n \u001b[90m 26 |\u001b[39m       item\u001b[33m.\u001b[39murl()\u001b[33m.\u001b[39mincludes(\u001b[32m\"/agent-policy\"\u001b[39m) \u001b[33m&&\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\predictive-real-city-v6.spec.ts",
+                        "column": 52,
+                        "line": 23
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  21 |\n  22 |   await page.goto(\"/\");\n> 23 |   await expect(page.getByTestId(\"journey-status\")).toHaveAttribute(\"data-source\", \"backend\");\n     |                                                    ^\n  24 |   const modeResponse = page.waitForResponse(\n  25 |     (item) =>\n  26 |       item.url().includes(\"/agent-policy\") &&\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\predictive-real-city-v6.spec.ts:23:52"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:19:38.577Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\predictive-real-city-v6-V6-8173c-urney-weakness-autonomously-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\predictive-real-city-v6.spec.ts",
+                    "column": 52,
+                    "line": 23
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "4894c07164170a07435a-3571807afa92e197005d",
+          "file": "predictive-real-city-v6.spec.ts",
+          "line": 14,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "product-hardening.spec.ts",
+      "file": "product-hardening.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "TravelerTwin Control Tower renders persisted evidence and authority boundary",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10359,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:11:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:11:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:19:49.561Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-hardening-Traveler-1b173-ence-and-authority-boundary-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-bc9ed4f872aaa739e3d1",
+          "file": "product-hardening.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "Control Tower compiles and reloads a persisted natural-language mission",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10397,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:22:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:22:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:20:00.487Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-hardening-Control--0c139-ed-natural-language-mission-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-2a57c6a0c9a03c18e420",
+          "file": "product-hardening.spec.ts",
+          "line": 21,
+          "column": 1
+        },
+        {
+          "title": "Assisted acceptance is policy-driven and route/feed evidence survive reload",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10410,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:47:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:47:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:20:11.484Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-hardening-Assisted-2b63c-eed-evidence-survive-reload-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-ac1c193de3c4b3de9e28",
+          "file": "product-hardening.spec.ts",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "Autonomous mode executes an envelope-safe recovery through the Agent Gateway",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10373,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:175:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:175:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:20:22.570Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-hardening-Autonomo-12c8d-y-through-the-Agent-Gateway-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-b93e60e7ba896a3334d4",
+          "file": "product-hardening.spec.ts",
+          "line": 172,
+          "column": 1
+        },
+        {
+          "title": "Proactive Guardian launches the flagship recovery without a new chat prompt",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10364,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:252:3",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                      "column": 57,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openJourney(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mjourneyStatus))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"data-source\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"backend\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(testIds\u001b[33m.\u001b[39mcurrentActivity))\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Tech Art Center\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m }\n \u001b[90m 9 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                        "column": 57,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('journey-status')\nExpected: \u001b[32m\"backend\"\u001b[39m\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" getByTestId('journey-status') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey-status')\u001b[22m\n\n\n  4 | async function openJourney(page: Page) {\n  5 |   await page.goto(\"/\");\n> 6 |   await expect(page.getByTestId(testIds.journeyStatus)).toHaveAttribute(\"data-source\", \"backend\");\n    |                                                         ^\n  7 |   await expect(page.getByTestId(testIds.currentActivity)).toContainText(\"Tech Art Center\");\n  8 | }\n  9 |\n    at openJourney (D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:6:57)\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts:252:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:20:33.633Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-hardening-Proactiv-e0669-y-without-a-new-chat-prompt-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-hardening.spec.ts",
+                    "column": 57,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-d389f04c847d96a20f90",
+          "file": "product-hardening.spec.ts",
+          "line": 251,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "product-v8.spec.ts",
+      "file": "product-v8.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "V8 product experience",
+          "file": "product-v8.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "completes the multi-day stay and autonomous recovery journey",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 10400,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('today-heading')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('today-heading') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('today-heading')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('today-heading')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('today-heading') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('today-heading')\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts:14:53",
+                        "location": {
+                          "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                          "column": 53,
+                          "line": 14
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 12 |\u001b[39m \u001b[90m       data-testid=\"today-heading\". Asserting the retired string would have\u001b[39m\n \u001b[90m 13 |\u001b[39m \u001b[90m       tested a copy entry nobody renders. */\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 14 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m\"today-heading\"\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m\"v8-maplibre-panel\"\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({ path\u001b[33m:\u001b[39m \u001b[32m\"../reports/product-v8/ui/after/journey-hub-desktop.png\"\u001b[39m\u001b[33m,\u001b[39m fullPage\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 17 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                            "column": 53,
+                            "line": 14
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('today-heading')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('today-heading') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('today-heading')\u001b[22m\n\n\n  12 |        data-testid=\"today-heading\". Asserting the retired string would have\n  13 |        tested a copy entry nobody renders. */\n> 14 |     await expect(page.getByTestId(\"today-heading\")).toBeVisible();\n     |                                                     ^\n  15 |     await expect(page.getByTestId(\"v8-maplibre-panel\")).toBeVisible();\n  16 |     await page.screenshot({ path: \"../reports/product-v8/ui/after/journey-hub-desktop.png\", fullPage: true });\n  17 |\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts:14:53"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:20:44.652Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-v8-V8-product-expe-0a799-autonomous-recovery-journey-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                        "column": 53,
+                        "line": 14
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "12c80ef017c6f7cfbfe6-7774b143b8c08d7465e5",
+              "file": "product-v8.spec.ts",
+              "line": 8,
+              "column": 3
+            },
+            {
+              "title": "keeps the mobile Journey, Map, AI, Bookings, Me composition usable",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 10374,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('v8-live-journey')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('v8-live-journey') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('v8-live-journey')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('v8-live-journey')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('v8-live-journey') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('v8-live-journey')\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts:57:55",
+                        "location": {
+                          "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                          "column": 55,
+                          "line": 57
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 55 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize({ width\u001b[33m:\u001b[39m \u001b[35m390\u001b[39m\u001b[33m,\u001b[39m height\u001b[33m:\u001b[39m \u001b[35m844\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/v8/live\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 57 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m\"v8-live-journey\"\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 58 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"navigation\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Mobile navigation\"\u001b[39m })\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Map\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Compare all modes\"\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 60 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"dialog\"\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                            "column": 55,
+                            "line": 57
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('v8-live-journey')\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('v8-live-journey') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('v8-live-journey')\u001b[22m\n\n\n  55 |     await page.setViewportSize({ width: 390, height: 844 });\n  56 |     await page.goto(\"/v8/live\");\n> 57 |     await expect(page.getByTestId(\"v8-live-journey\")).toBeVisible();\n     |                                                       ^\n  58 |     await expect(page.getByRole(\"navigation\", { name: \"Mobile navigation\" }).getByRole(\"button\", { name: \"Map\" })).toBeVisible();\n  59 |     await page.getByRole(\"button\", { name: \"Compare all modes\" }).click();\n  60 |     await expect(page.getByRole(\"dialog\")).toBeVisible();\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts:57:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:20:55.807Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\product-v8-V8-product-expe-89c84-kings-Me-composition-usable-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\product-v8.spec.ts",
+                        "column": 55,
+                        "line": 57
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "12c80ef017c6f7cfbfe6-ec322dd82df08762746c",
+              "file": "product-v8.spec.ts",
+              "line": 54,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-ack-rendered.spec.ts",
+      "file": "qoder-ack-rendered.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T3 acknowledgement vs resolution (rendered integration)",
+          "file": "qoder-ack-rendered.spec.ts",
+          "line": 197,
+          "column": 6,
+          "specs": [
+            {
+              "title": "an ACKNOWLEDGED disruption with no linked acceptance stays open: both '发生了什么' and '已知晓，仍待处理' render",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 604,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:06.790Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-aba9fe52acc648eca786",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 198,
+              "column": 3
+            },
+            {
+              "title": "an ACCEPTED proposal linked to the event by trigger_event_id closes it: no open/acknowledged notice, shown as handled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 575,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:07.563Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-7be1823e7e89336551c4",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "an ACCEPTED proposal with an UNRELATED trigger_event_id leaves the event open",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 576,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:08.149Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-d6a15c785fb1bafb50e9",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 246,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "T3 ack vs resolution — Today surface (rendered integration)",
+          "file": "qoder-ack-rendered.spec.ts",
+          "line": 279,
+          "column": 6,
+          "specs": [
+            {
+              "title": "an ACKNOWLEDGED event with no acceptance stays an unresolved change on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 487,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:08.735Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-cde7acd51ffd1ab0172a",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 280,
+              "column": 3
+            },
+            {
+              "title": "a matching ACCEPTED replan clears the change count on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 467,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:09.231Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-3afe1cd932624ae6d9db",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 292,
+              "column": 3
+            },
+            {
+              "title": "an UNRELATED accepted proposal still leaves the change unresolved on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 453,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:09.709Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-822e07c44fad4c9dfa98",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 311,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-ack-resolution.spec.ts",
+      "file": "qoder-ack-resolution.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T3 acknowledgement vs resolution (unit)",
+          "file": "qoder-ack-resolution.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "acknowledged-only stays open; only linked acceptance resolves",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 385,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:10.189Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "064057ec4672d5ae5434-5874badd09c4a2d212ad",
+              "file": "qoder-ack-resolution.spec.ts",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-budget-evidence.spec.ts",
+      "file": "qoder-budget-evidence.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T4 budget evidence coverage (unit)",
+          "file": "qoder-budget-evidence.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "NONE / PARTIAL / FULL are distinct, and only FULL allows a verdict",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 365,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:10.594Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bdb2b166fb45b54e8865-ed6b62c0fd38c4188174",
+              "file": "qoder-budget-evidence.spec.ts",
+              "line": 19,
+              "column": 3
+            },
+            {
+              "title": "B4: all activities priced but an unknown hotel/booking stays PARTIAL (no trip verdict)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 336,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:10.968Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bdb2b166fb45b54e8865-9f82b7bb751f49c86a79",
+              "file": "qoder-budget-evidence.spec.ts",
+              "line": 67,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-budget-rendered.spec.ts",
+      "file": "qoder-budget-rendered.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T4 budget evidence coverage (rendered integration)",
+          "file": "qoder-budget-rendered.spec.ts",
+          "line": 170,
+          "column": 6,
+          "specs": [
+            {
+              "title": "B4: all stops priced but an unknown stay/transport -> the block refuses a verified-budget verdict and shows PARTIAL wording",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 517,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:11.318Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-3d1d1a777e9770c6d0e1",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "only when every budget-relevant item is known does the FULL verdict wording render",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 484,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:11.844Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-101bfc4b9085e7b50794",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 195,
+              "column": 3
+            },
+            {
+              "title": "a KNOWN_FREE (0 amount) stop counts as known and keeps the block at FULL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 466,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:12.336Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-e3615883bc8f3f911e04",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 215,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-contrast-audit.spec.ts",
+      "file": "qoder-contrast-audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder contrast audit (Today + Live, light + dark)",
+          "file": "qoder-contrast-audit.spec.ts",
+          "line": 188,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no contrast violations on Today/Live, light + dark (mobile)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9110,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== today/mobile/dark — scanned 194 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== live/mobile/dark — scanned 241 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== today/mobile/light — scanned 194 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n\n=== live/mobile/light — scanned 241 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:12.828Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-d9ba0b7660b7268d3531",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 193,
+              "column": 5
+            },
+            {
+              "title": "focus indicators clear 3:1 on Today/Live, light + dark (mobile)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7984,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:21.956Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-cb2448eb505eda12f5ed",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 213,
+              "column": 5
+            },
+            {
+              "title": "no contrast violations on Today/Live, light + dark (desktop)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8995,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== today/desktop/dark — scanned 194 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== live/desktop/dark — scanned 241 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== today/desktop/light — scanned 194 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n\n=== live/desktop/light — scanned 241 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:29.949Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-3c46099a83b445ee2431",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 193,
+              "column": 5
+            },
+            {
+              "title": "focus indicators clear 3:1 on Today/Live, light + dark (desktop)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7697,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:38.955Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-7e86458825d01d726831",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 213,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-live-structure.spec.ts",
+      "file": "qoder-live-structure.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder Live structure order (Phase 2)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 216,
+          "column": 6,
+          "specs": [
+            {
+              "title": "sections stack Current -> Map -> Disruption -> Replan (bounding rect)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1054,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[live-map] branch=honest-empty-state height=97px\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:46.682Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-8fe4cea0d931505bf77c",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 223,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live accepted transition (Phase 3)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 300,
+          "column": 6,
+          "specs": [
+            {
+              "title": "accepting a proposal surfaces the confirmation before the open warning collapses",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1038,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:47.747Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-22ea606d90cb65a0c691",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 301,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live state-coverage matrix (Phase 1)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 364,
+          "column": 6,
+          "specs": [
+            {
+              "title": "L0 NORMAL: current/next real, no disruption, no Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 575,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:48.796Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-ffa38d39c21dddbeb667",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 366,
+              "column": 3
+            },
+            {
+              "title": "L1 UNRESOLVED: disruption shown, no proposal, no Accept CTA, safe notice",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 586,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:49.379Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-0829f81f3eda08249751",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 373,
+              "column": 3
+            },
+            {
+              "title": "L2 PROPOSAL_READY: one real differing proposal, exactly one Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 541,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:49.976Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-43d0051743cac9314b75",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 381,
+              "column": 3
+            },
+            {
+              "title": "L3 ACCEPTED: Accept CTA gone, handled confirmation shown",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 592,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:50.526Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-484e775d45e1f373643b",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 395,
+              "column": 3
+            },
+            {
+              "title": "L4 MOBILITY_UNAVAILABLE-safe: rejected proposal offers no fake Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 507,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:51.128Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-8e5c20fbb6f6a2fc0110",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 411,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live dark replan-state audit (Phase 4)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 433,
+          "column": 6,
+          "specs": [
+            {
+              "title": "L1 UNRESOLVED and L2 PROPOSAL_READY have no dark contrast violations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 762,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:51.644Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-a8ba0b7140259c272d85",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 434,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live map height + first screen (Phase 4)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 458,
+          "column": 6,
+          "specs": [
+            {
+              "title": "map is 240 normal and 200-216 when a decision is active; disruption reaches the fold",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1082,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:52.419Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-dfb800e4ec321076ff0e",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 461,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-mobile-overflow.spec.ts",
+      "file": "qoder-mobile-overflow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder mobile-overflow (Today + Live)",
+          "file": "qoder-mobile-overflow.spec.ts",
+          "line": 81,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no horizontal overflow at 360/412/430 on Today and Live",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10679,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:21:53.514Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "928439c33d86a090a673-498b293695333fc198ca",
+              "file": "qoder-mobile-overflow.spec.ts",
+              "line": 82,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-today-hero.spec.ts",
+      "file": "qoder-today-hero.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder Today single-focus hero",
+          "file": "qoder-today-hero.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "hero has one primary CTA, bounded height, no empty Now slot, no overflow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8218,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:22:04.218Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "924c427cbcbc065904ea-a5e13c5b7149172b2104",
+              "file": "qoder-today-hero.spec.ts",
+              "line": 16,
+              "column": 3
+            },
+            {
+              "title": "reduced-motion disables the hero reveal transform",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3549,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:22:12.450Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "924c427cbcbc065904ea-81431a8f9fa9ff20553d",
+              "file": "qoder-today-hero.spec.ts",
+              "line": 108,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "real-world-trip-operations-v9.spec.ts",
+      "file": "real-world-trip-operations-v9.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real-world trip operations: inbox to luggage-aware autonomous recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 60034,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\real-world-trip-operations-v9.spec.ts",
+                        "column": 45,
+                        "line": 46
+                      },
+                      "message": "Error: locator.fill: Test timeout of 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Reservation JSON')\u001b[22m\n\u001b[2m    - locator resolved to <textarea id=\"reservation-json\" data-testid=\"bookings-json-input\" placeholder=\"{\"reservation_type\":\"RAIL\", \"confirmation_ref\":\"…\"}\"></textarea>\u001b[22m\n\u001b[2m    - fill(\"{\"reservation_type\":\"RAIL\",\"provider_key\":\"user-confirmed-rail\",\"confirmation_ref\":\"G12345-V9-UI\",\"origin\":{\"name\":\"Shanghai Hongqiao\"},\"destination\":{\"name\":\"Tianjin West Station\",\"latitude\":39.1366,\"longitude\":117.1696},\"scheduled_departure_at\":\"2026-10-09T03:30:00+08:00\",\"scheduled_arrival_at\":\"2026-10-09T08:00:00+08:00\",\"price_amount_minor\":55300,\"currency\":\"CNY\",\"price_status\":\"KNOWN\"}\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    116 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m        - element is not visible\u001b[22m\n\u001b[2m      - retrying fill action\u001b[22m\n\u001b[2m        - waiting 500ms\u001b[22m\n\n\n  44 |     price_status: \"KNOWN\",\n  45 |   };\n> 46 |   await page.getByLabel(\"Reservation JSON\").fill(JSON.stringify(reservation));\n     |                                             ^\n  47 |   await page.getByRole(\"button\", { name: \"Review and protect\" }).click();\n  48 |   await expect(page.getByText(\"Reservation confirmed and protected\")).toBeVisible();\n  49 |   await expect(page.getByTestId(\"wallet-reservation\")).toContainText(\"G12345-V9-UI\");\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\real-world-trip-operations-v9.spec.ts:46:45"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:22:16.031Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\real-world-trip-operations-0d33e-e-aware-autonomous-recovery-chromium\\error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "29e7341f982624cf90aa-8a11254deda98461369d",
+          "file": "real-world-trip-operations-v9.spec.ts",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-accessibility.spec.ts",
+      "file": "v10-accessibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 live execution surface has no automated accessibility violations",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10408,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-accessibility.spec.ts:8:78",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-accessibility.spec.ts",
+                      "column": 78,
+                      "line": 8
+                    },
+                    "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize({ width\u001b[33m:\u001b[39m \u001b[35m390\u001b[39m\u001b[33m,\u001b[39m height\u001b[33m:\u001b[39m \u001b[35m844\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/v8/live\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Choose your next leg.\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m150\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m\n \u001b[90m 11 |\u001b[39m   \u001b[36mconst\u001b[39m results \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mAxeBuilder\u001b[39m({ page })\u001b[33m.\u001b[39manalyze()\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-accessibility.spec.ts",
+                        "column": 78,
+                        "line": 8
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n\n   6 |   await page.setViewportSize({ width: 390, height: 844 });\n   7 |   await page.goto(\"/v8/live\");\n>  8 |   await expect(page.getByRole(\"heading\", { name: \"Choose your next leg.\" })).toBeVisible();\n     |                                                                              ^\n   9 |   await page.waitForTimeout(150);\n  10 |\n  11 |   const results = await new AxeBuilder({ page }).analyze();\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-accessibility.spec.ts:8:78"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:23:16.622Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\v10-accessibility-V10-live-71b4a-ed-accessibility-violations-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-accessibility.spec.ts",
+                    "column": 78,
+                    "line": 8
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "29d23d6481181e2cc578-80f18dc7a2cc81332edc",
+          "file": "v10-accessibility.spec.ts",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-inbox.spec.ts",
+      "file": "v10-inbox.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 Journey Inbox exposes text, image, and deterministic code paths",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10380,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Your real reservations, protected.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Your real reservations, protected.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Your real reservations, protected.' })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Your real reservations, protected.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Your real reservations, protected.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Your real reservations, protected.' })\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-inbox.spec.ts:6:91",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-inbox.spec.ts",
+                      "column": 91,
+                      "line": 6
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize({ width\u001b[33m:\u001b[39m \u001b[35m390\u001b[39m\u001b[33m,\u001b[39m height\u001b[33m:\u001b[39m \u001b[35m844\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 5 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/v8/bookings\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Your real reservations, protected.\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                                                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Bring a confirmation into the Journey\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m\"Confirmation screenshot\"\u001b[39m))\u001b[33m.\u001b[39mtoHaveAttribute(\u001b[32m\"accept\"\u001b[39m\u001b[33m,\u001b[39m \u001b[32m\"image/*\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 9 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Open scanner\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-inbox.spec.ts",
+                        "column": 91,
+                        "line": 6
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Your real reservations, protected.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Your real reservations, protected.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Your real reservations, protected.' })\u001b[22m\n\n\n  4 |   await page.setViewportSize({ width: 390, height: 844 });\n  5 |   await page.goto(\"/v8/bookings\");\n> 6 |   await expect(page.getByRole(\"heading\", { name: \"Your real reservations, protected.\" })).toBeVisible();\n    |                                                                                           ^\n  7 |   await expect(page.getByRole(\"heading\", { name: \"Bring a confirmation into the Journey\" })).toBeVisible();\n  8 |   await expect(page.getByLabel(\"Confirmation screenshot\")).toHaveAttribute(\"accept\", \"image/*\");\n  9 |   await expect(page.getByRole(\"button\", { name: \"Open scanner\" })).toBeVisible();\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-inbox.spec.ts:6:91"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:23:27.671Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\v10-inbox-V10-Journey-Inbo-ee130-nd-deterministic-code-paths-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-inbox.spec.ts",
+                    "column": 91,
+                    "line": 6
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "64aa652ee6696cfdcc48-dcd8163cddaa1f7f43fc",
+          "file": "v10-inbox.spec.ts",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-live-execution.spec.ts",
+      "file": "v10-live-execution.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 live execution panel exposes the server clock and evidence trail",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10387,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-live-execution.spec.ts:10:78",
+                    "location": {
+                      "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-live-execution.spec.ts",
+                      "column": 78,
+                      "line": 10
+                    },
+                    "snippet": "\u001b[0m \u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39msetViewportSize({ width\u001b[33m:\u001b[39m \u001b[35m390\u001b[39m\u001b[33m,\u001b[39m height\u001b[33m:\u001b[39m \u001b[35m844\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/v8/live\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 10 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Choose your next leg.\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 11 |\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m panel \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m\"v10-live-execution-panel\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m expect(panel)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-live-execution.spec.ts",
+                        "column": 78,
+                        "line": 10
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n\n   8 |   await page.setViewportSize({ width: 390, height: 844 });\n   9 |   await page.goto(\"/v8/live\");\n> 10 |   await expect(page.getByRole(\"heading\", { name: \"Choose your next leg.\" })).toBeVisible();\n     |                                                                              ^\n  11 |\n  12 |   const panel = page.getByTestId(\"v10-live-execution-panel\");\n  13 |   await expect(panel).toBeVisible();\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-live-execution.spec.ts:10:78"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:23:38.697Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\v10-live-execution-V10-liv-57062-er-clock-and-evidence-trail-chromium\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-live-execution.spec.ts",
+                    "column": 78,
+                    "line": 10
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8db3bb2dfefe9aa0b397-a123abc512c1202ca1b9",
+          "file": "v10-live-execution.spec.ts",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-quality-budget.spec.ts",
+      "file": "v10-quality-budget.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "V10 product-quality budget",
+          "file": "v10-quality-budget.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Live Journey becomes usable without layout or server-error regressions",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4385,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 4000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 4000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 4000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 4000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-quality-budget.spec.ts:21:80",
+                        "location": {
+                          "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-quality-budget.spec.ts",
+                          "column": 80,
+                          "line": 21
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 19 |\u001b[39m     \u001b[36mconst\u001b[39m started \u001b[33m=\u001b[39m \u001b[33mDate\u001b[39m\u001b[33m.\u001b[39mnow()\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m\"/v8/live\"\u001b[39m\u001b[33m,\u001b[39m { waitUntil\u001b[33m:\u001b[39m \u001b[32m\"domcontentloaded\"\u001b[39m })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Choose your next leg.\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible({\n \u001b[90m    |\u001b[39m                                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 22 |\u001b[39m       timeout\u001b[33m:\u001b[39m \u001b[35m4000\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 23 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-quality-budget.spec.ts",
+                            "column": 80,
+                            "line": 21
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Choose your next leg.' })\nExpected: visible\nTimeout: 4000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'Choose your next leg.' }) with timeout 4000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Choose your next leg.' })\u001b[22m\n\n\n  19 |     const started = Date.now();\n  20 |     await page.goto(\"/v8/live\", { waitUntil: \"domcontentloaded\" });\n> 21 |     await expect(page.getByRole(\"heading\", { name: \"Choose your next leg.\" })).toBeVisible({\n     |                                                                                ^\n  22 |       timeout: 4000,\n  23 |     });\n  24 |\n    at D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-quality-budget.spec.ts:21:80"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T08:23:49.765Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\moodle\\_qoder_integration_20260919\\frontend\\test-results\\v10-quality-budget-V10-pro-06902-or-server-error-regressions-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\v10-quality-budget.spec.ts",
+                        "column": 80,
+                        "line": 21
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "097d06b879bafd514efa-c2f90fd859dc33a03d51",
+              "file": "v10-quality-budget.spec.ts",
+              "line": 4,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "v13-5-fully-grounded.spec.ts",
+      "file": "v13-5-fully-grounded.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "City Discovery renders the fully grounded Journey proof",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 16,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1293,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:23:54.848Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0bf14543113d88c76d29-4f3ee0ce4dbc72d6f7d8",
+          "file": "v13-5-fully-grounded.spec.ts",
+          "line": 50,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v13-authoritative-integrity.spec.ts",
+      "file": "v13-authoritative-integrity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "accepted authoritative execution truth converges to Dexie offline truth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 16,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1760,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T08:23:56.330Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f25db6e4799f01ecfe6-e627389b5953c571676c",
+          "file": "v13-authoritative-integrity.spec.ts",
+          "line": 19,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-19T08:19:10.626Z",
+    "duration": 287586.094,
+    "expected": 31,
+    "skipped": 0,
+    "unexpected": 15,
+    "flaky": 0
+  }
+}

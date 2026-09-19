@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\util\typing.py
+# hypothesis_version: 6.168.0
+
+['*', ',', ',\\s*', '.', 'GenericProtocol[Any]', 'None', 'Optional', 'Union', 'UnionType', '[', '\\s*\\|\\s*', ']', '^(.+?)\\[(.+)\\]$', '_DESC', '_DESC_co', '_FN', '_KT', '_KT_co', '_KT_contra', '_T', '_VT', '_VT_co', '__args__', '__module__', '__name__', '__origin__', '__supertype__', '_name', 'copy_with', 'typing', 'typing_extensions', '|']

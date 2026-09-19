@@ -1,0 +1,1045 @@
+diff --git a/backend/app/main.py b/backend/app/main.py
+index a5bba8c..fc1d799 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -1,7 +1,7 @@
+ from __future__ import annotations
+ 
+ import json
+-from datetime import datetime, timezone
++from datetime import datetime, timedelta, timezone
+ from typing import Any
+ from uuid import UUID, uuid4
+ 
+@@ -73,6 +73,7 @@ from app.integrations.mock.providers import MockMobilityProvider
+ from app.intelligence.reason_codes import ReasonCode, VerifiedExplanationFacts
+ from app.intelligence.replan_diff import PlanActivitySnapshot, diff_plans
+ from app.replanning.feasibility import activity_from_record, build_context, evaluate_feasibility
++from app.replanning.mock_replan_engine import choose_closure_replacement
+ from app.schemas import (
+     Booking as BookingSchema,
+ )
+@@ -119,6 +120,7 @@ from app.services import (
+     seed_demo,
+     service_schema,
+     traveler_schema,
++    validate_plan_feasibility,
+     validate_selected_plan_feasibility,
+ )
+ 
+@@ -751,7 +753,9 @@ def _twin_snapshot(session: Session, journey: Journey) -> dict[str, Any]:
+ def start_journey(journey_id: UUID, session: Session = Depends(get_session)):
+     journey = require(session, Journey, str(journey_id), "Journey")
+     if journey.status == "ACTIVE":
+-        return _twin_snapshot(session, journey)
++        twin = _twin_snapshot(session, journey)
++        session.commit()
++        return twin
+     if journey.status != "PLANNED" or not journey.active_plan_version_id:
+         raise HTTPException(409, "journey must be PLANNED with a selected plan")
+     plan = session.get(PlanVersion, journey.active_plan_version_id)
+@@ -774,8 +778,9 @@ def start_journey(journey_id: UUID, session: Session = Depends(get_session)):
+         journey_id=journey.id,
+         after={"status": journey.status, "current_activity_id": journey.current_activity_id},
+     )
++    twin = _twin_snapshot(session, journey)
+     session.commit()
+-    return _twin_snapshot(session, journey)
++    return twin
+ 
+ 
+ @app.post(
+@@ -819,8 +824,9 @@ def complete_activity(journey_id: UUID, activity_id: UUID, session: Session = De
+         journey_id=journey.id,
+         after={"status": activity.status, "next_activity_id": journey.current_activity_id},
+     )
++    twin = _twin_snapshot(session, journey)
+     session.commit()
+-    return _twin_snapshot(session, journey)
++    return twin
+ 
+ 
+ @app.get("/api/v1/journeys/{journey_id}/twin", response_model=JourneyTwinSchema)
+@@ -946,17 +952,66 @@ def generate_replan(
+     journey_id: UUID, body: dict[str, Any], session: Session = Depends(get_session)
+ ):
+     journey = require(session, Journey, str(journey_id), "Journey")
+-    if not journey.active_plan_version_id:
+-        raise HTTPException(422, "journey has no active plan")
++    if journey.status != "ACTIVE" or not journey.active_plan_version_id:
++        raise HTTPException(409, "journey must be ACTIVE with an active plan")
+     base = session.get(PlanVersion, journey.active_plan_version_id)
+     trigger_id = body.get("trigger_event_id")
+-    if base is None:
+-        raise HTTPException(422, "active plan is missing")
+-    if trigger_id and (session.get(EventModel, str(trigger_id)) is None):
+-        raise HTTPException(422, "trigger event is not on this journey")
++    trigger_event = None
++    if base is None or base.status != "ACTIVE":
++        raise HTTPException(409, "active plan is missing or inconsistent")
++    if trigger_id:
++        trigger_event = session.get(EventModel, str(trigger_id))
++        if trigger_event is None or trigger_event.journey_id != journey.id:
++            raise HTTPException(422, "trigger event is not on this journey")
++        if trigger_event.status not in {"DETECTED", "ACKNOWLEDGED"}:
++            raise HTTPException(409, "trigger event is no longer actionable")
+     source = session.scalars(
+         select(Activity).where(Activity.plan_version_id == base.id).order_by(Activity.sequence_no)
+     ).all()
++    replacement_choice = None
++    affected_activity_id = None
++    affected_place_id = None
++    if trigger_event is not None and trigger_event.event_type == "CLOSURE":
++        payload = json.loads(trigger_event.payload_json or "{}")
++        affected_activity_id = trigger_event.affected_activity_id
++        if affected_activity_id is None and payload.get("affected_place_id"):
++            affected_place_id = str(payload["affected_place_id"])
++            match = next((a for a in source if a.place_id == affected_place_id), None)
++            affected_activity_id = match.id if match else None
++        affected = next((a for a in source if a.id == affected_activity_id), None)
++        if affected is not None:
++            affected_place_id = affected.place_id
++            if affected.status in {"COMPLETED", "SKIPPED", "CANCELLED"}:
++                raise HTTPException(409, "disruption targets an activity that is already terminal")
++            if affected.locked:
++                raise HTTPException(
++                    422, "closed activity is protected and cannot be replaced automatically"
++                )
++            affected_place = session.get(Place, affected.place_id) if affected.place_id else None
++            if affected_place is None:
++                raise HTTPException(422, "affected place is unavailable")
++            places = session.scalars(
++                select(Place).where(Place.city_code == journey.city_code).order_by(Place.id)
++            ).all()
++            replacement_choice = choose_closure_replacement(
++                affected_place=affected_place,
++                candidate_places=places,
++                occupied_place_ids={a.place_id for a in source if a.place_id},
++                max_duration_min=max(
++                    1,
++                    int(
++                        (
++                            datetime.fromisoformat(affected.end_at)
++                            - datetime.fromisoformat(affected.start_at)
++                        ).total_seconds()
++                        // 60
++                    ),
++                ),
++            )
++            if replacement_choice is None:
++                raise HTTPException(
++                    422, "no deterministic replacement is available for the closure"
++                )
+     proposed_id = str(uuid4())
+     latest_version = (
+         session.scalar(
+@@ -985,27 +1040,65 @@ def generate_replan(
+     )
+     session.add(proposed)
+     session.flush()
++    mobility = MockMobilityProvider()
++    copied_rows: list[dict[str, Any]] = []
+     for activity in source:
+-        session.add(
+-            Activity(
+-                id=str(uuid4()),
+-                plan_version_id=proposed.id,
+-                sequence_no=activity.sequence_no,
+-                activity_type=activity.activity_type,
+-                title=activity.title,
+-                place_id=activity.place_id,
+-                city_service_id=activity.city_service_id,
+-                start_at=activity.start_at,
+-                end_at=activity.end_at,
+-                travel_from_prev_min=activity.travel_from_prev_min,
+-                estimated_cost_minor=activity.estimated_cost_minor,
+-                currency=activity.currency,
+-                status=activity.status,
+-                locked=activity.locked,
+-                metadata_json=activity.metadata_json,
+-                created_at=activity.created_at,
+-                updated_at=activity.updated_at,
++        row = {
++            "sequence_no": activity.sequence_no,
++            "activity_type": activity.activity_type,
++            "title": activity.title,
++            "place_id": activity.place_id,
++            "city_service_id": activity.city_service_id,
++            "start_at": activity.start_at,
++            "end_at": activity.end_at,
++            "travel_from_prev_min": activity.travel_from_prev_min,
++            "estimated_cost_minor": activity.estimated_cost_minor,
++            "currency": activity.currency,
++            "status": activity.status,
++            "locked": activity.locked,
++            "metadata_json": activity.metadata_json,
++            "created_at": activity.created_at,
++            "updated_at": activity.updated_at,
++        }
++        if replacement_choice is not None and activity.id == affected_activity_id:
++            start_dt = datetime.fromisoformat(activity.start_at)
++            row.update(
++                {
++                    "title": replacement_choice.title,
++                    "place_id": replacement_choice.place_id,
++                    "city_service_id": None,
++                    "end_at": (
++                        start_dt + timedelta(minutes=replacement_choice.duration_min)
++                    ).isoformat(),
++                    "estimated_cost_minor": replacement_choice.cost_minor,
++                    "locked": False,
++                    "metadata_json": json.dumps(
++                        {
++                            "replan_reason_codes": replacement_choice.reason_codes,
++                            "replaced_place_id": affected_place_id,
++                        },
++                        sort_keys=True,
++                    ),
++                }
+             )
++        copied_rows.append(row)
++    for index, row in enumerate(copied_rows):
++        if index > 0:
++            previous = copied_rows[index - 1]
++            origin = previous.get("place_id") or previous.get("city_service_id")
++            destination = row.get("place_id") or row.get("city_service_id")
++            if origin and destination:
++                row["travel_from_prev_min"] = int(mobility.estimate_minutes(origin, destination))
++        session.add(Activity(id=str(uuid4()), plan_version_id=proposed.id, **row))
++    proposed.total_cost_minor = sum(int(row["estimated_cost_minor"]) for row in copied_rows)
++    if replacement_choice is not None:
++        proposed.explanation_json = json.dumps(
++            {
++                "reason": "Deterministic closure recovery",
++                "replacement_place_id": replacement_choice.place_id,
++                "reason_codes": replacement_choice.reason_codes,
++            },
++            sort_keys=True,
+         )
+     session.flush()
+     copied = session.scalars(
+@@ -1013,6 +1106,30 @@ def generate_replan(
+         .where(Activity.plan_version_id == proposed.id)
+         .order_by(Activity.sequence_no)
+     ).all()
++    disruption_constraints: list[dict[str, Any]] = []
++    if affected_place_id:
++        disruption_constraints.append(
++            {
++                "kind": "HARD",
++                "category": "availability",
++                "rule_code": "PLACE_UNAVAILABLE",
++                "params": {"place_id": affected_place_id},
++                "active": True,
++            }
++        )
++    gate = validate_plan_feasibility(
++        session,
++        journey,
++        proposed,
++        additional_constraints=disruption_constraints,
++        include_active_c4=True,
++    )
++    if not gate.passed:
++        session.rollback()
++        raise HTTPException(422, f"no feasible replan proposal: {', '.join(gate.failures)}")
++    locked_preserved = not any(
++        failure.startswith("LOCKED_COMMITMENT_LOST:") for failure in gate.failures
++    )
+     old = [
+         PlanActivitySnapshot(
+             a.place_id or a.id,
+@@ -1041,9 +1158,9 @@ def generate_replan(
+         trigger_event_id=str(trigger_id) if trigger_id else None,
+         base_plan_version_id=base.id,
+         proposed_plan_version_id=proposed.id,
+-        status="GENERATED",
+-        hard_constraints_passed=True,
+-        locked_commitments_preserved=True,
++        status="PRESENTED",
++        hard_constraints_passed=gate.passed,
++        locked_commitments_preserved=locked_preserved,
+         utility_score=float(base.utility_score or 0),
+         score_breakdown_json=base.score_breakdown_json or "{}",
+         diff_json=json.dumps(
+@@ -1101,18 +1218,45 @@ def get_replan(proposal_id: UUID, session: Session = Depends(get_session)):
+ @app.post("/api/v1/replans/{proposal_id}/accept")
+ def accept_replan(proposal_id: UUID, session: Session = Depends(get_session)):
+     proposal = require(session, ReplanProposalModel, str(proposal_id), "Replan proposal")
+-    if proposal.status != "GENERATED":
++    if proposal.status != "PRESENTED":
+         raise HTTPException(409, "replan proposal is no longer actionable")
+     journey = require(session, Journey, proposal.journey_id, "Journey")
+-    if journey.active_plan_version_id != proposal.base_plan_version_id:
++    if (
++        journey.status != "ACTIVE"
++        or journey.active_plan_version_id != proposal.base_plan_version_id
++    ):
+         raise HTTPException(409, "replan base plan is stale")
+     base = session.get(PlanVersion, proposal.base_plan_version_id)
+     proposed = session.get(PlanVersion, proposal.proposed_plan_version_id)
+-    if base is None or proposed is None:
+-        raise HTTPException(409, "replan plan is missing")
++    if (
++        base is None
++        or proposed is None
++        or base.status != "ACTIVE"
++        or proposed.status != "CANDIDATE"
++    ):
++        raise HTTPException(409, "replan plan is missing or inconsistent")
++    gate = validate_plan_feasibility(session, journey, proposed, include_active_c4=True)
++    if not gate.passed:
++        raise HTTPException(409, f"replan is no longer feasible: {', '.join(gate.failures)}")
++    old_current = (
++        session.get(Activity, journey.current_activity_id)
++        if journey.current_activity_id
++        else None
++    )
++    replacement_current = None
++    if old_current is not None:
++        replacement_current = session.scalar(
++            select(Activity).where(
++                Activity.plan_version_id == proposed.id,
++                Activity.sequence_no == old_current.sequence_no,
++            )
++        )
++        if replacement_current is None:
++            raise HTTPException(409, "replan does not preserve the current execution position")
+     base.status = "SUPERSEDED"
+     proposed.status = "ACTIVE"
+     journey.active_plan_version_id = proposed.id
++    journey.current_activity_id = replacement_current.id if replacement_current else None
+     proposal.status = "ACCEPTED"
+     proposal.decided_at = datetime.now(timezone.utc).isoformat()
+     record_audit(
+@@ -1135,7 +1279,7 @@ def accept_replan(proposal_id: UUID, session: Session = Depends(get_session)):
+ @app.post("/api/v1/replans/{proposal_id}/reject", response_model=ReplanProposalSchema)
+ def reject_replan(proposal_id: UUID, session: Session = Depends(get_session)):
+     proposal = require(session, ReplanProposalModel, str(proposal_id), "Replan proposal")
+-    if proposal.status == "GENERATED":
++    if proposal.status == "PRESENTED":
+         proposal.status = "REJECTED"
+         proposal.decided_at = datetime.now(timezone.utc).isoformat()
+         session.commit()
+diff --git a/backend/app/replanning/feasibility.py b/backend/app/replanning/feasibility.py
+index 3823827..e5d2a8d 100644
+--- a/backend/app/replanning/feasibility.py
++++ b/backend/app/replanning/feasibility.py
+@@ -279,7 +279,9 @@ def evaluate_feasibility(
+ 
+     failures: list[str] = []
+     provider = context.mobility_provider
+-    if getattr(provider, "provider_key", None) != "mock-mobility":
++    provider_key = getattr(provider, "provider_key", None)
++    provider_is_frozen = bool(getattr(provider, "is_frozen_snapshot", False))
++    if provider_key != "mock-mobility" and not provider_is_frozen:
+         failures.append("NON_DETERMINISTIC_MOBILITY_PROVIDER")
+ 
+     hard_constraints = _active_hard_constraints(context)
+@@ -451,7 +453,7 @@ def evaluate_feasibility(
+                 elif not _within_open_interval(item.start_at, item.end_at, availability):
+                     failures.append(f"SERVICE_CLOSED:{item.city_service_id}")
+ 
+-    if getattr(provider, "provider_key", None) == "mock-mobility":
++    if provider_key == "mock-mobility" or provider_is_frozen:
+         for previous, current in zip(ordered, ordered[1:]):
+             origin = _location_key(previous)
+             destination = _location_key(current)
+diff --git a/b/backend/app/replanning/mock_replan_engine.py b/backend/app/replanning/mock_replan_engine.py
+new file mode 100644
+index 0000000..b295ea9
+--- /dev/null
++++ b/backend/app/replanning/mock_replan_engine.py
+@@ -0,0 +1,72 @@
++from __future__ import annotations
++
++import json
++from dataclasses import dataclass
++from typing import Any, Iterable
++
++
++@dataclass(frozen=True)
++class ReplacementChoice:
++    place_id: str
++    title: str
++    duration_min: int
++    cost_minor: int
++    reason_codes: tuple[str, ...]
++
++
++def _json(value: Any, default: Any) -> Any:
++    if value is None:
++        return default
++    if isinstance(value, str):
++        try:
++            return json.loads(value)
++        except json.JSONDecodeError:
++            return default
++    return value
++
++
++def choose_closure_replacement(
++    *,
++    affected_place: Any,
++    candidate_places: Iterable[Any],
++    occupied_place_ids: set[str],
++    max_duration_min: int,
++) -> ReplacementChoice | None:
++    """Choose one deterministic same-slot replacement for a closed flexible place.
++
++    This is a mock candidate-family generator, not the feasibility authority.
++    The returned candidate must still pass the shared deterministic gate.
++    """
++
++    affected_tags = set(_json(getattr(affected_place, "tags_json", "[]"), []))
++    ranked: list[tuple[tuple[int, int, int, str], ReplacementChoice]] = []
++    for place in candidate_places:
++        place_id = str(getattr(place, "id"))
++        if place_id in occupied_place_ids or place_id == str(getattr(affected_place, "id")):
++            continue
++        meta = _json(getattr(place, "metadata_json", "{}"), {})
++        tags = set(_json(getattr(place, "tags_json", "[]"), []))
++        duration = int(meta.get("duration_min", 60))
++        cost = int(meta.get("cost_minor", 0))
++        if duration <= 0 or duration > max_duration_min:
++            continue
++        overlap = len(affected_tags & tags)
++        indoor = 1 if "indoor" in tags else 0
++        choice = ReplacementChoice(
++            place_id=place_id,
++            title=str(getattr(place, "name")),
++            duration_min=duration,
++            cost_minor=cost,
++            reason_codes=(
++                "DISRUPTED_ACTIVITY_REPLACED",
++                "MINIMAL_SCHEDULE_CHANGE",
++                *(('INDOOR_ALTERNATIVE',) if indoor else ()),
++            ),
++        )
++        # Highest tag overlap, then indoor, then lower cost, then stable ID.
++        rank = (-overlap, -indoor, cost, place_id)
++        ranked.append((rank, choice))
++    if not ranked:
++        return None
++    ranked.sort(key=lambda item: item[0])
++    return ranked[0][1]
+diff --git a/b/backend/app/replanning/protected_commitments.py b/backend/app/replanning/protected_commitments.py
+new file mode 100644
+index 0000000..1ca493c
+--- /dev/null
++++ b/backend/app/replanning/protected_commitments.py
+@@ -0,0 +1,44 @@
++from __future__ import annotations
++
++import json
++from collections.abc import Iterable
++from typing import Any
++
++
++def active_c4_hard_constraints(commitments: Iterable[Any]) -> list[dict[str, Any]]:
++    """Translate durable C4 Commitment facts into feasibility hard constraints.
++
++    Commitment.activity_id belongs to a particular PlanVersion and therefore is
++    not a stable cross-version identity.  The WP04 policy stores the stable
++    semantic key and scheduled start; those facts are the authoritative anchor
++    used for replanning.
++    """
++
++    constraints: list[dict[str, Any]] = []
++    for item in commitments:
++        if str(getattr(item, "status", "")) != "ACTIVE":
++            continue
++        if str(getattr(item, "level", "")) != "C4_Anchored":
++            continue
++        raw = getattr(item, "policy_json", "{}") or "{}"
++        try:
++            policy = json.loads(raw) if isinstance(raw, str) else dict(raw)
++        except (TypeError, ValueError, json.JSONDecodeError) as exc:
++            raise ValueError("C4 commitment policy is invalid JSON") from exc
++        semantic_key = policy.get("semantic_key")
++        scheduled_start = policy.get("scheduled_start_at")
++        if not semantic_key or not scheduled_start:
++            raise ValueError("C4 commitment lacks stable semantic/time anchor")
++        constraints.append(
++            {
++                "kind": "HARD",
++                "category": "commitment",
++                "rule_code": "LOCKED_COMMITMENT",
++                "params": {
++                    "semantic_ref": str(semantic_key),
++                    "start_at": str(scheduled_start),
++                },
++                "active": True,
++            }
++        )
++    return constraints
+diff --git a/b/backend/app/replanning/provider_snapshots.py b/backend/app/replanning/provider_snapshots.py
+new file mode 100644
+index 0000000..e65876f
+--- /dev/null
++++ b/backend/app/replanning/provider_snapshots.py
+@@ -0,0 +1,69 @@
++from __future__ import annotations
++
++from dataclasses import dataclass
++from datetime import datetime, timezone
++from typing import Mapping
++
++
++@dataclass(frozen=True)
++class TravelEstimateFact:
++    origin_key: str
++    destination_key: str
++    minutes: int
++    provider_key: str
++    captured_at: str
++    degraded: bool = False
++
++    def __post_init__(self) -> None:
++        if self.minutes < 0:
++            raise ValueError("travel minutes must be non-negative")
++
++
++@dataclass(frozen=True)
++class MobilitySnapshot:
++    """Frozen travel facts consumed by the deterministic feasibility gate.
++
++    External routing adapters run *before* the gate and their outputs are
++    frozen into this value object.  The gate never performs a network call.
++    """
++
++    facts: Mapping[tuple[str, str], TravelEstimateFact]
++    source_provider_key: str
++    captured_at: str
++    degraded: bool = False
++
++    provider_key: str = "mobility-snapshot"
++    is_frozen_snapshot: bool = True
++
++    @classmethod
++    def from_minutes(
++        cls,
++        *,
++        source_provider_key: str,
++        minutes: Mapping[tuple[str, str], int],
++        captured_at: str | None = None,
++        degraded: bool = False,
++    ) -> "MobilitySnapshot":
++        stamp = captured_at or datetime.now(timezone.utc).isoformat()
++        return cls(
++            facts={
++                pair: TravelEstimateFact(
++                    origin_key=pair[0],
++                    destination_key=pair[1],
++                    minutes=int(value),
++                    provider_key=source_provider_key,
++                    captured_at=stamp,
++                    degraded=degraded,
++                )
++                for pair, value in minutes.items()
++            },
++            source_provider_key=source_provider_key,
++            captured_at=stamp,
++            degraded=degraded,
++        )
++
++    def estimate_minutes(self, origin_key: str, destination_key: str) -> int:
++        fact = self.facts.get((origin_key, destination_key))
++        if fact is None:
++            raise KeyError(f"missing frozen travel estimate: {origin_key}|{destination_key}")
++        return fact.minutes
+diff --git a/backend/app/services.py b/backend/app/services.py
+index 78be4a9..8defe70 100644
+--- a/backend/app/services.py
++++ b/backend/app/services.py
+@@ -14,6 +14,7 @@ from app.core.audit import record_audit
+ from app.db.models import (
+     Activity,
+     CityService,
++    Commitment,
+     Journey,
+     JourneyConstraint,
+     Place,
+@@ -30,6 +31,7 @@ from app.replanning.feasibility import (
+     evaluate_feasibility,
+ )
+ from app.replanning.reference_replanner import WEIGHTS
++from app.replanning.protected_commitments import active_c4_hard_constraints
+ from app.schemas import Activity as ActivitySchema
+ from app.schemas import CityService as CityServiceSchema
+ from app.schemas import Constraint as ConstraintSchema
+@@ -372,28 +374,19 @@ def _templates() -> list[list[tuple[str, str, str, str]]]:
+     ]
+ 
+ 
+-def validate_selected_plan_feasibility(
++def validate_plan_feasibility(
+     session: Session,
+     journey: Journey,
++    plan: PlanVersion,
+     *,
+     journey_overrides: Mapping[str, Any] | None = None,
+     additional_constraints: Sequence[Any] = (),
+-) -> FeasibilityResult | None:
+-    """Re-evaluate a selected plan against a proposed mutation snapshot.
+-
+-    This is the single mutation guard used by Journey PATCH and HARD
+-    constraint creation.  It deliberately builds a read-only snapshot rather
+-    than mutating ORM state, so a rejected request cannot leak partial changes
+-    through the current transaction.
+-    """
+-
+-    if journey.status != "PLANNED" or not journey.active_plan_version_id:
+-        return None
+-
+-    selected = session.get(PlanVersion, journey.active_plan_version_id)
+-    if selected is None or selected.journey_id != journey.id or selected.status != "SELECTED":
+-        raise ValueError("Journey selected plan state is invalid")
++    include_active_c4: bool = True,
++) -> FeasibilityResult:
++    """Evaluate any persisted plan against the current authoritative Journey facts."""
+ 
++    if plan.journey_id != journey.id:
++        raise ValueError("PlanVersion does not belong to Journey")
+     overrides = dict(journey_overrides or {})
+     proposed_journey = {
+         "id": journey.id,
+@@ -403,12 +396,21 @@ def validate_selected_plan_feasibility(
+         "budget_amount_minor": overrides.get("budget_amount_minor", journey.budget_amount_minor),
+         "budget_currency": overrides.get("budget_currency", journey.budget_currency),
+     }
+-    constraints = list(
++    constraints: list[Any] = list(
+         session.scalars(
+             select(JourneyConstraint).where(JourneyConstraint.journey_id == journey.id)
+         ).all()
+     )
+     constraints.extend(additional_constraints)
++    if include_active_c4:
++        commitments = session.scalars(
++            select(Commitment).where(
++                Commitment.journey_id == journey.id,
++                Commitment.status == "ACTIVE",
++                Commitment.level == "C4_Anchored",
++            )
++        ).all()
++        constraints.extend(active_c4_hard_constraints(commitments))
+     places = {
+         item.id: item
+         for item in session.scalars(
+@@ -422,9 +424,7 @@ def validate_selected_plan_feasibility(
+         ).all()
+     }
+     activities = session.scalars(
+-        select(Activity)
+-        .where(Activity.plan_version_id == selected.id)
+-        .order_by(Activity.sequence_no)
++        select(Activity).where(Activity.plan_version_id == plan.id).order_by(Activity.sequence_no)
+     ).all()
+     return evaluate_feasibility(
+         build_context(
+@@ -433,12 +433,42 @@ def validate_selected_plan_feasibility(
+             places,
+             services,
+             mobility_provider=MockMobilityProvider(),
+-            plan_currency=selected.currency,
++            plan_currency=plan.currency,
+         ),
+         [activity_from_record(item) for item in activities],
+     )
+ 
+ 
++def validate_selected_plan_feasibility(
++    session: Session,
++    journey: Journey,
++    *,
++    journey_overrides: Mapping[str, Any] | None = None,
++    additional_constraints: Sequence[Any] = (),
++) -> FeasibilityResult | None:
++    """Re-evaluate the current selected/active plan against a proposed mutation snapshot."""
++
++    if journey.status not in {"PLANNED", "ACTIVE"} or not journey.active_plan_version_id:
++        return None
++
++    selected = session.get(PlanVersion, journey.active_plan_version_id)
++    expected_plan_status = "SELECTED" if journey.status == "PLANNED" else "ACTIVE"
++    if (
++        selected is None
++        or selected.journey_id != journey.id
++        or selected.status != expected_plan_status
++    ):
++        raise ValueError("Journey active plan state is invalid")
++    return validate_plan_feasibility(
++        session,
++        journey,
++        selected,
++        journey_overrides=journey_overrides,
++        additional_constraints=additional_constraints,
++        include_active_c4=True,
++    )
++
++
+ def generate_plans(
+     session: Session, journey: Journey, planning_mode: str, candidate_count: int
+ ) -> list[PlanVersion]:
+diff --git a/b/backend/tests/test_mock_replan_engine_next.py b/backend/tests/test_mock_replan_engine_next.py
+new file mode 100644
+index 0000000..fcb3db9
+--- /dev/null
++++ b/backend/tests/test_mock_replan_engine_next.py
+@@ -0,0 +1,35 @@
++from __future__ import annotations
++
++from sqlalchemy import select
++
++from app.db.models import Place
++from app.db.session import SessionLocal
++from app.main import app
++from app.replanning.mock_replan_engine import choose_closure_replacement
++from fastapi.testclient import TestClient
++
++client = TestClient(app)
++
++
++def test_canonical_tech_art_closure_prefers_design_library():
++    client.post('/api/v1/demo/reset')
++    with SessionLocal() as session:
++        places = session.scalars(select(Place).order_by(Place.id)).all()
++        affected = session.get(Place, 'place-tech-art')
++        choice = choose_closure_replacement(
++            affected_place=affected,
++            candidate_places=places,
++            occupied_place_ids={
++                'place-old-town',
++                'place-riverside-museum',
++                'place-food-hall',
++                'place-tech-art',
++                'place-river-cruise',
++                'place-skyline-dinner',
++            },
++            max_duration_min=80,
++        )
++        assert choice is not None
++        assert choice.place_id == 'place-design-library'
++        assert choice.duration_min == 60
++        assert choice.cost_minor == 2000
+diff --git a/b/backend/tests/test_provider_snapshot_next.py b/backend/tests/test_provider_snapshot_next.py
+new file mode 100644
+index 0000000..1c8dc73
+--- /dev/null
++++ b/backend/tests/test_provider_snapshot_next.py
+@@ -0,0 +1,85 @@
++from __future__ import annotations
++
++from app.replanning.feasibility import FeasibilityActivity, build_context, evaluate_feasibility
++from app.replanning.provider_snapshots import MobilitySnapshot
++
++
++class LiveRouter:
++    provider_key = 'valhalla-live'
++    def estimate_minutes(self, _a, _b):
++        return 10
++
++
++def _journey():
++    return {
++        'id': 'j',
++        'city_code': 'C',
++        'start_at': '2026-10-10T09:00:00+08:00',
++        'end_at': '2026-10-10T12:00:00+08:00',
++        'budget_amount_minor': 1000,
++        'budget_currency': 'CNY',
++    }
++
++
++def _places():
++    return {
++        'a': {'id': 'a', 'city_code': 'C', 'opening_hours': {'open': '08:00', 'close': '20:00'}},
++        'b': {'id': 'b', 'city_code': 'C', 'opening_hours': {'open': '08:00', 'close': '20:00'}},
++    }
++
++
++def _activities():
++    from datetime import datetime
++    return [
++        FeasibilityActivity(
++            'a',
++            datetime.fromisoformat('2026-10-10T09:00:00+08:00'),
++            datetime.fromisoformat('2026-10-10T09:30:00+08:00'),
++            0,
++            place_id='a',
++            currency='CNY',
++        ),
++        FeasibilityActivity(
++            'b',
++            datetime.fromisoformat('2026-10-10T09:45:00+08:00'),
++            datetime.fromisoformat('2026-10-10T10:15:00+08:00'),
++            0,
++            place_id='b',
++            currency='CNY',
++        ),
++    ]
++
++
++def test_live_router_is_not_called_inside_authoritative_gate():
++    gate = evaluate_feasibility(
++        build_context(
++            _journey(),
++            [],
++            _places(),
++            {},
++            mobility_provider=LiveRouter(),
++            plan_currency='CNY',
++        ),
++        _activities(),
++    )
++    assert 'NON_DETERMINISTIC_MOBILITY_PROVIDER' in gate.failures
++
++
++def test_frozen_real_provider_snapshot_is_accepted_by_gate():
++    snapshot = MobilitySnapshot.from_minutes(
++        source_provider_key='valhalla',
++        minutes={('a', 'b'): 10},
++        captured_at='2026-10-10T08:59:00+08:00',
++    )
++    gate = evaluate_feasibility(
++        build_context(
++            _journey(),
++            [],
++            _places(),
++            {},
++            mobility_provider=snapshot,
++            plan_currency='CNY',
++        ),
++        _activities(),
++    )
++    assert gate.passed, gate.failures
+diff --git a/b/backend/tests/test_wp05_integrity_next.py b/backend/tests/test_wp05_integrity_next.py
+new file mode 100644
+index 0000000..fa6f194
+--- /dev/null
++++ b/backend/tests/test_wp05_integrity_next.py
+@@ -0,0 +1,223 @@
++from __future__ import annotations
++
++from datetime import datetime
++
++from fastapi.testclient import TestClient
++from sqlalchemy import select
++
++from app.db.models import Activity, Journey, JourneyTwin, PlanVersion, ReplanProposal
++from app.db.session import SessionLocal
++from app.main import app
++
++client = TestClient(app)
++
++
++def _selected(start: bool = False):
++    ids = client.post('/api/v1/demo/reset').json()
++    jid = ids['journey_id']
++    plan = client.post(
++        f'/api/v1/journeys/{jid}/plans/generate', json={'candidate_count': 1}
++    ).json()[0]
++    assert client.post(f"/api/v1/journeys/{jid}/plans/{plan['id']}/select").status_code == 200
++    if start:
++        assert client.post(f'/api/v1/journeys/{jid}/start').status_code == 200
++    return ids, plan
++
++
++def test_start_and_completion_persist_journey_twin_projection():
++    ids, plan = _selected(start=False)
++    jid = ids['journey_id']
++    started = client.post(f'/api/v1/journeys/{jid}/start')
++    assert started.status_code == 200
++    current_id = started.json()['current_activity_id']
++    with SessionLocal() as session:
++        twin = session.get(JourneyTwin, jid)
++        assert twin is not None
++        assert twin.current_activity_id == current_id
++    completed = client.post(f'/api/v1/journeys/{jid}/activities/{current_id}/complete')
++    assert completed.status_code == 200
++    next_id = completed.json()['current_activity_id']
++    with SessionLocal() as session:
++        twin = session.get(JourneyTwin, jid)
++        assert twin is not None
++        assert twin.current_activity_id == next_id
++
++
++def test_active_journey_mutation_cannot_break_active_plan():
++    ids, _ = _selected(start=True)
++    jid = ids['journey_id']
++    patch = client.patch(
++        f'/api/v1/journeys/{jid}',
++        json={'budget': {'amount_minor': 1, 'currency': 'CNY'}},
++    )
++    assert patch.status_code == 422
++    hard = client.post(
++        f'/api/v1/journeys/{jid}/constraints',
++        json={
++            'kind': 'HARD',
++            'category': 'budget',
++            'rule_code': 'BUDGET_MAX',
++            'params': {'amount_minor': 1, 'currency': 'CNY'},
++            'weight': 1.0,
++        },
++    )
++    assert hard.status_code == 422
++
++
++def test_replan_requires_active_journey():
++    ids, _ = _selected(start=False)
++    jid = ids['journey_id']
++    event = client.post(f'/api/v1/journeys/{jid}/events', json={'event_type': 'CLOSURE'}).json()
++    response = client.post(
++        f'/api/v1/journeys/{jid}/replans', json={'trigger_event_id': event['id']}
++    )
++    assert response.status_code == 409
++
++
++def test_replan_trigger_event_must_belong_to_same_journey():
++    ids, _ = _selected(start=True)
++    j1 = ids['journey_id']
++    traveler = ids['traveler_id']
++    j2 = client.post(
++        '/api/v1/journeys',
++        json={
++            'traveler_id': traveler,
++            'title': 'Second Journey',
++            'city_code': 'CNX-DEMO',
++            'timezone': 'Asia/Shanghai',
++            'start_at': '2026-10-10T09:00:00+08:00',
++            'end_at': '2026-10-10T19:00:00+08:00',
++            'budget': {'amount_minor': 50000, 'currency': 'CNY'},
++            'planning_mode': 'balanced',
++        },
++    ).json()['id']
++    event = client.post(f'/api/v1/journeys/{j2}/events', json={'event_type': 'WEATHER'}).json()
++    response = client.post(f'/api/v1/journeys/{j1}/replans', json={'trigger_event_id': event['id']})
++    assert response.status_code == 422
++
++
++def test_replan_accept_remaps_current_activity_to_new_active_plan():
++    ids, _ = _selected(start=True)
++    jid = ids['journey_id']
++    event = client.post(f'/api/v1/journeys/{jid}/events', json={'event_type': 'CLOSURE'}).json()
++    proposal = client.post(
++        f'/api/v1/journeys/{jid}/replans', json={'trigger_event_id': event['id']}
++    ).json()
++    accepted = client.post(f"/api/v1/replans/{proposal['id']}/accept")
++    assert accepted.status_code == 200
++    with SessionLocal() as session:
++        journey = session.get(Journey, jid)
++        current = session.get(Activity, journey.current_activity_id)
++        assert current is not None
++        assert current.plan_version_id == journey.active_plan_version_id
++        active_plan = session.get(PlanVersion, journey.active_plan_version_id)
++        assert active_plan.status == 'ACTIVE'
++        assert journey.status == 'ACTIVE'
++
++
++def test_replan_proposal_is_presented_before_acceptance():
++    ids, _ = _selected(start=True)
++    jid = ids['journey_id']
++    event = client.post(f'/api/v1/journeys/{jid}/events', json={'event_type': 'CLOSURE'}).json()
++    proposal = client.post(f'/api/v1/journeys/{jid}/replans', json={'trigger_event_id': event['id']})
++    assert proposal.status_code == 201
++    assert proposal.json()['status'] == 'PRESENTED'
++    accepted = client.post(f"/api/v1/replans/{proposal.json()['id']}/accept")
++    assert accepted.status_code == 200
++    assert accepted.json()['proposal']['status'] == 'ACCEPTED'
++
++
++def test_replan_accept_revalidates_durable_c4_commitment_anchor():
++    ids, plan = _selected(start=False)
++    jid = ids['journey_id']
++    cruise = next(a for a in plan['activities'] if a['place_id'] == 'place-river-cruise')
++    booking = client.post(
++        f'/api/v1/journeys/{jid}/bookings', json={'activity_id': cruise['id']}
++    ).json()
++    capture = client.post(
++        f'/api/v1/journeys/{jid}/transactions',
++        json={
++            'booking_id': booking['id'],
++            'transaction_type': 'CAPTURE',
++            'amount': booking['amount'],
++        },
++        headers={'Idempotency-Key': 'c4-replan-test-0001'},
++    )
++    assert capture.status_code == 201
++    assert client.post(f'/api/v1/journeys/{jid}/start').status_code == 200
++    event = client.post(f'/api/v1/journeys/{jid}/events', json={'event_type': 'CLOSURE'}).json()
++    proposal = client.post(
++        f'/api/v1/journeys/{jid}/replans', json={'trigger_event_id': event['id']}
++    ).json()
++    with SessionLocal() as session:
++        p = session.get(ReplanProposal, proposal['id'])
++        proposed_cruise = session.scalar(
++            select(Activity).where(
++                Activity.plan_version_id == p.proposed_plan_version_id,
++                Activity.place_id == 'place-river-cruise',
++            )
++        )
++        proposed_cruise.start_at = '2026-10-10T16:00:00+08:00'
++        proposed_cruise.end_at = '2026-10-10T17:00:00+08:00'
++        session.commit()
++    accepted = client.post(f"/api/v1/replans/{proposal['id']}/accept")
++    assert accepted.status_code == 409
++    with SessionLocal() as session:
++        journey = session.get(Journey, jid)
++        base = session.get(PlanVersion, proposal['base_plan_version_id'])
++        assert journey.active_plan_version_id == base.id
++        assert base.status == 'ACTIVE'
++
++
++def test_canonical_closure_replan_replaces_tech_art_and_preserves_cruise():
++    ids, plan = _selected(start=False)
++    jid = ids['journey_id']
++    cruise = next(a for a in plan['activities'] if a['place_id'] == 'place-river-cruise')
++    tech = next(a for a in plan['activities'] if a['place_id'] == 'place-tech-art')
++    booking = client.post(
++        f'/api/v1/journeys/{jid}/bookings', json={'activity_id': cruise['id']}
++    ).json()
++    assert client.post(
++        f'/api/v1/journeys/{jid}/transactions',
++        json={
++            'booking_id': booking['id'],
++            'transaction_type': 'CAPTURE',
++            'amount': booking['amount'],
++        },
++        headers={'Idempotency-Key': 'golden-closure-c4-0001'},
++    ).status_code == 201
++    assert client.post(f'/api/v1/journeys/{jid}/start').status_code == 200
++    event = client.post(
++        f'/api/v1/journeys/{jid}/events',
++        json={'event_type': 'CLOSURE', 'severity': 'MAJOR', 'affected_activity_id': tech['id']},
++    )
++    assert event.status_code == 201
++    proposal = client.post(
++        f'/api/v1/journeys/{jid}/replans', json={'trigger_event_id': event.json()['id']}
++    )
++    assert proposal.status_code == 201, proposal.text
++    body = proposal.json()
++    assert body['locked_commitments_preserved'] is True
++    assert 'place-tech-art' in body['diff']['removed']
++    assert 'place-design-library' in body['diff']['added']
++    with SessionLocal() as session:
++        record = session.get(ReplanProposal, body['id'])
++        proposed_places = [
++            a.place_id
++            for a in session.scalars(
++                select(Activity)
++                .where(Activity.plan_version_id == record.proposed_plan_version_id)
++                .order_by(Activity.sequence_no)
++            ).all()
++        ]
++        assert 'place-tech-art' not in proposed_places
++        assert 'place-design-library' in proposed_places
++        proposed_cruise = session.scalar(
++            select(Activity).where(
++                Activity.plan_version_id == record.proposed_plan_version_id,
++                Activity.place_id == 'place-river-cruise',
++            )
++        )
++        assert datetime.fromisoformat(proposed_cruise.start_at) == datetime.fromisoformat(
++            '2026-10-10T15:30:00+08:00'
++        )

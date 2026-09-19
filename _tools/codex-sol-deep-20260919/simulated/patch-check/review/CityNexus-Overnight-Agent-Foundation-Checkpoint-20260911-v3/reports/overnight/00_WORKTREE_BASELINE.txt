@@ -1,0 +1,57 @@
+WORKTREE BASELINE
+CapturedAt=2026-09-11T00:21:41.3882051+08:00
+
+git status --short
+ M .gitignore
+?? .env.example
+?? CityNexus-Renderer-v0.3.2-C1C2-Review-Package.zip
+?? CityNexus-Renderer-v0.3.2-C2.1-Review-Package.zip
+?? HANDOFF-ROUTE-CONTACT-GATE.md
+?? KNOWN_NONBLOCKING_DEBT.md
+?? LOCAL-APPLY-INSTRUCTIONS.md
+?? PACKAGE-MANIFEST.json
+?? _fresh_vertical_slice_hardening_replay_20260910/
+?? _fresh_vertical_slice_hardening_replay_archive_20260910/
+?? _fresh_vertical_slice_hardening_replay_final_20260910/
+?? _incoming_post_goal_vertical_slice_prep_20260910/
+?? _incoming_post_wp04_github_integration_foundation_20260909/
+?? _incoming_provider_runtime_hardening_gpt_assist_20260910/
+?? _incoming_solver_runtime_gpt_assist_20260910/
+?? _incoming_vertical_slice_hardening_20260910/
+?? _incoming_weather_runtime_gpt_assist_20260910/
+?? _incoming_weather_runtime_hardening_gpt_assist_20260910/
+?? _incoming_wp04_preflight_assist_20260909/
+?? _incoming_wp05_wp06_deep_assist_20260909/
+?? _incoming_wp06_postgate_deep_assist_20260909/
+?? _incoming_wp06_wp07_road_prep_20260909/
+?? backend/
+?? contracts/
+?? data/
+?? docs/
+?? domain-model/citynexus-core-domain-model-v0.2.yaml
+?? domain-model/citynexus-core-domain-model-v0.3.yaml
+?? domain-model/citynexus-core-domain-model-v0.4.yaml
+?? domain-model/citynexus-domain-model-v0.3-package.zip
+?? domain-model/citynexus-domain-model-v0.4-rc-package.zip
+?? domain-model/citynexus-domain-model-v0.4.schema.json
+?? domain-model/qa/domain-model-v0.4-report.json
+?? domain-model/qa/model-diff-v0.4-to-v0.4.1.json
+?? domain-model/qa/package-manifest.json
+?? frontend/
+?? review/
+?? scripts/
+?? tests/
+?? tools/
+?? visio-renderer/
+?? visio/
+
+git diff --stat
+ .gitignore | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+git log --oneline -n 12
+7d22cd0 feat(visio): establish CityNexus Visio model specification v1.0
+e3b7875 feat(use-cases): establish CityNexus use case baseline v0.1
+072e84f feat(requirements): establish CityNexus requirements baseline v0.3
+d5236d9 chore(domain): promote CityNexus domain model v0.4.2 RC3
+096d857 chore(domain): freeze CityNexus domain model v0.4.1 RC2

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\stay_mode_solver.py
+# hypothesis_version: 6.168.0
+
+[0.4, 1.0, 100, 500, 10000, 1000000, 1000000000, 'DETERMINISTIC', 'EMPTY', 'ESTIMATED', 'FEASIBLE', 'FREE_KNOWN', 'HIGH', 'KNOWN', 'KNOWN_CAPTURED', 'NORMAL', 'OPTIMAL', 'RAIN', 'SEVERE_RAIN', 'UNKNOWN', 'low_walking', 'paid_mode']

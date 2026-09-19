@@ -1,0 +1,16 @@
+{
+  "calibration": "C2",
+  "implementation": "native-class-plus-presentation-overlay",
+  "requiredText": [
+    "Journey",
+    "aggregate root",
+    "journeyId",
+    "lifecycleState",
+    "healthStatus",
+    "JourneyTwin",
+    "projection",
+    "riskScore"
+  ],
+  "status": "PASS",
+  "failures": []
+}

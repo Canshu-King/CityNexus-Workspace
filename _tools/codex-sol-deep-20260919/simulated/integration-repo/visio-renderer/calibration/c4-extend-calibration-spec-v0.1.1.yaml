@@ -1,0 +1,161 @@
+metadata:
+  name: CityNexus C4 Extend Fallback Calibration v0.1.1
+  version: 0.1.1
+  units: cm
+  intent: Repair the C4 Extend calibration by enforcing visible route tangency with
+    the semantic source/target side ports and by validating SVG text through parsed
+    visible text rather than raw entity spelling.
+page:
+  name: C4E_Extend
+  widthCm: 33.87
+  heightCm: 19.05
+nodes:
+- id: UC-06
+  kind: usecase
+  x: 11.1
+  y: 8.2
+  width: 4.8
+  height: 1.35
+  text: 'UC-06
+
+    Book & Order Services'
+  styleRef: useCaseDefault
+- id: UC-07
+  kind: usecase
+  x: 17.2
+  y: 8.2
+  width: 4.8
+  height: 1.35
+  text: 'UC-07
+
+    Make Secure Payment'
+  styleRef: useCaseCommerce
+- id: UC-08
+  kind: usecase
+  x: 11.1
+  y: 11.9
+  width: 4.8
+  height: 1.35
+  text: 'UC-08
+
+    Execute Journey'
+  styleRef: useCaseDefault
+- id: UC-09
+  kind: usecase
+  x: 17.2
+  y: 11.9
+  width: 4.8
+  height: 1.35
+  text: 'UC-09
+
+    Detect Journey Events'
+  styleRef: useCaseDefault
+- id: UC-10
+  kind: usecase
+  x: 23.3
+  y: 11.9
+  width: 4.8
+  height: 1.35
+  text: 'UC-10
+
+    Replan Journey'
+  styleRef: useCasePlanning
+routes:
+- id: EXT-07-06
+  connectorType: extend
+  source: UC-07
+  target: UC-06
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 17.2
+    - 6.6
+  - - 8.3
+    - 6.6
+  - - 8.3
+    - 9.7
+  - - 11.1
+    - 9.7
+  label: <<extend>>
+  condition: '[payment required]'
+  labelBox:
+    x: 12.7
+    y: 5.95
+    width: 2.7
+    height: 0.45
+  conditionBox:
+    x: 12.7
+    y: 6.95
+    width: 3.6
+    height: 0.45
+- id: EXT-09-08
+  connectorType: extend
+  source: UC-09
+  target: UC-08
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 17.2
+    - 10.2
+  - - 7.5
+    - 10.2
+  - - 7.5
+    - 13.4
+  - - 11.1
+    - 13.4
+  label: <<extend>>
+  condition: '[event detected]'
+  labelBox:
+    x: 12.6
+    y: 9.55
+    width: 2.7
+    height: 0.45
+  conditionBox:
+    x: 12.6
+    y: 10.85
+    width: 3.4
+    height: 0.45
+- id: EXT-10-09
+  connectorType: extend
+  source: UC-10
+  target: UC-09
+  sourceSide: TOP
+  targetSide: BOTTOM
+  sourcePortFraction: 0.5
+  targetPortFraction: 0.5
+  waypoints:
+  - - 23.3
+    - 9.4
+  - - 27.0
+    - 9.4
+  - - 27.0
+    - 14.2
+  - - 17.2
+    - 14.2
+  label: <<extend>>
+  condition: '[replan required]'
+  labelBox:
+    x: 25.2
+    y: 8.75
+    width: 2.7
+    height: 0.45
+  conditionBox:
+    x: 25.2
+    y: 10.05
+    width: 3.4
+    height: 0.45
+style:
+  routeStyleRef: includeExtend
+  labelFontPt: 7.5
+  conditionFontPt: 7.0
+  textColor: muted
+gate:
+  maxGeometryDeltaMm: 0.5
+  maxCrossings: 0
+  maxOverlaps: 0
+  maxThroughNodes: 0
+  maxOutOfPage: 0

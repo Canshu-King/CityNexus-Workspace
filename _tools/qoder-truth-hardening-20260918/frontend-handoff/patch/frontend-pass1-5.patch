@@ -1,0 +1,2569 @@
+diff --git a/frontend/e2e/_qoderContrastScan.ts b/frontend/e2e/_qoderContrastScan.ts
+new file mode 100644
+index 0000000..1b7d1d9
+--- /dev/null
++++ b/frontend/e2e/_qoderContrastScan.ts
+@@ -0,0 +1,215 @@
++import type { Page } from "@playwright/test";
++
++/**
++ * Shared dark-mode contrast scan for the Qoder frontend gates.
++ *
++ * Implements GPT's final dark gate table as a single source of truth used by
++ * both e2e/qoder-dark-audit.spec.ts (real Today/Live surfaces) and
++ * e2e/qoder-live-structure.spec.ts (the mocked L1/L2/L3 replan states), so the
++ * four tiers are judged identically everywhere:
++ *   FAIL — text AA (body <4.5, large <3), a required control boundary <3:1, a
++ *          state indicator <3:1 (colour-only), and ~white un-tokenised surfaces.
++ *   WARN — decorative borders (counted, never gating).
++ * Intent comes from data-contrast-role in the DOM, not from guessing CSS.
++ */
++
++export interface Violation {
++  kind: "text-contrast" | "light-surface" | "control-boundary" | "state-indicator";
++  selector: string;
++  testId: string | null;
++  text: string;
++  color: string;
++  background: string;
++  fontSizePx: number;
++  bold: boolean;
++  contrast: number;
++  required: number;
++}
++
++export interface ScanResult {
++  count: number;
++  rows: Violation[];
++  warnings: number;
++}
++
++export async function scanContrast(page: Page): Promise<ScanResult> {
++  return page.evaluate(() => {
++    type Row = Violation;
++    const parse = (value: string): [number, number, number, number] => {
++      const m = value.match(/rgba?\(([^)]+)\)/);
++      if (!m) return [0, 0, 0, value === "transparent" ? 0 : 1];
++      const p = m[1].split(",").map((x) => parseFloat(x.trim()));
++      return [p[0] || 0, p[1] || 0, p[2] || 0, p.length > 3 ? p[3] : 1];
++    };
++    const compositeOver = (
++      fg: [number, number, number, number],
++      bg: [number, number, number],
++    ): [number, number, number] => [
++      fg[0] * fg[3] + bg[0] * (1 - fg[3]),
++      fg[1] * fg[3] + bg[1] * (1 - fg[3]),
++      fg[2] * fg[3] + bg[2] * (1 - fg[3]),
++    ];
++    const channel = (c: number) => {
++      const s = c / 255;
++      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
++    };
++    const lum = (rgb: [number, number, number]) =>
++      0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2]);
++    const contrast = (a: [number, number, number], b: [number, number, number]) => {
++      const la = lum(a);
++      const lb = lum(b);
++      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
++    };
++    const backgroundUnder = (el: Element | null): [number, number, number] => {
++      const stack: Array<[number, number, number, number]> = [];
++      let cur: Element | null = el;
++      while (cur) {
++        const bg = parse(getComputedStyle(cur).backgroundColor);
++        if (bg[3] > 0) {
++          stack.push(bg);
++          if (bg[3] >= 0.999) break;
++        }
++        cur = cur.parentElement;
++      }
++      let acc: [number, number, number] = [0, 0, 0];
++      for (let i = stack.length - 1; i >= 0; i--) acc = compositeOver(stack[i], acc);
++      return acc;
++    };
++    const hasDirectText = (el: Element): string => {
++      let text = "";
++      el.childNodes.forEach((n) => {
++        if (n.nodeType === 3) text += n.textContent ?? "";
++      });
++      return text.trim();
++    };
++    const isVisible = (el: Element): boolean => {
++      const style = getComputedStyle(el);
++      if (style.display === "none" || style.visibility === "hidden") return false;
++      if (parseFloat(style.opacity) < 0.03) return false;
++      const rect = el.getBoundingClientRect();
++      if (rect.width < 2 || rect.height < 2) return false;
++      if (rect.bottom < 0 || rect.top > innerHeight || rect.right < 0 || rect.left > innerWidth)
++        return false;
++      return true;
++    };
++    const describe = (el: Element): string => {
++      const tid = el.getAttribute("data-testid");
++      if (tid) return `[data-testid="${tid}"]`;
++      const cls = (el.getAttribute("class") || "").split(/\s+/).filter(Boolean).slice(0, 3).join(".");
++      return `${el.tagName.toLowerCase()}${cls ? "." + cls : ""}`;
++    };
++
++    const rows: Row[] = [];
++    const all = Array.from(document.querySelectorAll<HTMLElement>("body *"));
++    const bw = (st: CSSStyleDeclaration) => parseFloat(st.borderTopWidth) || 0;
++
++    for (const el of all) {
++      if (!isVisible(el)) continue;
++      const style = getComputedStyle(el);
++      const bg = backgroundUnder(el);
++      const selfBg = parse(style.backgroundColor);
++
++      if (selfBg[3] > 0.6 && lum(bg) > 0.82) {
++        rows.push({
++          kind: "light-surface",
++          selector: describe(el),
++          testId: el.getAttribute("data-testid"),
++          text: (el.getAttribute("class") || "").slice(0, 60),
++          color: style.color,
++          background: style.backgroundColor,
++          fontSizePx: parseFloat(style.fontSize),
++          bold: parseInt(style.fontWeight || "400", 10) >= 600,
++          contrast: 0,
++          required: 0,
++        });
++      }
++
++      const text = hasDirectText(el);
++      if (text) {
++        const color = parse(style.color);
++        if (color[3] >= 0.05) {
++          const ratio = contrast(compositeOver(color, bg), bg);
++          const sizePx = parseFloat(style.fontSize);
++          const weight = parseInt(style.fontWeight || "400", 10);
++          const required = sizePx >= 24 || (sizePx >= 18.66 && weight >= 700) ? 3.0 : 4.5;
++          if (ratio < required) {
++            rows.push({
++              kind: "text-contrast",
++              selector: describe(el),
++              testId: el.getAttribute("data-testid"),
++              text: text.slice(0, 60),
++              color: style.color,
++              background: style.backgroundColor,
++              fontSizePx: sizePx,
++              bold: weight >= 600,
++              contrast: Math.round(ratio * 100) / 100,
++              required,
++            });
++          }
++        }
++      }
++    }
++
++    let warnings = 0;
++    for (const el of all) {
++      if (!isVisible(el)) continue;
++      const style = getComputedStyle(el);
++      const bg = backgroundUnder(el);
++      const role = el.getAttribute("data-contrast-role");
++      const isControl = role === "control" || el.classList.contains("v8-outline-button");
++      const isState = role === "state";
++      const parentBg = el.parentElement ? backgroundUnder(el.parentElement) : bg;
++
++      if (isControl) {
++        const fill = parse(style.backgroundColor);
++        const fillC = fill[3] > 0.5 ? contrast(compositeOver(fill, parentBg), parentBg) : 0;
++        const bc = parse(style.borderTopColor);
++        const borderC = bw(style) >= 1 && bc[3] > 0.3 ? contrast(compositeOver(bc, parentBg), parentBg) : 0;
++        if (fillC < 3 && borderC < 3) {
++          rows.push({
++            kind: "control-boundary",
++            selector: describe(el),
++            testId: el.getAttribute("data-testid"),
++            text: (hasDirectText(el) || el.getAttribute("class") || "").slice(0, 40),
++            color: style.borderTopColor,
++            background: style.backgroundColor,
++            fontSizePx: parseFloat(style.fontSize),
++            bold: false,
++            contrast: Math.round(Math.max(fillC, borderC) * 100) / 100,
++            required: 3,
++          });
++        }
++        continue;
++      }
++      if (isState) {
++        const fill = parse(style.backgroundColor);
++        const fillC = fill[3] > 0.5 ? contrast(compositeOver(fill, parentBg), parentBg) : 0;
++        const color = parse(style.color);
++        const colorC = color[3] > 0.05 ? contrast(compositeOver(color, bg), bg) : 0;
++        const label = el.querySelector<HTMLElement>("span") ?? el;
++        const weight = parseInt(getComputedStyle(label).fontWeight || "400", 10);
++        const before = getComputedStyle(el, "::before").content;
++        const hasBar = !!before && before !== "none" && before !== "normal";
++        const pass = fillC >= 3 || colorC >= 3 || (weight >= 600 && colorC >= 1.5) || (fillC >= 1.3 && (weight >= 600 || hasBar));
++        if (!pass) {
++          rows.push({
++            kind: "state-indicator",
++            selector: describe(el),
++            testId: el.getAttribute("data-testid"),
++            text: (hasDirectText(el) || el.getAttribute("class") || "").slice(0, 40),
++            color: style.color,
++            background: style.backgroundColor,
++            fontSizePx: parseFloat(style.fontSize),
++            bold: weight >= 600,
++            contrast: Math.round(Math.max(fillC, colorC) * 100) / 100,
++            required: 3,
++          });
++        }
++        continue;
++      }
++      if (bw(style) >= 1 && parse(style.borderTopColor)[3] > 0.2) warnings += 1;
++    }
++
++    return { count: all.length, rows, warnings };
++  });
++}
+diff --git a/frontend/e2e/_qoderShellSeed.ts b/frontend/e2e/_qoderShellSeed.ts
+new file mode 100644
+index 0000000..a230556
+--- /dev/null
++++ b/frontend/e2e/_qoderShellSeed.ts
+@@ -0,0 +1,38 @@
++import { expect, type Page } from "@playwright/test";
++
++/**
++ * Seed a real, fully-populated journey the way the product itself does, so the
++ * Today (/v8/hub) and Live (/v8/live) surfaces render against genuine backend
++ * API responses. The setup screen's "Tianjin demo" button creates the traveler
++ * + journey and generates stay options, persisting `citynexus.v8.journey_id`.
++ *
++ * Shared by the Qoder frontend gates (dark-mode audit, mobile overflow) so they
++ * audit the same reachable surfaces without a fragile per-spec fixture.
++ * Idempotent: if a journey is already loaded it returns immediately.
++ */
++export async function ensureDemoJourney(page: Page): Promise<void> {
++  await page.goto("/v8", { waitUntil: "load" });
++  await page.waitForTimeout(600);
++  const setup = page.getByTestId("trial-setup");
++  if (await setup.isVisible().catch(() => false)) {
++    await page.getByTestId("trial-tianjin-demo").click();
++    await page
++      .waitForFunction(() => !!localStorage.getItem("citynexus.v8.journey_id"), null, {
++        timeout: 30_000,
++      });
++    await page.waitForTimeout(1000);
++  }
++}
++
++/** Land on a route inside the V8 shell and wait for its anchor surface. */
++export async function openScreen(
++  page: Page,
++  url: string,
++  readyTestIds: string[],
++): Promise<void> {
++  await page.goto(url, { waitUntil: "load" });
++  for (const id of readyTestIds) {
++    await expect(page.getByTestId(id).first()).toBeVisible({ timeout: 25_000 });
++  }
++  await page.waitForTimeout(1200);
++}
+diff --git a/frontend/e2e/qoder-dark-audit.spec.ts b/frontend/e2e/qoder-dark-audit.spec.ts
+new file mode 100644
+index 0000000..16ede0e
+--- /dev/null
++++ b/frontend/e2e/qoder-dark-audit.spec.ts
+@@ -0,0 +1,216 @@
++import { expect, test } from "@playwright/test";
++import { mkdirSync, writeFileSync } from "node:fs";
++import { ensureDemoJourney, openScreen } from "./_qoderShellSeed";
++import { scanContrast, type Violation } from "./_qoderContrastScan";
++
++/**
++ * Qoder frontend track — dark-mode gate on the real Today (/v8/hub) and Live
++ * (/v8/live) surfaces (GPT calls #1 + #5). The four-tier contrast judgement
++ * lives in _qoderContrastScan.ts and is shared with the mocked Live state gate,
++ * so "0 violations" means the same thing everywhere. Legacy / Advanced /
++ * Wallet-JSON / off-path panels stay declared debt.
++ */
++
++const OUT_DIR = "../reports/dark-audit";
++
++interface AuditReport {
++  screen: string;
++  scanned: number;
++  violations: Violation[];
++  borderWarnings: number;
++}
++
++async function auditScreen(
++  page: import("@playwright/test").Page,
++  url: string,
++  readyTestIds: string[],
++  screen: string,
++): Promise<AuditReport> {
++  await page.emulateMedia({ colorScheme: "dark", media: "screen" });
++  await page.goto(url, { waitUntil: "load" });
++  for (const id of readyTestIds) {
++    await expect(page.getByTestId(id).first()).toBeVisible({ timeout: 25_000 });
++  }
++  await page.waitForTimeout(1500);
++  const scanned = await scanContrast(page);
++  return {
++    screen,
++    scanned: scanned.count,
++    violations: scanned.rows,
++    borderWarnings: scanned.warnings,
++  };
++}
++
++interface FocusVerdict {
++  selector: string;
++  testId: string | null;
++  outlineStyle: string;
++  outlineWidth: number;
++  outlineColor: string;
++  hasRing: boolean;
++  contrast: number;
++}
++
++async function auditFocusRing(
++  page: import("@playwright/test").Page,
++): Promise<Violation[]> {
++  const violations: Violation[] = [];
++  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
++  const seen = new Set<string>();
++  for (let i = 0; i < 22; i += 1) {
++    await page.keyboard.press("Tab");
++    const verdict = await page.evaluate(() => {
++      const parse = (value: string): [number, number, number, number] => {
++        const m = value.match(/rgba?\(([^)]+)\)/);
++        if (!m) return [0, 0, 0, value === "transparent" ? 0 : 1];
++        const p = m[1].split(",").map((x) => parseFloat(x.trim()));
++        return [p[0] || 0, p[1] || 0, p[2] || 0, p.length > 3 ? p[3] : 1];
++      };
++      const channel = (c: number) => {
++        const s = c / 255;
++        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
++      };
++      const lum = (rgb: [number, number, number]) =>
++        0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2]);
++      const contrast = (a: [number, number, number], b: [number, number, number]) => {
++        const la = lum(a);
++        const lb = lum(b);
++        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
++      };
++      const backgroundUnder = (el: Element): [number, number, number] => {
++        const stack: Array<[number, number, number, number]> = [];
++        let cur: Element | null = el;
++        while (cur) {
++          const bg = parse(getComputedStyle(cur).backgroundColor);
++          if (bg[3] > 0) {
++            stack.push(bg);
++            if (bg[3] >= 0.999) break;
++          }
++          cur = cur.parentElement;
++        }
++        let acc: [number, number, number] = [0, 0, 0];
++        for (let i = stack.length - 1; i >= 0; i--) {
++          const f = stack[i];
++          acc = [f[0] * f[3] + acc[0] * (1 - f[3]), f[1] * f[3] + acc[1] * (1 - f[3]), f[2] * f[3] + acc[2] * (1 - f[3])];
++        }
++        return acc;
++      };
++      const el = document.activeElement as HTMLElement | null;
++      if (!el || el === document.body || !el.matches("button,a,input,textarea,[tabindex],[role=button]"))
++        return null;
++      const rect = el.getBoundingClientRect();
++      if (rect.width < 2 || rect.height < 2) return null;
++      const st = getComputedStyle(el);
++      const outlineWidth = parseFloat(st.outlineWidth) || 0;
++      const outlineColor = st.outlineColor === "currentcolor" ? st.color : st.outlineColor;
++      const box = st.boxShadow;
++      const hasRing = box && box !== "none";
++      const surround = backgroundUnder(el.parentElement ?? el);
++      const oc = parse(outlineColor);
++      const ringContrast =
++        st.outlineStyle !== "none" && outlineWidth > 0 && oc[3] > 0.2
++          ? contrast(
++              [oc[0] * oc[3] + surround[0] * (1 - oc[3]), oc[1] * oc[3] + surround[1] * (1 - oc[3]), oc[2] * oc[3] + surround[2] * (1 - oc[3])],
++              surround,
++            )
++          : 0;
++      const tid = el.getAttribute("data-testid");
++      const cls = (el.getAttribute("class") || "").split(/\s+/).filter(Boolean).slice(0, 2).join(".");
++      return {
++        selector: tid ? `[data-testid="${tid}"]` : `${el.tagName.toLowerCase()}${cls ? "." + cls : ""}`,
++        testId: tid,
++        outlineStyle: st.outlineStyle,
++        outlineWidth,
++        outlineColor,
++        hasRing: !!hasRing,
++        contrast: Math.round(ringContrast * 100) / 100,
++      } as FocusVerdict;
++    });
++
++    if (!verdict) continue;
++    if (seen.has(verdict.selector)) break;
++    seen.add(verdict.selector);
++
++    const indicator = verdict.outlineStyle !== "none" && verdict.outlineWidth >= 2;
++    if (!indicator && !verdict.hasRing) {
++      violations.push({
++        kind: "control-boundary",
++        selector: verdict.selector,
++        testId: verdict.testId,
++        text: "no focus indicator",
++        color: verdict.outlineColor,
++        background: "",
++        fontSizePx: 0,
++        bold: false,
++        contrast: 0,
++        required: 3,
++      });
++    } else if (indicator && verdict.contrast < 3) {
++      violations.push({
++        kind: "control-boundary",
++        selector: verdict.selector,
++        testId: verdict.testId,
++        text: `focus ring ${verdict.outlineWidth}px vs surround`,
++        color: verdict.outlineColor,
++        background: "",
++        fontSizePx: 0,
++        bold: false,
++        contrast: verdict.contrast,
++        required: 3,
++      });
++    }
++  }
++  return violations;
++}
++
++function summarise(reports: AuditReport[]): string {
++  const lines: string[] = [];
++  for (const r of reports) {
++    lines.push(`\n=== ${r.screen} (dark) — scanned ${r.scanned} nodes, ${r.violations.length} violation(s), ${r.borderWarnings} decorative-border warning(s) ===`);
++    const byKind = new Map<string, Violation[]>();
++    for (const v of r.violations) {
++      if (!byKind.has(v.kind)) byKind.set(v.kind, []);
++      byKind.get(v.kind)!.push(v);
++    }
++    for (const [kind, items] of byKind) {
++      lines.push(`  -- ${kind}: ${items.length}`);
++      for (const v of items.slice(0, 25))
++        lines.push(`     ${v.selector} "${v.text}" fg=${v.color} bg=${v.background} c=${v.contrast}/${v.required} ${v.fontSizePx}px`);
++    }
++  }
++  return lines.join("\n");
++}
++
++test.describe("Qoder dark-mode audit (Today + Live)", () => {
++  for (const vp of [
++    { width: 390, height: 844, name: "mobile" },
++    { width: 1280, height: 900, name: "desktop" },
++  ]) {
++    test(`no dark contrast violations on Today/Live (${vp.name})`, async ({ page }) => {
++      test.setTimeout(120_000);
++      await page.setViewportSize({ width: vp.width, height: vp.height });
++      await ensureDemoJourney(page);
++      const today = await auditScreen(page, "/v8/hub", ["today-heading"], `today/${vp.name}`);
++      const live = await auditScreen(page, "/v8/live", ["v8-live-journey"], `live/${vp.name}`);
++      const reports = [today, live];
++      mkdirSync(OUT_DIR, { recursive: true });
++      writeFileSync(`${OUT_DIR}/dark-audit-${vp.name}.json`, JSON.stringify(reports, null, 2), "utf8");
++      console.log(summarise(reports));
++      const all = reports.flatMap((r) => r.violations.map((v) => `${r.screen}: ${v.kind} ${v.selector} "${v.text}"`));
++      expect(all, `dark contrast violations (${vp.name}):\n${all.slice(0, 40).join("\n")}`).toEqual([]);
++    });
++
++    test(`focus indicators clear 3:1 on Today/Live (${vp.name})`, async ({ page }) => {
++      test.setTimeout(120_000);
++      await page.setViewportSize({ width: vp.width, height: vp.height });
++      await page.emulateMedia({ colorScheme: "dark", media: "screen" });
++      await ensureDemoJourney(page);
++      await openScreen(page, "/v8/hub", ["today-heading"]);
++      const todayFocus = await auditFocusRing(page);
++      await openScreen(page, "/v8/live", ["v8-live-journey"]);
++      const liveFocus = await auditFocusRing(page);
++      const lines = [...todayFocus, ...liveFocus].map((v) => `${v.selector} "${v.text}" ${v.contrast}/${v.required}`);
++      expect(lines, `dark focus violations (${vp.name}):\n${lines.join("\n")}`).toEqual([]);
++    });
++  }
++});
+diff --git a/frontend/e2e/qoder-live-structure.spec.ts b/frontend/e2e/qoder-live-structure.spec.ts
+new file mode 100644
+index 0000000..3227fd0
+--- /dev/null
++++ b/frontend/e2e/qoder-live-structure.spec.ts
+@@ -0,0 +1,432 @@
++import { expect, test, type Page } from "@playwright/test";
++import { scanContrast } from "./_qoderContrastScan";
++
++/**
++ * Qoder frontend track — Live state-coverage matrix (GPT pass-5, Phase 1).
++ *
++ * Before any Live restructure, light up the whole reachable Live state space
++ * with a self-contained mock (no reliance on the global journey_id seed that the
++ * isolated harness cannot provide). GPT's stop-loss: if NORMAL / UNRESOLVED /
++ * PROPOSAL_READY / ACCEPTED cannot be constructed here WITHOUT touching
++ * production state logic, we do NOT reorder Live. These fixtures only vary the
++ * /experience disruptions and the /replans proposal statuses — the same inputs
++ * real travellers' data would carry — never a product-code change to make a
++ * test easier.
++ *
++ * Each case locks a behavioural invariant the reorder must not break:
++ *   NORMAL          -> no Accept CTA
++ *   UNRESOLVED      -> disruption shown, no Accept CTA, safe "nothing to decide"
++ *   PROPOSAL_READY  -> exactly one Accept CTA for one real differing proposal
++ *   ACCEPTED        -> Accept CTA gone, handled confirmation shown
++ */
++
++const JOURNEY_ID = "e2e-live-structure";
++const TRAVELER_ID = "e2e-live-traveler";
++
++type Disruption = {
++  id: string;
++  type: string;
++  severity: string;
++  status?: string | null;
++  affected_activity_id: string | null;
++  occurred_at: string;
++};
++type Proposal = {
++  id: string;
++  status: string;
++  trigger_event_id?: string | null;
++  hard_constraints_passed: boolean;
++  locked_commitments_preserved: boolean;
++  diff: { removed?: string[]; added?: string[]; moved?: string[] };
++};
++
++function seed(page: Page) {
++  return page.addInitScript(() => {
++    localStorage.setItem("citynexus.v8.journey_id", "e2e-live-structure");
++    localStorage.setItem("citynexus.locale", "zh-CN");
++    // eslint-disable-next-line @typescript-eslint/no-explicit-any
++    (navigator as any).serviceWorker.register = () => Promise.resolve({});
++  });
++}
++
++function activity(id: string, title: string, start: string, end: string) {
++  return {
++    id,
++    sequence_no: 1,
++    type: "visit",
++    title,
++    start_at: start,
++    end_at: end,
++    locked: false,
++    protected: false,
++    metadata: {},
++    cost_status: "UNKNOWN",
++  };
++}
++
++function experience(disruptions: Disruption[], withActivities: boolean) {
++  return {
++    journey: {
++      id: JOURNEY_ID,
++      traveler_id: TRAVELER_ID,
++      title: "厦门周末",
++      city_code: "CN-XIAMEN",
++      timezone: "Asia/Shanghai",
++      start_at: "2026-10-09T18:00:00+08:00",
++      end_at: "2026-10-11T15:00:00+08:00",
++      budget: { amount_minor: 120000, currency: "CNY" },
++    },
++    trip: {
++      arrival_anchor: { at: "2026-10-09T18:00:00+08:00", location: "厦门站" },
++      departure_anchor: { at: "2026-10-11T15:00:00+08:00", location: "厦门高崎机场" },
++      party_size: 2,
++      occupancy: { adults: 2, rooms: 1 },
++      stay_budget: { amount_minor: 70000, currency: "CNY" },
++    },
++    offers: [],
++    options: [],
++    selected_option_id: null,
++    mobility_facts: [],
++    active_plan: {
++      id: "plan-1",
++      version_no: 1,
++      status: "ACTIVE",
++      source: "E2E_LIVE_STRUCTURE",
++      current_activity_id: withActivities ? "act-1" : null,
++      // Located activities make the Live "current"/"next" moments real; map
++      // stays in its honest empty state (no tiles, no fabricated route).
++      activities: withActivities
++        ? [
++            activity("act-1", "鼓浪屿", "2026-10-09T09:00:00+08:00", "2026-10-09T12:00:00+08:00"),
++            activity("act-2", "菽庄花园", "2026-10-09T14:30:00+08:00", "2026-10-09T16:00:00+08:00"),
++          ]
++        : [],
++      legs: [],
++      user_location: null,
++      disruptions,
++    },
++    recovery: null,
++    experience_flags: {
++      needs_review: false,
++      recovery_required: false,
++      staleness: false,
++      feasibility_failures: [],
++    },
++  };
++}
++
++function offline() {
++  return {
++    journey_id: JOURNEY_ID,
++    sequence: 1,
++    valid_until: "2026-12-31T00:00:00Z",
++    snapshot: {
++      active_plan_version_id: null,
++      current_activity_id: null,
++      next_24h: [],
++      legs: [],
++      hotel: null,
++      reservations: [],
++      read_only: true,
++      financial_actions_allowed: false,
++    },
++    provider_freshness: { latest_provider_capture_at: null, transit_realtime: "UNKNOWN" },
++    updated_at: "2026-10-09T10:00:00Z",
++  };
++}
++
++async function mockApi(page: Page, fx: { experience: unknown; replans: unknown }) {
++  await page.route(/\/api\/v1\//, (route) => {
++    const pathname = new URL(route.request().url()).pathname;
++    const send = (json: unknown) =>
++      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(json) });
++    if (pathname.endsWith("/experience")) return send(fx.experience);
++    if (pathname.endsWith("/replans")) return send(fx.replans);
++    if (pathname.endsWith("/plans")) return send([]);
++    if (pathname.endsWith("/twin")) return send({ id: "twin-1", context: {} });
++    if (pathname.endsWith("/agent-policy"))
++      return send({ mode: "ADVISORY", auto_accept_replan: false, version: 1, max_auto_replan_cost_delta_minor: 5000, max_auto_loss_minor: 0, max_auto_schedule_drift_min: 20 });
++    if (pathname.endsWith("/wallet")) return send({ reservations: [], commitments: [], offline_ready: true });
++    if (pathname.endsWith("/offline-snapshot")) return send(offline());
++    if (pathname.endsWith("/runtime-status")) return send({});
++    if (pathname.endsWith("/execution-clock"))
++      return send({ now: "2026-10-09T10:00:00+08:00", timezone: "Asia/Shanghai", current_activity_id: null });
++    if (pathname.endsWith("/web-observations")) return send({ observations: [] });
++    return send({});
++  });
++}
++
++async function openLive(page: Page, fx: { experience: unknown; replans: unknown }) {
++  await page.setViewportSize({ width: 412, height: 915 });
++  await seed(page);
++  await mockApi(page, fx);
++  await page.goto("/v8/live", { waitUntil: "domcontentloaded" });
++  await expect(page.getByTestId("live-recovery")).toBeVisible({ timeout: 20_000 });
++}
++
++const acceptCtaCount = (page: Page) =>
++  page
++    .getByTestId("live-accept")
++    .evaluateAll((els) => els.filter((el) => (el as HTMLElement).getClientRects().length > 0).length);
++
++const CLOSURE: Disruption = {
++  id: "evt-close",
++  type: "CLOSURE",
++  severity: "HIGH",
++  status: "DETECTED",
++  affected_activity_id: "act-2",
++  occurred_at: "2026-10-09T09:30:00+08:00",
++};
++
++test.describe("Qoder Live structure order (Phase 2)", () => {
++  const rectIntersect = (
++    a: { x: number; y: number; width: number; height: number },
++    b: { x: number; y: number; width: number; height: number },
++  ) =>
++    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
++
++  test("sections stack Current -> Map -> Disruption -> Replan (bounding rect)", async ({ page }) => {
++    const proposal: Proposal = {
++      id: "r-p1",
++      status: "PRESENTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: ["菽庄花园"], added: ["厦门科技馆"], moved: [] },
++    };
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [proposal] });
++
++    const tops = async (testId: string) => {
++      const loc = page.getByTestId(testId).first();
++      if ((await loc.count()) === 0) return null;
++      const box = await loc.boundingBox();
++      return box ? box.y : null;
++    };
++    const current = await tops("live-journey-current");
++    const disruption = await tops("live-disruption");
++    const replan = await tops("live-proposal");
++    const mapBox = await page.locator(".v8-map-panel").first().boundingBox();
++
++    expect(current, "current missing").not.toBeNull();
++    expect(mapBox, "map missing").not.toBeNull();
++    // Current above the map.
++    expect(current!).toBeLessThan(mapBox!.y);
++    // Map above the disruption, disruption above the replan decision.
++    expect(disruption).not.toBeNull();
++    expect(mapBox!.y + mapBox!.height).toBeLessThanOrEqual(disruption! + 1);
++    expect(replan).not.toBeNull();
++    expect(disruption!).toBeLessThan(replan!);
++
++    // Bounded mobile map: 200–270 tall, not wider than the viewport.
++    expect(mapBox!.height).toBeGreaterThanOrEqual(200);
++    expect(mapBox!.height).toBeLessThanOrEqual(270);
++    expect(mapBox!.width).toBeLessThanOrEqual(412);
++
++    // A proposal is present, so the primary Accept CTA exists and the Copilot
++    // dock must not sit on top of it (single decision centre).
++    const accept = await page.getByTestId("live-accept").first().boundingBox();
++    expect(accept, "accept CTA missing").not.toBeNull();
++    const copilot = await page.locator(".cn-copilot-edge").first().boundingBox();
++    if (copilot) {
++      expect(
++        rectIntersect(accept!, copilot),
++        `Copilot dock overlaps the Accept CTA (accept=${JSON.stringify(accept)} copilot=${JSON.stringify(copilot)})`,
++      ).toBe(false);
++    }
++  });
++});
++
++test.describe("Qoder Live accepted transition (Phase 3)", () => {
++  test("accepting a proposal surfaces the confirmation before the open warning collapses", async ({
++    page,
++  }) => {
++    await page.setViewportSize({ width: 412, height: 915 });
++    await seed(page);
++
++    const proposal: Proposal = {
++      id: "r-p1",
++      status: "PRESENTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: ["菽庄花园"], added: ["厦门科技馆"], moved: [] },
++    };
++    const exp = experience([CLOSURE], true);
++
++    await page.route(/\/api\/v1\//, (route) => {
++      const url = new URL(route.request().url());
++      const pathname = url.pathname;
++      const method = route.request().method();
++      const send = (json: unknown) =>
++        route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(json) });
++      if (method === "POST" && /\/replans\/[^/]+\/accept$/.test(pathname)) {
++        proposal.status = "ACCEPTED"; // stateful flip — production logic untouched
++        return send({ id: proposal.id, status: "ACCEPTED" });
++      }
++      if (pathname.endsWith("/replans")) return send([proposal]);
++      if (pathname.endsWith("/experience")) return send(exp);
++      if (pathname.endsWith("/plans")) return send([]);
++      if (pathname.endsWith("/twin")) return send({ id: "twin-1", context: {} });
++      if (pathname.endsWith("/agent-policy"))
++        return send({ mode: "ADVISORY", auto_accept_replan: false, version: 1, max_auto_replan_cost_delta_minor: 5000, max_auto_loss_minor: 0, max_auto_schedule_drift_min: 20 });
++      if (pathname.endsWith("/wallet")) return send({ reservations: [], commitments: [], offline_ready: true });
++      if (pathname.endsWith("/offline-snapshot")) return send(offline());
++      if (pathname.endsWith("/runtime-status")) return send({});
++      if (pathname.endsWith("/execution-clock"))
++        return send({ now: "2026-10-09T10:00:00+08:00", timezone: "Asia/Shanghai", current_activity_id: null });
++      if (pathname.endsWith("/web-observations")) return send({ observations: [] });
++      return send({});
++    });
++
++    await page.goto("/v8/live", { waitUntil: "domcontentloaded" });
++
++    // Pre-accept baseline.
++    await expect(page.getByTestId("live-proposal")).toBeVisible();
++    await expect(page.getByTestId("live-disruption")).toBeVisible();
++
++    await page.getByTestId("live-accept").click();
++
++    // 1. A positive confirmation surfaces (message or handled line) — the "已采用"
++    //    signal exists before we let the disruption context go.
++    const confirmation = page
++      .getByTestId("live-message")
++      .or(page.getByTestId("live-handled"));
++    await expect(confirmation.first()).toBeVisible({ timeout: 10_000 });
++
++    // 2. Settled: handled shown, and only now has the open warning collapsed.
++    await expect(page.getByTestId("live-handled")).toBeVisible();
++    await expect(page.getByTestId("live-disruption")).toHaveCount(0);
++    await expect(page.getByTestId("live-accept")).toHaveCount(0);
++  });
++});
++
++test.describe("Qoder Live state-coverage matrix (Phase 1)", () => {
++
++  test("L0 NORMAL: current/next real, no disruption, no Accept CTA", async ({ page }) => {
++    await openLive(page, { experience: experience([], true), replans: [] });
++    await expect(page.getByTestId("live-journey-current")).toBeVisible();
++    await expect(page.getByTestId("live-disruption")).toHaveCount(0);
++    expect(await acceptCtaCount(page)).toBe(0);
++  });
++
++  test("L1 UNRESOLVED: disruption shown, no proposal, no Accept CTA, safe notice", async ({ page }) => {
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [] });
++    await expect(page.getByTestId("live-disruption")).toContainText("发生了什么");
++    await expect(page.getByTestId("live-proposal")).toHaveCount(0);
++    expect(await acceptCtaCount(page)).toBe(0);
++    await expect(page.getByTestId("live-no-proposal")).toBeVisible();
++  });
++
++  test("L2 PROPOSAL_READY: one real differing proposal, exactly one Accept CTA", async ({ page }) => {
++    const proposal: Proposal = {
++      id: "r-p1",
++      status: "PRESENTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: ["菽庄花园"], added: ["厦门科技馆"], moved: [] },
++    };
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [proposal] });
++    await expect(page.getByTestId("live-proposal")).toHaveCount(1);
++    expect(await acceptCtaCount(page)).toBe(1);
++  });
++
++  test("L3 ACCEPTED: Accept CTA gone, handled confirmation shown", async ({ page }) => {
++    const accepted: Proposal = {
++      id: "r-a1",
++      status: "ACCEPTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [accepted] });
++    expect(await acceptCtaCount(page)).toBe(0);
++    await expect(page.getByTestId("live-handled")).toBeVisible();
++    // The accepted event must not resurface as an open disruption.
++    await expect(page.getByTestId("live-disruption")).toHaveCount(0);
++  });
++
++  test("L4 MOBILITY_UNAVAILABLE-safe: rejected proposal offers no fake Accept CTA", async ({ page }) => {
++    // A refusal (no acceptable plan) is modelled only through its status — no
++    // production logic is altered to force it.
++    const rejected: Proposal = {
++      id: "r-x1",
++      status: "REJECTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: false,
++      locked_commitments_preserved: true,
++      diff: { removed: [], added: [], moved: [] },
++    };
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [rejected] });
++    expect(await acceptCtaCount(page)).toBe(0);
++    await expect(page.getByTestId("live-no-proposal")).toBeVisible();
++  });
++});
++
++async function openLiveDark(page: Page, fx: { experience: unknown; replans: unknown }) {
++  await page.emulateMedia({ colorScheme: "dark", media: "screen" });
++  await openLive(page, fx);
++}
++
++test.describe("Qoder Live dark replan-state audit (Phase 4)", () => {
++  test("L1 UNRESOLVED and L2 PROPOSAL_READY have no dark contrast violations", async ({ page }) => {
++    // The reorder + new mock states light up cards the demo-driven audit cannot
++    // reach (warning fill, proposal card, accept button, diff rows) under the
++    // same four-tier gate.
++    await openLiveDark(page, { experience: experience([CLOSURE], true), replans: [] });
++    await expect(page.getByTestId("live-disruption")).toBeVisible();
++    let scan = await scanContrast(page);
++    expect(scan.rows.map((v) => `${v.kind} ${v.selector} "${v.text}"`), "L1 dark").toEqual([]);
++
++    const proposal: Proposal = {
++      id: "r-p1",
++      status: "PRESENTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: ["菽庄花园"], added: ["厦门科技馆"], moved: [] },
++    };
++    await openLiveDark(page, { experience: experience([CLOSURE], true), replans: [proposal] });
++    await expect(page.getByTestId("live-proposal")).toBeVisible();
++    scan = await scanContrast(page);
++    expect(scan.rows.map((v) => `${v.kind} ${v.selector} "${v.text}"`), "L2 dark").toEqual([]);
++  });
++});
++
++test.describe("Qoder Live map height + first screen (Phase 4)", () => {
++  const mapHeight = async (page: Page) => (await page.locator(".v8-map-panel").first().boundingBox())?.height ?? 0;
++
++  test("map is 240 normal and 200-216 when a decision is active; disruption reaches the fold", async ({
++    page,
++  }) => {
++    await openLive(page, { experience: experience([], true), replans: [] });
++    const normal = await mapHeight(page);
++    expect(normal, "L0 map height").toBeGreaterThanOrEqual(238);
++    expect(normal, "L0 map height").toBeLessThanOrEqual(242);
++
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [] });
++    const decision = await mapHeight(page);
++    expect(decision, "L1 map height").toBeGreaterThanOrEqual(200);
++    expect(decision, "L1 map height").toBeLessThanOrEqual(216);
++    const d1 = await page.getByTestId("live-disruption").first().boundingBox();
++    expect(d1!.y, "L1 disruption must reach the 412x915 first screen").toBeLessThan(915);
++
++    const proposal: Proposal = {
++      id: "r-p1",
++      status: "PRESENTED",
++      trigger_event_id: "evt-close",
++      hard_constraints_passed: true,
++      locked_commitments_preserved: true,
++      diff: { removed: ["菽庄花园"], added: ["厦门科技馆"], moved: [] },
++    };
++    await openLive(page, { experience: experience([CLOSURE], true), replans: [proposal] });
++    const decision2 = await mapHeight(page);
++    expect(decision2, "L2 map height").toBeGreaterThanOrEqual(200);
++    expect(decision2, "L2 map height").toBeLessThanOrEqual(216);
++    const d2 = await page.getByTestId("live-disruption").first().boundingBox();
++    const cta = await page.getByTestId("live-accept").first().boundingBox();
++    expect(d2!.y, "L2 disruption top").toBeLessThan(915);
++    expect(cta!.y, "L2 Accept CTA must be reachable on the first screen").toBeLessThan(915);
++  });
++});
+diff --git a/frontend/e2e/qoder-mobile-overflow.spec.ts b/frontend/e2e/qoder-mobile-overflow.spec.ts
+new file mode 100644
+index 0000000..105903b
+--- /dev/null
++++ b/frontend/e2e/qoder-mobile-overflow.spec.ts
+@@ -0,0 +1,120 @@
++import { expect, test, type Page } from "@playwright/test";
++import { ensureDemoJourney, openScreen } from "./_qoderShellSeed";
++
++/**
++ * Qoder frontend track — mobile horizontal-overflow gate (GPT final call #2:
++ * "Today 的 …360/412/430 overflow… 全绿后，再做 Live").
++ *
++ * The Apple-style refactor changes wrappers, section order and hero layout, so
++ * a durable, programmatic no-horizontal-scroll check is the guard that lets me
++ * restructure without a human eye on a screenshot. It fails if the document
++ * itself scrolls sideways or any visible element pokes past the viewport edge.
++ */
++
++const WIDTHS = [360, 412, 430];
++
++interface Offender {
++  selector: string;
++  testId: string | null;
++  right: number;
++  scrollWidth: number;
++  clientWidth: number;
++}
++
++async function scanOverflow(page: Page): Promise<{
++  docScrollWidth: number;
++  innerWidth: number;
++  offenders: Offender[];
++}> {
++  return page.evaluate(() => {
++    const innerWidth = window.innerWidth;
++    const docScrollWidth = Math.max(
++      document.documentElement.scrollWidth,
++      document.body.scrollWidth,
++    );
++    const describe = (el: Element): string => {
++      const tid = el.getAttribute("data-testid");
++      if (tid) return `[data-testid="${tid}"]`;
++      const cls = (el.getAttribute("class") || "")
++        .split(/\s+/)
++        .filter(Boolean)
++        .slice(0, 2)
++        .join(".");
++      return `${el.tagName.toLowerCase()}${cls ? "." + cls : ""}`;
++    };
++    const offenders: Offender[] = [];
++    for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
++      const style = getComputedStyle(el);
++      if (style.display === "none" || style.visibility === "hidden") continue;
++      if (parseFloat(style.opacity) < 0.03) continue;
++      const rect = el.getBoundingClientRect();
++      if (rect.width < 2 || rect.height < 2) continue;
++      // A clipped-scroll container is fine; only flag content that escapes the
++      // viewport horizontally, or a box wider than its own clipped content.
++      const escapes = rect.right > innerWidth + 1;
++      const inner = el.scrollWidth > el.clientWidth + 1;
++      // Ignore elements that deliberately scroll inside (allow-x), they can't
++      // push the page wider.
++      const isScroller = /auto|scroll/.test(style.overflowX);
++      if (escapes && !isScroller && !el.closest("[data-allow-x]")) {
++        offenders.push({
++          selector: describe(el),
++          testId: el.getAttribute("data-testid"),
++          right: Math.round(rect.right),
++          scrollWidth: el.scrollWidth,
++          clientWidth: el.clientWidth,
++        });
++      } else if (inner && !isScroller && rect.right > innerWidth + 1) {
++        offenders.push({
++          selector: describe(el),
++          testId: el.getAttribute("data-testid"),
++          right: Math.round(rect.right),
++          scrollWidth: el.scrollWidth,
++          clientWidth: el.clientWidth,
++        });
++      }
++    }
++    return { docScrollWidth, innerWidth, offenders };
++  });
++}
++
++test.describe("Qoder mobile-overflow (Today + Live)", () => {
++  test("no horizontal overflow at 360/412/430 on Today and Live", async ({ page }) => {
++    test.setTimeout(120_000);
++    await page.emulateMedia({ colorScheme: "light", media: "screen" });
++    await ensureDemoJourney(page);
++
++    const failures: string[] = [];
++
++    for (const width of WIDTHS) {
++      await page.setViewportSize({ width, height: 844 });
++
++      const today = {
++        url: "/v8/hub",
++        ready: ["today-heading", "today-attention"],
++        label: `today@${width}`,
++      };
++      const live = {
++        url: "/v8/live",
++        ready: ["v8-live-journey", "live-journey-current"],
++        label: `live@${width}`,
++      };
++
++      for (const screen of [today, live]) {
++        await openScreen(page, screen.url, screen.ready);
++        const result = await scanOverflow(page);
++        if (result.docScrollWidth > result.innerWidth + 1) {
++          failures.push(`${screen.label}: page scrolls sideways (${result.docScrollWidth}px > ${result.innerWidth}px)`);
++        }
++        for (const o of result.offenders.slice(0, 8)) {
++          failures.push(`${screen.label}: ${o.selector} right=${o.right} (innerW ${result.innerWidth})`);
++        }
++      }
++    }
++
++    expect(
++      failures,
++      `mobile horizontal overflow:\n${failures.join("\n")}`,
++    ).toEqual([]);
++  });
++});
+diff --git a/frontend/e2e/qoder-today-hero.spec.ts b/frontend/e2e/qoder-today-hero.spec.ts
+new file mode 100644
+index 0000000..ec99e9d
+--- /dev/null
++++ b/frontend/e2e/qoder-today-hero.spec.ts
+@@ -0,0 +1,99 @@
++import { expect, test } from "@playwright/test";
++import { ensureDemoJourney, openScreen } from "./_qoderShellSeed";
++
++/**
++ * Qoder frontend track — single-focus Today Hero acceptance (GPT pass-3).
++ *
++ * GPT fixed the Hero's minimum acceptance as DOM/computed assertions (no human
++ * screenshot needed). This gate holds the design to: exactly one primary action,
++ * no overflow, a bounded first-screen height, and a "Now" block that is simply
++ * absent when there is no current activity (never an empty slot).
++ */
++
++const WIDTHS = [360, 412, 430, 1280];
++
++test.describe("Qoder Today single-focus hero", () => {
++  test("hero has one primary CTA, bounded height, no empty Now slot, no overflow", async ({
++    page,
++  }) => {
++    test.setTimeout(120_000);
++    await page.emulateMedia({ colorScheme: "light", media: "screen" });
++    await ensureDemoJourney(page);
++
++    for (const width of WIDTHS) {
++      const height = width >= 900 ? 900 : 844;
++      await page.setViewportSize({ width, height });
++      await openScreen(page, "/v8/hub", ["today-heading", "today-next"]);
++
++      const hero = page.getByTestId("today-hero");
++      await expect(hero).toBeVisible();
++
++      // 1. Exactly one visible primary CTA inside the hero.
++      const primaryCount = await hero
++        .locator(".v8-primary, .v8-primary-button")
++        .evaluateAll(
++          (els) =>
++            els.filter(
++              (el) => (el as HTMLElement).offsetParent !== null && (el as HTMLElement).getClientRects().length > 0,
++            ).length,
++        );
++      expect(primaryCount, `hero@${width}: expected ≤1 primary CTA, got ${primaryCount}`).toBeLessThanOrEqual(1);
++
++      // 2. No horizontal overflow within the hero itself.
++      const overflow = await hero.evaluate((el) => ({
++        scrollW: el.scrollWidth,
++        clientW: el.clientWidth,
++        over: el.scrollWidth > el.clientWidth + 1,
++      }));
++      expect(overflow.over, `hero@${width}: internal horizontal overflow (${overflow.scrollW}>${overflow.clientW})`).toBe(false);
++
++      // 3. Hero must not dominate the first screen (>45% viewport height).
++      const heroBox = await hero.boundingBox();
++      expect(heroBox, `hero@${width}: no box`).not.toBeNull();
++      const ratio = (heroBox?.height ?? 0) / height;
++      expect(ratio, `hero@${width}: height ${Math.round(ratio * 100)}% of viewport > 45%`).toBeLessThanOrEqual(0.45);
++
++      // 4/5. The demo journey has not started, so there is NO current activity:
++      //      the hero must degrade to Next only and must not render an empty
++      //      "Now" block.
++      const nowAttr = await hero.getAttribute("data-now");
++      const nowCount = await page.getByTestId("today-now").count();
++      expect(nowAttr, `hero@${width}: data-now should be false pre-trip`).toBe("false");
++      expect(nowCount, `hero@${width}: empty "Now" block must not render`).toBe(0);
++
++      // 6. The CTA appears iff there is a genuine next stop — never an empty
++      //    slot (GPT: "无 next 时不渲染空 CTA"). The pre-plan demo has no next,
++      //    so the hero shows a completion line and must not render a CTA.
++      const nextRowText = ((await page.getByTestId("today-next").locator(".cn-hero-next-row").innerText()) || "").trim();
++      const isEmptyNext = /还没有安排|Nothing scheduled/i.test(nextRowText);
++      const ctaCount = await page
++        .getByTestId("today-hero-cta")
++        .evaluateAll((els) => els.filter((el) => (el as HTMLElement).getClientRects().length > 0).length);
++      if (isEmptyNext) {
++        expect(ctaCount, `hero@${width}: an empty "no next" state must not render a CTA (next="${nextRowText}")`).toBe(0);
++      } else {
++        expect(ctaCount, `hero@${width}: an actionable next stop must expose exactly one CTA (next="${nextRowText}")`).toBe(1);
++      }
++    }
++  });
++
++  test("reduced-motion disables the hero reveal transform", async ({ page }) => {
++    test.setTimeout(90_000);
++    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: "light", media: "screen" });
++    await ensureDemoJourney(page);
++    await page.setViewportSize({ width: 390, height: 844 });
++    await openScreen(page, "/v8/hub", ["today-heading", "today-next"]);
++
++    const hero = page.getByTestId("today-hero");
++    const reveal = await hero.evaluate((el) => {
++      const st = getComputedStyle(el);
++      return { animationName: st.animationName, transform: st.transform };
++    });
++    // The hero itself sits in a page-reveal group; under reduced motion that
++    // animation is suppressed and no translate transform is applied.
++    expect(
++      reveal.animationName === "none" || reveal.transform === "none",
++      `reduced-motion: hero should not translate-reveal (anim=${reveal.animationName}, transform=${reveal.transform})`,
++    ).toBe(true);
++  });
++});
+diff --git a/frontend/package.json b/frontend/package.json
+index a823543..3bdc470 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -6,6 +6,7 @@
+     "dev": "vite",
+     "build": "vite build",
+     "typecheck": "tsc -p tsconfig.check.json --noEmit",
++    "typecheck:all": "tsc -p tsconfig.typecheck.json --noEmit",
+     "test:e2e": "playwright test",
+     "storybook": "set STORYBOOK=1&& storybook dev -p 6006",
+     "storybook:build": "set STORYBOOK=1&& storybook build"
+@@ -30,6 +31,8 @@
+     "@axe-core/playwright": "^4.10.2",
+     "@playwright/test": "^1.54.0",
+     "@storybook/react-vite": "^9.1.20",
++    "@types/react": "^19.1.0",
++    "@types/react-dom": "^19.1.0",
+     "@vitejs/plugin-react": "^4.7.0",
+     "openapi-typescript": "^7.5.0",
+     "storybook": "^9.1.20",
+diff --git a/frontend/src/api/v10Execution.ts b/frontend/src/api/v10Execution.ts
+index a3915ee..26f64a1 100644
+--- a/frontend/src/api/v10Execution.ts
++++ b/frontend/src/api/v10Execution.ts
+@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
+ // in CI whenever contracts/openapi.yaml changes.
+ export type GeneratedOpenApiPaths = paths;
+ 
+-export type ExecutionClockResponse = paths["/api/v1/journeys/{journey_id}/execution-clock"]["get"]["responses"][200]["content"]["application/json"];
++export type ExecutionClockResponse = paths["/journeys/{journey_id}/execution-clock"]["get"]["responses"][200]["content"]["application/json"];
+ 
+ export type WebObservationPayload = {
+   id: string;
+diff --git a/frontend/src/app/V8Experience.tsx b/frontend/src/app/V8Experience.tsx
+index 3bc259b..eca55ac 100644
+--- a/frontend/src/app/V8Experience.tsx
++++ b/frontend/src/app/V8Experience.tsx
+@@ -831,6 +831,7 @@ export function V8Experience() {
+               )}
+               <button
+                 className={route === item.key ? "active" : ""}
++                data-contrast-role={route === item.key ? "state" : undefined}
+                 onClick={() => navigate(item.key)}
+               >
+                 <Icon name={item.icon} />
+@@ -883,6 +884,7 @@ export function V8Experience() {
+             <button
+               className="v9-language"
+               data-testid="topbar-language"
++              data-contrast-role="control"
+               aria-label="Switch language"
+               onClick={switchLocale}
+             >
+@@ -1004,28 +1006,34 @@ export function V8Experience() {
+             />
+           )}
+           {route === "live" && (
+-            <LiveRecovery
+-              journeyId={data.journey.id}
+-              handledEventIds={handledEventIds}
+-              onAccepted={() => void load(data.journey.id)}
+-            />
+-          )}
+-          {route === "live" && (
+-            <>
++            <div
++              className="live-shell"
++              data-decision-active={disruptions.length > 0 ? "true" : "false"}
++            >
+               <Live
++                data={data}
++                selected={selected}
++                mode={mode}
++                onRain={triggerRain}
++                onLocation={shareForegroundLocation}
++                offline={offline}
++              />
++              <LiveRecovery
++                journeyId={data.journey.id}
++                handledEventIds={handledEventIds}
++                onAccepted={() => void load(data.journey.id)}
++              />
++              <LiveSecondary
+                 data={data}
+                 selected={selected}
+                 mode={mode}
+                 comparison={comparison}
+                 isHandledDisruption={isHandledDisruption}
+                 onMode={changeMode}
+-                onRain={triggerRain}
+                 onSheet={() => setSheetOpen(true)}
+-                onLocation={shareForegroundLocation}
+-                offline={offline}
+               />
+               <V10LiveExecutionPanel journeyId={data.journey.id} />
+-            </>
++            </div>
+           )}
+           {route === "map" && (
+             <MapPage
+@@ -1129,6 +1137,11 @@ export function V8Experience() {
+           <button
+             key={item.key}
+             data-testid={`nav-${item.key}`}
++            data-contrast-role={
++              route === item.key || (item.key === "map" && route === "live")
++                ? "state"
++                : undefined
++            }
+             className={
+               route === item.key || (item.key === "map" && route === "live")
+                 ? "active"
+@@ -1162,7 +1175,7 @@ export function V8Experience() {
+             </div>
+             {drawerRoutes.map((item, index) => (
+               <div key={item.key}>
+-                {("group" in item && (index === 0 || !("group" in drawerRoutes[index - 1]) || drawerRoutes[index - 1].group !== item.group)) && (
++                {("group" in item && (index === 0 || !("group" in drawerRoutes[index - 1]) || (drawerRoutes[index - 1] as { group?: string }).group !== item.group)) && (
+                   <span className="v8-nav-group">{"group" in item ? item.group : "MORE"}</span>
+                 )}
+                 <button
+@@ -1279,7 +1292,7 @@ function TripsWorkspace({
+               kept for developers behind an Advanced disclosure. */}
+           <JourneyInboxWorkbench
+             journeyId={data.journey.id}
+-            onConfirmed={onRefresh}
++            onConfirmed={async () => { onRefresh(); }}
+           />
+           <details className="trips-advanced">
+             <summary>{zh ? "高级 / 开发者" : "Advanced / developer"}</summary>
+@@ -1466,7 +1479,16 @@ function Hub({
+   // not keep Today in a permanent "needs attention" state.
+   const disruptions = planDisruptions.filter((item) => !isHandledDisruption(item));
+   const handledDisruptions = planDisruptions.filter((item) => isHandledDisruption(item));
+-  const nextClock = nextStop ? clockInZone(nextStop.start_at, journeyTz) : null;
++  // Single-focus hero: "Now" only when something is genuinely in progress, and
++  // "Next" as the one upcoming action. No empty current slot is ever fabricated.
++  const currentStop =
++    activities.find(
++      (item) => Date.parse(item.start_at) <= nowMs && Date.parse(item.end_at) >= nowMs,
++    ) ?? null;
++  const nextUp = currentStop
++    ? activities.find((item) => Date.parse(item.start_at) > Date.parse(currentStop.end_at)) ?? null
++    : nextStop;
++  const heroClock = nextUp ? clockInZone(nextUp.start_at, journeyTz) : null;
+ 
+   return (
+     <section className="v8-page">
+@@ -1521,7 +1543,7 @@ function Hub({
+           </p>
+         </div>
+         <div className="v8-hub-actions">
+-          <button className="v9-language v8-home-language" data-testid="home-language" aria-label="Switch language" onClick={switchLocale}>
++          <button className="v9-language v8-home-language" data-testid="home-language" data-contrast-role="control" aria-label="Switch language" onClick={switchLocale}>
+             {t("nav.language")}
+           </button>
+           <button className="v8-outline-button" onClick={onNewJourney}>
+@@ -1541,115 +1563,129 @@ function Hub({
+         </div>
+       </div>
+       <div className="v8-hero-grid">
+-        <article className="v8-trip-hero">
+-          <div className="v8-trip-hero-head">
+-            <div>
+-              <span className="v8-status-pill">
+-                <span className="status-dot" />
+-                {t("hub.planningReady")}
+-              </span>
+-              <h2>{data.journey.title}</h2>
+-              <p>
+-                <Icon name="calendar" />
+-                {dateInZone(data.journey.start_at, locale, journeyTz)} — {dateInZone(data.journey.end_at, locale, journeyTz)}{" "}
+-                <span>·</span> {t("shell.travelers", { n: data.trip.party_size })}
+-              </p>
++        <article
++          className="v8-trip-hero cn-now-next-hero"
++          data-testid="today-hero"
++          data-now={currentStop ? "true" : "false"}
++        >
++          {currentStop ? (
++            <div className="cn-hero-now" data-testid="today-now">
++              <span className="cn-hero-label">{zh ? "现在" : "Now"}</span>
++              <strong className="cn-hero-now-place">{currentStop.title}</strong>
+             </div>
+-            <button
+-              className="v8-quiet-button"
+-              onClick={() => onNavigate("studio")}
+-            >
+-              {t("hub.viewPlan")}
+-            </button>
+-          </div>
+-          <div className="today-actions" data-testid="today-next">
+-            <div>
+-              <span>{zh ? "下一步" : "Next"}</span>
+-              <strong>
+-                {nextStop
+-                  ? `${nextClock ?? ""} ${nextStop.title}`.trim()
+-                  : zh
+-                    ? "还没有安排"
+-                    : "Nothing scheduled"}
+-              </strong>
+-              <small>
++          ) : null}
++          <div className="cn-hero-next" data-testid="today-next">
++            <span className="cn-hero-label">
++              {nextUp ? (zh ? "接下来" : "Next") : zh ? "今天" : "Today"}
++            </span>
++            <strong className="cn-hero-next-row">
++              {nextUp
++                ? `${heroClock ?? ""} ${nextUp.title}`.trim()
++                : zh
++                  ? "还没有安排"
++                  : "Nothing scheduled"}
++            </strong>
++            {nextUp ? (
++              <small className="cn-hero-meta">
+                 {todayStops.length
+                   ? zh
+-                    ? `今天有 ${todayStops.length} 项安排`
++                    ? `今天还有 ${todayStops.length} 项安排`
+                     : `${todayStops.length} stops today`
+                   : zh
+-                    ? "今天没有安排"
+-                    : "Nothing today"}
+-              </small>
+-            </div>
+-            <div>
+-              <span>{zh ? "住宿" : "Stay"}</span>
+-              <strong data-testid="today-stay">
+-                {chosenStay
+-                  ? chosenStay.stay.property_name
+-                  : zh
+-                    ? "还没有选定"
+-                    : "Not chosen yet"}
+-              </strong>
+-              <small>
+-                {chosenStay
+-                  ? zh
+-                    ? "已确认的住宿"
+-                    : "Confirmed stay"
+-                  : zh
+-                    ? "去「行程 · 住宿」挑选"
+-                    : "Choose in Trips · Stay"}
++                    ? "下一站之后暂无安排"
++                    : "Nothing scheduled after this"}
+               </small>
+-            </div>
+-            <div>
+-              <span>{zh ? "需要关注" : "Attention"}</span>
+-              <strong
+-                className={disruptions.length ? "warn" : "green"}
+-                data-testid="today-attention"
+-              >
+-                {disruptions.length
+-                  ? zh
+-                    ? `${disruptions.length} 项变化`
+-                    : `${disruptions.length} change(s)`
+-                  : handledDisruptions.length
+-                    ? zh
+-                      ? "已处理"
+-                      : "Handled"
+-                    : zh
+-                      ? "一切正常"
+-                      : "All clear"}
+-              </strong>
+-              <small>
+-                {disruptions.length
+-                  ? zh
+-                    ? "打开「实时行程」查看"
+-                    : "Open Live to review"
+-                  : handledDisruptions.length
+-                    ? zh
+-                      ? "刚才的变化已经处理好"
+-                      : "The earlier change has been handled"
+-                    : zh
+-                      ? "没有影响行程的变化"
+-                      : "Nothing affecting your trip"}
+-              </small>
+-            </div>
+-          </div>
+-          <div className="v8-anchor-row">
+-            <div>
+-              <span>{t("hub.arrival")}</span>
+-              <b>{dateInZone(data.trip.arrival_anchor.at, locale, journeyTz)}</b>
+-              <small>{data.trip.arrival_anchor.location}</small>
+-            </div>
+-            <div className="anchor-line" />
+-            <div>
+-              <span>{t("hub.departure")}</span>
+-              <b>{dateInZone(data.trip.departure_anchor.at, locale, journeyTz)}</b>
+-              <small>{data.trip.departure_anchor.location}</small>
+-            </div>
++            ) : null}
+           </div>
++          {nextUp ? (
++            <button
++              type="button"
++              className="v8-primary cn-hero-cta"
++              data-testid="today-hero-cta"
++              data-contrast-role="control"
++              onClick={() => onNavigate("live")}
++            >
++              {zh ? "查看实时行程" : "Open Live"}
++            </button>
++          ) : null}
+         </article>
+         <MapPanel data={data} option={selected} />
+       </div>
++      {/* Stay / booking steps OUT of the hero into a compact strip: the hero owns
++          one action, lodging is secondary context (GPT Hero rules). */}
++      <div className="cn-hero-strip" data-testid="today-strip">
++        <div className="cn-strip-item">
++          <span>{zh ? "住宿" : "Stay"}</span>
++          <strong data-testid="today-stay">
++            {chosenStay
++              ? chosenStay.stay.property_name
++              : zh
++                ? "还没有选定"
++                : "Not chosen yet"}
++          </strong>
++        </div>
++        <div className="cn-strip-item">
++          <span>{t("hub.arrival")}</span>
++          <b>{dateInZone(data.trip.arrival_anchor.at, locale, journeyTz)}</b>
++        </div>
++        <div className="cn-strip-item">
++          <span>{t("hub.departure")}</span>
++          <b>{dateInZone(data.trip.departure_anchor.at, locale, journeyTz)}</b>
++        </div>
++      </div>
++      {/* Attention is its own band, not a tile squeezed beside "Next"/"Stay":
++          Apple hierarchy says a change that needs the traveller is the loudest
++          thing after Now/Next, and an all-clear is a quiet line, not a card.
++          The `today-attention` element is always rendered (same logic and
++          strings as before); only its presentation escalates via data-attention. */}
++      <section
++        className="cn-attention-band"
++        data-testid="today-attention-band"
++        data-attention={
++          disruptions.length ? "open" : handledDisruptions.length ? "handled" : "clear"
++        }
++        aria-label={zh ? "需要关注" : "Needs attention"}
++      >
++        <div className="cn-attention-head">
++          <span className="v8-kicker">{zh ? "需要关注" : "Attention"}</span>
++          <strong
++            className={disruptions.length ? "warn" : "green"}
++            data-testid="today-attention"
++          >
++            {disruptions.length
++              ? zh
++                ? `${disruptions.length} 项变化`
++                : `${disruptions.length} change(s)`
++              : handledDisruptions.length
++                ? zh
++                  ? "已处理"
++                  : "Handled"
++                : zh
++                  ? "一切正常"
++                  : "All clear"}
++          </strong>
++        </div>
++        {disruptions.length > 0 || handledDisruptions.length > 0 ? (
++          <p className="cn-attention-hint">
++            {disruptions.length
++              ? zh
++                ? "打开「实时行程」查看并处理这些变化。"
++                : "Open Live to review these changes."
++              : zh
++                ? "刚才的变化已经处理好。"
++                : "The earlier change has been handled."}
++          </p>
++        ) : null}
++        {disruptions.length > 0 && (
++          <button
++            type="button"
++            className="v8-primary cn-attention-cta"
++            onClick={() => onNavigate("live")}
++          >
++            {zh ? "查看实时行程" : "Review in Live"}
++          </button>
++        )}
++      </section>
+       <div className="v8-section-heading">
+         <div>
+           <p className="v8-kicker">{t("hub.planGlance")}</p>
+@@ -1972,44 +2008,22 @@ function Live({
+   data,
+   selected,
+   mode,
+-  comparison,
+-  isHandledDisruption,
+-  onMode,
+   onRain,
+-  onSheet,
+   onLocation,
+   offline,
+ }: {
+   data: V8Data;
+   selected: V8Data["options"][number] | null;
+   mode: V8Mode;
+-  comparison: V8Data["mobility_facts"];
+-  /** Whether a disruption has already been dealt with (accepted replan). */
+-  isHandledDisruption: (item: NonNullable<V8Data["active_plan"]>["disruptions"][number]) => boolean;
+-  onMode: (mode: V8Mode) => Promise<void>;
+   onRain: () => Promise<void>;
+-  onSheet: () => void;
+   onLocation: () => Promise<void>;
+   offline: OfflineJourney | null;
+ }) {
+   const t = useT();
+   const { locale } = useLocale();
+-  const zh = locale.startsWith("zh");
+   const now = data.active_plan?.activities[0];
+   const next = data.active_plan?.activities[1];
+   const nextLeg = data.active_plan?.legs[0];
+-  // The Live risk line reports only what still needs the traveller.  A trigger
+-  // Event stays in the plan payload after an accepted replan (ACKNOWLEDGED is
+-  // deliberately not resolution in this product), so counting it as an open
+-  // disruption made Live keep warning about a problem that was already solved.
+-  const planDisruptions = data.active_plan?.disruptions ?? [];
+-  const disruptions = planDisruptions.filter((item) => !isHandledDisruption(item));
+-  const destination =
+-    next?.metadata.longitude != null && next?.metadata.latitude != null
+-      ? data.journey.city_code.startsWith("CN-")
+-        ? `https://uri.amap.com/navigation?to=${next.metadata.longitude},${next.metadata.latitude},${encodeURIComponent(next.title)}&mode=walk&coordinate=wgs84&callnative=1`
+-        : `https://www.google.com/maps/dir/?api=1&destination=${next.metadata.latitude},${next.metadata.longitude}`
+-      : null;
+   return (
+     <section className="v8-page" data-testid="v8-live-journey">
+       <div className="v8-page-intro compact">
+@@ -2039,53 +2053,90 @@ function Live({
+           </button>
+         </div>
+       </div>
+-      <div className="v8-live-grid">
+-        <div className="v8-live-main">
+-          <MapPanel data={data} option={selected} />
+-          <div className="v8-live-now">
+-            <span className="v8-live-label">
+-              <span className="status-dot pulse" />
+-              {t("live.now")}
+-            </span>
+-            <div>
+-              <h2 data-testid="live-journey-current">
+-                {now
+-                  ? now.title
+-                  : `${t("live.awaitingPlan")}${selected?.stay.property_name ? ` · ${selected.stay.property_name}` : ""}`}
+-              </h2>
+-              <p>
+-                {next
+-                  ? t("live.nextLeg", { title: next.title, mode: nextLeg?.mode?.toLowerCase() ?? mode.toLowerCase(), duration: nextLeg?.duration_min ?? t("live.durationPending"), unit: nextLeg ? " min" : "" })
+-                  : t("live.nextSelect")}
+-              </p>
+-            </div>
+-            <strong>
+-              {now ? clockInZone(now.start_at, data.journey.timezone || "UTC") : t("live.awaitingPlanUpper")}
+-            </strong>
++      <div className="v8-live-main">
++        <div className="v8-live-now">
++          <span className="v8-live-label">
++            <span className="status-dot pulse" />
++            {t("live.now")}
++          </span>
++          <div>
++            <h2 data-testid="live-journey-current">
++              {now
++                ? now.title
++                : `${t("live.awaitingPlan")}${selected?.stay.property_name ? ` · ${selected.stay.property_name}` : ""}`}
++            </h2>
++            <p>
++              {next
++                ? t("live.nextLeg", { title: next.title, mode: nextLeg?.mode?.toLowerCase() ?? mode.toLowerCase(), duration: nextLeg?.duration_min ?? t("live.durationPending"), unit: nextLeg ? " min" : "" })
++                : t("live.nextSelect")}
++            </p>
+           </div>
+-          <div className="v8-mode-chooser">
+-            <div>
+-              <span>{t("live.modeForLeg")}</span>
+-              <b>{t("live.chooseRoute")}</b>
+-            </div>
+-            <div className="v8-mode-chips">
+-              {v8Modes.map((item) => (
+-                <button
+-                  data-testid={`mode-${item.toLowerCase()}`}
+-                  key={item}
+-                  className={mode === item ? "active" : ""}
+-                  onClick={() => void onMode(item)}
+-                >
+-                  {modeLabel(item, zh)}
+-                </button>
+-              ))}
+-            </div>
+-            <button className="v8-compare-button" onClick={onSheet}>
+-              {t("live.compareAll")}
+-            </button>
++          <strong>
++            {now ? clockInZone(now.start_at, data.journey.timezone || "UTC") : t("live.awaitingPlanUpper")}
++          </strong>
++        </div>
++        <MapPanel data={data} option={selected} />
++      </div>
++    </section>
++  );
++}
++
++function LiveSecondary({
++  data,
++  selected,
++  mode,
++  comparison,
++  isHandledDisruption,
++  onMode,
++  onSheet,
++}: {
++  data: V8Data;
++  selected: V8Data["options"][number] | null;
++  mode: V8Mode;
++  comparison: V8Data["mobility_facts"];
++  isHandledDisruption: (item: NonNullable<V8Data["active_plan"]>["disruptions"][number]) => boolean;
++  onMode: (mode: V8Mode) => Promise<void>;
++  onSheet: () => void;
++}) {
++  const t = useT();
++  const { locale } = useLocale();
++  const zh = locale.startsWith("zh");
++  const next = data.active_plan?.activities[1];
++  const nextLeg = data.active_plan?.legs[0];
++  const planDisruptions = data.active_plan?.disruptions ?? [];
++  const disruptions = planDisruptions.filter((item) => !isHandledDisruption(item));
++  const destination =
++    next?.metadata.longitude != null && next?.metadata.latitude != null
++      ? data.journey.city_code.startsWith("CN-")
++        ? `https://uri.amap.com/navigation?to=${next.metadata.longitude},${next.metadata.latitude},${encodeURIComponent(next.title)}&mode=walk&coordinate=wgs84&callnative=1`
++        : `https://www.google.com/maps/dir/?api=1&destination=${next.metadata.latitude},${next.metadata.longitude}`
++      : null;
++  return (
++    <section className="v8-page" data-testid="v8-live-secondary">
++      <div className="cn-live-secondary">
++        <div className="v8-mode-chooser">
++          <div>
++            <span>{t("live.modeForLeg")}</span>
++            <b>{t("live.chooseRoute")}</b>
++          </div>
++          <div className="v8-mode-chips">
++            {v8Modes.map((item) => (
++              <button
++                data-testid={`mode-${item.toLowerCase()}`}
++                key={item}
++                className={mode === item ? "active" : ""}
++                data-contrast-role={mode === item ? "state" : "control"}
++                onClick={() => void onMode(item)}
++              >
++                {modeLabel(item, zh)}
++              </button>
++            ))}
+           </div>
++          <button className="v8-compare-button" onClick={onSheet}>
++            {t("live.compareAll")}
++          </button>
+         </div>
+-        <aside className="v8-live-side">
++        <div className="v8-live-side">
+           <div className="v8-next-card">
+             <span>{t("live.leaveBy")}</span>
+             <h3>{next?.title ?? t("live.awaitingPlan")}</h3>
+@@ -2147,7 +2198,7 @@ function Live({
+             ))}
+             <small>{t("live.providerFacts")}</small>
+           </details>
+-        </aside>
++        </div>
+       </div>
+     </section>
+   );
+@@ -2458,7 +2509,7 @@ function Me({
+   data: V8Data;
+   policy: Policy | null;
+   onActivate: () => Promise<void>;
+-  wallet?: WalletSnapshot | null;
++  wallet?: Wallet | null;
+ }) {
+   const t = useT();
+   const { locale } = useLocale();
+diff --git a/frontend/src/app/v8Types.ts b/frontend/src/app/v8Types.ts
+index f9facdd..68fce83 100644
+--- a/frontend/src/app/v8Types.ts
++++ b/frontend/src/app/v8Types.ts
+@@ -30,6 +30,8 @@ export type RecoveryState = {
+   kind: string;
+   event_id: string;
+   event_status: "DETECTED" | "ACKNOWLEDGED" | "RESOLVED";
++  acknowledged: boolean;
++  no_alternative: boolean;
+   capability_code: string | null;
+   active_plan_version_id: string | null;
+   failures: string[];
+diff --git a/frontend/src/components/v8/MapPanel.tsx b/frontend/src/components/v8/MapPanel.tsx
+index 9546072..117f2ad 100644
+--- a/frontend/src/components/v8/MapPanel.tsx
++++ b/frontend/src/components/v8/MapPanel.tsx
+@@ -1,5 +1,6 @@
+ import { useEffect, useMemo, useRef, useState } from "react";
+ import "maplibre-gl/dist/maplibre-gl.css";
++import type { FeatureCollection } from "geojson";
+ import type { V8Data } from "../../app/v8Types";
+ import { useT, useLocale } from "../../i18n/LocaleContext";
+ 
+@@ -74,7 +75,7 @@ export function MapPanel({
+         .flatMap((feature) => feature.geometry.coordinates)
+         .filter((value) => value.length >= 2);
+       const center: [number, number] | null =
+-        coordinates[Math.floor(coordinates.length / 2)] ??
++        (coordinates[Math.floor(coordinates.length / 2)] as [number, number] | undefined) ??
+         (points[0] ? [points[0].longitude, points[0].latitude] : null);
+       if (!center) {
+         // No route geometry and no located activity: an honest empty state is
+@@ -84,10 +85,7 @@ export function MapPanel({
+       }
+       setNoLocation(false);
+       const mapInstance = new maplibregl.Map({
+-        // Never leave the traveller staring at an empty box when the tile
+-        // server is unreachable (common on restricted networks).
+-        failIfMajorPerformanceCaveat: false,
+-      container: host.current,
++        container: host.current,
+       style: {
+         version: 8,
+         sources: {
+@@ -109,7 +107,7 @@ export function MapPanel({
+             data: {
+               type: "FeatureCollection",
+               features: route,
+-            } as GeoJSON.FeatureCollection,
++            } as FeatureCollection,
+           },
+         },
+         layers: [
+diff --git a/frontend/src/design-tokens.css b/frontend/src/design-tokens.css
+new file mode 100644
+index 0000000..e04034e
+--- /dev/null
++++ b/frontend/src/design-tokens.css
+@@ -0,0 +1,599 @@
++/*
++ * CityNexus — Apple-inspired design tokens + motion layer (frontend track).
++ * Additive: defines CSS custom properties and restrained motion. It does NOT
++ * change component DOM or data-testids, so the existing rendered assertions keep
++ * passing. Values follow the Qoder/GPT v6 frontend design brief.
++ */
++
++:root {
++  /* Material palette (Light) */
++  --cn-canvas: #f5f5f7;
++  --cn-surface: #ffffff;
++  --cn-secondary: #f2f2f7;
++  --cn-ink: #1d1d1f;
++  --cn-ink-secondary: #6e6e73;
++  --cn-ink-tertiary: #86868b;
++  --cn-accent: #0a66ff;
++  /* Fill for controls that carry white text. Kept at the deeper blue even in
++     dark so a button label clears AA (white on #0a66ff ≈ 4.8:1), unlike the
++     brighter #0a84ff link accent which only reaches ~3.6:1 against white. */
++  --cn-accent-solid: #0a66ff;
++  --cn-success: #248a3d;
++  --cn-warning: #b06000;
++  --cn-danger: #d70015;
++  --cn-hairline: rgba(0, 0, 0, 0.08);
++  /* Boundary for controls whose only affordance is their outline (language
++     toggle, outline buttons) — must clear 3:1 vs the page. Decorative
++     separators stay on the softer --cn-hairline. */
++  --cn-control-border: #b9bfca;
++  font-family: var(--cn-font);
++
++  /* Type scale (mobile-first) */
++  --cn-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
++    "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
++  --cn-fs-display: 34px;
++  --cn-fs-title: 28px;
++  --cn-fs-section: 22px;
++  --cn-fs-card: 17px;
++  --cn-fs-body: 17px;
++  --cn-fs-secondary: 15px;
++  --cn-fs-caption: 13px;
++  --cn-lh-tight: 1.14;
++  --cn-lh-body: 1.45;
++
++  /* Spacing rhythm (4 base / 8 primary) */
++  --cn-s-8: 8px;
++  --cn-s-12: 12px;
++  --cn-s-16: 16px;
++  --cn-s-20: 20px;
++  --cn-s-24: 24px;
++  --cn-s-32: 32px;
++  --cn-s-40: 40px;
++  --cn-s-48: 48px;
++  --cn-gutter: 20px;
++
++  /* Radii (unified, no coin-flip) */
++  --cn-r-control: 11px;
++  --cn-r-button: 13px;
++  --cn-r-card: 16px;
++  --cn-r-hero: 20px;
++  --cn-r-sheet: 24px;
++  --cn-r-pill: 999px;
++
++  /* Depth — restrained */
++  --cn-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.06);
++  --cn-shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.06), 0 18px 40px rgba(0, 0, 0, 0.1);
++
++  /* Motion tokens */
++  --cn-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
++  --cn-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
++  --cn-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
++  --cn-t-press: 110ms;
++  --cn-t-hover: 160ms;
++  --cn-t-state: 200ms;
++  --cn-t-reveal: 320ms;
++  --cn-t-sheet: 400ms;
++  --cn-t-reorder: 360ms;
++  --cn-t-accept: 440ms;
++}
++
++@media (prefers-color-scheme: dark) {
++  :root {
++    --cn-canvas: #000000;
++    --cn-surface: #1c1c1e;
++    --cn-secondary: #2c2c2e;
++    --cn-ink: #f5f5f7;
++    --cn-ink-secondary: #aeaeb2;
++    --cn-ink-tertiary: #8e8e93;
++    --cn-accent: #0a84ff;
++    --cn-accent-solid: #0a66ff;
++    --cn-success: #30d158;
++    --cn-warning: #ff9f0a;
++    --cn-danger: #ff453a;
++    --cn-hairline: rgba(255, 255, 255, 0.1);
++    --cn-control-border: #7c7c82;
++    --cn-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.5);
++    --cn-shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.5), 0 18px 40px rgba(0, 0, 0, 0.6);
++  }
++}
++
++/* Bind the V8 shell to the Apple palette + system font without touching markup:
++   existing components consume --v8-* vars, so remapping them re-skins the app. */
++.v8-product-shell {
++  --v8-canvas: var(--cn-canvas);
++  --v8-panel: var(--cn-surface);
++  --v8-ink: var(--cn-ink);
++  --v8-muted: var(--cn-ink-secondary);
++  --v8-line: var(--cn-hairline);
++  --v8-indigo: var(--cn-accent);
++  --v8-green: var(--cn-success);
++  --v8-amber: var(--cn-warning);
++  --v8-coral: var(--cn-danger);
++  font-family: var(--cn-font);
++  -webkit-font-smoothing: antialiased;
++  text-rendering: optimizeLegibility;
++}
++
++/* Typography rhythm on the surfaces the app already renders. */
++.v8-page { background: var(--cn-canvas); }
++.v8-page h1, .v8-hero-title { font-size: var(--cn-fs-display); font-weight: 700; line-height: var(--cn-lh-tight); letter-spacing: -0.02em; }
++.v8-page h2, .v8-section-title { font-size: var(--cn-fs-title); font-weight: 700; line-height: var(--cn-lh-tight); letter-spacing: -0.015em; }
++
++/* Unify card material: solid content, restrained depth (no atmosphere floating). */
++.v8-page .v8-card,
++.v8-page .replan-card,
++.v8-page .evidence-card,
++.v8-page .map-card {
++  background: var(--cn-surface);
++  border: 1px solid var(--cn-hairline);
++  border-radius: var(--cn-r-card);
++  box-shadow: var(--cn-shadow-card);
++}
++
++/* --- Motion: transform/opacity only, GPU-friendly, capped, reduced-motion aware --- */
++
++@keyframes cn-rise {
++  from { opacity: 0; transform: translate3d(0, 10px, 0); }
++  to { opacity: 1; transform: translate3d(0, 0, 0); }
++}
++
++/* One orchestrated page-load reveal; sections stagger by <=40ms, max 4 groups. */
++.v8-page { animation: cn-rise var(--cn-t-reveal) var(--cn-ease-out) both; }
++.v8-page > * { animation: cn-rise var(--cn-t-reveal) var(--cn-ease-out) both; }
++.v8-page > *:nth-child(1) { animation-delay: 0ms; }
++.v8-page > *:nth-child(2) { animation-delay: 28ms; }
++.v8-page > *:nth-child(3) { animation-delay: 56ms; }
++.v8-page > *:nth-child(4),
++.v8-page > *:nth-child(n + 5) { animation-delay: 84ms; } /* capped: no DOM parade */
++
++/* Restrained press + hover feedback (transform only, no rotate / big shadow). */
++.v8-page button:not(.cn-no-motion):active,
++.v8-page [role="button"]:active,
++.v8-page a.v8-cta:active { transform: scale(0.985); transition: transform var(--cn-t-press) var(--cn-ease-standard); }
++.v8-page button:not(.cn-no-motion),
++.v8-page a.v8-cta,
++.v8-page .v8-card { transition: transform var(--cn-t-hover) var(--cn-ease-standard), box-shadow var(--cn-t-hover) var(--cn-ease-standard); }
++@media (hover: hover) {
++  .v8-page .v8-card:hover { transform: translateY(-1px); box-shadow: var(--cn-shadow-raised); }
++}
++
++/* Focus-visible ring (keyboard), Apple-ish soft accent. */
++.v8-page :focus-visible { outline: 2px solid var(--cn-accent); outline-offset: 2px; border-radius: var(--cn-r-control); }
++
++/* Touch targets >=44px on primary controls. */
++.v8-page button, .v8-page a.v8-cta, .v8-nav button { min-height: 44px; }
++
++@media (prefers-reduced-motion: reduce) {
++  .v8-page,
++  .v8-page > *,
++  .v8-page button, .v8-page a.v8-cta, .v8-page .v8-card {
++    animation: none !important;
++    transition: none !important;
++    transform: none !important;
++    opacity: 1 !important;
++  }
++}
++
++/* --- Today hierarchy refinement (GPT call #2): Hero -> Attention -> Timeline --- */
++/* Single-focus Now/Next Hero (GPT pass-3). One reveal group, one primary CTA. */
++.cn-now-next-hero {
++  display: flex;
++  flex-direction: column;
++  gap: var(--cn-s-8);
++  padding: 24px;
++  border: 1px solid var(--cn-hairline);
++  border-radius: 20px;
++  background: var(--cn-surface);
++  box-shadow: var(--cn-shadow-card);
++  min-height: 0;
++}
++.cn-now-next-hero .cn-hero-label {
++  display: block;
++  margin-bottom: 2px;
++  color: var(--cn-ink-tertiary);
++  font-size: var(--cn-fs-caption);
++  font-weight: 700;
++  letter-spacing: 0.1em;
++  text-transform: uppercase;
++}
++.cn-hero-now .cn-hero-now-place {
++  display: block;
++  color: var(--cn-ink);
++  font-size: 20px;
++  font-weight: 650;
++  line-height: 1.2;
++  overflow-wrap: anywhere;
++}
++.cn-hero-now {
++  padding-bottom: var(--cn-s-8);
++  border-bottom: 1px solid var(--cn-hairline);
++}
++.cn-hero-next-row {
++  display: block;
++  color: var(--cn-ink);
++  font-size: var(--cn-fs-title);
++  font-weight: 700;
++  line-height: var(--cn-lh-tight);
++  letter-spacing: -0.02em;
++  overflow-wrap: anywhere;
++}
++.cn-hero-meta {
++  display: block;
++  margin-top: 4px;
++  color: var(--cn-ink-secondary);
++  font-size: 15px;
++  font-weight: 500;
++  line-height: var(--cn-lh-body);
++}
++.cn-hero-cta {
++  align-self: start;
++  margin-top: var(--cn-s-8);
++  min-height: 50px;
++}
++/* The whole card reveals once; do not stagger its Now/Next/CTA children. */
++.cn-now-next-hero.cn-hero-stagger > * { animation: none; }
++
++/* Stay / anchors step down into a compact secondary strip beneath the hero. */
++.cn-hero-strip {
++  display: flex;
++  flex-wrap: wrap;
++  gap: var(--cn-s-8) var(--cn-s-16);
++  margin: 10px 0 0;
++  padding: 12px 16px;
++  border: 1px solid var(--cn-hairline);
++  border-radius: var(--cn-r-card);
++  background: var(--cn-secondary);
++}
++.cn-strip-item { display: grid; gap: 2px; min-width: 0; }
++.cn-strip-item > span {
++  color: var(--cn-ink-secondary);
++  font-size: var(--cn-fs-caption);
++  font-weight: 700;
++  letter-spacing: 0.06em;
++  text-transform: uppercase;
++}
++.cn-strip-item > strong,
++.cn-strip-item > b {
++  color: var(--cn-ink);
++  font-size: var(--cn-fs-secondary);
++  font-weight: 600;
++  overflow: hidden;
++  text-overflow: ellipsis;
++  white-space: nowrap;
++}
++
++.cn-attention-band {
++  margin: 14px 0 0;
++  padding: var(--cn-s-16) var(--cn-s-20);
++  border-radius: var(--cn-r-card);
++  background: var(--cn-surface);
++  border: 1px solid var(--cn-hairline);
++  box-shadow: var(--cn-shadow-card);
++}
++.cn-attention-head {
++  display: flex;
++  align-items: baseline;
++  justify-content: space-between;
++  gap: var(--cn-s-12);
++}
++.cn-attention-head .v8-kicker { margin: 0; }
++.cn-attention-head strong {
++  font-size: var(--cn-fs-card);
++  font-weight: 700;
++  letter-spacing: -0.01em;
++}
++.cn-attention-head strong.warn { color: var(--cn-danger); }
++.cn-attention-head strong.green { color: var(--cn-success); }
++.cn-attention-hint {
++  margin: 6px 0 0;
++  color: var(--cn-ink-secondary);
++  font-size: var(--cn-fs-secondary);
++  line-height: var(--cn-lh-body);
++}
++.cn-attention-cta { margin-top: var(--cn-s-12); }
++
++/* Handled history: a quiet single line, no card chrome. */
++.cn-attention-band[data-attention="handled"] {
++  padding: 6px 2px;
++  background: transparent;
++  border-color: transparent;
++  box-shadow: none;
++}
++.cn-attention-band[data-attention="handled"] .cn-attention-head {
++  align-items: center;
++}
++.cn-attention-band[data-attention="handled"] .cn-attention-head strong {
++  font-size: var(--cn-fs-secondary);
++}
++.cn-attention-band[data-attention="handled"] .cn-attention-hint {
++  display: inline;
++  margin-left: 8px;
++  font-size: var(--cn-fs-caption);
++}
++/* Nothing to attend: near-zero visual footprint — "无事就闭嘴". The element
++   stays in the DOM (rendered tests look for it) but reads as a whisper, not an
++   "all clear" monument. */
++.cn-attention-band[data-attention="clear"] {
++  padding: 2px;
++  margin: 4px 0 0;
++  background: transparent;
++  border-color: transparent;
++  box-shadow: none;
++}
++.cn-attention-band[data-attention="clear"] .cn-attention-head {
++  justify-content: flex-start;
++}
++.cn-attention-band[data-attention="clear"] .v8-kicker {
++  display: none;
++}
++.cn-attention-band[data-attention="clear"] .cn-attention-head strong {
++  font-size: var(--cn-fs-caption);
++  font-weight: 600;
++}
++/* Open attention escalates with a warm edge. */
++.cn-attention-band[data-attention="open"] {
++  border-color: rgba(215, 0, 21, 0.28);
++}
++@keyframes cn-attention-in {
++  from { opacity: 0; transform: translate3d(0, 8px, 0); }
++  to { opacity: 1; transform: none; }
++}
++.cn-attention-band[data-attention="open"] {
++  animation: cn-attention-in var(--cn-t-reveal) var(--cn-ease-out) both;
++}
++
++/* --- Live replan motion — PRESENTATION ONLY (GPT call #3) ---
++   A pure CSS response to the data-state attribute on the proposal card. This
++   does not touch, and must never touch, what counts as accepted, when a
++   disruption is resolved, or which proposal maps to which event — that logic
++   survived six truth-gate versions and is out of scope for the design line. */
++.v8-page .live-proposal {
++  transition:
++    opacity var(--cn-t-state) var(--cn-ease-standard),
++    transform var(--cn-t-state) var(--cn-ease-standard);
++}
++.v8-page .live-proposal[data-state="accepting"] {
++  opacity: 0.72;
++  transform: translate3d(0, -2px, 0);
++}
++@keyframes cn-accept-settle {
++  from { opacity: 0; transform: translate3d(0, 8px, 0); }
++  to { opacity: 1; transform: none; }
++}
++.v8-page .live-handled,
++.v8-page [data-testid="live-message"] {
++  animation: cn-accept-settle var(--cn-t-accept) var(--cn-ease-out) both;
++}
++
++/* Live single-focus IA (GPT A+): the map is compact; when a decision is active
++   it shrinks slightly so the disruption/replan rises toward the first screen. */
++.live-shell { display: block; }
++/* Live already shows the single current state; hide LiveRecovery's duplicate
++   header (kept in the DOM) so the decision, not two titles, owns the fold. */
++.live-shell > [data-testid="live-recovery"] > .v8-page-intro { display: none; }
++.cn-live-secondary {
++  display: grid;
++  gap: var(--cn-s-12);
++  margin-top: var(--cn-s-8);
++  padding-top: var(--cn-s-12);
++  border-top: 1px solid var(--cn-hairline);
++}
++.cn-live-secondary .v8-mode-chooser { box-shadow: none; }
++.cn-live-secondary .v8-live-side { gap: var(--cn-s-8); }
++.cn-live-secondary .v8-next-card,
++.cn-live-secondary .v8-comparison { box-shadow: none; }
++/* Decision-active emphasis is expressed through layout order + the separator
++   above (not opacity, which the contrast audit cannot see). */
++
++@media (max-width: 680px) {
++  .live-shell > .v8-page .v8-live-main > .v8-map-panel {
++    min-height: 240px !important;
++    height: 240px !important;
++    box-sizing: border-box !important;
++  }
++  .live-shell[data-decision-active="true"] > .v8-page .v8-live-main > .v8-map-panel {
++    min-height: 208px !important;
++    height: 208px !important;
++  }
++}
++
++/*
++ * Controlled dark-mode convergence, driven by e2e/qoder-dark-audit.spec.ts
++ * (GPT final call #1). NOT a blind 114-colour rewrite: the audit swept the
++ * reachable Today (/v8/hub) and Live (/v8/live) surfaces under emulated dark
++ * and reported exactly these classes. Most are SHELL surfaces that live outside
++ * `.v8-page` (topbar, mobile nav, copilot pill, avatar, language button) — the
++ * gap a `.v8-page`-scoped pass could not reach. Each is rebound to a theme
++ * token so light stays as-is and dark follows, and filled controls use
++ * --cn-accent-solid so white labels clear AA. Legacy / Advanced / Wallet-JSON /
++ * off-path panels are intentionally left as declared debt this pass.
++ */
++@media (prefers-color-scheme: dark) {
++  /* 1. Shell surfaces that painted a hardcoded white in dark. */
++  .v8-product-shell .v8-topbar {
++    background: var(--cn-surface) !important;
++  }
++  .v8-product-shell .v8-breadcrumb,
++  .v8-product-shell .v8-runtime,
++  .v8-product-shell .v8-icon-button {
++    color: var(--cn-ink-secondary) !important;
++  }
++  .v8-product-shell .v8-breadcrumb b { color: var(--cn-ink-tertiary) !important; }
++  .v8-product-shell .v8-breadcrumb strong { color: var(--cn-ink) !important; }
++  .v8-product-shell .v8-mobile-nav {
++    background: rgba(28, 28, 30, 0.92) !important;
++    border-top-color: var(--cn-hairline) !important;
++  }
++  .v8-product-shell .v8-mobile-nav button { color: var(--cn-ink-secondary) !important; }
++  .v8-product-shell .v8-mobile-nav button.active { color: var(--cn-accent) !important; }
++  .v8-product-shell .cn-copilot-edge {
++    background: var(--cn-surface) !important;
++    color: var(--cn-ink) !important;
++    border-color: var(--cn-hairline) !important;
++    box-shadow: var(--cn-shadow-raised) !important;
++  }
++
++  /* 2. Language button: was white fill + bright accent text. */
++  .v8-product-shell .v9-language,
++  .v8-page .v9-language {
++    background: var(--cn-secondary) !important;
++    color: var(--cn-ink) !important;
++    border-color: var(--cn-control-border) !important;
++  }
++
++  /* 3. Filled controls: deep accent so the white label clears AA in dark. */
++  .v8-product-shell .v8-avatar,
++  .v8-product-shell .v8-primary,
++  .v8-product-shell .cn-copilot-edge-mark,
++  .v8-product-shell .v9-navigate,
++  .v8-product-shell a.v9-navigate {
++    background: var(--cn-accent-solid) !important;
++    color: #fff !important;
++  }
++
++  /* 4. Content cards / rows that kept a light fill inside .v8-page. */
++  .v8-page .v8-day-card,
++  .v8-page .v8-day-detail,
++  .v8-page .v8-live-now,
++  .v8-page .v8-mode-chooser,
++  .v8-page .v8-next-card,
++  .v8-page .v8-comparison,
++  .v8-page .v8-outline-button,
++  .v8-page .v8-compare-button,
++  .v8-page .v8-rain-button,
++  .v8-page .v8-map-panel {
++    background: var(--cn-surface) !important;
++    color: var(--cn-ink) !important;
++    border-color: var(--cn-hairline) !important;
++  }
++  /* Outline buttons carry no fill — their border is the only affordance, so it
++     must clear 3:1 vs the page (unlike the decorative cards above). */
++  .v8-page .v8-outline-button {
++    border-color: var(--cn-control-border) !important;
++  }
++  .v8-page .active,
++  .v8-page .v8-mode-chooser .active {
++    background: var(--cn-secondary) !important;
++    color: var(--cn-ink) !important;
++  }
++  .v8-page .v8-map-caption {
++    background: rgba(28, 28, 30, 0.86) !important;
++    color: var(--cn-ink) !important;
++  }
++  .v8-page .v8-status-pill {
++    background: rgba(48, 209, 88, 0.16) !important;
++    color: #7bd88f !important;
++  }
++  .v8-page .mode-mark {
++    background: var(--cn-secondary) !important;
++    color: var(--cn-accent) !important;
++  }
++
++  /* 5. Hardcoded grey-blue body text that fell below AA on the dark canvas. */
++  .v8-product-shell .v8-lede,
++  .v8-product-shell .v8-muted,
++  .v8-product-shell .v8-live-now p,
++  .v8-product-shell .v8-live-now > strong,
++  .v8-product-shell .v8-mode-chooser span,
++  .v8-product-shell .v8-mode-chips button,
++  .v8-product-shell .v8-next-card p,
++  .v8-product-shell .v8-eta span,
++  .v8-product-shell .v9-evidence-summary > small {
++    color: var(--cn-ink-secondary) !important;
++  }
++  .v8-product-shell .v8-live-label { color: var(--cn-danger) !important; }
++  .v8-product-shell .v8-live-label .status-dot { background: var(--cn-danger) !important; }
++
++  .v8-page button:not([class]) {
++    background: var(--cn-surface);
++    color: var(--cn-ink);
++    border: 1px solid var(--cn-hairline);
++  }
++}
++
++/*
++ * Desktop-only sidebar (renders above 680px, so only the desktop audit reaches
++ * it) plus the Today hero's semantic status text — the remaining Today/Live
++ * surfaces the dark audit flagged. Same controlled approach: token-bind just
++ * these rendered classes.
++ */
++@media (prefers-color-scheme: dark) {
++  .v8-product-shell .v8-sidebar {
++    background: var(--cn-surface) !important;
++    border-right-color: var(--cn-hairline) !important;
++  }
++  .v8-product-shell .v8-brand strong { color: var(--cn-ink); }
++  .v8-product-shell .v8-brand span,
++  .v8-product-shell .v8-workspace-label,
++  .v8-product-shell .v8-nav-group,
++  .v8-product-shell .v8-nav button {
++    color: var(--cn-ink-secondary) !important;
++  }
++  .v8-product-shell .v8-workspace-label span { color: var(--cn-ink) !important; }
++  .v8-product-shell .v8-brand-mark {
++    background: var(--cn-accent-solid) !important;
++    color: #fff !important;
++  }
++  .v8-product-shell .v8-nav button:hover,
++  .v8-product-shell .v8-nav button.active {
++    background: var(--cn-secondary) !important;
++    color: var(--cn-ink) !important;
++  }
++  .v8-product-shell .v8-nav button.active:before { background: var(--cn-accent); }
++  .v8-product-shell .v8-sync {
++    color: #7bd88f !important;
++    border-color: var(--cn-hairline) !important;
++  }
++  .v8-product-shell .v8-sync div { color: var(--cn-ink-secondary) !important; }
++  .v8-product-shell .v8-user { color: var(--cn-ink) !important; }
++  .v8-product-shell .v8-user small { color: var(--cn-ink-secondary) !important; }
++
++  /* Today hero attention status: was a hard-coded green/amber. */
++  .v8-page .today-actions strong.green { color: #7bd88f !important; }
++  .v8-page .today-actions strong.warn { color: var(--cn-warning) !important; }
++
++  /* Live next-card green accents: hard-coded dark-on-light greens now sit on a
++     dark card surface, so they fall below AA. */
++  .v8-page .v8-next-card > span,
++  .v8-page .v8-next-card .v9-risk,
++  .v8-page .v8-next-card .v9-risk span { color: #7bd88f !important; }
++  .v8-page .v8-next-card .v9-risk b { color: var(--cn-warning) !important; }
++
++  /* Live replan surfaces (render only with a disruption, so the demo-driven
++     audit cannot reach them — migrated for coherence, declared unverified this
++     pass). They were hard-coded light tints with ink inherited from the body. */
++  .v8-page .live-disruption {
++    background: rgba(255, 159, 10, 0.12) !important;
++    border-color: rgba(255, 159, 10, 0.34) !important;
++    color: var(--cn-ink) !important;
++  }
++  .v8-page .live-proposal {
++    background: var(--cn-surface) !important;
++    border-color: var(--cn-hairline) !important;
++    color: var(--cn-ink) !important;
++  }
++  .v8-page .live-disruption b,
++  .v8-page .live-proposal b { color: var(--cn-ink) !important; }
++  .v8-page .live-summary,
++  .v8-page .live-unchanged,
++  .v8-page .live-diff { color: var(--cn-ink-secondary) !important; }
++  .v8-page .role-alert { color: #ff6961 !important; }
++  .v8-page .live-handled { color: #7bd88f !important; }
++
++  /* Mode chips: the reorder lifted them into the desktop viewport, exposing a
++     hard-coded #fff fill (a light surface in dark) and a selected state that was
++     indistinguishable from unselected. Unselected = surface + control-border
++     (unfilled control); selected = accent-solid fill + white label (a real
++     fill-difference cue, not colour alone). */
++  .v8-page .v8-mode-chips button {
++    background: var(--cn-surface) !important;
++    color: var(--cn-ink-secondary) !important;
++    border-color: var(--cn-control-border) !important;
++  }
++  .v8-page .v8-mode-chips button.active {
++    background: var(--cn-accent-solid) !important;
++    color: #fff !important;
++    border-color: transparent !important;
++  }
++}
++
+diff --git a/frontend/src/features/agent/AgentComposer.tsx b/frontend/src/features/agent/AgentComposer.tsx
+index a508a7a..504ef34 100644
+--- a/frontend/src/features/agent/AgentComposer.tsx
++++ b/frontend/src/features/agent/AgentComposer.tsx
+@@ -1,7 +1,7 @@
+ import { useEffect, useMemo, useState } from "react";
+ import type { V8Data } from "../../app/v8Types";
+ import { cityNexusApi, type CopilotResponse } from "../../api/citynexus";
+-import { useLocale, useT } from "../../i18n/LocaleContext";
++import { useLocale, useT, type TripLocale } from "../../i18n/LocaleContext";
+ import { formatMinorMoney } from "../../lib/money";
+ import { NativeMissionTimeline } from "./CopilotDock";
+ 
+@@ -221,7 +221,7 @@ export function AgentComposer({
+                       </div>
+                       <div>
+                         <span>{t("agent.feasibility")}</span>
+-                        <b>{feasibilityLabel(item.response.what_if.feasibility, zh)}</b>
++                        <b>{feasibilityLabel(item.response.what_if.feasibility, locale === "zh-CN")}</b>
+                       </div>
+                     </div>
+                     <small>
+@@ -305,7 +305,7 @@ function readStoredMessages(journeyId: string): CopilotMessage[] {
+ function formatMetric(
+   record: Record<string, unknown>,
+   cost: unknown,
+-  locale: "zh-CN" | "en-GB",
++  locale: TripLocale,
+ ) {
+   const currency = typeof record.currency === "string" ? record.currency : "CNY";
+   const value = typeof cost === "number" ? formatMinorMoney(cost, currency, locale) : "—";
+diff --git a/frontend/src/features/execution/LiveRecovery.tsx b/frontend/src/features/execution/LiveRecovery.tsx
+index e42d1c9..b1d3212 100644
+--- a/frontend/src/features/execution/LiveRecovery.tsx
++++ b/frontend/src/features/execution/LiveRecovery.tsx
+@@ -304,7 +304,7 @@ export function LiveRecovery({
+             : `Option ${String.fromCharCode(65 + index)}`;
+           const summary = proposal.explanation?.summary?.trim();
+           return (
+-            <article className="live-proposal" key={proposal.id} data-testid="live-proposal">
++            <article className="live-proposal" key={proposal.id} data-testid="live-proposal" data-state={busy === proposal.id ? "accepting" : "idle"}>
+               <b>
+                 {optionLabel} · {zh ? "推荐怎么改" : "Suggested change"}
+               </b>
+diff --git a/frontend/src/features/notifications/PushCapabilityCard.tsx b/frontend/src/features/notifications/PushCapabilityCard.tsx
+index 1f67e09..b911ef5 100644
+--- a/frontend/src/features/notifications/PushCapabilityCard.tsx
++++ b/frontend/src/features/notifications/PushCapabilityCard.tsx
+@@ -4,7 +4,7 @@ import { useT } from "../../i18n/LocaleContext";
+ type Props = { travelerId: string };
+ type PushConfig = { capability: string; public_key: string | null; record_fallback: boolean };
+ 
+-function decodeKey(value: string): Uint8Array {
++function decodeKey(value: string): Uint8Array<ArrayBuffer> {
+   const padded = `${value}${"=".repeat((4 - (value.length % 4)) % 4)}`;
+   const binary = window.atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+diff --git a/frontend/src/features/planning/PlanComparison.tsx b/frontend/src/features/planning/PlanComparison.tsx
+index e677154..5bc8a9e 100644
+--- a/frontend/src/features/planning/PlanComparison.tsx
++++ b/frontend/src/features/planning/PlanComparison.tsx
+@@ -13,6 +13,15 @@ import { useState } from "react";
+ import { useLocale } from "../../i18n/LocaleContext";
+ import type { PlanVersion } from "../../api/v12Authoritative";
+ 
++// The generated OpenAPI PlanVersion schema lags the backend, which also emits
++// plan.stale, plan.selectable and per-activity cost_status / metadata. View
++// types layer those additive runtime fields without editing the generated schema.
++type PlanVersionView = PlanVersion & { stale?: boolean; selectable?: boolean };
++type PlanActivityView = NonNullable<PlanVersion["activities"]>[number] & {
++  cost_status?: string;
++  metadata?: Record<string, unknown>;
++};
++
+ const MINOR = 100;
+ 
+ function money(amountMinor: number, currency: string, zh: boolean): string {
+@@ -67,7 +76,7 @@ export function PlanComparison({
+   const [busyId, setBusyId] = useState<string | null>(null);
+   const [error, setError] = useState<string | null>(null);
+ 
+-  const candidates = plans.filter(
++  const candidates = (plans as PlanVersionView[]).filter(
+     (plan) => plan.status === "CANDIDATE" && !plan.stale && plan.selectable !== false,
+   );
+   if (candidates.length === 0) return null;
+@@ -116,7 +125,7 @@ export function PlanComparison({
+           // relationship from missing data is a fabricated fact.
+           // Partial coverage is not coverage: if ANY stop's price is unknown the
+           // total is unknown, so no within/over verdict may be claimed from it.
+-          const stops = plan.activities ?? [];
++          const stops = (plan.activities ?? []) as PlanActivityView[];
+           const knownFlags = stops.map((activity) => {
+             const status = String(activity.cost_status ?? "").toUpperCase();
+             if (status === "KNOWN_FREE" || status === "KNOWN_PAID") return true;
+diff --git a/frontend/src/features/studio/SortableActivityList.tsx b/frontend/src/features/studio/SortableActivityList.tsx
+index 9abb6ed..508a52d 100644
+--- a/frontend/src/features/studio/SortableActivityList.tsx
++++ b/frontend/src/features/studio/SortableActivityList.tsx
+@@ -28,7 +28,7 @@ function SortableActivity({ activity, label, index, protectedActivity }: { activ
+ }
+ 
+ export function SortableActivityList({ activities, protectedFirst, onDraft, labels }: { activities: string[]; protectedFirst: boolean; onDraft?: (activities: string[]) => void; labels?: Record<string, string> }) {
+-  const [items, setItems] = useState(activities);
++  const [items, setItems] = useState<string[]>(activities);
+   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+   useEffect(() => {
+     setItems(activities);
+@@ -37,7 +37,7 @@ export function SortableActivityList({ activities, protectedFirst, onDraft, labe
+     if (!over || active.id === over.id) return;
+     const oldIndex = items.indexOf(String(active.id));
+     const newIndex = items.indexOf(String(over.id));
+-    const next = arrayMove(items, oldIndex, newIndex);
++    const next = arrayMove<string>(items, oldIndex, newIndex);
+     setItems(next);
+     onDraft?.(next);
+   };
+diff --git a/frontend/src/main.tsx b/frontend/src/main.tsx
+index 163255e..e2be003 100644
+--- a/frontend/src/main.tsx
++++ b/frontend/src/main.tsx
+@@ -37,6 +37,7 @@ import { V8Experience } from "./app/V8Experience";
+ import { ProductErrorBoundary } from "./components/ProductErrorBoundary";
+ import { LocaleProvider } from "./i18n/LocaleContext";
+ import "./styles.css";
++import "./design-tokens.css";
+ 
+ const journeyStorageKey = "citynexus.demo.journey_id";
+ const agentRunStorageKey = "citynexus.demo.agent_run_id";
+@@ -746,7 +747,7 @@ function LegacyApp() {
+     );
+     if (!riverCruise) throw new Error("Accepted plan lost the protected River Cruise activity");
+     setSession({
+-      journeyId: session.journeyId,
++      ...session,
+       plan: acceptedPlan,
+       techArt:
+         acceptedPlan.activities.find((item) => item.place_id === "place-tech-art") ?? null,
+@@ -1396,7 +1397,7 @@ function LegacyApp() {
+             ) : (
+               travelerTwin.explicit_preferences.map((item, index) => (
+                 <span key={(String(item.dimension ?? "explicit")) + index}>
+-                  {String(item.dimension ?? item.category ?? "preference")} · {item.explanation ?? "user-provided"}
++                  {String(item.dimension ?? item.category ?? "preference")} · {String(item.explanation ?? "user-provided")}
+                 </span>
+               ))
+             )}
+diff --git a/frontend/src/stories/V12ExecutionStates.stories.tsx b/frontend/src/stories/V12ExecutionStates.stories.tsx
+index 931b29f..eb359b3 100644
+--- a/frontend/src/stories/V12ExecutionStates.stories.tsx
++++ b/frontend/src/stories/V12ExecutionStates.stories.tsx
+@@ -52,6 +52,7 @@ export default meta;
+ type Story = StoryObj<typeof meta>;
+ 
+ export const StateMatrix: Story = {
++  args: { plan: fixture(states[0]) },
+   render: () => (
+     <div className="v12-story-grid">
+       {states.map((state) => {
+diff --git a/frontend/tsconfig.typecheck.json b/frontend/tsconfig.typecheck.json
+new file mode 100644
+index 0000000..d9da574
+--- /dev/null
++++ b/frontend/tsconfig.typecheck.json
+@@ -0,0 +1,4 @@
++{
++  "compilerOptions": {"target":"ES2022","lib":["ES2022","DOM","DOM.Iterable"],"jsx":"react-jsx","module":"ESNext","moduleResolution":"bundler","skipLibCheck":true,"noEmit":true,"strict":false,"allowJs":true,"resolveJsonModule":true,"esModuleInterop":true,"types":["vite/client"]},
++  "include": ["src/**/*.ts","src/**/*.tsx"]
++}

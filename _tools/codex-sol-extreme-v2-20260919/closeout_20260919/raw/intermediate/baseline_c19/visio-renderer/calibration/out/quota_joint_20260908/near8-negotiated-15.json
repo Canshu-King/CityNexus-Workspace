@@ -1,0 +1,866 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_NEAR8_PORTS_20260908",
+  "seed": 8255507838,
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "axisCounts": {
+    "x": 96,
+    "y": 82
+  },
+  "trace": [
+    {
+      "iteration": 700,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 701,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 702,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 703,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 704,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 705,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 706,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 707,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 708,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 709,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 710,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 711,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 712,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 713,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 714,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 715,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 716,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 717,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 718,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 719,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 720,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 721,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 722,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 723,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 724,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 725,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 726,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 727,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 728,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 729,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 730,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 1,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 731,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 1,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 732,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 1,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 733,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 1,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 734,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 735,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 736,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 737,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 738,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 739,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 740,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 741,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 742,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 743,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 6,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 744,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 745,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 746,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 747,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 748,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 749,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 750,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 751,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 752,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 753,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 754,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 755,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 756,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 757,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 758,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 759,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 760,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 761,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 762,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 763,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 764,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 765,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 766,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 767,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 768,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 5,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 769,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 770,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 771,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 772,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 773,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 774,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 775,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 776,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 777,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 778,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 779,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 780,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 781,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 782,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 783,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 784,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 785,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 786,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 787,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 788,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 789,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 790,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 791,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 792,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 793,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 794,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 795,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 796,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 797,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 798,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    },
+    {
+      "iteration": 799,
+      "routed": 8,
+      "failed": [],
+      "conflictingVertices": 4,
+      "conflictingEdges": 0,
+      "presentFactor": 1001.0
+    }
+  ],
+  "bestScore": [
+    4,
+    0
+  ],
+  "bestConflictVertices": [
+    {
+      "point": [
+        21.0,
+        10.5
+      ],
+      "routes": [
+        "A-PA-07",
+        "A-CD-UC-10"
+      ]
+    },
+    {
+      "point": [
+        21.5,
+        8.97
+      ],
+      "routes": [
+        "A-B-06",
+        "A-CD-UC-10"
+      ]
+    },
+    {
+      "point": [
+        22.9,
+        9.4
+      ],
+      "routes": [
+        "A-M-UC-10",
+        "A-PA-07"
+      ]
+    },
+    {
+      "point": [
+        26.5,
+        8.97
+      ],
+      "routes": [
+        "A-M-UC-10",
+        "A-B-06"
+      ]
+    }
+  ],
+  "bestConflictEdges": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ]
+}

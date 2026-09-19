@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\_core\memmap.py
+# hypothesis_version: 6.168.0
+
+[b'\x00', -100.0, 'C', '_mmap', 'b', 'c', 'copyonwrite', 'flush', 'memmap', 'name', 'numpy', 'r', 'r+', 'read', 'readonly', 'readwrite', 'w+', 'write']

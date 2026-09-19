@@ -1,0 +1,75 @@
+{
+  "priorPackage": "CityNexus-P1-Route-Repair-V3-GPT-Opinion-20260907(3).zip",
+  "comparisons": [
+    {
+      "currentPath": "current/visio-renderer/phase1-routing-rc6-candidate.yaml",
+      "priorPath": "visio-renderer/phase1-routing-rc6-candidate.yaml",
+      "currentSha256": "8c1661ebb1a9d5a371f48ef800316dd643f391beec559eb2a4b8065eed75182d",
+      "priorSha256": "8c1661ebb1a9d5a371f48ef800316dd643f391beec559eb2a4b8065eed75182d",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/analyze_p1_route_conflicts.py",
+      "priorPath": "visio-renderer/calibration/analyze_p1_route_conflicts.py",
+      "currentSha256": "c5f03a657fa3f2068e442b18ade7df9dabbc466166a2cc9ef6375c03738111dc",
+      "priorSha256": "c5f03a657fa3f2068e442b18ade7df9dabbc466166a2cc9ef6375c03738111dc",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/audit_p1_route_contacts.py",
+      "priorPath": "visio-renderer/calibration/audit_p1_route_contacts.py",
+      "currentSha256": "3ccc8b74387938774ba9f65c9520083c0630e230d6513fa60e01adacace1e5e2",
+      "priorSha256": "3ccc8b74387938774ba9f65c9520083c0630e230d6513fa60e01adacace1e5e2",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/validate_p1_route_candidate.py",
+      "priorPath": "visio-renderer/calibration/validate_p1_route_candidate.py",
+      "currentSha256": "874ee5783c6c67b066186c2debc210fc91ddb4fa81af3ee9f80e0c917e1c3e73",
+      "priorSha256": "874ee5783c6c67b066186c2debc210fc91ddb4fa81af3ee9f80e0c917e1c3e73",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/validate_p1_route_candidate_v2.py",
+      "priorPath": "visio-renderer/calibration/validate_p1_route_candidate_v2.py",
+      "currentSha256": "aac508c33336e6349242c7302bd8ba687c3dc00a66426bd21f96da86c75d2ce4",
+      "priorSha256": "aac508c33336e6349242c7302bd8ba687c3dc00a66426bd21f96da86c75d2ce4",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/validate_p1_route_candidate_v3.py",
+      "priorPath": "visio-renderer/calibration/validate_p1_route_candidate_v3.py",
+      "currentSha256": "a4d211821460bb12e1786381aa5f8daa4af0b86d5f703a0e0938098239660d64",
+      "priorSha256": "a4d211821460bb12e1786381aa5f8daa4af0b86d5f703a0e0938098239660d64",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v2-report.json",
+      "priorPath": "visio-renderer/calibration/out/P1_UC_ROUTE_CANDIDATE-v2-report.json",
+      "currentSha256": "b1bf4f8947600537ea014abff8c42bd8f470a5c8f7319be2c878d8c13dedc3aa",
+      "priorSha256": "b1bf4f8947600537ea014abff8c42bd8f470a5c8f7319be2c878d8c13dedc3aa",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/out/P1_UC_ROUTE_CONTACT-AUDIT.json",
+      "priorPath": "visio-renderer/calibration/out/P1_UC_ROUTE_CONTACT-AUDIT.json",
+      "currentSha256": "d8c545743bb004445e178a768b2c3f1a634f2584fa4565d90f2d5c8d1c9e7ff1",
+      "priorSha256": "d8c545743bb004445e178a768b2c3f1a634f2584fa4565d90f2d5c8d1c9e7ff1",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-renderer/calibration/out/P1_UC_ROUTE_REPAIR-WORKLIST.json",
+      "priorPath": "visio-renderer/calibration/out/P1_UC_ROUTE_REPAIR-WORKLIST.json",
+      "currentSha256": "e74262e0b39de1879dbee0792acc28a03f3ffdf15f6313ec4d08f737f7e6746d",
+      "priorSha256": "e74262e0b39de1879dbee0792acc28a03f3ffdf15f6313ec4d08f737f7e6746d",
+      "byteIdentical": true
+    },
+    {
+      "currentPath": "current/visio-spec/pages/p1_uc_overview.yaml",
+      "priorPath": "visio-spec/pages/p1_uc_overview.yaml",
+      "currentSha256": "6e2b9876177803f05a9397dfa6d4d64da1d2feac01f3946925864f64fc6d24c5",
+      "priorSha256": "6e2b9876177803f05a9397dfa6d4d64da1d2feac01f3946925864f64fc6d24c5",
+      "byteIdentical": true
+    }
+  ]
+}

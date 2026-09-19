@@ -1,0 +1,417 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_NEAR8_PORTS_20260908",
+  "seed": 8526090808,
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "samples": 120,
+  "axisCounts": {
+    "x": 96,
+    "y": 82
+  },
+  "familyCounts": {
+    "A-CD-UC-04": 19,
+    "A-CD-UC-10": 28,
+    "A-M-UC-04": 20,
+    "A-M-UC-08": 42,
+    "A-M-UC-10": 29,
+    "A-B-06": 33,
+    "A-PA-07": 19,
+    "A-CE-09": 33
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pairRepairHistory": [
+    {
+      "round": 0,
+      "impossibleBefore": [
+        [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      ],
+      "addedByRoute": {
+        "A-PA-07": 3
+      },
+      "impossibleAfter": []
+    }
+  ],
+  "pid": 37584,
+  "poolFeasibilityPrecheck": "PASS",
+  "impossibleRoutePairs": [],
+  "tightRoutePairs": [
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 532,
+      "conflictingPairs": 528,
+      "compatiblePairs": 4,
+      "compatibilityRatio": 0.007518796992481203
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 924,
+      "conflictingPairs": 908,
+      "compatiblePairs": 16,
+      "compatibilityRatio": 0.017316017316017316
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-CE-09",
+      "candidatePairs": 1386,
+      "conflictingPairs": 1357,
+      "compatiblePairs": 29,
+      "compatibilityRatio": 0.020923520923520924
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "candidatePairs": 627,
+      "conflictingPairs": 609,
+      "compatiblePairs": 18,
+      "compatibilityRatio": 0.028708133971291867
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 957,
+      "conflictingPairs": 921,
+      "compatiblePairs": 36,
+      "compatibilityRatio": 0.03761755485893417
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 551,
+      "conflictingPairs": 528,
+      "compatiblePairs": 23,
+      "compatibilityRatio": 0.041742286751361164
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-M-UC-10",
+      "candidatePairs": 1218,
+      "conflictingPairs": 1162,
+      "compatiblePairs": 56,
+      "compatibilityRatio": 0.04597701149425287
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-B-06",
+      "candidatePairs": 1386,
+      "conflictingPairs": 1320,
+      "compatiblePairs": 66,
+      "compatibilityRatio": 0.047619047619047616
+    }
+  ],
+  "arcRepairHistory": [
+    {
+      "round": 0,
+      "ac3Before": "FAIL",
+      "emptyBefore": [
+        "A-CD-UC-10"
+      ],
+      "repairs": [
+        {
+          "route": "A-CD-UC-10",
+          "dominantBlockers": [
+            "A-B-06",
+            "A-PA-07"
+          ],
+          "blockerCounts": {
+            "A-M-UC-10": 17,
+            "A-B-06": 27,
+            "A-PA-07": 27,
+            "A-M-UC-04": 5,
+            "A-M-UC-08": 6,
+            "A-CE-09": 1
+          },
+          "bundleAttempts": 18,
+          "added": 0
+        }
+      ],
+      "ac3After": "FAIL",
+      "emptyAfter": [
+        "A-CD-UC-10"
+      ]
+    }
+  ],
+  "arcConsistency": {
+    "status": "FAIL",
+    "rounds": 1,
+    "emptyRoutes": [
+      "A-CD-UC-10"
+    ],
+    "removalCount": 28,
+    "lastRemovals": [
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:0",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:102",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:12",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:14",
+        "unsupportedBy": [
+          "A-M-UC-04",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:17",
+        "unsupportedBy": [
+          "A-M-UC-04",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:24",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:36",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:42",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:5",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:6",
+        "unsupportedBy": [
+          "A-M-UC-04",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:60",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:78",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:84",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:1",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:11",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:2",
+        "unsupportedBy": [
+          "A-M-UC-04",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:22",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:4",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:41",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:58",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:97",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:10",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:30",
+        "unsupportedBy": [
+          "A-M-UC-08",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:35",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:71",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:83",
+        "unsupportedBy": [
+          "A-M-UC-10",
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:53",
+        "unsupportedBy": [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      },
+      {
+        "route": "A-CD-UC-10",
+        "candidate": "A-CD-UC-10:a24",
+        "unsupportedBy": [
+          "A-M-UC-04",
+          "A-M-UC-08",
+          "A-M-UC-10",
+          "A-CE-09"
+        ]
+      }
+    ],
+    "remainingDomainSizes": {
+      "A-CD-UC-04": 19,
+      "A-CD-UC-10": 0,
+      "A-M-UC-04": 20,
+      "A-M-UC-08": 42,
+      "A-M-UC-10": 29,
+      "A-B-06": 33,
+      "A-PA-07": 19,
+      "A-CE-09": 33
+    }
+  },
+  "reason": "arc-consistency-proved-current-pool-infeasible"
+}

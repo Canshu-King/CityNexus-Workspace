@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:4241",
+      "localStorage": [
+        {
+          "name": "citynexus.v8.journey_id",
+          "value": "3c1638a1-568b-4f45-b648-6012b2617710"
+        },
+        {
+          "name": "citynexus.copilot.history.3c1638a1-568b-4f45-b648-6012b2617710",
+          "value": "[]"
+        },
+        {
+          "name": "citynexus.demo.journey_id",
+          "value": "3c1638a1-568b-4f45-b648-6012b2617710"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1619 @@
+{
+  "pageName": "P1_UC_Overview",
+  "status": "PASS",
+  "semanticConnectorCount": 21,
+  "candidateRouteCount": 21,
+  "explicitGeometryRouteCount": 21,
+  "crossingCount": 0,
+  "crossingPairs": [],
+  "overlapCount": 0,
+  "overlapPairs": [],
+  "routes": [
+    {
+      "id": "A-B-06",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 14,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 4,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-05",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 4,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-CE-09",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 5,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-08",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 16,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-PA-07",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-02",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 15,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-05",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 17,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-06",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-07",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-08",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 9,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-11",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-12",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 7,
+      "failures": []
+    },
+    {
+      "id": "EXT-07-06",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "EXT-09-08",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "EXT-10-09",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    }
+  ],
+  "failures": []
+}
+{
+  "pageName": "P1_UC_Overview",
+  "status": "FAIL",
+  "routeCount": 21,
+  "contactPairCount": 46,
+  "uniqueContactCount": 55,
+  "contactCounts": {
+    "crossing": 0,
+    "overlap": 0,
+    "tjunction": 22,
+    "shared_endpoint": 33
+  },
+  "minimumSegmentCm": 0.1,
+  "shortSegmentCount": 9,
+  "redundantCollinearPointCount": 88,
+  "contacts": [
+    {
+      "routeA": "A-T-UC-02",
+      "routeB": "A-T-UC-04",
+      "segmentA": 2,
+      "segmentB": 3,
+      "type": "shared_endpoint",
+      "point": [
+        5.0,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-02",
+      "routeB": "A-T-UC-05",
+      "segmentA": 0,
+      "segmentB": 2,
+      "type": "shared_endpoint",
+      "point": [
+        4.6,
+        9.1
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "A-T-UC-05",
+      "segmentA": 2,
+      "segmentB": 1,
+      "type": "shared_endpoint",
+      "point": [
+        4.6,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "A-T-UC-06",
+      "segmentA": 4,
+      "segmentB": 3,
+      "type": "shared_endpoint",
+      "point": [
+        5.2,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "A-M-UC-08",
+      "segmentA": 8,
+      "segmentB": 5,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "A-M-UC-08",
+      "segmentA": 10,
+      "segmentB": 3,
+      "type": "shared_endpoint",
+      "point": [
+        13.7,
+        6.8
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "A-B-06",
+      "segmentA": 7,
+      "segmentB": 10,
+      "type": "shared_endpoint",
+      "point": [
+        13.52,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "EXT-07-06",
+      "segmentA": 5,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        8.3,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "EXT-07-06",
+      "segmentA": 6,
+      "segmentB": 4,
+      "type": "tjunction",
+      "point": [
+        11.1,
+        9.0
+      ]
+    },
+    {
+      "routeA": "A-T-UC-04",
+      "routeB": "EXT-07-06",
+      "segmentA": 11,
+      "segmentB": 1,
+      "type": "tjunction",
+      "point": [
+        13.7,
+        6.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-T-UC-06",
+      "segmentA": 4,
+      "segmentB": 2,
+      "type": "shared_endpoint",
+      "point": [
+        5.2,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-T-UC-07",
+      "segmentA": 9,
+      "segmentB": 7,
+      "type": "shared_endpoint",
+      "point": [
+        13.8,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-M-UC-04",
+      "segmentA": 13,
+      "segmentB": 3,
+      "type": "shared_endpoint",
+      "point": [
+        19.9,
+        4.77
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-M-UC-08",
+      "segmentA": 8,
+      "segmentB": 6,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-M-UC-08",
+      "segmentA": 12,
+      "segmentB": 1,
+      "type": "shared_endpoint",
+      "point": [
+        19.9,
+        6.8
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-B-06",
+      "segmentA": 7,
+      "segmentB": 9,
+      "type": "shared_endpoint",
+      "point": [
+        13.52,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "A-PA-07",
+      "segmentA": 11,
+      "segmentB": 8,
+      "type": "shared_endpoint",
+      "point": [
+        19.9,
+        8.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "EXT-07-06",
+      "segmentA": 5,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        8.3,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-05",
+      "routeB": "EXT-07-06",
+      "segmentA": 6,
+      "segmentB": 4,
+      "type": "tjunction",
+      "point": [
+        11.1,
+        9.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-06",
+      "routeB": "A-T-UC-11",
+      "segmentA": 1,
+      "segmentB": 0,
+      "type": "shared_endpoint",
+      "point": [
+        5.2,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-06",
+      "routeB": "EXT-07-06",
+      "segmentA": 5,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        8.3,
+        8.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "A-T-UC-08",
+      "segmentA": 0,
+      "segmentB": 1,
+      "type": "shared_endpoint",
+      "point": [
+        5.4,
+        10.299999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "A-T-UC-11",
+      "segmentA": 6,
+      "segmentB": 5,
+      "type": "shared_endpoint",
+      "point": [
+        13.8,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "A-M-UC-08",
+      "segmentA": 2,
+      "segmentB": 10,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        10.299999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "A-B-06",
+      "segmentA": 5,
+      "segmentB": 5,
+      "type": "shared_endpoint",
+      "point": [
+        13.8,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "EXT-09-08",
+      "segmentA": 1,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        7.5,
+        10.299999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-07",
+      "routeB": "EXT-09-08",
+      "segmentA": 4,
+      "segmentB": 1,
+      "type": "tjunction",
+      "point": [
+        13.8,
+        10.2
+      ]
+    },
+    {
+      "routeA": "A-T-UC-08",
+      "routeB": "A-T-UC-10",
+      "segmentA": 2,
+      "segmentB": 0,
+      "type": "shared_endpoint",
+      "point": [
+        5.4,
+        10.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-08",
+      "routeB": "A-T-UC-12",
+      "segmentA": 3,
+      "segmentB": 0,
+      "type": "shared_endpoint",
+      "point": [
+        5.4,
+        10.899999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-08",
+      "routeB": "EXT-09-08",
+      "segmentA": 5,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        7.5,
+        11.9
+      ]
+    },
+    {
+      "routeA": "A-T-UC-10",
+      "routeB": "A-M-UC-08",
+      "segmentA": 2,
+      "segmentB": 11,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        10.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-10",
+      "routeB": "A-PA-07",
+      "segmentA": 6,
+      "segmentB": 4,
+      "type": "shared_endpoint",
+      "point": [
+        20.05,
+        11.9
+      ]
+    },
+    {
+      "routeA": "A-T-UC-10",
+      "routeB": "EXT-09-08",
+      "segmentA": 1,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        7.5,
+        10.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-10",
+      "routeB": "EXT-09-08",
+      "segmentA": 3,
+      "segmentB": 0,
+      "type": "tjunction",
+      "point": [
+        17.2,
+        10.6
+      ]
+    },
+    {
+      "routeA": "A-T-UC-11",
+      "routeB": "A-M-UC-08",
+      "segmentA": 4,
+      "segmentB": 7,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-11",
+      "routeB": "A-B-06",
+      "segmentA": 3,
+      "segmentB": 8,
+      "type": "shared_endpoint",
+      "point": [
+        13.52,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-11",
+      "routeB": "A-PA-07",
+      "segmentA": 6,
+      "segmentB": 6,
+      "type": "shared_endpoint",
+      "point": [
+        20.05,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-11",
+      "routeB": "EXT-07-06",
+      "segmentA": 1,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        8.3,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-11",
+      "routeB": "EXT-07-06",
+      "segmentA": 2,
+      "segmentB": 4,
+      "type": "tjunction",
+      "point": [
+        11.1,
+        9.399999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-12",
+      "routeB": "A-M-UC-08",
+      "segmentA": 2,
+      "segmentB": 12,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        10.899999999999999
+      ]
+    },
+    {
+      "routeA": "A-T-UC-12",
+      "routeB": "EXT-09-08",
+      "segmentA": 1,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        7.5,
+        10.899999999999999
+      ]
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-M-UC-04",
+      "segmentA": 1,
+      "segmentB": 0,
+      "type": "shared_endpoint",
+      "point": [
+        26.2,
+        5.96
+      ]
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-M-UC-08",
+      "segmentA": 2,
+      "segmentB": 0,
+      "type": "shared_endpoint",
+      "point": [
+        26.2,
+        6.8
+      ]
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-B-06",
+      "segmentA": 4,
+      "segmentB": 2,
+      "type": "shared_endpoint",
+      "point": [
+        26.2,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "EXT-10-09",
+      "segmentA": 3,
+      "segmentB": 1,
+      "type": "tjunction",
+      "point": [
+        26.2,
+        9.4
+      ]
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-B-06",
+      "segmentA": 8,
+      "segmentB": 6,
+      "type": "shared_endpoint",
+      "point": [
+        13.55,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "EXT-07-06",
+      "segmentA": 2,
+      "segmentB": 0,
+      "type": "tjunction",
+      "point": [
+        17.2,
+        6.8
+      ]
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "EXT-09-08",
+      "segmentA": 9,
+      "segmentB": 1,
+      "type": "tjunction",
+      "point": [
+        13.55,
+        10.2
+      ]
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-B-06",
+      "segmentA": 2,
+      "segmentB": 1,
+      "type": "shared_endpoint",
+      "point": [
+        26.3,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "EXT-10-09",
+      "segmentA": 1,
+      "segmentB": 1,
+      "type": "tjunction",
+      "point": [
+        26.3,
+        9.4
+      ]
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "segmentA": 4,
+      "segmentB": 5,
+      "type": "shared_endpoint",
+      "point": [
+        20.05,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "EXT-10-09",
+      "segmentA": 0,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        27.0,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "EXT-10-09",
+      "segmentA": 3,
+      "segmentB": 0,
+      "type": "tjunction",
+      "point": [
+        23.3,
+        9.6
+      ]
+    },
+    {
+      "routeA": "A-PA-07",
+      "routeB": "EXT-10-09",
+      "segmentA": 2,
+      "segmentB": 2,
+      "type": "tjunction",
+      "point": [
+        27.0,
+        12.8
+      ]
+    },
+    {
+      "routeA": "A-CE-09",
+      "routeB": "EXT-10-09",
+      "segmentA": 1,
+      "segmentB": 3,
+      "type": "tjunction",
+      "point": [
+        19.65,
+        14.2
+      ]
+    }
+  ],
+  "shortSegments": [
+    {
+      "route": "A-T-UC-04",
+      "segment": 8,
+      "lengthCm": 0.030000000000001137,
+      "from": [
+        13.52,
+        9.0
+      ],
+      "to": [
+        13.55,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "segment": 8,
+      "lengthCm": 0.030000000000001137,
+      "from": [
+        13.52,
+        9.2
+      ],
+      "to": [
+        13.55,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "segment": 4,
+      "lengthCm": 0.030000000000001137,
+      "from": [
+        13.52,
+        9.399999999999999
+      ],
+      "to": [
+        13.55,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "segment": 7,
+      "lengthCm": 0.05000000000000071,
+      "from": [
+        20.05,
+        9.399999999999999
+      ],
+      "to": [
+        20.1,
+        9.4
+      ]
+    },
+    {
+      "route": "A-T-UC-12",
+      "segment": 3,
+      "lengthCm": 0.049999999999998934,
+      "from": [
+        13.55,
+        10.899999999999999
+      ],
+      "to": [
+        13.6,
+        10.9
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "segment": 14,
+      "lengthCm": 0.05000000000000071,
+      "from": [
+        13.55,
+        11.9
+      ],
+      "to": [
+        13.5,
+        11.9
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "segment": 7,
+      "lengthCm": 0.030000000000001137,
+      "from": [
+        13.55,
+        9.6
+      ],
+      "to": [
+        13.52,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "segment": 12,
+      "lengthCm": 0.019999999999999574,
+      "from": [
+        13.52,
+        8.2
+      ],
+      "to": [
+        13.5,
+        8.2
+      ]
+    },
+    {
+      "route": "A-CE-09",
+      "segment": 3,
+      "lengthCm": 0.05000000000000071,
+      "from": [
+        19.65,
+        11.9
+      ],
+      "to": [
+        19.599999999999998,
+        11.9
+      ]
+    }
+  ],
+  "redundantCollinearPoints": [
+    {
+      "route": "A-T-UC-02",
+      "pointIndex": 1,
+      "point": [
+        4.6,
+        9.1
+      ]
+    },
+    {
+      "route": "A-T-UC-02",
+      "pointIndex": 3,
+      "point": [
+        5.0,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 3,
+      "point": [
+        4.6,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 4,
+      "point": [
+        5.0,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 5,
+      "point": [
+        5.2,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 6,
+      "point": [
+        8.3,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 7,
+      "point": [
+        11.1,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 8,
+      "point": [
+        13.52,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 9,
+      "point": [
+        13.55,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 11,
+      "point": [
+        13.7,
+        6.8
+      ]
+    },
+    {
+      "route": "A-T-UC-04",
+      "pointIndex": 12,
+      "point": [
+        13.7,
+        6.6
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 2,
+      "point": [
+        4.6,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 3,
+      "point": [
+        4.6,
+        9.1
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 5,
+      "point": [
+        5.2,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 6,
+      "point": [
+        8.3,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 7,
+      "point": [
+        11.1,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 8,
+      "point": [
+        13.52,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 9,
+      "point": [
+        13.55,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 10,
+      "point": [
+        13.8,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 12,
+      "point": [
+        19.9,
+        8.2
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 13,
+      "point": [
+        19.9,
+        6.8
+      ]
+    },
+    {
+      "route": "A-T-UC-05",
+      "pointIndex": 14,
+      "point": [
+        19.9,
+        4.77
+      ]
+    },
+    {
+      "route": "A-T-UC-06",
+      "pointIndex": 2,
+      "point": [
+        5.2,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-06",
+      "pointIndex": 3,
+      "point": [
+        5.2,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-06",
+      "pointIndex": 4,
+      "point": [
+        5.2,
+        9.0
+      ]
+    },
+    {
+      "route": "A-T-UC-06",
+      "pointIndex": 6,
+      "point": [
+        8.3,
+        8.2
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 1,
+      "point": [
+        5.4,
+        10.299999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 2,
+      "point": [
+        7.5,
+        10.299999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 3,
+      "point": [
+        13.55,
+        10.299999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 5,
+      "point": [
+        13.8,
+        10.2
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 6,
+      "point": [
+        13.8,
+        9.6
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 7,
+      "point": [
+        13.8,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-07",
+      "pointIndex": 8,
+      "point": [
+        13.8,
+        9.2
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "pointIndex": 2,
+      "point": [
+        5.4,
+        10.299999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "pointIndex": 3,
+      "point": [
+        5.4,
+        10.6
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "pointIndex": 4,
+      "point": [
+        5.4,
+        10.899999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "pointIndex": 6,
+      "point": [
+        7.5,
+        11.9
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "pointIndex": 1,
+      "point": [
+        5.4,
+        10.6
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "pointIndex": 2,
+      "point": [
+        7.5,
+        10.6
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "pointIndex": 3,
+      "point": [
+        13.55,
+        10.6
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "pointIndex": 4,
+      "point": [
+        17.2,
+        10.6
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "pointIndex": 7,
+      "point": [
+        20.05,
+        11.9
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 1,
+      "point": [
+        5.2,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 2,
+      "point": [
+        8.3,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 3,
+      "point": [
+        11.1,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 4,
+      "point": [
+        13.52,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 5,
+      "point": [
+        13.55,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 6,
+      "point": [
+        13.8,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-11",
+      "pointIndex": 7,
+      "point": [
+        20.05,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-12",
+      "pointIndex": 1,
+      "point": [
+        5.4,
+        10.899999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-12",
+      "pointIndex": 2,
+      "point": [
+        7.5,
+        10.899999999999999
+      ]
+    },
+    {
+      "route": "A-T-UC-12",
+      "pointIndex": 3,
+      "point": [
+        13.55,
+        10.899999999999999
+      ]
+    },
+    {
+      "route": "A-CD-UC-10",
+      "pointIndex": 2,
+      "point": [
+        26.2,
+        5.96
+      ]
+    },
+    {
+      "route": "A-CD-UC-10",
+      "pointIndex": 3,
+      "point": [
+        26.2,
+        6.8
+      ]
+    },
+    {
+      "route": "A-CD-UC-10",
+      "pointIndex": 4,
+      "point": [
+        26.2,
+        9.4
+      ]
+    },
+    {
+      "route": "A-CD-UC-10",
+      "pointIndex": 5,
+      "point": [
+        26.2,
+        9.6
+      ]
+    },
+    {
+      "route": "A-M-UC-04",
+      "pointIndex": 1,
+      "point": [
+        26.2,
+        5.96
+      ]
+    },
+    {
+      "route": "A-M-UC-04",
+      "pointIndex": 4,
+      "point": [
+        19.9,
+        4.77
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 1,
+      "point": [
+        26.2,
+        6.8
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 2,
+      "point": [
+        19.9,
+        6.8
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 3,
+      "point": [
+        17.2,
+        6.8
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 4,
+      "point": [
+        13.7,
+        6.8
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 6,
+      "point": [
+        13.55,
+        9.0
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 7,
+      "point": [
+        13.55,
+        9.2
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 8,
+      "point": [
+        13.55,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 9,
+      "point": [
+        13.55,
+        9.6
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 10,
+      "point": [
+        13.55,
+        10.2
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 11,
+      "point": [
+        13.55,
+        10.299999999999999
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 12,
+      "point": [
+        13.55,
+        10.6
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "pointIndex": 13,
+      "point": [
+        13.55,
+        10.899999999999999
+      ]
+    },
+    {
+      "route": "A-M-UC-10",
+      "pointIndex": 2,
+      "point": [
+        26.3,
+        9.4
+      ]
+    },
+    {
+      "route": "A-M-UC-10",
+      "pointIndex": 3,
+      "point": [
+        26.3,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 1,
+      "point": [
+        27.0,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 2,
+      "point": [
+        26.3,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 3,
+      "point": [
+        26.2,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 4,
+      "point": [
+        23.3,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 5,
+      "point": [
+        20.05,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 6,
+      "point": [
+        13.8,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 7,
+      "point": [
+        13.55,
+        9.6
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 9,
+      "point": [
+        13.52,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 10,
+      "point": [
+        13.52,
+        9.2
+      ]
+    },
+    {
+      "route": "A-B-06",
+      "pointIndex": 11,
+      "point": [
+        13.52,
+        9.0
+      ]
+    },
+    {
+      "route": "A-PA-07",
+      "pointIndex": 3,
+      "point": [
+        27.0,
+        12.8
+      ]
+    },
+    {
+      "route": "A-PA-07",
+      "pointIndex": 5,
+      "point": [
+        20.05,
+        11.9
+      ]
+    },
+    {
+      "route": "A-PA-07",
+      "pointIndex": 6,
+      "point": [
+        20.05,
+        9.6
+      ]
+    },
+    {
+      "route": "A-PA-07",
+      "pointIndex": 7,
+      "point": [
+        20.05,
+        9.399999999999999
+      ]
+    },
+    {
+      "route": "A-PA-07",
+      "pointIndex": 9,
+      "point": [
+        19.9,
+        8.2
+      ]
+    },
+    {
+      "route": "A-CE-09",
+      "pointIndex": 2,
+      "point": [
+        19.65,
+        14.2
+      ]
+    }
+  ],
+  "failures": [
+    "55 cross-route contacts",
+    "9 segments shorter than 0.1 cm",
+    "88 redundant collinear route points"
+  ]
+}
+{
+  "pageName": "P1_UC_Overview",
+  "status": "FAIL",
+  "baseGateStatus": "PASS",
+  "semanticConnectorCount": 21,
+  "candidateRouteCount": 21,
+  "explicitGeometryRouteCount": 21,
+  "properCrossingCount": 0,
+  "collinearOverlapPairCount": 0,
+  "contactPairCount": 46,
+  "uniqueContactCount": 55,
+  "contactCounts": {
+    "crossing": 0,
+    "overlap": 0,
+    "tjunction": 22,
+    "shared_endpoint": 33
+  },
+  "shortSegmentCount": 9,
+  "redundantCollinearPointCount": 88,
+  "failures": [
+    "55 cross-route contacts",
+    "9 segments shorter than 0.1 cm",
+    "88 redundant collinear route points"
+  ]
+}
+exit=1

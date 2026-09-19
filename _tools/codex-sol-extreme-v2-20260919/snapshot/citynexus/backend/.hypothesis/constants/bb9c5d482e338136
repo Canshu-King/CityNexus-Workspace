@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\starlette\staticfiles.py
+# hypothesis_version: 6.168.0
+
+[200, 304, 401, 404, 405, ',', '..', '/', '404.html', 'GET', 'HEAD', 'W/', '\\', 'cache-control', 'content-location', 'date', 'etag', 'expires', 'http', 'if-modified-since', 'if-none-match', 'index.html', 'last-modified', 'method', 'os.PathLike[str]', 'path', 'statics', 'type', 'vary']

@@ -1,0 +1,50 @@
+
+FullName                                                                                                       Length LastWriteTime
+--------                                                                                                       ------ -------------
+D:\moodle\02 Software Engineering\Software Engineering - Assignment Coursework 2026.pdf                         39948 2026/9/2 14:02:50
+D:\moodle\02 Software Engineering\参考资料\Addison Wesley - UML Reference Manual.pdf                          4045642 2026/9/3 14:34:10
+D:\moodle\02 Software Engineering\参考资料\Sommerville I. Engineering Software Products...Global ed. 2021.pdf 8948492 2026/9/3 14:34:05
+D:\moodle\02 Software Engineering\已下载资料\assignment 1.pdf                                                  212519 2026/9/2 13:49:03
+D:\moodle\02 Software Engineering\已下载资料\Data Flow Diagrams.pdf                                             77562 2026/9/2 14:33:19
+D:\moodle\02 Software Engineering\已下载资料\Requirements Engineering Process.pdf                             1051684 2026/9/2 14:32:54
+D:\moodle\02 Software Engineering\已下载资料\Requirements Specification Template.pdf                           130853 2026/9/2 14:33:07
+D:\moodle\02 Software Engineering\已下载资料\Software Requirements.pdf                                        1344827 2026/9/2 14:33:07
+D:\moodle\02 Software Engineering\已下载资料\UML Diagrams.pdf                                                 1417152 2026/9/2 14:33:18
+D:\moodle\02 Software Engineering\已下载资料\Use Case Diagram.pdf                                               54863 2026/9/2 14:33:18
+D:\moodle\02 Software Engineering\课程资料\Assignment Coursework for Software Engineering Module 2026 (1).pdf   39948 2026/9/3 14:12:49
+D:\moodle\02 Software Engineering\课程资料\Assignment Coursework for Software Engineering Module 2026.pdf       39948 2026/9/3 0:53:14
+D:\moodle\02 Software Engineering\课程资料\Data Flow Diagrams (1).pdf                                           77562 2026/9/3 14:33:52
+D:\moodle\02 Software Engineering\课程资料\Data Flow Diagrams (2).pdf                                           77562 2026/9/3 14:33:43
+D:\moodle\02 Software Engineering\课程资料\Data Flow Diagrams.pdf                                               77562 2026/9/2 14:33:19
+D:\moodle\02 Software Engineering\课程资料\How to Write a Software Requirements Specification.pdf              223379 2026/9/3 14:33:41
+D:\moodle\02 Software Engineering\课程资料\Learning Activity Week 1.pdf                                        329810 2026/9/3 14:11:56
+D:\moodle\02 Software Engineering\课程资料\Learning Activity Week 2.pdf                                        408798 2026/9/3 14:34:02
+D:\moodle\02 Software Engineering\课程资料\Learning Activity Week 3.pdf                                        409922 2026/9/3 14:33:50
+D:\moodle\02 Software Engineering\课程资料\Learning Activity.pdf                                               412207 2026/9/3 14:33:24
+D:\moodle\02 Software Engineering\课程资料\Requirements Engineering Process (1).pdf                           1051684 2026/9/3 14:34:01
+D:\moodle\02 Software Engineering\课程资料\Requirements Engineering Process.pdf                               1051684 2026/9/2 14:32:54
+D:\moodle\02 Software Engineering\课程资料\Requirements Specification Template (1).pdf                         130853 2026/9/3 14:33:59
+D:\moodle\02 Software Engineering\课程资料\Requirements Specification Template (2).pdf                         130853 2026/9/3 14:33:58
+D:\moodle\02 Software Engineering\课程资料\Requirements Specification Template (3).pdf                         130853 2026/9/3 14:33:39
+D:\moodle\02 Software Engineering\课程资料\Requirements Specification Template.pdf                             130853 2026/9/2 14:33:07
+D:\moodle\02 Software Engineering\课程资料\Software Processes.pdf                                             1099201 2026/9/3 14:33:53
+D:\moodle\02 Software Engineering\课程资料\Software Prototyping.pdf                                            806326 2026/9/3 14:33:34
+D:\moodle\02 Software Engineering\课程资料\Software Requirements (1).pdf                                      1344827 2026/9/3 14:33:56
+D:\moodle\02 Software Engineering\课程资料\Software Requirements.pdf                                          1344827 2026/9/2 14:33:07
+D:\moodle\02 Software Engineering\课程资料\Software Testing.pdf                                               1050641 2026/9/3 14:31:32
+D:\moodle\02 Software Engineering\课程资料\UML Diagrams (1).pdf                                               1417152 2026/9/3 14:33:49
+D:\moodle\02 Software Engineering\课程资料\UML Diagrams (2).pdf                                               1417152 2026/9/3 14:33:32
+D:\moodle\02 Software Engineering\课程资料\UML Diagrams.pdf                                                   1417152 2026/9/2 14:33:18
+D:\moodle\02 Software Engineering\课程资料\Use Case Diagram (1).pdf                                             54863 2026/9/3 14:33:48
+D:\moodle\02 Software Engineering\课程资料\Use Case Diagram (2).pdf                                             54863 2026/9/3 14:33:30
+D:\moodle\02 Software Engineering\课程资料\Use Case Diagram.pdf                                                 54863 2026/9/2 14:33:18
+D:\moodle\02 Software Engineering\课程资料\Use Case Diagrams (1).pdf                                          1965028 2026/9/3 14:33:28
+D:\moodle\02 Software Engineering\课程资料\Use Case Diagrams.pdf                                              1965028 2026/9/3 14:33:46
+
+
+
+Algorithm : SHA256
+Hash      : 12EB8DEA111487C9C5B6F8BD67420F23996A681A204FF706381EA1A1DB8A4307
+Path      : D:\moodle\02 Software Engineering\Software Engineering - Assignment Coursework 2026.pdf
+
+

@@ -1,0 +1,15 @@
+Provider Runtime hardening source changes relative to the previous Provider Runtime checkpoint:
+
+backend/app/replanning/provider_snapshots.py
+  - structural snapshot immutability and key/fact identity validation
+
+backend/app/main.py
+  - proposal snapshot reconstruction helper
+  - JourneyTwin effective provider provenance
+  - degraded provider propagation into feasibility/scoring
+  - same-snapshot base/candidate travel delta
+  - accept-time frozen snapshot revalidation
+
+backend/tests/test_gpt_adversarial_provider_hardening.py
+  - five adversarial regression tests for PRH-01..PRH-05
+  - lint/format-only cleanup after import into the real worktree

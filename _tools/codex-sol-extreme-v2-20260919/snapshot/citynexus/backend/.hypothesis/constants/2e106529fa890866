@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\integrations\mobility\snapshot_capture.py
+# hypothesis_version: 6.168.0
+
+[-180, 180, 'Feature', 'LineString', 'MOCK_DETERMINISTIC', 'PROVIDER_CAPTURED_AT', 'SYNTHETIC_FIXTURE', 'capture_provenance', 'coordinates', 'estimate', 'fact_quality', 'fixture', 'geometry', 'mock', 'mode', 'time_basis', 'type']

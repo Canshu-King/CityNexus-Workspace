@@ -1,0 +1,36 @@
+{
+  "artifact": "CityNexus V12 redacted live Agent evidence",
+  "recorded_at": "2026-09-13T02:29:30+08:00",
+  "captured_at": null,
+  "timestamp_note": "The prior live process did not persist its exact capture timestamp; no synthetic provider-run timestamp is claimed.",
+  "runtime_label": "REAL_DEEPSEEK_TOOL_AGENT=PASS_WITH_V12_GATEWAY_CONTINUATION",
+  "provider_key": "deepseek",
+  "model_key": "deepseek-flash",
+  "run_status": "COMPLETED",
+  "secrets_present": false,
+  "private_reasoning_present": false,
+  "tool_steps": [
+    {"tool_name": "inspect_journey", "result": "COMPLETED"},
+    {"tool_name": "inspect_twin", "result": "COMPLETED"},
+    {"tool_name": "list_replans", "result": "COMPLETED"},
+    {"tool_name": "request_replan", "result": "COMPLETED", "decision": "ALLOW_AUTO", "executed": false, "proposal_id": "00665610-62e2-4224-9f27-0509ba2f9ee9"},
+    {"tool_name": "list_replans", "result": "COMPLETED"}
+  ],
+  "normalized_args_fingerprints": "REDACTED_NOT_PERSISTED",
+  "gateway_continuation": {
+    "tool_name": "accept_replan",
+    "decision": "ALLOW_AUTO",
+    "executed": true,
+    "user_confirmation_required": false,
+    "reason_codes": ["DELEGATION_POLICY_MATCHED", "DETERMINISTIC_GATE_VERIFIED"],
+    "proposal_id": "00665610-62e2-4224-9f27-0509ba2f9ee9",
+    "active_plan_before": null,
+    "active_plan_after": "fca3e0ca-74bc-4968-809e-54b97320cd66",
+    "cost_delta_minor": 0,
+    "loss_minor": 0,
+    "provider_degraded": false,
+    "impact_maturity": "VALIDATED_IMPACT"
+  },
+  "model_accept_step_observed": false,
+  "notes": "The real model generated the replan proposal and stopped after a repeated proposal listing. The server Gateway continuation accepted it autonomously inside the pre-authorized envelope. This is intentionally labeled separately from a claim that the model itself issued accept_replan in this V12 bridge run."
+}

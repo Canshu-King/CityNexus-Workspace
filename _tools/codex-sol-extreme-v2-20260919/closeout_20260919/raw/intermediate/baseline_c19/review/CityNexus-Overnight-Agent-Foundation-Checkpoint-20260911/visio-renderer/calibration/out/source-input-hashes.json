@@ -1,0 +1,137 @@
+{
+  "rendererVersion": "v0.3.2",
+  "milestone": "C4_ASSOCIATION_FROZEN_EXTEND_REPAIR_0_1_1",
+  "inputs": [
+    {
+      "path": "visio-spec/style-tokens.yaml",
+      "sha256": "E62E369625A0D521A245EFABE1AB5E581C5E7C0985712FC26EC022337E11B030",
+      "source": "package"
+    },
+    {
+      "path": "visio-spec/pages/p1_uc_overview.yaml",
+      "sha256": "6E2B9876177803F05A9397DFA6D4D64DA1D2FEAC01F3946925864F64FC6D24C5",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/render-config.yaml",
+      "sha256": "4FC506FE26AE3219250871694DA8FFB590450D2421532958A9FAC6F3A2C80A11",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/native-master-map.json",
+      "sha256": "68101D5871EAE8A6B6F0B6710450C54A49EE30C6CE234310C072B033F9123CD4",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/phase1-routing.yaml",
+      "sha256": "430F886AA7FF753578101FBE99C9C2B6843E2C803EFEE5B84E85181D23E20F19",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/presentation.py",
+      "sha256": "1010930CD497636A2E96EB3C835B63B4E70B79B74329C77A1A9E8297EAA7ECEA",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/routing_geometry.py",
+      "sha256": "E289F47C5BCD1138F989962D39B8F4E5E1C75AE19B45BBA5F4C2CE532EB3D42B",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/TOOLCHAIN-BASELINE.md",
+      "sha256": "378FAF4B85851B0B0C19CFE385D5354BC539492568D33832BEFCF14078EF3B2C",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/c3-presentation-spec.yaml",
+      "sha256": "65E1773EEB63D4828DB33A648EAE7924B0DFA5C9DADD0491E7AC5AF6DB807007",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/build_c3.py",
+      "sha256": "3183B4FAE21275BF62A2C00033C0C601BF56B4A987CA2200452227B19F03B839",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/validate_c3.py",
+      "sha256": "BE6E7432AFB86E7F35C1B41E93DF3E27FE078BCA0B106EFB9083F2EC315E2BB7",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/c4-routing-calibration-spec.yaml",
+      "sha256": "A5A96EF51CD39F3E79CA5A93CAABCB91B6D77AC6D4BD2AE21B7B8259F89D7AF4",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/validate_c4_plan.py",
+      "sha256": "F61A6117940C9E094183BFDD1927515D1B966A578ED9A324FCCD420C94BB5FC2",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/build_c4_fallback.py",
+      "sha256": "E7DB100E6E6DC66B42D29AF04C2FA3CE3E96108AC7648C7E2E7866DC3DCE401E",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/validate_c4_fallback.py",
+      "sha256": "E72213345F6B705F75BABC334A2F10ED5988BB08FE6EDCD228373B0F267933FC",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/audit_c4_fallback_openxml.py",
+      "sha256": "C0B8479F3B0E2ECF3BF412FE18E79C599C6438E63120743338E0DA67F68C4388",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/tests/test_c4_fallback_contract.py",
+      "sha256": "818F0FFE0EE2550C4BAA63711D49F4F809AFA1BB0E69A895C14A2CACCBAB8C1A",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/tests/test_c4_fallback_direction_validator_contract.py",
+      "sha256": "8169349D8FF30C1B3E13EDAF07D6F7E23B4E65867E3DD8B2F69C4E9DC110E847",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/c4-extend-calibration-spec.yaml",
+      "sha256": "D6B437B9863AB43E6C67AB34CB2D247FA7D14CDCC7EC5A3008AF4E98E57AD400",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/build_c4_extend.py",
+      "sha256": "6630867FDB6B50B2DB247010C52DDCA6C6F749DFA23275C374431548AEDB809F",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/validate_c4_extend.py",
+      "sha256": "779BD7973F6246C989C208EF1DACEF334C1F0CB93C7D3EF52002BAB3C27F37DF",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/tests/test_c4_extend_contract.py",
+      "sha256": "FB592090B79B2DDE0ECE7E467F0EEFDB6FD36493A1AD25A09CD189D229EABB83",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/c4-extend-calibration-spec-v0.1.1.yaml",
+      "sha256": "E814B5412106C183B2C483D33034040D4C85559335F17B6A90F6DEB78DD8BCFE",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/build_c4_extend_1.py",
+      "sha256": "F79F946782BB27C3F63A45846A6FEC29E24969EDA8BDCD027C1419AE9662469F",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/calibration/validate_c4_extend_1.py",
+      "sha256": "3347A0ACA98821A1292EA8005D0BAAA4366271F38615FB1936F936C090C284AA",
+      "source": "package"
+    },
+    {
+      "path": "visio-renderer/tests/test_c4_extend_1_contract.py",
+      "sha256": "E43E0C04A49BBD9611ABD80C20D83B336C383F66EC06EE0DAEC5E1FA487881DF",
+      "source": "package"
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,193 @@
+{
+  "audit": "C4F OpenXML directional ports",
+  "status": "PASS",
+  "routeCount": 5,
+  "routes": [
+    {
+      "id": "C4-T-A",
+      "nameU": "Association",
+      "hiddenStroke": true,
+      "endpoints": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "C4-TRAVELER",
+          "expectedSide": "RIGHT",
+          "formula": "PAR(PNT(Sheet.1!Connections.X1,Sheet.1!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": 1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            1.0,
+            0.0
+          ],
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "C4-UC-A",
+          "expectedSide": "LEFT",
+          "formula": "PAR(PNT(Sheet.2!Connections.X1,Sheet.2!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": -1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            -1.0,
+            0.0
+          ],
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "C4-T-B",
+      "nameU": null,
+      "hiddenStroke": true,
+      "endpoints": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "C4-TRAVELER",
+          "expectedSide": "RIGHT",
+          "formula": "PAR(PNT(Sheet.1!Connections.X2,Sheet.1!Connections.Y2))",
+          "aliasIndex": 2,
+          "rowIndex": 1,
+          "dirX": 1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            1.0,
+            0.0
+          ],
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "C4-UC-B",
+          "expectedSide": "LEFT",
+          "formula": "PAR(PNT(Sheet.3!Connections.X1,Sheet.3!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": -1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            -1.0,
+            0.0
+          ],
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "C4-T-C",
+      "nameU": null,
+      "hiddenStroke": true,
+      "endpoints": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "C4-TRAVELER",
+          "expectedSide": "RIGHT",
+          "formula": "PAR(PNT(Sheet.1!Connections.X3,Sheet.1!Connections.Y3))",
+          "aliasIndex": 3,
+          "rowIndex": 2,
+          "dirX": 1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            1.0,
+            0.0
+          ],
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "C4-UC-C",
+          "expectedSide": "LEFT",
+          "formula": "PAR(PNT(Sheet.4!Connections.X1,Sheet.4!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": -1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            -1.0,
+            0.0
+          ],
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "C4-P-A",
+      "nameU": null,
+      "hiddenStroke": true,
+      "endpoints": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "C4-PROVIDER",
+          "expectedSide": "LEFT",
+          "formula": "PAR(PNT(Sheet.5!Connections.X1,Sheet.5!Connections.Y1))",
+          "aliasIndex": 1,
+          "rowIndex": 0,
+          "dirX": -1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            -1.0,
+            0.0
+          ],
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "C4-UC-A",
+          "expectedSide": "RIGHT",
+          "formula": "PAR(PNT(Sheet.2!Connections.X2,Sheet.2!Connections.Y2))",
+          "aliasIndex": 2,
+          "rowIndex": 1,
+          "dirX": 1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            1.0,
+            0.0
+          ],
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "C4-P-C",
+      "nameU": null,
+      "hiddenStroke": true,
+      "endpoints": [
+        {
+          "endpoint": "source",
+          "nodeSpecId": "C4-PROVIDER",
+          "expectedSide": "LEFT",
+          "formula": "PAR(PNT(Sheet.5!Connections.X2,Sheet.5!Connections.Y2))",
+          "aliasIndex": 2,
+          "rowIndex": 1,
+          "dirX": -1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            -1.0,
+            0.0
+          ],
+          "status": "PASS"
+        },
+        {
+          "endpoint": "target",
+          "nodeSpecId": "C4-UC-C",
+          "expectedSide": "RIGHT",
+          "formula": "PAR(PNT(Sheet.4!Connections.X2,Sheet.4!Connections.Y2))",
+          "aliasIndex": 2,
+          "rowIndex": 1,
+          "dirX": 1.0,
+          "dirY": 0.0,
+          "expectedDir": [
+            1.0,
+            0.0
+          ],
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

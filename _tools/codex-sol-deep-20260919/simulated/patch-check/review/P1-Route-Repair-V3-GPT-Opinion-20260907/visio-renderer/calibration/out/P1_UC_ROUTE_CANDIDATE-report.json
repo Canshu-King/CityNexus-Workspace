@@ -1,0 +1,140 @@
+{
+  "pageName": "P1_UC_Overview",
+  "status": "PASS",
+  "semanticConnectorCount": 21,
+  "candidateRouteCount": 21,
+  "explicitGeometryRouteCount": 21,
+  "crossingCount": 0,
+  "crossingPairs": [],
+  "overlapCount": 0,
+  "overlapPairs": [],
+  "routes": [
+    {
+      "id": "A-B-06",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 14,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 4,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-05",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 4,
+      "failures": []
+    },
+    {
+      "id": "A-CD-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-CE-09",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 5,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-08",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 16,
+      "failures": []
+    },
+    {
+      "id": "A-M-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-PA-07",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-02",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-04",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 15,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-05",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 17,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-06",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-07",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-08",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 8,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-10",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 9,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-11",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 11,
+      "failures": []
+    },
+    {
+      "id": "A-T-UC-12",
+      "planningStatus": "PLANNING_REQUIRED",
+      "pointCount": 7,
+      "failures": []
+    },
+    {
+      "id": "EXT-07-06",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "EXT-09-08",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    },
+    {
+      "id": "EXT-10-09",
+      "planningStatus": "FROZEN_FROM_C4E1",
+      "pointCount": 6,
+      "failures": []
+    }
+  ],
+  "failures": []
+}

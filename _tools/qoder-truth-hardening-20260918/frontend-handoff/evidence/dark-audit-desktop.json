@@ -1,0 +1,14 @@
+[
+  {
+    "screen": "today/desktop",
+    "scanned": 197,
+    "violations": [],
+    "borderWarnings": 2
+  },
+  {
+    "screen": "live/desktop",
+    "scanned": 241,
+    "violations": [],
+    "borderWarnings": 2
+  }
+]

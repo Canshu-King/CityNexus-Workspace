@@ -1,0 +1,136 @@
+{
+  "PLAN_O_PRESERVE_LOCAL_GEOMETRY": [
+    {
+      "route": "A-T-UC-07",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        16.2,
+        8.875
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        12.7,
+        12.575
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "endpoint": "target",
+      "side": "TOP",
+      "pointCm": [
+        22.3,
+        11.225
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        11.9,
+        12.575
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-M-UC-10",
+      "endpoint": "target",
+      "side": "TOP",
+      "pointCm": [
+        24.3,
+        11.225
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    }
+  ],
+  "PLAN_R_REVERSE_EMBEDDING": [
+    {
+      "route": "A-T-UC-07",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        16.2,
+        8.875
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-T-UC-10",
+      "endpoint": "target",
+      "side": "TOP",
+      "pointCm": [
+        24.3,
+        11.225
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-T-UC-08",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        12.3,
+        12.575
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-M-UC-10",
+      "endpoint": "target",
+      "side": "TOP",
+      "pointCm": [
+        22.3,
+        11.225
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    },
+    {
+      "route": "A-M-UC-08",
+      "endpoint": "target",
+      "side": "BOTTOM",
+      "pointCm": [
+        9.9,
+        12.575
+      ],
+      "alignedTo0_10": [
+        true,
+        false
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\__config__.py
+# hypothesis_version: 6.168.0
+
+['0.3.34.106.0', '19.44.35228', '3.12', '3.3.0', 'Build Dependencies', 'Compilers', 'Machine Information', 'Python Information', 'SIMD Extensions', 'args', 'baseline', 'blas', 'build', 'c', 'c++', 'cl', 'commands', 'cpu', 'cross-compiled', 'cython', 'detection method', 'dicts', 'endian', 'family', 'found', 'host', 'include directory', 'lapack', 'lib directory', 'link', 'linker', 'linker args', 'little', 'msvc', 'name', 'not found', 'numpy', 'path', 'pc file directory', 'pkgconfig', 'scipy-openblas', 'show_config', 'stdout', 'system', 'version', 'windows', 'x86_64']

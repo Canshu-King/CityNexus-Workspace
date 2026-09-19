@@ -1,0 +1,32 @@
+{
+  "phase": "Phase 1",
+  "document": "D:/moodle/CityNexus/visio/CityNexus_Visio_Model_Baseline_v1.0.vsdx",
+  "template": "USTRME_M.VSTX",
+  "stencils": {
+    "useCase": "UUSEME_M.VSSX",
+    "class": "USTRME_M.VSSX"
+  },
+  "nativeMasters": {
+    "Actor": "UUSEME_M.VSSX::Actor",
+    "Use Case": "UUSEME_M.VSSX::Use Case",
+    "System Boundary": "UUSEME_M.VSSX::Subsystem",
+    "Class": "USTRME_M.VSSX::Class",
+    "Association": "UUSEME_M.VSSX::Association / USTRME_M.VSSX::Association",
+    "Dependency": "USTRME_M.VSSX::Dependency",
+    "Extend": "UUSEME_M.VSSX::Extend",
+    "Composition": "USTRME_M.VSSX::Composition"
+  },
+  "pages": [
+    {"name": "00_Style_Guide", "index": 1, "semanticShapeCount": 6, "connectorCount": 3, "totalShapeCount": 9},
+    {"name": "P1_UC_Overview", "index": 2, "semanticShapeCount": 17, "connectorCount": 11, "totalShapeCount": 28},
+    {"name": "P1_Domain_Overview", "index": 3, "semanticShapeCount": 11, "connectorCount": 14, "totalShapeCount": 25}
+  ],
+  "glue": {"ungluedConnectorCount": 0, "endpointInspection": "All connector BeginX/EndX endpoints resolved to expected shapes via MCP get_connections"},
+  "geometry": {"overlapCount": 0, "connectorThroughShapeCount": 0, "crossingCount": {"00_Style_Guide": 0, "P1_UC_Overview": 0, "P1_Domain_Overview": 0}},
+  "exports": [
+    {"page": "P1_UC_Overview", "path": "D:/moodle/CityNexus/visio/exports/part1/CNX_P1_UC_Overview_v1.0.svg", "exists": true},
+    {"page": "P1_Domain_Overview", "path": "D:/moodle/CityNexus/visio/exports/part1/CNX_P1_Domain_Overview_v1.0.svg", "exists": true}
+  ],
+  "warnings": ["Visio MCP exposes endpoint glue inspection but not a dedicated automatic overlap/crossing analyzer; geometry values were checked against the specified non-overlapping layout and should receive final visual review."],
+  "part2Rendered": false
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\path_registry.py
+# hypothesis_version: 6.168.0
+
+['*', 'AliasedInsp[Any]', '_cache', '_loader_key', '_sa_default', 'column', 'entity', 'has_entity', 'is_aliased_class', 'is_entity', 'is_property', 'is_root', 'is_unnatural', 'key', 'loader', 'mapper', 'natural_path', 'parent', 'path', 'prop', 'relationship', 'token']

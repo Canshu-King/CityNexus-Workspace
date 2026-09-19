@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\starlette\websockets.py
+# hypothesis_version: 6.168.0
+
+[1000, 1006, ',', ':', 'binary', 'bytes', 'code', 'extensions', 'headers', 'more_body', 'reason', 'subprotocol', 'text', 'type', 'utf-8', 'websocket', 'websocket.accept', 'websocket.close', 'websocket.connect', 'websocket.disconnect', 'websocket.receive', 'websocket.send']

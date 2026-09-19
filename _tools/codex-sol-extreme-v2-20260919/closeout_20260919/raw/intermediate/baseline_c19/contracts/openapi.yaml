@@ -1,0 +1,2452 @@
+openapi: 3.1.0
+info:
+  title: CityNexus MVP API
+  version: 0.1.0
+  description: >-
+    Coursework MVP contract. Deterministic feasibility is authoritative; AI is optional.
+servers:
+  - url: http://localhost:8000/api/v1
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /demo/reset:
+    post:
+      operationId: resetDemo
+      responses:
+        '200':
+          description: Demo database reset and seeded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: {type: string, const: reset}
+  /travelers:
+    post:
+      operationId: createTraveler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TravelerCreate'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Traveler'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /travelers/{traveler_id}:
+    parameters:
+      - {$ref: '#/components/parameters/TravelerId'}
+    get:
+      operationId: getTraveler
+      responses:
+        '200':
+          description: Traveler
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Traveler'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /travelers/{traveler_id}/preferences:
+    parameters:
+      - {$ref: '#/components/parameters/TravelerId'}
+    get:
+      operationId: listPreferences
+      responses:
+        '200':
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Preference'}
+    put:
+      operationId: replacePreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {$ref: '#/components/schemas/PreferenceInput'}
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Preference'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /travelers/{traveler_id}/capabilities:
+    parameters:
+      - {$ref: '#/components/parameters/TravelerId'}
+    get:
+      operationId: listTravelerCapabilities
+      responses:
+        '200': {description: Explicit traveler capability facts}
+    put:
+      operationId: replaceTravelerCapabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: array, items: {type: object}}
+      responses:
+        '200': {description: Staged capability facts}
+  /travelers/{traveler_id}/capabilities/confirm:
+    parameters:
+      - {$ref: '#/components/parameters/TravelerId'}
+    post:
+      operationId: confirmTravelerCapabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: array, items: {type: object}}
+      responses:
+        '200': {description: Confirmed durable capability facts}
+  /travelers/{traveler_id}/agent-policy:
+    parameters:
+      - {$ref: '#/components/parameters/TravelerId'}
+    get:
+      operationId: getAgentPolicy
+      responses:
+        '200':
+          description: Server-owned traveler Agent delegation policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentPolicy'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      operationId: putAgentPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentPolicyPayload'}
+      responses:
+        '200':
+          description: Updated policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentPolicy'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /agent/tools:
+    get:
+      operationId: listAgentTools
+      responses:
+        '200':
+          description: Safe CityNexus Agent tool catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/AgentToolDescriptor'}
+  /agent/tools/v2:
+    get:
+      operationId: listAgentToolsV2
+      responses:
+        '200':
+          description: Expanded typed CityNexus Agent tool catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/AgentToolDescriptor'}
+  /agent/runtime-status:
+    get:
+      operationId: getAgentRuntimeStatus
+      responses:
+        '200':
+          description: Non-secret agent runtime identity and MCP proof status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - runtime_identity
+                  - native_binary_detected
+                  - native_mcp_proven
+                  - mcp_server
+                  - deepseek_configured
+                  - hermes_compat_configured
+                properties:
+                  runtime_identity: {type: string}
+                  native_binary_detected: {type: boolean}
+                  native_mcp_proven: {type: boolean}
+                  mcp_server: {type: string}
+                  deepseek_configured: {type: boolean}
+                  hermes_compat_configured: {type: boolean}
+                  hermes_native_gateway: {type: object}
+  /agent/hermes/capabilities:
+    get:
+      operationId: getNativeHermesCapabilities
+      responses:
+        '200':
+          description: Non-secret official Hermes Runs API capability status
+          content:
+            application/json:
+              schema: {type: object}
+  /agent/hermes/runs/{run_id}:
+    parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: getNativeHermesRun
+      responses:
+        '200':
+          description: Native Hermes run status
+          content:
+            application/json:
+              schema: {type: object}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /agent/hermes/runs/{run_id}/events:
+    parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: streamNativeHermesRunEvents
+      responses:
+        '200':
+          description: Native Hermes run progress as server-sent events
+          content:
+            text/event-stream:
+              schema: {type: string}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/hermes/runs/{run_id}:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: getJourneyNativeHermesRun
+      responses:
+        '200':
+          description: Journey-scoped native Hermes run status
+          content:
+            application/json:
+              schema: {type: object}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/hermes/runs/{run_id}/timeline:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+      - name: limit
+        in: query
+        required: false
+        schema: {type: integer, minimum: 1, maximum: 250, default: 100}
+    get:
+      operationId: getJourneyNativeHermesTimeline
+      responses:
+        '200':
+          description: Persisted normalized native Hermes event timeline
+          content:
+            application/json:
+              schema: {type: object}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/hermes/runs/{run_id}/events:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: streamJourneyNativeHermesRunEvents
+      responses:
+        '200':
+          description: Journey-scoped native Hermes events as server-sent events
+          content:
+            text/event-stream:
+              schema: {type: string}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/hermes/runs/{run_id}/stop:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string}
+    post:
+      operationId: stopJourneyNativeHermesRun
+      responses:
+        '200':
+          description: Native Hermes run stop receipt
+          content:
+            application/json:
+              schema: {type: object}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '502': {$ref: '#/components/responses/BadGateway'}
+  /agent/tools/{tool_name}:
+    parameters:
+      - name: tool_name
+        in: path
+        required: true
+        schema: {type: string}
+    post:
+      operationId: callAgentTool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentToolCall'}
+      responses:
+        '200':
+          description: Structured server-owned Agent tool receipt
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentToolResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /agent/tools/v2/{tool_name}:
+    parameters:
+      - name: tool_name
+        in: path
+        required: true
+        schema: {type: string}
+    post:
+      operationId: callAgentToolV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentToolCall'}
+      responses:
+        '200':
+          description: Structured typed Agent action receipt
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentToolResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys:
+    post:
+      operationId: createJourney
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/JourneyCreate'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Journey'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getJourney
+      responses:
+        '200':
+          description: Journey
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Journey'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      operationId: updateJourney
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/JourneyPatch'}
+      responses:
+        '200':
+          description: Updated journey
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Journey'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/constraints:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: listConstraints
+      responses:
+        '200':
+          description: Constraints
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Constraint'}
+    post:
+      operationId: addConstraint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ConstraintInput'}
+      responses:
+        '201':
+          description: Constraint created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Constraint'}
+  /journeys/{journey_id}/constraints/{constraint_id}:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: constraint_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    delete:
+      operationId: deleteConstraint
+      responses:
+        '204': {description: Deleted}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /places:
+    get:
+      operationId: searchPlaces
+      parameters:
+        - name: city_code
+          in: query
+          required: true
+          schema: {type: string}
+        - name: category
+          in: query
+          schema: {type: string}
+        - name: q
+          in: query
+          schema: {type: string}
+      responses:
+        '200':
+          description: Place catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Place'}
+  /city-services:
+    get:
+      operationId: searchCityServices
+      parameters:
+        - name: city_code
+          in: query
+          required: true
+          schema: {type: string}
+        - name: service_type
+          in: query
+          schema: {type: string}
+      responses:
+        '200':
+          description: City services
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/CityService'}
+  /city-services/{service_id}/booking-slots:
+    parameters:
+      - name: service_id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: getBookingSlots
+      parameters:
+        - name: start_at
+          in: query
+          required: true
+          schema: {type: string, format: date-time}
+        - name: end_at
+          in: query
+          required: true
+          schema: {type: string, format: date-time}
+      responses:
+        '200':
+          description: Normalised provider booking slots with provenance
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/BookingSlot'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/plans/generate:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: generatePlans
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                planning_mode: {$ref: '#/components/schemas/PlanningMode'}
+                candidate_count: {type: integer, minimum: 1, maximum: 5, default: 3}
+                place_ids:
+                  type: array
+                  minItems: 2
+                  maxItems: 12
+                  items: {type: string}
+                  description: Explicit selected/discovered POIs for the generic Compose Engine path.
+      responses:
+        '201':
+          description: Feasible candidate plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PlanVersion'}
+        '422': {$ref: '#/components/responses/Infeasible'}
+  /journeys/{journey_id}/plans:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: listPlans
+      responses:
+        '200':
+          description: Journey plan versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PlanVersion'}
+  /plans/{plan_version_id}:
+    parameters:
+      - {$ref: '#/components/parameters/PlanVersionId'}
+    get:
+      operationId: getPlan
+      responses:
+        '200':
+          description: Plan with activities
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PlanVersion'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/plans/{plan_version_id}/select:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/PlanVersionId'}
+    post:
+      operationId: selectPlan
+      responses:
+        '200':
+          description: Selected plan
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Journey'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Infeasible'}
+  /journeys/{journey_id}/bookings:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BookingCreate'}
+      responses:
+        '201':
+          description: Simulated booking
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Booking'}
+  /bookings/{booking_id}/cancel:
+    post:
+      operationId: cancelBooking
+      parameters:
+        - name: booking_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Cancelled booking
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Booking'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bookings/{booking_id}:
+    parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getBooking
+      responses:
+        '200':
+          description: Current provider-normalised booking state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Booking'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/orders:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/OrderCreate'}
+      responses:
+        '201':
+          description: Simulated order
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Order'}
+  /journeys/{journey_id}/transactions:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/IdempotencyKey'}
+    post:
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TransactionCreate'}
+      responses:
+        '201':
+          description: Simulated transaction
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Transaction'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /transactions/{transaction_id}:
+    parameters:
+      - name: transaction_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getTransaction
+      responses:
+        '200':
+          description: Current provider-normalised payment state and traceable reference
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Transaction'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /commitments/{commitment_id}:
+    parameters:
+      - name: commitment_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getCommitment
+      responses:
+        '200':
+          description: Commitment state and deterministic policy evidence
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Commitment'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/start:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: startJourney
+      responses:
+        '200':
+          description: Journey started only when the selected plan is still feasible
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JourneyTwin'}
+        '409':
+          description: >-
+            Refused.  The selected plan failed the same truth policy used by
+            select/booking: `STALE_RECOMPOSE_REQUIRED` for expired or
+            inconsistent frozen evidence, `START_BLOCKED_INFEASIBLE` for a hard
+            constraint or accessibility conflict.  The Journey does not become
+            ACTIVE.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+  /journeys/{journey_id}/activities/{activity_id}/complete:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: activity_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: completeActivity
+      responses:
+        '200':
+          description: Updated JourneyTwin
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JourneyTwin'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/twin:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getJourneyTwin
+      parameters:
+        - name: now
+          in: query
+          required: false
+          description: Deterministic demo/test projection time; production clients normally omit it.
+          schema: {type: string, format: date-time}
+      responses:
+        '200':
+          description: JourneyTwin projection
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JourneyTwin'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/weather/refresh:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: refreshJourneyWeather
+      description: Server-owned Open-Meteo refresh with deterministic Activity attribution.
+      responses:
+        '200':
+          description: Weather refresh evidence and created or reused Event identities
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WeatherRuntimeRefresh'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/history:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getJourneyHistory
+      responses:
+        '200':
+          description: Timeline of audit-worthy journey events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/HistoryItem'}
+  /journeys/{journey_id}/agent-feed:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getAgentFeed
+      parameters:
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 200, default: 100}
+      responses:
+        '200':
+          description: Persisted audit projection for Agent actions and decisions
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentFeedResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/commands:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: runAgentCommand
+      description: Compile a natural-language one-run Journey Mission and execute it through the server-owned Agent Gateway.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentCommandRequest'}
+      responses:
+        '200':
+          description: Persisted Mission and AgentRun result
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentCommandResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/guardian/mission:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    put:
+      operationId: putGuardianMission
+      description: Compile and activate the persisted standing Mission used by proactive scans.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentCommandRequest'}
+      responses:
+        '200':
+          description: Active standing MissionIntent with server-resolved authority envelope
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/guardian/scan:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: scanJourneyGuardian
+      description: Scan persisted Journey signals and launch at most one policy-bounded recovery per incident state.
+      responses:
+        '200':
+          description: Persisted Guardian decision and optional recovery trace
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GuardianRun'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/guardian/status:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getJourneyGuardianStatus
+      responses:
+        '200':
+          description: Reloadable standing Mission and Guardian run history
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/agent/approvals/{approval_id}/approve:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: approval_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: approveAgentAction
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentApprovalRequest'}
+      responses:
+        '200':
+          description: User-bound approval receipt
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentApprovalResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/agent/runs/{run_id}:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - name: run_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAgentRun
+      description: Reload a persisted AgentRun and its server-recorded tool trace.
+      responses:
+        '200':
+          description: Persisted AgentRun with ordered tool steps
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentRunResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/route-evidence:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getRouteEvidence
+      parameters:
+        - name: proposal_id
+          in: query
+          required: false
+          schema: {type: [string, 'null'], format: uuid}
+      responses:
+        '200':
+          description: Frozen provider route evidence and old/new map features
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RouteEvidence'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/reflect:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: getJourneyReflect
+      responses:
+        '200':
+          description: Backend-derived Journey history and reflection summary
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReflectSummary'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/events:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: listEvents
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Event'}
+    post:
+      operationId: injectOrRecordEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EventCreate'}
+      responses:
+        '201':
+          description: Event recorded
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Event'}
+  /journeys/{journey_id}/events/{event_id}/impact:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/EventId'}
+    get:
+      operationId: getEventImpact
+      responses:
+        '200':
+          description: Persisted hybrid impact assessment and validation provenance
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, event_id, journey_id, status, candidates, validated_activity_ids]
+                properties:
+                  id: {type: string, format: uuid}
+                  event_id: {type: string, format: uuid}
+                  journey_id: {type: string, format: uuid}
+                  provider_key: {type: string}
+                  model_key: {type: string}
+                  status: {type: string}
+                  uncertain: {type: boolean}
+                  selected_activity_id: {type: [string, 'null'], format: uuid}
+                  candidates: {type: array, items: {type: object}}
+                  validated_activity_ids: {type: array, items: {type: string, format: uuid}}
+                  rejected_activity_ids: {type: array, items: {type: string}}
+                  reason_codes: {type: array, items: {type: string}}
+                  semantic_reason: {type: string}
+                  failure_code: {type: [string, 'null']}
+                  created_at: {type: string, format: date-time}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/replans:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    get:
+      operationId: listReplans
+      responses:
+        '200':
+          description: Replan proposals
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ReplanProposal'}
+    post:
+      operationId: generateReplan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trigger_event_id]
+              properties:
+                trigger_event_id: {type: string, format: uuid}
+                candidate_count: {type: integer, minimum: 1, maximum: 5, default: 3}
+      responses:
+        '201':
+          description: Best deterministic proposal and alternatives if retained
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReplanProposal'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Infeasible'}
+  /journeys/{journey_id}/plans/authoritative-compose:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: authoritativeComposeJourney
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AuthoritativeComposeRequest'}
+      responses:
+        '201':
+          description: Bounded authoritative multi-day candidates with frozen mobility evidence
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AuthoritativeComposeResponse'}
+        '422': {$ref: '#/components/responses/Infeasible'}
+  /journeys/{journey_id}/authoritative-compose:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      $ref: '#/paths/~1journeys~1{journey_id}~1plans~1authoritative-compose/post'
+  /journeys/{journey_id}/trip-studio/preview:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: previewTripStudioEdit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TripStudioPreviewRequest'}
+      responses:
+        '200':
+          description: Non-mutating authoritative reorder preview
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TripStudioPreview'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/plans/preview-reorder:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      $ref: '#/paths/~1journeys~1{journey_id}~1trip-studio~1preview/post'
+  /journeys/{journey_id}/trip-studio/accept:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: acceptTripStudioEdit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TripStudioAcceptRequest'}
+      responses:
+        '201':
+          description: New authoritative manual PlanVersion created from frozen evidence
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TripStudioAcceptResponse'}
+        '422': {$ref: '#/components/responses/Infeasible'}
+  /journeys/{journey_id}/plans/accept-reorder:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      $ref: '#/paths/~1journeys~1{journey_id}~1trip-studio~1accept/post'
+  /journeys/{journey_id}/activities/{activity_id}/depart:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/ActivityId'}
+    post:
+      operationId: departJourneyActivity
+      responses:
+        '200':
+          description: Activity marked EN_ROUTE with actual timestamp
+          content: {application/json: {schema: {$ref: '#/components/schemas/JourneyTwin'}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/activities/{activity_id}/arrive:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/ActivityId'}
+    post:
+      operationId: arriveJourneyActivity
+      responses:
+        '200':
+          description: Activity marked ARRIVED with actual timestamp
+          content: {application/json: {schema: {$ref: '#/components/schemas/JourneyTwin'}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/activities/{activity_id}/begin:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/ActivityId'}
+    post:
+      operationId: beginJourneyActivity
+      responses:
+        '200':
+          description: Activity marked IN_PROGRESS with actual timestamp
+          content: {application/json: {schema: {$ref: '#/components/schemas/JourneyTwin'}}}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /replans/{proposal_id}:
+    parameters:
+      - {$ref: '#/components/parameters/ProposalId'}
+    get:
+      operationId: getReplan
+      responses:
+        '200':
+          description: Proposal
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReplanProposal'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /replans/{proposal_id}/accept:
+    parameters:
+      - {$ref: '#/components/parameters/ProposalId'}
+      - {$ref: '#/components/parameters/IdempotencyKey'}
+    post:
+      operationId: acceptReplan
+      responses:
+        '200':
+          description: Proposal accepted and new plan activated atomically
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReplanAcceptance'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /replans/{proposal_id}/reject:
+    parameters:
+      - {$ref: '#/components/parameters/ProposalId'}
+    post:
+      operationId: rejectReplan
+      responses:
+        '200':
+          description: Proposal rejected
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReplanProposal'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/copilot/messages:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+    post:
+      operationId: copilotMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: {type: string, minLength: 1, maxLength: 4000}
+                locale: {type: string, enum: [en, zh]}
+      responses:
+        '200':
+          description: AI or deterministic fallback answer
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CopilotResponse'}
+  /journeys/{journey_id}/activities/{activity_id}/skip:
+    parameters:
+      - {$ref: '#/components/parameters/JourneyId'}
+      - {$ref: '#/components/parameters/ActivityId'}
+    post:
+      operationId: skipActivity
+      responses:
+        '200': {description: Activity skipped and JourneyTwin returned}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /journeys/{journey_id}/guardian/autopilot/start:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: startGuardianAutopilot
+      requestBody:
+        required: false
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '200': {description: Per-Journey autopilot enrollment}
+  /journeys/{journey_id}/guardian/autopilot/stop:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: stopGuardianAutopilot
+      responses:
+        '200': {description: Autopilot enrollment stopped}
+  /journeys/{journey_id}/guardian/autopilot/status:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: getGuardianAutopilotStatus
+      responses:
+        '200': {description: Per-Journey autopilot status}
+  /journeys/{journey_id}/guardian/provider-fixture:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: setGuardianProviderFixture
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '200': {description: Provider fixture applied}
+  /journeys/{journey_id}/guardian/signal-fixture:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: setGuardianSignalFixture
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '200': {description: Guardian signal fixture applied}
+  /journeys/{journey_id}/guardian/resilience:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: getGuardianResilience
+      responses:
+        '200': {description: Guardian resilience snapshot}
+  /journeys/{journey_id}/resilience:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: getJourneyResilience
+      responses:
+        '200': {description: Journey resilience snapshot}
+  /journeys/{journey_id}/guardian/resilience/refresh:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: refreshGuardianResilience
+      responses:
+        '200': {description: Refreshed resilience snapshot}
+  /journeys/{journey_id}/resilience/refresh:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: refreshJourneyResilience
+      responses:
+        '200': {description: Refreshed resilience snapshot}
+  /journeys/{journey_id}/resilience/counterfactuals:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: listResilienceCounterfactuals
+      responses:
+        '200': {description: Bounded counterfactual scenarios}
+  /journeys/{journey_id}/provider-mesh:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: getProviderMesh
+      responses:
+        '200': {description: Independent provider mesh state}
+  /journeys/{journey_id}/provider-mesh/discover:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: discoverProviderMesh
+      responses:
+        '200': {description: Provider mesh discovery and evidence}
+  /journeys/{journey_id}/real-city/discover:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: discoverRealCity
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '200': {description: Real or sealed captured city candidates}
+  /journeys/{journey_id}/real-city/intelligence:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: runRealCityIntelligence
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '201': {description: DeepSeek-curated, deterministic, authoritative city intelligence result}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /journeys/{journey_id}/operations/stream:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: streamJourneyOperations
+      responses:
+        '200': {description: Persisted Journey operation feed}
+  /journeys/{journey_id}/outcomes:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: listJourneyOutcomes
+      responses:
+        '200': {description: Actual Journey outcome timeline}
+    post:
+      operationId: recordJourneyOutcome
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {type: object}}
+      responses:
+        '201': {description: Actual outcome event recorded}
+  /journeys/{journey_id}/reflect/process:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: processJourneyReflect
+      responses:
+        '200': {description: TravelerTwin learned evidence refreshed}
+  /journeys/{journey_id}/observability/traces:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: listJourneyObservabilityTraces
+      responses:
+        '200': {description: OpenInference-shaped trace spans}
+  /travelers/{traveler_id}/traveler-twin:
+    parameters: [{$ref: '#/components/parameters/TravelerId'}]
+    get:
+      operationId: getTravelerTwin
+      responses:
+        '200': {description: Inspectable explicit and learned TravelerTwin evidence}
+  /travelers/{traveler_id}/traveler-twin/learned:
+    parameters: [{$ref: '#/components/parameters/TravelerId'}]
+    delete:
+      operationId: clearTravelerTwinLearned
+      responses:
+        '200': {description: Learned soft evidence cleared; explicit preferences retained}
+  /journeys/{journey_id}/experience:
+    get:
+      operationId: getJourneyExperience
+      responses:
+        '200':
+          description: >-
+            Stay-aware Journey experience.  `recovery` exposes the durable
+            mid-trip HARD recovery state and `experience_flags` exposes the
+            stale / re-sync condition so the phone UI can act on it.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  journey: {type: object}
+                  trip: {type: object}
+                  recovery: {$ref: '#/components/schemas/RecoveryState'}
+                  experience_flags:
+                    type: object
+                    properties:
+                      needs_review: {type: boolean}
+                      recovery_required: {type: boolean}
+                      staleness: {type: boolean}
+                      feasibility_failures: {type: array, items: {type: string}}
+  /journeys/{journey_id}/capabilities:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    get:
+      operationId: listJourneyCapabilities
+      responses:
+        '200': {description: Journey-scoped capability facts}
+    put:
+      operationId: replaceJourneyCapabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: array, items: {type: object}}
+      responses:
+        '200': {description: Staged journey capability facts}
+  /journeys/{journey_id}/capabilities/confirm:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: confirmJourneyCapabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: array, items: {type: object}}
+      responses:
+        '200':
+          description: >-
+            Confirmed journey capability facts.  When a newly confirmed HARD
+            capability invalidates the ACTIVE plan, `recovery` carries the
+            durable governed recovery state; the active plan is never silently
+            rewritten.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  journey_id: {type: string, format: uuid}
+                  capabilities: {type: array, items: {type: object}}
+                  summary: {type: object}
+                  traveler_twin: {type: object}
+                  active_plan_feasibility:
+                    type: object
+                    nullable: true
+                    properties:
+                      passed: {type: boolean, nullable: true}
+                      failures: {type: array, items: {type: string}}
+                      state:
+                        type: string
+                        enum: [PLAN_FEASIBLE, REPLAN_REQUIRED, NO_ACTIVE_PLAN]
+                  recovery: {$ref: '#/components/schemas/RecoveryState'}
+  /journeys/{journey_id}/recovery/acknowledge:
+    parameters: [{$ref: '#/components/parameters/JourneyId'}]
+    post:
+      operationId: acknowledgeJourneyRecovery
+      responses:
+        '200':
+          description: >-
+            Governed acknowledgement of an open recovery warning.  Records that
+            the traveller saw the warning; it never resolves the recovery, never
+            marks an infeasible plan safe, and never lets stale evidence look
+            current.  `experience_flags.needs_review` stays true until a
+            revalidated feasible plan is actually selected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  journey_id: {type: string, format: uuid}
+                  acknowledged: {type: boolean}
+                  resolved: {type: boolean, enum: [false]}
+                  recovery: {$ref: '#/components/schemas/RecoveryState'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /journeys/{journey_id}/stays/offers/capture:
+    post:
+      operationId: captureAccommodationOffers
+      responses:
+        '200': {description: Captured accommodation evidence, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stays/search:
+    post:
+      operationId: searchAccommodationOffers
+      responses:
+        '200': {description: Accommodation provider results, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options/generate:
+    post:
+      operationId: generateStayJourneyOptions
+      responses:
+        '200': {description: Bounded Top-K stay and Journey options, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options:
+    get:
+      operationId: listStayJourneyOptions
+      responses:
+        '200': {description: Ranked stay and Journey options, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options/{option_id}/select:
+    post:
+      operationId: selectStayJourneyOption
+      responses:
+        '200': {description: Selected stay option, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options/{option_id}/weather:
+    post:
+      operationId: applyStayWeather
+      responses:
+        '200': {description: Weather-adjusted stay Journey option, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options/{option_id}/autopilot/recover:
+    post:
+      operationId: recoverStayJourneyAutopilot
+      responses:
+        '200': {description: Policy-gated autonomous recovery, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-options/{option_id}/mode:
+    post:
+      operationId: changeStayOptionMode
+      responses:
+        '200': {description: Mode-aware Journey impact, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/multiday:
+    get:
+      operationId: getMultidayJourney
+      responses:
+        '200': {description: Multi-day anchors and day groups, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/stay-mobility/providers:
+    get:
+      operationId: getStayMobilityProviders
+      responses:
+        '200': {description: Stay and mobility provider mesh status, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/mobility:
+    get:
+      operationId: listJourneyMobility
+      responses:
+        '200': {description: Frozen multimodal facts, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/mobility/compare:
+    post:
+      operationId: compareJourneyMobility
+      responses:
+        '200': {description: Mode comparison, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/operations/luggage:
+    put:
+      operationId: setJourneyLuggageContext
+      responses:
+        '200': {description: Persisted luggage and baggage constraints, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/inbox/import:
+    post:
+      operationId: importJourneyReservation
+      responses:
+        '201': {description: Reservation draft extracted without inventing critical facts, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/inbox:
+    get:
+      operationId: listJourneyInbox
+      responses:
+        '200': {description: Journey Inbox drafts, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/memory:
+    get:
+      operationId: getJourneyMemory
+      responses:
+        '200': {description: Semantic Journey Memory timeline, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/inbox/text-extract:
+    post:
+      operationId: extractJourneyReservationText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: {type: string, minLength: 1, maxLength: 20000}
+      responses:
+        '201': {description: DeepSeek Responses text extraction draft, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/inbox/vision:
+    post:
+      operationId: extractJourneyReservationImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_url]
+              properties:
+                image_url: {type: string, minLength: 8, maxLength: 12000000}
+                hint: {type: string, maxLength: 200, default: booking confirmation}
+      responses:
+        '201': {description: DeepSeek Responses vision extraction draft, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/web-research:
+    post:
+      operationId: runJourneyWebResearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: {type: string, minLength: 3, maxLength: 500}
+                source_class: {type: string, enum: [OFFICIAL_NOTICE, OPERATOR_NOTICE, OPEN_WEB], default: OPEN_WEB}
+      responses:
+        '200': {description: Non-authoritative DeepSeek web observations, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/web-observations:
+    get:
+      operationId: listJourneyWebObservations
+      responses:
+        '200': {description: Stored non-authoritative web observations, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/execution-clock:
+    get:
+      operationId: getJourneyExecutionClock
+      responses:
+        '200': {description: Server execution clock for the Journey timezone, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/inbox/{draft_id}/confirm:
+    post:
+      operationId: confirmJourneyReservation
+      responses:
+        '200': {description: User-confirmed reservation and durable Commitment, content: {application/json: {schema: {type: object}}}}
+        '409': {description: Critical reservation facts remain unresolved}
+  /journeys/{journey_id}/inbox/{draft_id}:
+    patch:
+      operationId: patchJourneyReservationDraft
+      responses:
+        '200': {description: Corrected semantic reservation draft, content: {application/json: {schema: {type: object}}}}
+        '409': {description: Confirmed drafts cannot be edited}
+  /journeys/{journey_id}/inbox/{draft_id}/smart-apply:
+    post:
+      operationId: smartApplyJourneyReservation
+      responses:
+        '200': {description: Policy-gated semantic intake decision, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/wallet:
+    get:
+      operationId: getTravelWallet
+      responses:
+        '200': {description: Confirmed reservations and protected commitments, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/reservations/{reservation_id}/schedule-change:
+    post:
+      operationId: applyReservationScheduleChange
+      responses:
+        '200': {description: Schedule update recorded and Guardian notified, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/offline-snapshot:
+    get:
+      operationId: getOfflineJourneySnapshot
+      responses:
+        '200': {description: Read-only next-24-hour Journey snapshot and provider freshness, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/location:
+    post:
+      operationId: recordForegroundLocation
+      responses:
+        '201': {description: Foreground location observation with accuracy and timestamp, content: {application/json: {schema: {type: object}}}}
+  /travelers/{traveler_id}/push-subscriptions:
+    post:
+      operationId: createPushSubscription
+      responses:
+        '201': {description: Server-owned push subscription seam, content: {application/json: {schema: {type: object}}}}
+  /travelers/{traveler_id}/push-config:
+    get:
+      operationId: getPushConfig
+      responses:
+        '200': {description: Non-secret Web Push capability and public VAPID key, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/notifications:
+    get:
+      operationId: listJourneyNotifications
+      responses:
+        '200': {description: Deduplicated server-owned notification records, content: {application/json: {schema: {type: object}}}}
+  /providers/v9:
+    get:
+      operationId: getRealTripProviderStatus
+      responses:
+        '200': {description: Region-aware provider readiness and honest absence semantics, content: {application/json: {schema: {type: object}}}}
+  /journeys/{journey_id}/edge/devices:
+    post:
+      operationId: registerEdgeCompanion
+      responses:
+        '201': {description: Scoped Edge Companion credential returned once, content: {application/json: {schema: {type: object}}}}
+  /edge/devices/{device_id}/journey-snapshot:
+    get:
+      operationId: getEdgeJourneySnapshot
+      responses:
+        '200': {description: Compact read-only current and next Journey state, content: {application/json: {schema: {type: object}}}}
+  /edge/devices/{device_id}/actions:
+    post:
+      operationId: createEdgeAction
+      responses:
+        '201': {description: Allowlisted low-risk Edge Companion action, content: {application/json: {schema: {type: object}}}}
+        '403': {description: Action exceeds the Edge Companion authority surface}
+  /edge/devices/{device_id}/observations:
+    post:
+      operationId: createEdgeObservation
+      responses:
+        '201': {description: Edge observation recorded as evidence, content: {application/json: {schema: {type: object}}}}
+components:
+  parameters:
+    TravelerId:
+      name: traveler_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    JourneyId:
+      name: journey_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    ActivityId:
+      name: activity_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    EventId:
+      name: event_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    PlanVersionId:
+      name: plan_version_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    ProposalId:
+      name: proposal_id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 8, maxLength: 128}
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Conflict:
+      description: State or idempotency conflict
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    ValidationError:
+      description: Input validation error
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Infeasible:
+      description: No feasible result under hard constraints
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    BadGateway:
+      description: Upstream native runtime is unavailable
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+  schemas:
+    PlanningMode:
+      type: string
+      enum: [balanced, budget, explore, strict_schedule]
+    HealthResponse:
+      type: object
+      required: [status, database, ai]
+      properties:
+        status: {type: string, enum: [ok, degraded]}
+        database: {type: string, enum: [ok, error]}
+        ai: {type: string, enum: [available, unavailable, disabled]}
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, trace_id]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {type: object, additionalProperties: true}
+            trace_id: {type: string}
+    Error:
+      $ref: '#/components/schemas/ErrorEnvelope'
+    RecoveryState:
+      description: >-
+        Durable, governed recovery state.  Present only when a confirmed HARD
+        capability (or an evidence regression) invalidated the active plan.
+        The active plan is never silently mutated.
+      type: object
+      nullable: true
+      required: [state, requires_user_decision, silent_plan_mutation]
+      properties:
+        state:
+          type: string
+          enum: [RECOVERY_REQUIRED, RECOVERY_REQUIRED_NO_ALTERNATIVE, RESOLVED]
+        acknowledged: {type: boolean}
+        acknowledged_at: {type: string, format: date-time, nullable: true}
+        replan_attempted: {type: boolean}
+        no_alternative: {type: boolean}
+        kind: {type: string, example: CAPABILITY_HARD_RECOVERY}
+        event_id: {type: string, format: uuid}
+        event_status: {type: string, enum: [DETECTED, ACKNOWLEDGED, RESOLVED]}
+        capability_code: {type: string, nullable: true}
+        active_plan_version_id: {type: string, format: uuid, nullable: true}
+        failures: {type: array, items: {type: string}}
+        candidate_plan_count: {type: integer}
+        candidate_plan_ids: {type: array, items: {type: string, format: uuid}}
+        requires_user_decision: {type: boolean}
+        silent_plan_mutation: {type: boolean, enum: [false]}
+        actions:
+          type: array
+          items:
+            type: string
+            enum: [REPLAN, ACKNOWLEDGE_NO_ALTERNATIVE]
+        detected_at: {type: string, format: date-time}
+        journey_status: {type: string}
+    TravelerCreate:
+      type: object
+      required: [display_name, timezone]
+      properties:
+        display_name: {type: string, minLength: 1, maxLength: 120}
+        email: {type: [string, 'null'], format: email}
+        locale: {type: string, default: en-GB}
+        timezone: {type: string}
+    Traveler:
+      allOf:
+        - {$ref: '#/components/schemas/TravelerCreate'}
+        - type: object
+          required: [id, created_at, updated_at]
+          properties:
+            id: {type: string, format: uuid}
+            created_at: {type: string, format: date-time}
+            updated_at: {type: string, format: date-time}
+    PreferenceInput:
+      type: object
+      required: [category, key, value, weight]
+      properties:
+        category: {type: string}
+        key: {type: string}
+        value: {}
+        weight: {type: number, minimum: 0, maximum: 1}
+    Preference:
+      allOf:
+        - {$ref: '#/components/schemas/PreferenceInput'}
+        - type: object
+          required: [id, traveler_id]
+          properties:
+            id: {type: string, format: uuid}
+            traveler_id: {type: string, format: uuid}
+    AgentPolicyPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        mode: {type: string, enum: [ADVISORY, ASSISTED, AUTONOMOUS], default: ADVISORY}
+        auto_accept_replan: {type: boolean, default: false}
+        max_auto_replan_cost_delta_minor: {type: integer, minimum: 0, default: 0}
+        max_auto_loss_minor: {type: integer, minimum: 0, default: 0}
+        max_auto_schedule_drift_min: {type: integer, minimum: 0, default: 0}
+        allowed_activity_types:
+          type: array
+          maxItems: 20
+          items: {type: string}
+        protected_commitment_levels:
+          type: array
+          maxItems: 5
+          items: {type: string}
+          default: [C3_Guaranteed, C4_Anchored]
+        allow_auto_commitment_management: {type: boolean, default: false}
+        allow_auto_when_provider_degraded: {type: boolean, default: false}
+        allow_auto_on_critical_event: {type: boolean, default: false}
+    AgentPolicy:
+      allOf:
+        - {$ref: '#/components/schemas/AgentPolicyPayload'}
+        - type: object
+          required: [traveler_id, version, created_at, updated_at]
+          properties:
+            traveler_id: {type: string, format: uuid}
+            version: {type: integer, minimum: 1}
+            created_at: {type: string, format: date-time}
+            updated_at: {type: string, format: date-time}
+    AgentToolCall:
+      type: object
+      additionalProperties: false
+      required: [request_id]
+      properties:
+        request_id: {type: string, minLength: 8, maxLength: 128}
+        agent_id: {type: string, minLength: 1, maxLength: 128, default: hermes}
+        journey_id: {type: [string, 'null'], format: uuid}
+        proposal_id: {type: [string, 'null'], format: uuid}
+        trigger_event_id: {type: [string, 'null'], format: uuid}
+        candidate_count: {type: integer, minimum: 1, maximum: 5, default: 3}
+        approval_id: {type: [string, 'null'], format: uuid}
+        activity_id: {type: [string, 'null'], format: uuid}
+        replacement_activity_id: {type: [string, 'null'], format: uuid}
+        replacement_place_id: {type: [string, 'null'], minLength: 1, maxLength: 128}
+        booking_id: {type: [string, 'null'], format: uuid}
+        commitment_id: {type: [string, 'null'], format: uuid}
+        start_at: {type: [string, 'null'], format: date-time}
+        end_at: {type: [string, 'null'], format: date-time}
+        provider_key: {type: string, default: mock-booking}
+        reason: {type: [string, 'null'], minLength: 1, maxLength: 500}
+        user_confirmed: {type: boolean, default: false}
+        city_code: {type: [string, 'null'], minLength: 1, maxLength: 32}
+        q: {type: [string, 'null'], maxLength: 120}
+        category: {type: [string, 'null'], maxLength: 80}
+        service_type: {type: [string, 'null'], maxLength: 80}
+    AgentToolDescriptor:
+      type: object
+      required: [name, action, mutates_domain_truth, changes_money, changes_c4]
+      properties:
+        name: {type: string}
+        action: {type: string}
+        mutates_domain_truth: {type: boolean}
+        changes_money: {type: boolean}
+        changes_c4: {type: boolean}
+    AgentToolResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        tool: {type: string}
+        decision: {type: string, enum: [ALLOW_AUTO, REQUIRE_CONFIRMATION, REQUIRE_STEP_UP, DENY]}
+    AgentCommandRequest:
+      type: object
+      additionalProperties: false
+      required: [command]
+      properties:
+        command: {type: string, minLength: 8, maxLength: 2000}
+        requested_autonomy:
+          type: string
+          enum: [PLAN_ONLY, EXECUTE_WITHIN_BOUNDS]
+          default: EXECUTE_WITHIN_BOUNDS
+    AgentCommandResponse:
+      type: object
+      required: [mission, event_id, run]
+      properties:
+        event_id: {type: string, format: uuid}
+        mission: {type: object, additionalProperties: true}
+        run: {type: object, additionalProperties: true}
+    AgentRunResponse:
+      type: object
+      required: [run_id, mission_id, journey_id, status, tool_steps]
+      properties:
+        run_id: {type: string, format: uuid}
+        mission_id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        provider_key: {type: string}
+        model_key: {type: string}
+        status: {type: string}
+        outcome: {type: [string, 'null']}
+        failure_reason: {type: [string, 'null']}
+        mission_status: {type: [string, 'null']}
+        created_at: {type: string, format: date-time}
+        started_at: {type: string, format: date-time}
+        completed_at: {type: [string, 'null'], format: date-time}
+        tool_steps:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    GuardianRun:
+      type: object
+      additionalProperties: true
+      required: [id, journey_id, decision, status, action_status, deduplicated, evidence]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        decision: {type: string, enum: [NO_ACTION, WATCH, RECOVERY_REQUIRED]}
+        status: {type: string}
+        action_status: {type: string}
+        deduplicated: {type: boolean}
+        trigger_event_id: {type: [string, 'null'], format: uuid}
+        proposal_id: {type: [string, 'null'], format: uuid}
+        agent_run_id: {type: [string, 'null'], format: uuid}
+        evidence: {type: object, additionalProperties: true}
+        reasoning_summary: {type: string}
+    AgentApprovalRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        approval_method:
+          type: string
+          enum: [USER_CONFIRMATION, STEP_UP, WEBAUTHN]
+          default: USER_CONFIRMATION
+        step_up_code:
+          type: string
+          minLength: 4
+          maxLength: 128
+          writeOnly: true
+    AgentApprovalResponse:
+      type: object
+      required: [approval_id, journey_id, action, target_type, target_id, status, created_at, expires_at]
+      properties:
+        approval_id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        action: {type: string}
+        target_type: {type: string}
+        target_id: {type: string, format: uuid}
+        status: {type: string, enum: [PENDING, APPROVED, CONSUMED, EXPIRED, REVOKED]}
+        approval_method: {type: [string, 'null']}
+        created_at: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        approved_at: {type: [string, 'null'], format: date-time}
+        consumed_at: {type: [string, 'null'], format: date-time}
+    JourneyCreate:
+      type: object
+      required: [traveler_id, title, city_code, timezone, start_at, end_at, budget]
+      properties:
+        traveler_id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 160}
+        city_code: {type: string}
+        timezone: {type: string}
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        budget: {$ref: '#/components/schemas/Money'}
+        planning_mode: {$ref: '#/components/schemas/PlanningMode'}
+    JourneyPatch:
+      type: object
+      properties:
+        title: {type: string, minLength: 1, maxLength: 160}
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        budget: {$ref: '#/components/schemas/Money'}
+    Journey:
+      type: object
+      required: [id, traveler_id, title, city_code, timezone, start_at, end_at, budget, status]
+      properties:
+        id: {type: string, format: uuid}
+        traveler_id: {type: string, format: uuid}
+        title: {type: string}
+        city_code: {type: string}
+        timezone: {type: string}
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        budget: {$ref: '#/components/schemas/Money'}
+        planning_mode: {$ref: '#/components/schemas/PlanningMode'}
+        status: {type: string, enum: [DRAFT, PLANNED, ACTIVE, COMPLETED, CANCELLED]}
+        active_plan_version_id: {type: [string, 'null'], format: uuid}
+        current_activity_id: {type: [string, 'null'], format: uuid}
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor: {type: integer, minimum: 0}
+        currency: {type: string, minLength: 3, maxLength: 3}
+    ConstraintInput:
+      type: object
+      required: [kind, category, rule_code]
+      properties:
+        kind: {type: string, enum: [HARD, SOFT]}
+        category: {type: string}
+        rule_code: {type: string}
+        params: {type: object, additionalProperties: true, default: {}}
+        weight: {type: number, minimum: 0, default: 1}
+    Constraint:
+      allOf:
+        - {$ref: '#/components/schemas/ConstraintInput'}
+        - type: object
+          required: [id, journey_id, active]
+          properties:
+            id: {type: string, format: uuid}
+            journey_id: {type: string, format: uuid}
+            active: {type: boolean}
+    Place:
+      type: object
+      required: [id, name, category, location, city_code]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        category: {type: string}
+        city_code: {type: string}
+        location: {$ref: '#/components/schemas/GeoPoint'}
+        tags: {type: array, items: {type: string}}
+    CityService:
+      type: object
+      required: [id, name, service_type, city_code]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        service_type: {type: string}
+        city_code: {type: string}
+        place_id: {type: [string, 'null']}
+    GeoPoint:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude: {type: number, minimum: -90, maximum: 90}
+        longitude: {type: number, minimum: -180, maximum: 180}
+    Activity:
+      type: object
+      required: [id, sequence_no, title, start_at, end_at, status, estimated_cost]
+      properties:
+        id: {type: string, format: uuid}
+        sequence_no: {type: integer, minimum: 1}
+        title: {type: string}
+        activity_type: {type: string}
+        place_id: {type: [string, 'null']}
+        city_service_id: {type: [string, 'null']}
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        travel_from_prev_min: {type: integer, minimum: 0}
+        estimated_cost: {$ref: '#/components/schemas/Money'}
+        status: {type: string, enum: [PLANNED, READY, NOT_STARTED, EN_ROUTE, ARRIVED, IN_PROGRESS, ACTIVE, COMPLETED, SKIPPED, CANCELLED]}
+        locked: {type: boolean}
+    AuthoritativeComposeRequest:
+      type: object
+      required: [place_ids]
+      properties:
+        place_ids:
+          type: array
+          minItems: 2
+          maxItems: 12
+          items: {type: string}
+        candidate_count: {type: integer, minimum: 1, maximum: 5, default: 3}
+        stay_offer_id: {type: [string, 'null'], format: uuid}
+        reservation_id: {type: [string, 'null'], format: uuid}
+    AuthoritativeComposeResponse:
+      type: object
+      required: [optimizer, complete_plan_count, frozen_evidence_ids, top_k]
+      properties:
+        optimizer: {type: string}
+        complete_plan_count: {type: integer, minimum: 1}
+        frozen_evidence_ids:
+          type: array
+          items: {type: string}
+        stay_offer_id: {type: string, format: uuid}
+        top_k:
+          type: array
+          items: {$ref: '#/components/schemas/PlanVersion'}
+    TripStudioPreviewRequest:
+      type: object
+      required: [activity_ids]
+      properties:
+        activity_ids:
+          type: array
+          minItems: 2
+          maxItems: 40
+          items: {type: string, format: uuid}
+        draft_order:
+          type: [array, 'null']
+          items: {type: string, format: uuid}
+    TripStudioAcceptRequest:
+      type: object
+      required: [activity_ids]
+      properties:
+        activity_ids:
+          type: array
+          minItems: 2
+          maxItems: 40
+          items: {type: string, format: uuid}
+        preview_id: {type: [string, 'null'], format: uuid}
+    TripStudioPreview:
+      type: object
+      required: [preview_id, journey_id, base_plan_version_id, draft_order, impact, deterministic_gate, evidence_snapshot_id, authoritative_gate, can_accept]
+      properties:
+        preview_id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        base_plan_version_id: {type: string, format: uuid}
+        draft_order:
+          type: array
+          items: {type: string, format: uuid}
+        impact: {type: object, additionalProperties: true}
+        deterministic_gate: {type: object, additionalProperties: true}
+        evidence_snapshot_id: {type: [string, 'null']}
+        authoritative_gate: {type: object, additionalProperties: true}
+        can_accept: {type: boolean}
+        mutation: {type: string}
+    TripStudioAcceptResponse:
+      type: object
+      required: [plan, impact, deterministic_gate, frozen_evidence_id]
+      properties:
+        plan: {$ref: '#/components/schemas/PlanVersion'}
+        preview_id: {type: [string, 'null'], format: uuid}
+        impact: {type: object, additionalProperties: true}
+        deterministic_gate: {type: object, additionalProperties: true}
+        frozen_evidence_id: {type: [string, 'null']}
+    ScoreBreakdown:
+      type: object
+      required: [commitment_preservation, stability, time_reliability, preference_fit, mobility_fit, budget_fit, robustness, opportunity_value, total]
+      properties:
+        commitment_preservation: {type: number, minimum: 0, maximum: 1}
+        stability: {type: number, minimum: 0, maximum: 1}
+        time_reliability: {type: number, minimum: 0, maximum: 1}
+        preference_fit: {type: number, minimum: 0, maximum: 1}
+        mobility_fit: {type: number, minimum: 0, maximum: 1}
+        budget_fit: {type: number, minimum: 0, maximum: 1}
+        robustness: {type: number, minimum: 0, maximum: 1}
+        opportunity_value: {type: number, minimum: 0, maximum: 1}
+        total: {type: number, minimum: 0, maximum: 1}
+    PlanVersion:
+      type: object
+      required: [id, journey_id, version_no, planning_mode, status, source, activities]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        version_no: {type: integer, minimum: 1}
+        planning_mode: {$ref: '#/components/schemas/PlanningMode'}
+        status: {type: string, enum: [CANDIDATE, SELECTED, ACTIVE, SUPERSEDED, REJECTED]}
+        source: {type: string, enum: [INITIAL, REPLAN, MANUAL]}
+        parent_plan_version_id: {type: [string, 'null'], format: uuid}
+        total_cost: {$ref: '#/components/schemas/Money'}
+        utility_score: {type: [number, 'null'], minimum: 0, maximum: 1}
+        score_breakdown: {oneOf: [{$ref: '#/components/schemas/ScoreBreakdown'}, {type: 'null'}]}
+        mobility_snapshot_id: {type: [string, 'null']}
+        mobility_evidence: {type: object, additionalProperties: true}
+        activities:
+          type: array
+          items: {$ref: '#/components/schemas/Activity'}
+    BookingSlot:
+      type: object
+      required: [start_at, end_at, provider_key, provider_slot_ref]
+      properties:
+        start_at: {type: string, format: date-time}
+        end_at: {type: string, format: date-time}
+        provider_key: {type: string}
+        provider_slot_ref: {type: string}
+    BookingCreate:
+      type: object
+      required: [activity_id]
+      properties:
+        activity_id: {type: string, format: uuid}
+        provider_key: {type: string, default: mock-booking}
+        failure_token: {type: [string, 'null'], enum: [FORCE_BOOKING_FAIL, null]}
+        force_failure: {type: boolean, default: false}
+    Booking:
+      type: object
+      required: [id, journey_id, activity_id, status, amount]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        activity_id: {type: string, format: uuid}
+        commitment_id: {type: [string, 'null'], format: uuid}
+        provider_key: {type: string}
+        external_ref: {type: [string, 'null']}
+        status: {type: string, enum: [DRAFT, PENDING, CONFIRMED, COMPLETED, CANCELLED, FAILED]}
+        amount: {$ref: '#/components/schemas/Money'}
+        cancellation_policy: {type: object, additionalProperties: true}
+    OrderCreate:
+      type: object
+      required: [activity_id, items]
+      properties:
+        activity_id: {type: string, format: uuid}
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [sku, quantity]
+            properties:
+              sku: {type: string}
+              quantity: {type: integer, minimum: 1}
+        provider_key: {type: string, default: mock-booking}
+    Order:
+      type: object
+      required: [id, journey_id, status, amount]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        activity_id: {type: [string, 'null'], format: uuid}
+        commitment_id: {type: [string, 'null'], format: uuid}
+        provider_key: {type: string}
+        external_ref: {type: [string, 'null']}
+        status: {type: string, enum: [DRAFT, PENDING, CONFIRMED, FULFILLED, CANCELLED, FAILED]}
+        amount: {$ref: '#/components/schemas/Money'}
+        items:
+          type: array
+          items:
+            type: object
+            required: [sku, quantity, unit_amount_minor, line_total_minor]
+            properties:
+              sku: {type: string}
+              quantity: {type: integer, minimum: 1}
+              unit_amount_minor: {type: integer, minimum: 0}
+              line_total_minor: {type: integer, minimum: 0}
+    TransactionCreate:
+      type: object
+      required: [transaction_type, amount]
+      properties:
+        booking_id: {type: [string, 'null'], format: uuid}
+        order_id: {type: [string, 'null'], format: uuid}
+        transaction_type: {type: string, enum: [AUTHORIZE, CAPTURE, REFUND, VOID]}
+        amount: {$ref: '#/components/schemas/Money'}
+        provider_key: {type: string, default: mock-payment}
+        failure_token: {type: [string, 'null'], enum: [FORCE_PAYMENT_FAIL, null]}
+        force_failure: {type: boolean, default: false}
+    Transaction:
+      type: object
+      required: [id, journey_id, status, transaction_type, amount]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        status: {type: string, enum: [INITIATED, AUTHORIZED, SUCCEEDED, FAILED, REFUNDED, VOIDED]}
+        transaction_type: {type: string, enum: [AUTHORIZE, CAPTURE, REFUND, VOID]}
+        amount: {$ref: '#/components/schemas/Money'}
+        external_ref: {type: [string, 'null']}
+        booking_id: {type: [string, 'null'], format: uuid}
+        order_id: {type: [string, 'null'], format: uuid}
+        provider_key: {type: string}
+    EventCreate:
+      type: object
+      required: [event_type]
+      properties:
+        provider_key:
+          type: [string, 'null']
+          description: Server-assigned for public events; arbitrary provider identities are rejected.
+        provenance:
+          type: string
+          enum: [SIMULATED, PROVIDER_VERIFIED, USER_REPORTED, SYSTEM_DERIVED]
+          default: SIMULATED
+          description: Trusted provenance values are accepted only through server-side ingestion.
+        event_type: {type: string, enum: [TRAFFIC_DELAY, CLOSURE, WEATHER, SCHEDULE_DELAY, SERVICE_UNAVAILABLE, USER_CHANGE, OTHER]}
+        severity: {type: string, enum: [INFO, MINOR, MAJOR, CRITICAL]}
+        affected_activity_id: {type: [string, 'null'], format: uuid}
+        occurred_at:
+          type: [string, 'null']
+          format: date-time
+          description: Simulator clients should provide this explicitly; omission uses deterministic journey time.
+        payload: {type: object, additionalProperties: true, default: {}}
+    Event:
+      allOf:
+        - {$ref: '#/components/schemas/EventCreate'}
+        - type: object
+          required: [id, journey_id, provider_key, provenance, status, detected_at]
+          properties:
+            id: {type: string, format: uuid}
+            journey_id: {type: string, format: uuid}
+            status: {type: string, enum: [DETECTED, ACKNOWLEDGED, RESOLVED, IGNORED]}
+            detected_at: {type: string, format: date-time}
+    Commitment:
+      type: object
+      required: [id, journey_id, kind, level, status]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        activity_id: {type: [string, 'null'], format: uuid}
+        kind: {type: string, enum: [BOOKING, ORDER, PAYMENT, APPOINTMENT, OTHER]}
+        level: {type: string, enum: [C0_Flexible, C1_Preferred, C2_Reserved, C3_Guaranteed, C4_Anchored]}
+        status: {type: string, enum: [PROPOSED, ACTIVE, FULFILLED, CANCELLED, BREACHED]}
+        monetary_value: {$ref: '#/components/schemas/Money'}
+        external_ref: {type: [string, 'null']}
+        policy: {type: object, additionalProperties: true}
+    ReplanProposal:
+      type: object
+      required: [id, journey_id, base_plan_version_id, proposed_plan_version_id, status, hard_constraints_passed, locked_commitments_preserved, utility_score, score_breakdown, diff, explanation]
+      properties:
+        id: {type: string, format: uuid}
+        journey_id: {type: string, format: uuid}
+        trigger_event_id: {type: [string, 'null'], format: uuid}
+        base_plan_version_id: {type: string, format: uuid}
+        proposed_plan_version_id: {type: string, format: uuid}
+        status: {type: string, enum: [GENERATED, PRESENTED, ACCEPTED, REJECTED, EXPIRED, INVALIDATED]}
+        hard_constraints_passed: {type: boolean}
+        locked_commitments_preserved: {type: boolean}
+        utility_score: {type: number, minimum: 0, maximum: 1}
+        score_breakdown: {$ref: '#/components/schemas/ScoreBreakdown'}
+        diff: {type: object, additionalProperties: true}
+        explanation:
+          type: object
+          required: [summary, reasons]
+          properties:
+            summary: {type: string}
+            reasons: {type: array, items: {type: string}}
+            source: {type: string, enum: [DETERMINISTIC, AI, HYBRID]}
+    WeatherRuntimeRefresh:
+      type: object
+      required:
+        - provider
+        - queried_place_ids
+        - successful_place_ids
+        - failed_place_ids
+        - degraded
+        - snapshots
+        - attributions
+        - event_ids
+        - created_event_ids
+      properties:
+        provider: {type: string, const: open-meteo}
+        queried_place_ids: {type: array, items: {type: string}}
+        successful_place_ids: {type: array, items: {type: string}}
+        failed_place_ids: {type: array, items: {type: string}}
+        degraded: {type: boolean}
+        snapshots: {type: array, items: {type: object, additionalProperties: true}}
+        attributions: {type: array, items: {type: object, additionalProperties: true}}
+        event_ids: {type: array, items: {type: string, format: uuid}}
+        created_event_ids: {type: array, items: {type: string, format: uuid}}
+    JourneyTwin:
+      type: object
+      required: [journey_id, projection_status, snapshot_at]
+      properties:
+        journey_id: {type: string, format: uuid}
+        active_plan_version_id: {type: [string, 'null'], format: uuid}
+        current_activity_id: {type: [string, 'null'], format: uuid}
+        latest_event_id: {type: [string, 'null'], format: uuid}
+        projection_status: {type: string, enum: [READY, STALE, DEGRADED]}
+        snapshot_at: {type: string, format: date-time}
+        upcoming_commitments:
+          type: array
+          items: {$ref: '#/components/schemas/Commitment'}
+        context: {type: object, additionalProperties: true}
+    ReplanAcceptance:
+      type: object
+      required: [journey, proposal, twin]
+      properties:
+        journey: {$ref: '#/components/schemas/Journey'}
+        proposal: {$ref: '#/components/schemas/ReplanProposal'}
+        twin: {$ref: '#/components/schemas/JourneyTwin'}
+    HistoryItem:
+      type: object
+      required: [timestamp, type, summary]
+      properties:
+        timestamp: {type: string, format: date-time}
+        type: {type: string}
+        summary: {type: string}
+        entity_id: {type: [string, 'null']}
+    AgentFeedEntry:
+      type: object
+      required: [id, timestamp, event_type, summary, actor_type, reason_codes, facts]
+      properties:
+        id: {type: string, format: uuid}
+        timestamp: {type: string, format: date-time}
+        event_type: {type: string}
+        type: {type: string}
+        summary: {type: string}
+        actor_type: {type: string}
+        actor_id: {type: [string, 'null']}
+        tool: {type: [string, 'null']}
+        journey_id: {type: [string, 'null'], format: uuid}
+        proposal_id: {type: [string, 'null'], format: uuid}
+        entity_type: {type: [string, 'null']}
+        entity_id: {type: [string, 'null']}
+        decision: {type: [string, 'null']}
+        reason_codes:
+          type: array
+          items: {type: string}
+        trace_id: {type: string}
+        source: {type: string}
+        facts: {type: object, additionalProperties: true}
+    AgentFeedResponse:
+      type: object
+      required: [journey_id, source, events]
+      properties:
+        journey_id: {type: string, format: uuid}
+        source: {type: string}
+        events:
+          type: array
+          items: {$ref: '#/components/schemas/AgentFeedEntry'}
+    RouteEvidence:
+      type: object
+      required: [journey_id, proposal_id, frozen, old_route, markers, fallback, source]
+      properties:
+        journey_id: {type: string, format: uuid}
+        proposal_id: {type: [string, 'null'], format: uuid}
+        snapshot_id: {type: [string, 'null'], format: uuid}
+        provider: {type: string}
+        frozen: {type: boolean}
+        old_route: {type: object, additionalProperties: true}
+        new_route: {type: [object, 'null'], additionalProperties: true}
+        disruption_scope: {type: [object, 'null'], additionalProperties: true}
+        impacted_activity_ids:
+          type: array
+          items: {type: string}
+        markers: {type: object, additionalProperties: true}
+        fallback: {type: boolean}
+        fallback_reason: {type: [string, 'null']}
+        source: {type: string}
+    ReflectSummary:
+      type: object
+      required: [journey_id, status, completed, timeline, replan_history, agent_action_history, provider_disruptions, cost_summary, plan_version_chain, preference_feedback_hook]
+      properties:
+        journey_id: {type: string, format: uuid}
+        status: {type: string}
+        completed: {type: boolean}
+        timeline: {type: object, additionalProperties: true}
+        replan_history:
+          type: array
+          items: {type: object, additionalProperties: true}
+        agent_action_history:
+          type: array
+          items: {$ref: '#/components/schemas/AgentFeedEntry'}
+        provider_disruptions:
+          type: array
+          items: {type: object, additionalProperties: true}
+        cost_summary: {type: object, additionalProperties: true}
+        plan_version_chain:
+          type: array
+          items: {type: object, additionalProperties: true}
+        preference_feedback_hook: {type: object, additionalProperties: true}
+    CopilotResponse:
+      type: object
+      required: [message, mode, verified_context_used, intent, action, what_if, protected_commitments, evidence]
+      properties:
+        message: {type: string}
+        mode: {type: string, enum: [AI, FALLBACK]}
+        verified_context_used: {type: boolean}
+        intent:
+          type: object
+          required: [name, confidence, reason, entities, provider, mode]
+          properties:
+            name: {type: string, enum: [EXPLAIN_PLAN, WHAT_IF, DISCOVER, PREFERENCE_CHANGE, DISRUPTION_REPORT, REPLAN_REQUEST, UNKNOWN]}
+            confidence: {type: number, minimum: 0, maximum: 1}
+            reason: {type: string}
+            entities: {type: object, additionalProperties: true}
+            provider: {type: string}
+            mode: {type: string, enum: [AI, FALLBACK]}
+        action:
+          oneOf:
+            - type: object
+              properties: {type: {type: string}}
+            - type: "null"
+        what_if:
+          oneOf:
+            - type: object
+              required: [simulation_only, status, feasibility, before, after, deltas, protected_commitments, provenance, explanation]
+              properties:
+                simulation_only: {type: boolean, const: true}
+                status: {type: string}
+                feasibility: {type: string}
+                before: {type: object, additionalProperties: true}
+                after: {type: object, additionalProperties: true}
+                deltas: {type: object, additionalProperties: true}
+                affected_activities: {type: array, items: {type: object, additionalProperties: true}}
+                protected_commitments: {type: object, additionalProperties: true}
+                proposed_changes: {type: array, items: {type: object, additionalProperties: true}}
+                provenance: {type: object, additionalProperties: true}
+                explanation: {type: string}
+                next_action: {type: [string, "null"]}
+            - type: "null"
+        event: {type: [object, "null"], additionalProperties: true}
+        protected_commitments: {type: array, items: {type: object, additionalProperties: true}}
+        evidence: {type: object, additionalProperties: true}
+        recommendations:
+          type: array
+          items: {type: object, additionalProperties: true}

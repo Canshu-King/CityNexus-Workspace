@@ -1,0 +1,73 @@
+CityNexus Post-Goal Repair + Backend Vertical Slice Validation
+Date: 2026-09-10
+
+FOCUSED POST-GOAL REPAIR + BACKEND GOLDEN GATE
+Working directory: D:\moodle\CityNexus\backend
+Command:
+  ..\.venv\Scripts\python.exe -m pytest -q tests\test_post_goal_five_defects.py tests\test_backend_connected_golden_contract.py
+Result:
+  6 passed, 2 warnings in 1.62s
+
+FULL BACKEND REGRESSION
+Command:
+  ..\.venv\Scripts\python.exe -m pytest -q
+Result:
+  155 passed, 1 skipped, 2 warnings in 15.46s
+The single skip is the opt-in live Valhalla smoke test because
+CITYNEXUS_LIVE_VALHALLA_URL is not configured.
+
+PYTHON COMPILEALL
+Command:
+  ..\.venv\Scripts\python.exe -m compileall -q app tests
+Result:
+  PASS
+
+RUFF CHECK
+Command:
+  ..\.venv\Scripts\ruff.exe check app tests
+Result:
+  All checks passed
+
+RUFF FORMAT
+Command:
+  ..\.venv\Scripts\ruff.exe format --check app tests
+Result:
+  98 files already formatted
+
+OPENAPI FORMAL/RUNTIME EXACT COMPARISON
+Command:
+  Compared contracts/openapi.yaml operations after applying the declared
+  server path prefix against app.routes under /api/v1.
+Result:
+  OpenAPI 3.1.0; formal 38; runtime 38; missing 0; extra 0
+
+FRONTEND BUILD
+Working directory: D:\moodle\CityNexus\frontend
+Command:
+  npm run build
+Result:
+  PASS; Vite 7.3.6 production build
+
+BACKEND-CONNECTED PLAYWRIGHT
+Command:
+  npm run test:e2e
+Result:
+  1 passed
+The Playwright config launched/reached local FastAPI on port 8000 and Vite
+on port 4173. The browser scenario used backend reset, plan, booking,
+CAPTURE, start, closure event, replan list, accept, and post-reload Twin.
+
+LOCAL STORAGE RULE
+Result:
+  PASS. Only citynexus.demo.journey_id is stored for reconnect. Accepted
+  PlanVersion, C4, feasibility, Event, Replan, score, and provider facts are
+  not persisted in localStorage.
+
+NETWORK / OPTIONAL DEPENDENCIES
+Result:
+  No live network was required. Valhalla smoke remained opt-in. OR-Tools,
+  LiteLLM/DeepSeek, and routingpy were not made mandatory.
+
+The two warnings are upstream FastAPI/Starlette TestClient and AnyIO
+deprecations already present in the environment.
+No SHA, file hash, archive hash, or hash manifest work was performed.

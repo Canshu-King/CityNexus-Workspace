@@ -1,0 +1,215 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_QUOTA_SAVER_DUAL_ROTATED_20260908",
+  "seed": 202609087,
+  "topologyGateStatus": "PASS",
+  "orientableGenus": 0.0,
+  "samples": 100,
+  "axisCounts": {
+    "x": 99,
+    "y": 85
+  },
+  "familyCounts": {
+    "A-CD-UC-10": 33,
+    "A-M-UC-08": 54,
+    "A-M-UC-10": 36,
+    "A-B-06": 56,
+    "A-PA-07": 18,
+    "A-CE-09": 39
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pairRepairHistory": [
+    {
+      "round": 0,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-PA-07"
+        ],
+        [
+          "A-M-UC-08",
+          "A-CE-09"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-B-06",
+          "A-PA-07"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 2,
+        "A-B-06": 14,
+        "A-M-UC-08": 10,
+        "A-M-UC-10": 2
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 1,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 4,
+        "A-B-06": 7,
+        "A-M-UC-08": 3,
+        "A-M-UC-10": 2
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    },
+    {
+      "round": 2,
+      "impossibleBefore": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ],
+      "addedByRoute": {
+        "A-CD-UC-10": 1,
+        "A-B-06": 9,
+        "A-M-UC-08": 2,
+        "A-M-UC-10": 4
+      },
+      "impossibleAfter": [
+        [
+          "A-CD-UC-10",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-08",
+          "A-B-06"
+        ],
+        [
+          "A-M-UC-10",
+          "A-B-06"
+        ]
+      ]
+    }
+  ],
+  "pid": 39008,
+  "poolFeasibilityPrecheck": "FAIL",
+  "impossibleRoutePairs": [
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 1848,
+      "conflictingPairs": 1848,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-B-06",
+      "candidatePairs": 3024,
+      "conflictingPairs": 3024,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    },
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-B-06",
+      "candidatePairs": 2016,
+      "conflictingPairs": 2016,
+      "compatiblePairs": 0,
+      "compatibilityRatio": 0.0
+    }
+  ],
+  "tightRoutePairs": [
+    {
+      "routeA": "A-M-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 648,
+      "conflictingPairs": 646,
+      "compatiblePairs": 2,
+      "compatibilityRatio": 0.0030864197530864196
+    },
+    {
+      "routeA": "A-CD-UC-10",
+      "routeB": "A-PA-07",
+      "candidatePairs": 594,
+      "conflictingPairs": 589,
+      "compatiblePairs": 5,
+      "compatibilityRatio": 0.008417508417508417
+    },
+    {
+      "routeA": "A-B-06",
+      "routeB": "A-PA-07",
+      "candidatePairs": 1008,
+      "conflictingPairs": 989,
+      "compatiblePairs": 19,
+      "compatibilityRatio": 0.018849206349206348
+    },
+    {
+      "routeA": "A-M-UC-08",
+      "routeB": "A-CE-09",
+      "candidatePairs": 2106,
+      "conflictingPairs": 2038,
+      "compatiblePairs": 68,
+      "compatibilityRatio": 0.032288698955365625
+    }
+  ],
+  "reason": "pairwise-impossible-current-pool"
+}

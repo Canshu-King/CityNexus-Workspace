@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\strategy_options.py
+# hypothesis_version: 6.168.0
+
+['*', '.', '1.3', '1.4', 'Callable[..., Any]', '_FN', '_extra_criteria', '_of_type', '_reconcile_to_other', 'column', 'context', 'deferred', 'eager_from_alias', 'entities', 'expression', 'immediate', 'innerjoin', 'instrument', 'joined', 'lazy', 'load_element', 'loader', 'local_opts', 'noload', 'path', 'propagate_to_loaders', 'query_expression', 'raise', 'raise_on_sql', 'raiseload', 'recursion_depth', 'relationship', 'select', 'selectin', 'strategy', 'subquery']

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- 由 Microsoft Visio, SVG Export 生成 c4proto.svg Page-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="7.87402in" height="6.29921in"
+		viewBox="0 0 566.929 453.543" xml:space="preserve" color-interpolation-filters="sRGB" class="st3">
+	<v:documentProperties v:langID="2052" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#ffffff;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st2 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st3 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>页-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<v:layer v:name="连接线" v:index="0"/>
+		<g id="shape1-1" v:mID="1" v:groupContext="shape" transform="translate(42.5197,-184.252)">
+			<title>参与者</title>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:prompt="" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<path d="M11.34 453.54 L11.34 411.02 L11.34 428.03 L0 428.03 L0 394.02 L5.67 389.76 L51.02 389.76 L56.69 394.02 L56.69
+						 428.03 L45.35 428.03 L45.35 411.02 L45.35 453.54 L28.35 453.54 L28.35 419.53 L28.35 453.54 L11.34 453.54
+						 ZM36.85 377.01 A8.50394 8.50394 -180 1 0 19.84 377.01 A8.50394 8.50394 -180 1 0 36.85 377.01 Z"
+					class="st1"/>
+		</g>
+		<g id="shape2-3" v:mID="2" v:groupContext="shape" transform="translate(226.772,-320.315)">
+			<title>用例</title>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:prompt="" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<ellipse cx="56.6929" cy="433.701" rx="56.6929" ry="19.8425" class="st1"/>
+		</g>
+		<g id="group3-5" transform="translate(99.2126,-226.772)" v:mID="3" v:groupContext="group" v:layerMember="0">
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:prompt="" v:val="VT0(15):26"/>
+				<v:ud v:nameU="RelationshipName" v:prompt="" v:val="VT4()"/>
+				<v:ud v:nameU="ShowMulti" v:prompt="" v:val="VT0(0):5"/>
+				<v:ud v:nameU="Identifying" v:prompt="" v:val="VT0(1):26"/>
+				<v:ud v:nameU="DXBegin" v:prompt="" v:val="VT0(0.02362204795363):1"/>
+				<v:ud v:nameU="DYBegin" v:prompt="" v:val="VT0(2.2204460492503E-16):1"/>
+				<v:ud v:nameU="DXEnd" v:prompt="" v:val="VT0(0.023622047953631):1"/>
+				<v:ud v:nameU="DYEnd" v:prompt="" v:val="VT0(0):1"/>
+				<v:ud v:nameU="BeginAngle" v:prompt="" v:val="VT0(9.3998879928152E-15):32"/>
+				<v:ud v:nameU="EndAngle" v:prompt="" v:val="VT0(0):32"/>
+				<v:ud v:nameU="Name" v:prompt="" v:val="VT0(0):26"/>
+				<v:ud v:nameU="ID" v:prompt="" v:val="VT0(1):26"/>
+				<v:ud v:nameU="DXBegin" v:prompt="" v:val="VT0(0.038873753422993):0"/>
+				<v:ud v:nameU="DYBegin" v:prompt="" v:val="VT0(0):0"/>
+				<v:ud v:nameU="DXEnd" v:prompt="" v:val="VT0(0.022292633772155):0"/>
+				<v:ud v:nameU="DYEnd" v:prompt="" v:val="VT0(0.031846619674505):0"/>
+				<v:ud v:nameU="EndAngle" v:prompt="" v:val="VT0(0.96007036240567):32"/>
+			</v:userDefs>
+			<title>关联</title>
+			<g id="shape3-6" v:mID="3" v:groupContext="groupContent" v:layerMember="0">
+				<path d="M0 453.54 L48.19 453.54 L127.56 340.16" class="st2"/>
+			</g>
+		</g>
+	</g>
+</svg>

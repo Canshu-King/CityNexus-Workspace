@@ -1,0 +1,34 @@
+CityNexus Overnight Checkpoint — validation results
+Date: 2026-09-10
+
+BACKEND REGRESSION
+Command: .venv/Scripts/python.exe -m pytest -q (from backend/)
+Result: 149 passed, 1 skipped, 2 warnings in 14.07s
+Skip: optional live Valhalla smoke; CITYNEXUS_LIVE_VALHALLA_URL was unset
+
+BACKEND STATIC CHECKS
+Ruff check app tests: PASS
+Ruff format --check app tests: PASS (96 files already formatted)
+Python compileall -q app tests: PASS
+
+OPENAPI CONTRACT
+OpenAPI version: 3.1.0
+Formal operations: 38
+Runtime operations: 38
+Missing runtime operations: none
+Missing formal operations: none
+Exact operation comparison: PASS
+
+OPTIONAL VALHALLA SMOKE
+Command: tools/valhalla_snapshot_smoke.py
+Result: SKIP — CITYNEXUS_LIVE_VALHALLA_URL is not set
+
+FRONTEND
+npm run build: PASS (Vite production build)
+npm run test:e2e: PASS (1 passed; e2e/golden.spec.ts)
+
+PACKAGED REPLAY
+Result: 149 passed, 1 skipped, 2 warnings in 21.60s (isolated temporary SQLite file)
+Required live network calls: NONE
+
+No SHA, file hash, archive hash, or hash-manifest work was performed.

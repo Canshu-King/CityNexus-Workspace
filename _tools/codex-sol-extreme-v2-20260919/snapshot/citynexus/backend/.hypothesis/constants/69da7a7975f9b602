@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\fastapi\utils.py
+# hypothesis_version: 6.168.0
+
+[200, 204, 205, 304, '1XX', '2XX', '3XX', '4XX', '5XX', 'APIRoute', '\\W', '_', 'default', 'serialization', 'validation', '{(.*?)}']

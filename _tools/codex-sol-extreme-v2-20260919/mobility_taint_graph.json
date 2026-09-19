@@ -1,0 +1,37 @@
+{
+  "schema": "citynexus.mobility-taint-proof.v1",
+  "allowed_hard_qualities": ["EXPLICIT_FROZEN_FIXTURE", "LIVE_PROVIDER_CAPTURE"],
+  "nodes": [
+    {"id": "provider", "kind": "source", "truth": "external_or_fixture"},
+    {"id": "capture", "symbol": "capture_mobility_snapshot", "file": "backend/app/integrations/mobility/snapshot_capture.py"},
+    {"id": "normalize", "symbol": "_resolve_fact_quality", "file": "backend/app/integrations/mobility/snapshot_capture.py"},
+    {"id": "persist", "kind": "MobilitySnapshot/TravelEstimateFact"},
+    {"id": "deserialize", "symbol": "_derive_fact_quality_from_provenance", "file": "backend/app/replanning/provider_snapshots.py"},
+    {"id": "hard_gate", "symbol": "MobilitySnapshot.hard_minutes", "file": "backend/app/replanning/provider_snapshots.py"},
+    {"id": "candidate", "kind": "replan_candidate"},
+    {"id": "accept", "symbol": "_accept_replan_serialized_impl", "file": "backend/app/main.py"},
+    {"id": "projection", "kind": "Journey/Today/Live/Trips/Map"}
+  ],
+  "edges": [
+    {"from": "provider", "to": "capture", "rule": "capture response and provider identity"},
+    {"from": "capture", "to": "normalize", "rule": "explicit attestation only"},
+    {"from": "normalize", "to": "persist", "rule": "fact_quality persisted unchanged"},
+    {"from": "persist", "to": "deserialize", "rule": "explicit quality wins; only exact LIVE_CAPTURE legacy provenance promotes"},
+    {"from": "deserialize", "to": "hard_gate", "rule": "membership in exact two-value allowlist"},
+    {"from": "hard_gate", "to": "candidate", "rule": "unknown/synthetic/mock raises or excludes candidate"},
+    {"from": "candidate", "to": "accept", "rule": "same frozen snapshot revalidated"},
+    {"from": "accept", "to": "projection", "rule": "provider/fact_quality evidence is display-only provenance, never inferred upward"}
+  ],
+  "forbidden_flows": [
+    "SYNTHETIC_FALLBACK -> hard_gate",
+    "CAPTURED_REPLAY -> LIVE_PROVIDER_CAPTURE",
+    "unknown/None -> hard_minutes",
+    "mock fallback during live hard capture",
+    "provider label substring -> trusted quality"
+  ],
+  "dynamic_evidence": {
+    "test_file": "tests/test_mobility_taint_extreme.py",
+    "mutation_ids": ["J-PROVENANCE-LAUNDER", "J-NONE-QUALITY-HARD", "J-MOCK-HARD-FALLBACK"],
+    "result": "all focused tests pass and all three mutants are killed"
+  }
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\numpy\lib\_array_utils_impl.py
+# hypothesis_version: 6.168.0
+
+['byte_bounds', 'data', 'normalize_axis_index', 'normalize_axis_tuple', 'shape', 'strides']

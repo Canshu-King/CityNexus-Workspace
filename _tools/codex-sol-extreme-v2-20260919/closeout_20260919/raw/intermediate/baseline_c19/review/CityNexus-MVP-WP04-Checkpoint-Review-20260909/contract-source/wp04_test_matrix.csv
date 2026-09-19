@@ -1,0 +1,41 @@
+test_id,layer,area,scenario,expected,priority
+WP04-COM-001,unit,commitment,source strength catalog,exactly five source levels and invalid sixth rejected,P0
+WP04-COM-002,unit,commitment,payment alone on flexible item,does not derive rank 4,P0
+WP04-COM-003,integration,commitment,canonical fixed paid river cruise,ACTIVE source C4 with stable semantic identity and 15:30,P0
+WP04-COM-004,integration,commitment,confirmed then captured,strengthens same semantic commitment not duplicate unrelated commitment,P0
+WP04-BKG-001,contract,booking,availability query,normalized slots include provider provenance,P1
+WP04-BKG-002,integration,booking,activity from unselected candidate,rejected before provider call,P0
+WP04-BKG-003,integration,booking,activity from another journey,rejected before provider call,P0
+WP04-BKG-004,integration,booking,forced provider rejection,FAILED/non-confirmed result and no ACTIVE confirmed commitment,P0
+WP04-BKG-005,integration,booking,cancellable unpaid booking cancel,provider-confirmed CANCELLED and commitment adjusted,P1
+WP04-BKG-006,integration,booking,provider authoritative state,local state/external_ref match normalized provider outcome,P0
+WP04-ORD-001,integration,order,valid tradable service order,items total fulfilment window and state persisted,P1
+WP04-ORD-002,security,order,empty/invalid items,422 no order state,P1
+WP04-ORD-003,security,order,client attempts forged total,server ignores/recomputes total,P1
+WP04-PAY-001,integration,payment,target xor,both/neither booking_id order_id rejected,P0
+WP04-PAY-002,integration,payment,target ownership,target from another journey rejected before provider call,P0
+WP04-PAY-003,integration,payment,amount/currency mismatch,rejected before provider call,P0
+WP04-PAY-004,integration,payment,forced failure,FAILED transaction and commitment unchanged,P0
+WP04-PAY-005,integration,payment,capture success,SUCCEEDED transaction and commitment strengthened,P0
+WP04-PAY-006,functional,payment,receipt trace,external_ref retained for successful transaction,P1
+WP04-PAY-007,integration,payment,provider authoritative state,local status matches provider outcome,P0
+WP04-IDEM-001,integration,idempotency,same key same request,same transaction no second provider call,P0
+WP04-IDEM-002,integration,idempotency,same key different request,409 before provider call,P0
+WP04-IDEM-003,integration,idempotency,replay failed payment,same FAILED logical result no second provider call,P0
+WP04-IDEM-004,integration,idempotency,replay after commitment strengthening,no second strength upgrade/audit side effect,P0
+WP04-SEC-001,security,secrets,persistence/log inspection,no full card/CVV/provider secret fields,P0
+WP04-SEC-002,security,input,malformed provider/client outcome,controlled error no partial state,P0
+WP04-SEC-003,security,audit,high-risk outcomes,success/failure/conflict audit without secrets,P1
+WP04-RES-001,resilience,persistence,new session/restart,booking transaction commitment states preserved,P0
+WP04-ATOMIC-001,integration,atomicity,forced DB error after payment outcome,no partial commitment/transaction state,P1
+WP04-PRE-001,integration,precondition,Journey DRAFT booking attempt,rejected before provider call,P0
+WP04-PRE-002,integration,precondition,selected plan no longer feasible,commerce write rejected until repaired,P0
+CNX-I-011,integration,booking,create mock booking,CONFIRMED booking and commitment created,P0
+CNX-I-012,integration,payment,capture mock payment,SUCCEEDED transaction and commitment level advanced,P0
+CNX-I-013,integration,payment,repeat same idempotency key,same logical result no duplicate charge,P0
+CNX-C-006,contract,provider,mock booking interface,no random outcome without fixture token,P0
+CNX-C-007,contract,provider,mock payment interface,no random outcome without fixture token,P0
+WP04-SRC-001,contract,source-reconciliation,exact commitment strength extraction,"one unambiguous C0..C4 commitment enum found; no guessed labels",P0
+WP04-VAL-001,unit,commerce-guard,stable booking semantic identity,"place/service semantic identity used rather than only Activity UUID",P0
+WP04-VAL-002,security,payment-input,sensitive credential key inspection,"card_number/CVV/security_code rejected before persistence/provider call",P0
+WP04-VAL-003,unit,idempotency,key format,"missing/too-short Idempotency-Key rejected deterministically",P1

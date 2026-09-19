@@ -1,0 +1,73 @@
+{
+  "validator": "validate-requirements.py",
+  "checks": [
+    {
+      "name": "strict YAML duplicate-key detection",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON Schema validation",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate requirement IDs",
+      "status": "PASS"
+    },
+    {
+      "name": "ID prefix/type consistency",
+      "status": "PASS"
+    },
+    {
+      "name": "dangling use case references",
+      "status": "PASS"
+    },
+    {
+      "name": "dangling domain element references",
+      "status": "PASS"
+    },
+    {
+      "name": "dangling requirement dependencies",
+      "status": "PASS"
+    },
+    {
+      "name": "dangling test case references",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid priorities",
+      "status": "PASS"
+    },
+    {
+      "name": "empty acceptance criteria",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate acceptance criteria",
+      "status": "PASS"
+    },
+    {
+      "name": "traceability completeness",
+      "status": "PASS",
+      "details": {
+        "requirements": 0,
+        "mappings": 0
+      }
+    },
+    {
+      "name": "requirements count summary",
+      "status": "PASS",
+      "details": {
+        "business_goals": 0,
+        "functional_requirements": 0,
+        "business_rules": 0,
+        "non_functional_requirements": 0,
+        "security_requirements": 0,
+        "integration_requirements": 0
+      }
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 0
+  }
+}

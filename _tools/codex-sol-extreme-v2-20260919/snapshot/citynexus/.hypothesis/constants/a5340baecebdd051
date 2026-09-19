@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\solver_runtime.py
+# hypothesis_version: 6.168.0
+
+[1.0, 'DISABLED', 'MODEL_INVALID', 'ORTOOLS_CP_SAT', 'ORTOOLS_UNAVAILABLE', 'SOLVER_DISABLED', 'UNAVAILABLE', 'UNKNOWN', 'auto', 'deterministic', 'kind', 'mobility_snapshot_id', 'ortools', 'problem_fingerprint', 'rank', 'solver_status', 'terminal_status', 'v2']

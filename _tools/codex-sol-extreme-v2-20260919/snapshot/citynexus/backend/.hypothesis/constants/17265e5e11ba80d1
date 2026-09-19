@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\anyio\pytest_plugin.py
+# hypothesis_version: 6.168.0
+
+['--anyio-mode', '127.0.0.1', '::1', '_arg2scope', 'anyio', 'anyio_backend', 'anyio_mode', 'asyncio', 'asyncio_mode', 'auto', 'hypothesis', 'markers', 'module', 'pytestmark', 'request', 'session', 'strict']

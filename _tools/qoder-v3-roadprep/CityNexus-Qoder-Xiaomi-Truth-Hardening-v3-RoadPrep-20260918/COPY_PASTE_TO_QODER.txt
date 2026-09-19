@@ -1,0 +1,48 @@
+Use the attached:
+
+CityNexus-Qoder-Xiaomi-Truth-Hardening-v3-RoadPrep-20260918.zip
+
+Continue only in the isolated Qoder copy.
+
+Do NOT merge to D:\moodle\CityNexus.
+Do NOT initialize or modify the user's main Git repository.
+Do NOT deploy Valhalla.
+Do NOT start Frontend vNext.
+
+Read README_FIRST.md, then execute the v3 scope.
+
+Highest-priority corrections:
+
+1. T2 hard feasibility must use an allowlist, not merely reject SYNTHETIC_DEFAULT.
+   Unknown / legacy-unclassified fact quality must fail closed.
+2. Strengthen the candidate-specific real `/replans` test:
+   it must assert 201 and the exact surviving trustworthy candidate, not allow 422.
+3. Replace the module-wide complete-graph 15-minute test helper with narrow,
+   scenario-declared explicit mobility pairs.
+4. T1 cross-provider same venue with several metres of coordinate drift must
+   become AMBIGUOUS / excluded, not DIFFERENT.
+5. Add rendered `/v8/today` ACK tests in addition to the existing Live tests.
+6. Fix the duplicate `BudgetEvidenceCoverage` type declaration and add a real
+   `tsc --noEmit` typecheck gate.
+7. The Studio heading must not say "all safety checks passed" when total trip
+   budget is explicitly not verified.
+8. `humanReplanReason()` must not return an unknown raw backend string to the
+   traveler.
+9. Include both raw baseline and v3 full-suite logs.
+
+Important decision on T4:
+Do NOT wire stay/booking into Studio in this v3. The safe activity-cost scope
+downgrade is accepted, provided the UI makes that scope explicit and does not
+claim whole-trip budget verification.
+
+Target:
+
+CityNexus-Qoder-Xiaomi-Truth-Hardening-v3-20260918.zip
+
+Final verdict exactly:
+
+QODER_V3_PATCH_READY_FOR_INTEGRATION
+
+or
+
+QODER_V3_BLOCKED

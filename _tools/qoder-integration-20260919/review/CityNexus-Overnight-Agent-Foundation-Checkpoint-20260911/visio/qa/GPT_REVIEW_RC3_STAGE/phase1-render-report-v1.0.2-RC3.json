@@ -1,0 +1,26 @@
+{
+  "status": "FAIL",
+  "artifact": "D:/moodle/CityNexus/visio/CityNexus_Visio_Model_Baseline_v1.0.2_RC3.vsdx",
+  "phase": "Phase 1 only",
+  "pages": ["00_Style_Guide", "P1_UC_Overview", "P1_Domain_Overview"],
+  "semanticShapeCount": {"00_Style_Guide": 6, "P1_UC_Overview": 17, "P1_Domain_Overview": 11},
+  "connectorCount": {"00_Style_Guide": 3, "P1_UC_Overview": 21, "P1_Domain_Overview": 14},
+  "specIdCoverage": {"00_Style_Guide": 6, "P1_UC_Overview": 17, "P1_Domain_Overview": 11},
+  "pageSizesCm": {"00_Style_Guide": [29.7,21.0], "P1_UC_Overview": [33.87,19.05], "P1_Domain_Overview": [33.87,19.05]},
+  "positionDelta": "0 for semantic positions after YAML restoration",
+  "sizeDelta": "0 for semantic sizes after YAML restoration",
+  "connectorThroughUnrelatedUseCase": "UNVERIFIED",
+  "connectorThroughClass": "UNVERIFIED",
+  "crossings": "UNVERIFIED",
+  "endpointMultiplicity": "UNVERIFIED",
+  "headers": "rendered through presentation shapes",
+  "legend": "UNVERIFIED",
+  "mechanicalSvgInspection": {"SegoeUI": false, "Aptos": false, "F8FAFC": false, "requiredPaletteTokens": false},
+  "styleTokenViolations": ["SVG does not contain literal Segoe UI/Aptos font token", "SVG does not contain literal #F8FAFC or required palette hex tokens"],
+  "exports": [
+    "D:/moodle/CityNexus/visio/exports/phase1-rc3/00_Style_Guide_v1.0.2-RC3.svg",
+    "D:/moodle/CityNexus/visio/exports/phase1-rc3/P1_UC_Overview_v1.0.2-RC3.svg",
+    "D:/moodle/CityNexus/visio/exports/phase1-rc3/P1_Domain_Overview_v1.0.2-RC3.svg"
+  ],
+  "part2Rendered": false
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\sql\type_api.py
+# hypothesis_version: 6.168.0
+
+['.', 'GenericProtocol[Any]', 'TDComparator', 'TypeEngine[Any]', 'Type[TypeEngine[_T]]', '_', '_CT', '_O', '_RT', '_T', '_TE', '_T_co', '_T_con', '__reduce__', '_python_is_types', 'bind', 'cache_ok', 'cprf', 'custom', 'expr', 'get_col_spec', 'impl', 'literal', 'result', 'type', 'type_decorator', 'user_defined']

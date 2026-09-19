@@ -1,0 +1,32 @@
+[
+  {
+    "id": "service-metro-hub",
+    "provider_key": "mock-city",
+    "external_id": "S001",
+    "city_code": "CNX-DEMO",
+    "service_type": "mobility_hub",
+    "name": "Central Metro Hub",
+    "place_id": null,
+    "availability": {"status": "available", "first_service": "06:00", "last_service": "23:00"}
+  },
+  {
+    "id": "service-tourist-help",
+    "provider_key": "mock-city",
+    "external_id": "S002",
+    "city_code": "CNX-DEMO",
+    "service_type": "visitor_support",
+    "name": "Visitor Support Point",
+    "place_id": "place-old-town",
+    "availability": {"status": "available", "open": "09:00", "close": "17:00"}
+  },
+  {
+    "id": "service-bike-share",
+    "provider_key": "mock-city",
+    "external_id": "S003",
+    "city_code": "CNX-DEMO",
+    "service_type": "bike_share",
+    "name": "Nexus Bike Share",
+    "place_id": "place-city-park",
+    "availability": {"status": "available", "bikes": 12}
+  }
+]

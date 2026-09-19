@@ -1,0 +1,83 @@
+version: 0.1
+status: PLANNING_HINTS_ONLY_NOT_FROZEN
+primaryPortPlan: PLAN_O_PRESERVE_LOCAL_GEOMETRY
+fallbackPortPlan: PLAN_R_REVERSE_EMBEDDING
+reasoning:
+  - PLAN_O keeps Traveler A-T-UC-10 on the left side of frozen EXT-10-09 at UC-10 and Mobility A-M-UC-10 on the right side, matching their source geography.
+  - PLAN_O keeps A-M-UC-08 on the right side of the frozen EXT-09-08 target port, avoiding the left-bottom pocket forced by PLAN_R.
+  - PLAN_R remains a valid genus-0 fallback if PLAN_O family search exhausts its bounded budget.
+constraints:
+  frozenExtends:
+    - EXT-07-06
+    - EXT-09-08
+    - EXT-10-09
+  minSegmentCm: 0.10
+  waypointDecimalsMax: 2
+  noContact: true
+families:
+  A-T-UC-10:
+    preferred: U10_LEFT_OF_EXT10
+    rules:
+      - Keep the route on x < 23.3 while y is between 9.4 and 11.225.
+      - Approach the UC-10 TOP port from above without crossing EXT-10-09.
+  A-M-UC-10:
+    preferred: U10_RIGHT_POCKET
+    rules:
+      - Keep the terminal approach on x > 23.3.
+      - Candidate families must include a bottom-right entry that passes below y=14.2 before entering inside x=27.0.
+  A-CD-UC-10:
+    preferred: U10_RIGHT_POCKET_ALT
+    rules:
+      - Do not force a direct x=27 crossing within y=9.4..14.2.
+      - Include an outer/bottom family distinct from A-M-UC-10.
+  A-M-UC-08:
+    preferred: UC08_RIGHT_BOTTOM_ENTRY
+    rules:
+      - Under PLAN_O the target is to the right of frozen EXT-09-08 x=11.1 terminal leg.
+      - Include a family crossing below y=13.4 and approaching UC-08 BOTTOM from x > 11.1.
+  A-B-06:
+    preferred: PROVIDER_UPPER_LANE
+    rules:
+      - Include a family crossing the EXT-10-09 right barrier above y=9.4, then use a distinct upper-mid lane.
+  A-PA-07:
+    preferred: PROVIDER_UPPER_LANE_ALT
+    rules:
+      - Use a separate lane from A-B-06; do not share an intermediate waypoint or x-riser.
+  A-CE-09:
+    preferred: BOTTOM_LEFT_OUTER
+    rules:
+      - Include a family that passes below UC-12 before rising on the left side of UC-09.
+  A-CD-UC-04:
+    preferred: PRESERVE_IF_COMPATIBLE
+  A-CD-UC-05:
+    preferred: PRESERVE_IF_COMPATIBLE
+search:
+  candidateFamiliesPerRoute:
+    minimum: 5
+    suggestedMaximum: 12
+  familyKinds:
+    - default
+    - top_outer
+    - bottom_outer
+    - inner_left
+    - outer_right
+    - mandatory_gate
+  beam:
+    width: 64
+    expandTopKPerRoute: 6
+    selection: MRV_then_total_cost
+  jointMutableCore:
+    - A-M-UC-08
+    - A-CE-09
+    - A-PA-07
+    - A-B-06
+    - A-CD-UC-10
+    - A-M-UC-10
+    - A-T-UC-10
+    - A-T-UC-11
+  repeatSignature:
+    - portPlan
+    - failedRoute
+    - blockerSet
+    - candidateFamily
+    - selectedFamilyVector

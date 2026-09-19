@@ -1,0 +1,29 @@
+{
+  "campaign": "sol-v2-closeout-final",
+  "candidate_commit": "776be4e",
+  "mutant_count": 17,
+  "required_killed": 15,
+  "killed": 17,
+  "survivors": 0,
+  "execution_errors": 0,
+  "mutants": [
+    "J-ACK-RESOLVED",
+    "J-CROSS-JOURNEY-TRIGGER",
+    "J-ACK-CLOSES-UNRELATED",
+    "J-PROVENANCE-LAUNDER",
+    "J-NONE-QUALITY-HARD",
+    "J-MOCK-HARD-FALLBACK",
+    "J-NONE-NONE-PHYSICAL",
+    "J-COORDINATE-ONLY-SAME",
+    "J-CROSS-PROVIDER-NUMERIC",
+    "J-AMBIGUOUS-ADMITTED",
+    "J-PROTECTED-C4-DROPPED",
+    "J-PARTIAL-BUDGET-FULL",
+    "J-LIVE-FIXED-INDEX",
+    "J-STALE-CURSOR-FALLBACK",
+    "J-MATERIALITY-DIFF",
+    "J-C4-AMBIGUITY-FIRST",
+    "J-C4-GENERIC-OVER-SEMANTIC"
+  ],
+  "evidence": "raw/final/mutation_results.json"
+}

@@ -1,0 +1,24 @@
+server:
+  name: citynexus
+  command: python
+  args:
+    - -m
+    - citynexus_mcp.server
+  env:
+    CITYNEXUS_API_BASE_URL: http://127.0.0.1:8000
+profile:
+  allowed_tools:
+    - inspect_journey
+    - inspect_twin
+    - list_replans
+    - search_city_services
+    - request_replan
+    - accept_replan
+  disabled_tools:
+    - terminal
+    - file
+    - browser
+    - payment
+    - refund
+    - modify_c4
+

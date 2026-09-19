@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\shapely\creation.py
+# hypothesis_version: 6.168.0
+
+[' EMPTY', 'C', 'box', 'ccw', 'destroy_prepared', 'empty', 'geometrycollections', 'indices', 'linearrings', 'linestrings', 'multilinestrings', 'multipoints', 'multipolygons', 'points', 'polygons', 'prepare']

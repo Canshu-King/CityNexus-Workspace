@@ -1,0 +1,10 @@
+{
+  "calibration": "C1-font-style",
+  "status": "FAIL",
+  "failures": [
+    "Calibri",
+    "宋体",
+    "linearGradient"
+  ],
+  "source": "local Visio COM SVG inspection"
+}

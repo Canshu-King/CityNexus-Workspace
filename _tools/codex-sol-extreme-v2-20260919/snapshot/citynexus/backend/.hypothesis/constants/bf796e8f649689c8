@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\fastapi\params.py
+# hypothesis_version: 6.168.0
+
+['alias_priority', 'annotation', 'application/json', 'cookie', 'deprecated', 'examples', 'function', 'header', 'json_schema_extra', 'multipart/form-data', 'path', 'pattern', 'query', 'request', 'serialization_alias', 'strict', 'validation_alias']

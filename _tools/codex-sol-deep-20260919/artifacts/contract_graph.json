@@ -1,0 +1,47 @@
+{
+  "snapshot": {
+    "repository": "disposable clone of _qoder_integration_20260919",
+    "commit": "1de4e0c569349d7eee4bc22995cc49c487e3279e",
+    "captured_on": "2026-09-19",
+    "protected_sources_modified": false
+  },
+  "nodes": [
+    {"id":"journey.active_plan","layer":"backend","symbol":"Journey.active_plan_version_id","truth":"single active PlanVersion id"},
+    {"id":"journey.cursor","layer":"backend","symbol":"Journey.current_activity_id","truth":"authoritative execution cursor"},
+    {"id":"api.experience","layer":"api","symbol":"experience_payload","fields":["journey.active_plan_version_id","active_plan.id","active_plan.current_activity_id","active_plan.activities","active_plan.legs","active_plan.disruptions"]},
+    {"id":"ui.today","layer":"frontend","symbol":"V8Experience/Today","decision":"active plan plus disruptionState"},
+    {"id":"ui.live","layer":"frontend","symbol":"V8Experience/Live + LiveSecondary","decision":"current/next execution window"},
+    {"id":"ui.trips","layer":"frontend","symbol":"V8Experience/Trips","decision":"same active_plan identity"},
+    {"id":"event.lifecycle","layer":"backend","states":["DETECTED","ACKNOWLEDGED","RESOLVED","IGNORED"]},
+    {"id":"event.ack","layer":"api","symbol":"acknowledge_journey_recovery","effect":"records seen; resolved=false"},
+    {"id":"proposal.lifecycle","layer":"backend","states":["GENERATED","PRESENTED","ACCEPTED","REJECTED","EXPIRED","INVALIDATED"]},
+    {"id":"proposal.accept","layer":"api","symbol":"_accept_replan_impl","effect":"activates candidate, remaps cursor/C4, acknowledges trigger"},
+    {"id":"ui.disruption","layer":"frontend","symbol":"isDisruptionOpen","effect":"closed only by resolved/ignored/resolved_at or accepted linked trigger"},
+    {"id":"mobility.quality","layer":"backend","symbol":"MobilitySnapshot.hard_minutes","allowlist":["LIVE_PROVIDER_CAPTURE","EXPLICIT_FROZEN_FIXTURE"]},
+    {"id":"mobility.api","layer":"api","symbol":"journey_leg_payload","fields":["provider_key","provenance","provider_snapshot_id","captured_at","expires_at"]},
+    {"id":"booking.commitment","layer":"backend","symbol":"Commitment(level=C4_Anchored)","truth":"stable semantic/time anchor remapped on accept"},
+    {"id":"budget.evidence","layer":"frontend","symbol":"budgetEvidenceCoverage","states":["NONE","PARTIAL","FULL"]},
+    {"id":"budget.copy","layer":"ui","symbol":"studio.feasibilitySub","truth":"activity-only coverage explicitly disclaims whole-trip verification"}
+  ],
+  "edges": [
+    {"from":"journey.active_plan","to":"api.experience","relation":"projects"},
+    {"from":"journey.cursor","to":"api.experience","relation":"projects"},
+    {"from":"api.experience","to":"ui.today","relation":"consumed_by"},
+    {"from":"api.experience","to":"ui.live","relation":"consumed_by","finding":"CX-SOL-001"},
+    {"from":"api.experience","to":"ui.trips","relation":"consumed_by"},
+    {"from":"event.lifecycle","to":"event.ack","relation":"transition"},
+    {"from":"event.ack","to":"ui.disruption","relation":"must_remain_open"},
+    {"from":"proposal.accept","to":"proposal.lifecycle","relation":"PRESENTED_to_ACCEPTED"},
+    {"from":"proposal.accept","to":"event.lifecycle","relation":"DETECTED_to_ACKNOWLEDGED"},
+    {"from":"proposal.accept","to":"ui.disruption","relation":"linked_trigger_closes_consumer_decision"},
+    {"from":"mobility.quality","to":"proposal.accept","relation":"feasibility_gate"},
+    {"from":"mobility.quality","to":"mobility.api","relation":"provenance_projection"},
+    {"from":"booking.commitment","to":"proposal.accept","relation":"must_survive_and_remap"},
+    {"from":"budget.evidence","to":"budget.copy","relation":"licenses_claim_scope"}
+  ],
+  "findings": [
+    {"id":"CX-SOL-001","severity":"P1","verified":true,"edge":"api.experience->ui.live","summary":"Live ignored current_activity_id and displayed activities[0]/[1]."},
+    {"id":"CX-SOL-002","severity":"P2","verified":true,"edge":"proposal.accept->event.lifecycle->ui.disruption","summary":"Accepted proposal closes its trigger only through a cross-resource join; Event remains ACKNOWLEDGED."},
+    {"id":"CX-SOL-003","severity":"P2","verified":true,"edge":"mobility.quality->mobility.api","summary":"fact_quality is enforced server-side but not exposed in the V8 leg type; UI can show provenance but cannot independently distinguish hard eligibility."}
+  ]
+}

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\sql\operators.py
+# hypothesis_version: 6.168.0
+
+[-100, 100, '%', '/', '_', '_FN', '_T', '__sa_operate__', 'custom_op', 'eager_grouping', 'is_comparison', 'opstring', 'precedence', 'python_impl', 'return_type']

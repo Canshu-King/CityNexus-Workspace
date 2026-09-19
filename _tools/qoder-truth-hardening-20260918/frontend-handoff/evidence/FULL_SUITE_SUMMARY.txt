@@ -1,0 +1,34 @@
+Full `npx playwright test` (isolated harness, DEEPSEEK/CITYNEXUS keys cleared)
+
+Result: 29 passed / 16 failed.  See raw_full_suite.log for the run.
+
+All 16 failures are legacy specs that navigate to /v8 or / expecting a
+GLOBALLY-SEEDED journey (a chosen active plan with located activities + legs, a
+persisted Control-Tower mission, or the golden demo journey). The isolated
+worktree's fresh SQLite / reused backend does not provide that seed, so each
+fails at its first "is the journey there?" assertion:
+
+  1  golden.spec.ts
+  2  live-autopilot-v5.spec.ts
+  3  predictive-real-city-v6.spec.ts
+  4  product-hardening.spec.ts (TravelerTwin Control Tower persisted evidence)
+  5  product-hardening.spec.ts (reload natural-language mission)
+  6  product-hardening.spec.ts (assisted acceptance policy-driven)
+  7  product-hardening.spec.ts (autonomous envelope-safe recovery)
+  8  product-hardening.spec.ts (proactive Guardian flagship recovery)
+  9  product-v8.spec.ts (multi-day stay + autonomous recovery)
+ 10  product-v8.spec.ts (mobile Journey/Map/AI/Bookings/Me)
+ 11  real-world-trip-operations-v9.spec.ts
+ 12  v10-accessibility.spec.ts        (fails at "Choose your next leg." heading — never reaches axe)
+ 13  v10-inbox.spec.ts
+ 14  v10-live-execution.spec.ts
+ 15  v10-quality-budget.spec.ts
+ 16  v13-5-fully-grounded.spec.ts
+
+NONE of the 16 are a `qoder-*` gate. Every Qoder-authored gate passes and has its
+own raw log. The 16 are PRE-EXISTING and environmental: a `git stash` of the
+frontend changes reproduces the identical failure on v10-live-execution (confirmed
+during this line), so they are not a regression from the Apple pass. They must be
+re-run — and expected to reach real business assertions — in the integration
+phase where a chosen plan + journey_id + a disruption + a PRESENTED proposal are
+seeded. That is the definitive proof, per GPT's review.

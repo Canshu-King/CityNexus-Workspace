@@ -1,0 +1,20 @@
+routes:
+  P1_UC_Overview:
+    - {id: A-T-UC-02, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-1}
+    - {id: A-T-UC-04, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-2}
+    - {id: A-T-UC-05, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-3}
+    - {id: A-T-UC-06, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-4}
+    - {id: A-T-UC-07, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-5}
+    - {id: A-T-UC-08, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-6}
+    - {id: A-T-UC-10, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-7}
+    - {id: A-T-UC-11, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-8}
+    - {id: A-T-UC-12, sourceSide: RIGHT, targetSide: LEFT, lane: traveler-9}
+    - {id: EXT-07-06, sourceSide: LEFT, targetSide: RIGHT, lane: external-1}
+    - {id: EXT-09-08, sourceSide: LEFT, targetSide: RIGHT, lane: external-2}
+    - {id: EXT-10-09, sourceSide: LEFT, targetSide: RIGHT, lane: external-3}
+    - {id: A-CE-09, sourceSide: BOTTOM, targetSide: TOP, lane: extend-central}
+    - {id: A-PA-07, sourceSide: BOTTOM, targetSide: TOP, lane: include-central}
+    - {id: A-B-06, sourceSide: BOTTOM, targetSide: TOP, lane: boundary-central}
+policy:
+  type: right-angle
+  maxCrossingsPerPage: 2

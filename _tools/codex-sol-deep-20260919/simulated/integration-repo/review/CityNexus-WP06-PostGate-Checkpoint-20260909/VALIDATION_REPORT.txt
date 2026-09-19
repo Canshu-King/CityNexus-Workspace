@@ -1,0 +1,27 @@
+CityNexus WP06 Post-Gate validation — 2026-09-09
+
+PATCH PREFLIGHT
+git apply --check: PASS (8/8 supplied patch targets)
+
+FUNCTIONAL REGRESSION
+Command: .venv/Scripts/python.exe -m pytest -q (from backend/)
+Result: 133 passed, 1 skipped, 2 warnings in 12.64s
+Skipped: optional live Valhalla smoke; CITYNEXUS_LIVE_VALHALLA_URL unset
+Required live network calls: NONE
+Packaged snapshot replay: 133 passed, 1 skipped, 2 warnings in 18.77s
+Packaged replay database: isolated temporary SQLite file
+
+STATIC VALIDATION
+Ruff check: PASS
+Ruff format --check: PASS (88 files already formatted)
+Python compileall app tests: PASS
+
+CONTRACT VALIDATION
+OpenAPI version: 3.1.0
+Formal operations: 38
+Runtime operations: 38
+Missing runtime operations: none
+Missing formal operations: none
+
+CHECKPOINT DECISION
+PASS — stop at WP06 post-gate checkpoint pending independent review.

@@ -1,0 +1,296 @@
+{
+  "status": "BUILT",
+  "strategy": "native-extend-hidden-plus-presentation-segments",
+  "routeCount": 3,
+  "routes": [
+    {
+      "id": "EXT-07-06",
+      "nativeMaster": "Extend",
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow",
+      "plannedPointsCm": [
+        [
+          17.2,
+          7.5249999999999995
+        ],
+        [
+          17.2,
+          6.6
+        ],
+        [
+          8.3,
+          6.6
+        ],
+        [
+          8.3,
+          8.875
+        ],
+        [
+          11.1,
+          8.875
+        ]
+      ],
+      "presentationSegmentCount": 4,
+      "presentationSegments": [
+        {
+          "specId": "EXT-07-06::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            17.2,
+            7.5249999999999995
+          ],
+          "endCm": [
+            17.2,
+            6.6
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-07-06::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            17.2,
+            6.6
+          ],
+          "endCm": [
+            8.3,
+            6.6
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-07-06::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            8.3,
+            6.6
+          ],
+          "endCm": [
+            8.3,
+            8.875
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-07-06::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            8.3,
+            8.875
+          ],
+          "endCm": [
+            11.1,
+            8.875
+          ],
+          "terminal": true
+        }
+      ],
+      "label": "<<extend>>",
+      "condition": "[payment required]"
+    },
+    {
+      "id": "EXT-09-08",
+      "nativeMaster": "Extend",
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow",
+      "plannedPointsCm": [
+        [
+          17.2,
+          11.225
+        ],
+        [
+          17.2,
+          10.2
+        ],
+        [
+          7.5,
+          10.2
+        ],
+        [
+          7.5,
+          13.4
+        ],
+        [
+          11.1,
+          13.4
+        ],
+        [
+          11.1,
+          12.575000000000001
+        ]
+      ],
+      "presentationSegmentCount": 5,
+      "presentationSegments": [
+        {
+          "specId": "EXT-09-08::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            17.2,
+            11.225
+          ],
+          "endCm": [
+            17.2,
+            10.2
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-09-08::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            17.2,
+            10.2
+          ],
+          "endCm": [
+            7.5,
+            10.2
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-09-08::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            7.5,
+            10.2
+          ],
+          "endCm": [
+            7.5,
+            13.4
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-09-08::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            7.5,
+            13.4
+          ],
+          "endCm": [
+            11.1,
+            13.4
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-09-08::SEG::05",
+          "segmentIndex": 5,
+          "startCm": [
+            11.1,
+            13.4
+          ],
+          "endCm": [
+            11.1,
+            12.575000000000001
+          ],
+          "terminal": true
+        }
+      ],
+      "label": "<<extend>>",
+      "condition": "[event detected]"
+    },
+    {
+      "id": "EXT-10-09",
+      "nativeMaster": "Extend",
+      "nativeArrowCode": 1,
+      "nativeArrowSourceCell": "EndArrow",
+      "plannedPointsCm": [
+        [
+          23.3,
+          11.225
+        ],
+        [
+          23.3,
+          9.4
+        ],
+        [
+          27.0,
+          9.4
+        ],
+        [
+          27.0,
+          14.2
+        ],
+        [
+          17.2,
+          14.2
+        ],
+        [
+          17.2,
+          12.575000000000001
+        ]
+      ],
+      "presentationSegmentCount": 5,
+      "presentationSegments": [
+        {
+          "specId": "EXT-10-09::SEG::01",
+          "segmentIndex": 1,
+          "startCm": [
+            23.3,
+            11.225
+          ],
+          "endCm": [
+            23.3,
+            9.4
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-10-09::SEG::02",
+          "segmentIndex": 2,
+          "startCm": [
+            23.3,
+            9.4
+          ],
+          "endCm": [
+            27.0,
+            9.4
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-10-09::SEG::03",
+          "segmentIndex": 3,
+          "startCm": [
+            27.0,
+            9.4
+          ],
+          "endCm": [
+            27.0,
+            14.2
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-10-09::SEG::04",
+          "segmentIndex": 4,
+          "startCm": [
+            27.0,
+            14.2
+          ],
+          "endCm": [
+            17.2,
+            14.2
+          ],
+          "terminal": false
+        },
+        {
+          "specId": "EXT-10-09::SEG::05",
+          "segmentIndex": 5,
+          "startCm": [
+            17.2,
+            14.2
+          ],
+          "endCm": [
+            17.2,
+            12.575000000000001
+          ],
+          "terminal": true
+        }
+      ],
+      "label": "<<extend>>",
+      "condition": "[replan required]"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "status": "FAIL",
+  "plan": "PLAN_O_GRID10_NEGOTIATED",
+  "seed": 20260907,
+  "samples": 8,
+  "axisCounts": {
+    "x": 85,
+    "y": 79
+  },
+  "familyCounts": {
+    "A-T-UC-02": 5,
+    "A-T-UC-04": 7,
+    "A-T-UC-05": 8,
+    "A-T-UC-06": 6,
+    "A-T-UC-07": 2,
+    "A-T-UC-08": 4,
+    "A-T-UC-10": 6,
+    "A-T-UC-11": 8,
+    "A-T-UC-12": 5,
+    "A-CD-UC-04": 6,
+    "A-CD-UC-05": 5,
+    "A-CD-UC-10": 8,
+    "A-M-UC-04": 6,
+    "A-M-UC-08": 6,
+    "A-M-UC-10": 6,
+    "A-B-06": 4,
+    "A-PA-07": 6,
+    "A-CE-09": 8
+  },
+  "emptyRoutes": [],
+  "authoritativeCandidateModified": false,
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "pid": 10680,
+  "solverStatus": "INFEASIBLE",
+  "wallTimeSeconds": 0.0096155,
+  "candidateCount": 106,
+  "conflictPairCount": 1223
+}

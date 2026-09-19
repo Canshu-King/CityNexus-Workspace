@@ -1,0 +1,2065 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\moodle\\_qoder_integration_20260919\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--reporter=json"
+    ],
+    "configFile": "D:\\moodle\\_qoder_integration_20260919\\frontend\\playwright.config.ts",
+    "rootDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "D:\\moodle\\_qoder_integration_20260919\\frontend\\e2e\\_qoderAuthoritativeSetup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/moodle/_qoder_integration_20260919/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "real-seed",
+        "name": "real-seed",
+        "testDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+        "testIgnore": [
+          "/[\\\\/]e2e[\\\\/]legacy[\\\\/]/"
+        ],
+        "testMatch": [
+          "/_qoderRealSeed\\.setup\\.ts/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "D:/moodle/_qoder_integration_20260919/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/moodle/_qoder_integration_20260919/frontend/e2e",
+        "testIgnore": [
+          "/[\\\\/]e2e[\\\\/]legacy[\\\\/]/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "_qoderRealSeed.setup.ts",
+      "file": "_qoderRealSeed.setup.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "seed a real journey through the product API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "real-seed",
+              "projectName": "real-seed",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4870,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[qoder-real-seed] journey=c89ec546-ffdf-4ab1-a2d9-1971bbda5db0 options=4 chosen=179cd4db-854c-43fe-b1e6-8b50d7933324 (Haihe Riverside Hotel)\n"
+                    },
+                    {
+                      "text": "[qoder-real-seed] trialWizard=false live-journey-current=true\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:55:06.136Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e5b963f3c8f6099f74d0-d425156f0efa8e024368",
+          "file": "_qoderRealSeed.setup.ts",
+          "line": 110,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "golden.spec.ts",
+      "file": "golden.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "an accepted closure recovery is backend truth on V8 Live and survives reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1348,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[golden] accepted plan cddb64f7-1170-434e-827b-a368d13b7e65 reports 6 activities, 0 without a place_id; commitment booking=c1a5a83c-57b5-4fa6-9a89-29e18394293b commitment=dda14d29-91df-4264-87bd-ba9d56a8e8bf cruise(locked=true,protected=true)\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:55:11.441Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "368b625b608da03d5a27-5392265cd113f2851bfe",
+          "file": "golden.spec.ts",
+          "line": 55,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "live-autopilot-v5.spec.ts",
+      "file": "live-autopilot-v5.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the guardian autopilot recovers a live journey from a provider event with no traveller action",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2127,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[zero-touch] plan 55523d40-cafe-5bd2-b30a-de057ec7a839 -> 0640bef2-282d-44f6-ad99-dbc7d9c8f862 without a traveller action; feed source=audit_log, 52 entries, acceptances [\"replan_auto_accepted/AI_AGENT\",\"replan_auto_accepted/AI_AGENT\"]\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:55:12.903Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "94ed269759f25bdd5975-cdb0fa8241575daa2b9e",
+          "file": "live-autopilot-v5.spec.ts",
+          "line": 50,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "predictive-real-city-v6.spec.ts",
+      "file": "predictive-real-city-v6.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a forecast is prevented before the failure happens, and the traveller can see why",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9950,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[prevention] recomposition changed: true\n  before [[\"place-old-town\",\"2026-10-10T09:00:00+08:00\"],[\"place-riverside-museum\",\"2026-10-10T10:30:00+08:00\"],[\"place-food-hall\",\"2026-10-10T12:00:00+08:00\"],[\"place-tech-art\",\"2026-10-10T13:20:00+08:00\"],[\"place-river-cruise\",\"2026-10-10T15:30:00+08:00\"],[\"place-skyline-dinner\",\"2026-10-10T17:00:00+08:00\"]]\n  after  [[\"place-old-town\",\"2026-10-10T09:00:00+08:00\"],[\"place-riverside-museum\",\"2026-10-10T10:30:00+08:00\"],[\"place-food-hall\",\"2026-10-10T12:00:00+08:00\"],[\"place-city-park\",\"2026-10-10T13:20:00+08:00\"],[\"place-river-cruise\",\"2026-10-10T15:30:00+08:00\"],[\"place-skyline-dinner\",\"2026-10-10T17:00:00+08:00\"]]\n"
+                    },
+                    {
+                      "text": "[prevention] prediction provenance [{\"captured_at\":\"2026-09-19T16:55:15.381148+00:00\",\"expires_at\":\"2026-09-19T17:10:15.381148+00:00\",\"observation_id\":\"980da2e5-ca1f-4aca-b18e-706f1dbefea0\",\"observation_type\":\"MOBILITY\",\"provenance\":\"REPLAY\",\"provider_key\":\"city-signal-fixture\"},{\"captured_at\":\"2026-09-19T16:55:15.381148+00:00\",\"expires_at\":\"2026-09-19T17:10:15.381148+00:00\",\"observation_id\":\"6f21a4f1-ad7c-48fc-8510-83f5b9a14dd2\",\"observation_type\":\"CITY_SIGNAL\",\"provenance\":\"REPLAY\",\"provider_key\":\"open-meteo-replay\"}] · mesh candidates 3\n"
+                    },
+                    {
+                      "text": "[prevention] run=a813c03a-602d-46e8-97c8-9d284c0a6017 decision=PREEMPTIVE_RECOVERY trigger=PREDICTIVE action=EXECUTED solver=ORTOOLS_CP_SAT_V2 booking=38ac455f-a612-4d86-8086-415b98b4a8ec commitment=2eb2c90b-29f5-47c9-ae61-cba365e78080 plan 55523d40-cafe-5bd2-b30a-de057ec7a839 -> c012e2f0-97e0-4037-a7c7-1f90f2f37d41 with no hard failure on the journey and 0 scan requests\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:55:15.051Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4894c07164170a07435a-4872c9f93aad516e10d6",
+          "file": "predictive-real-city-v6.spec.ts",
+          "line": 86,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "product-hardening.spec.ts",
+      "file": "product-hardening.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "an autonomous recovery executes inside its envelope and is observable on the current recovery surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2934,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[envelope] executed recovery: cost delta -3000 of 5000, drift -5 of 120, plan 55523d40-cafe-5bd2-b30a-de057ec7a839 -> 6c187674-2bb0-4bb1-9135-c36766ec650a\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:55:25.024Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2ffb2a6c00d6fb8ad8db-f1510509663100773d05",
+          "file": "product-hardening.spec.ts",
+          "line": 83,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "product-v8.spec.ts",
+      "file": "product-v8.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "V8 product experience",
+          "file": "product-v8.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "completes the multi-day stay and autonomous recovery journey",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3676,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[stay-explorer] offerCards=4 noOptionsState=0\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:27.977Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "12c80ef017c6f7cfbfe6-7774b143b8c08d7465e5",
+              "file": "product-v8.spec.ts",
+              "line": 12,
+              "column": 3
+            },
+            {
+              "title": "keeps the mobile Journey, Map, AI, Bookings, Me composition usable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2498,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:31.662Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "12c80ef017c6f7cfbfe6-ec322dd82df08762746c",
+              "file": "product-v8.spec.ts",
+              "line": 58,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-ack-rendered.spec.ts",
+      "file": "qoder-ack-rendered.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T3 acknowledgement vs resolution (rendered integration)",
+          "file": "qoder-ack-rendered.spec.ts",
+          "line": 197,
+          "column": 6,
+          "specs": [
+            {
+              "title": "an ACKNOWLEDGED disruption with no linked acceptance stays open: both '发生了什么' and '已知晓，仍待处理' render",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 488,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:34.197Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-aba9fe52acc648eca786",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 198,
+              "column": 3
+            },
+            {
+              "title": "an ACCEPTED proposal linked to the event by trigger_event_id closes it: no open/acknowledged notice, shown as handled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 434,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:34.695Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-7be1823e7e89336551c4",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "an ACCEPTED proposal with an UNRELATED trigger_event_id leaves the event open",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 428,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:35.141Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-d6a15c785fb1bafb50e9",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 246,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "T3 ack vs resolution — Today surface (rendered integration)",
+          "file": "qoder-ack-rendered.spec.ts",
+          "line": 279,
+          "column": 6,
+          "specs": [
+            {
+              "title": "an ACKNOWLEDGED event with no acceptance stays an unresolved change on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 409,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:35.589Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-cde7acd51ffd1ab0172a",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 280,
+              "column": 3
+            },
+            {
+              "title": "a matching ACCEPTED replan clears the change count on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 398,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:36.008Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-3afe1cd932624ae6d9db",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 292,
+              "column": 3
+            },
+            {
+              "title": "an UNRELATED accepted proposal still leaves the change unresolved on Today",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 376,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:36.414Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2270f19087d57efcb859-822e07c44fad4c9dfa98",
+              "file": "qoder-ack-rendered.spec.ts",
+              "line": 311,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-ack-resolution.spec.ts",
+      "file": "qoder-ack-resolution.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T3 acknowledgement vs resolution (unit)",
+          "file": "qoder-ack-resolution.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "acknowledged-only stays open; only linked acceptance resolves",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 293,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:36.807Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "064057ec4672d5ae5434-5874badd09c4a2d212ad",
+              "file": "qoder-ack-resolution.spec.ts",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-budget-evidence.spec.ts",
+      "file": "qoder-budget-evidence.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T4 budget evidence coverage (unit)",
+          "file": "qoder-budget-evidence.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "NONE / PARTIAL / FULL are distinct, and only FULL allows a verdict",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 264,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:37.120Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bdb2b166fb45b54e8865-ed6b62c0fd38c4188174",
+              "file": "qoder-budget-evidence.spec.ts",
+              "line": 19,
+              "column": 3
+            },
+            {
+              "title": "B4: all activities priced but an unknown hotel/booking stays PARTIAL (no trip verdict)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 278,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:37.392Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bdb2b166fb45b54e8865-9f82b7bb751f49c86a79",
+              "file": "qoder-budget-evidence.spec.ts",
+              "line": 67,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-budget-rendered.spec.ts",
+      "file": "qoder-budget-rendered.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T4 budget evidence coverage (rendered integration)",
+          "file": "qoder-budget-rendered.spec.ts",
+          "line": 170,
+          "column": 6,
+          "specs": [
+            {
+              "title": "B4: all stops priced but an unknown stay/transport -> the block refuses a verified-budget verdict and shows PARTIAL wording",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 341,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:37.694Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-3d1d1a777e9770c6d0e1",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "only when every budget-relevant item is known does the FULL verdict wording render",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 394,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:38.044Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-101bfc4b9085e7b50794",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 195,
+              "column": 3
+            },
+            {
+              "title": "a KNOWN_FREE (0 amount) stop counts as known and keeps the block at FULL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 385,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:38.447Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ea8024a7385cdc3d70e-e3615883bc8f3f911e04",
+              "file": "qoder-budget-rendered.spec.ts",
+              "line": 215,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-contrast-audit.spec.ts",
+      "file": "qoder-contrast-audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder contrast audit (Today + Live, light + dark)",
+          "file": "qoder-contrast-audit.spec.ts",
+          "line": 188,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no contrast violations on Today/Live, light + dark (mobile)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8726,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== today/mobile/dark — scanned 194 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== live/mobile/dark — scanned 241 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== today/mobile/light — scanned 194 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n\n=== live/mobile/light — scanned 241 nodes, 0 violation(s), 3 decorative-border warning(s) ===\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:38.862Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-d9ba0b7660b7268d3531",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 193,
+              "column": 5
+            },
+            {
+              "title": "focus indicators clear 3:1 on Today/Live, light + dark (mobile)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7615,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:47.596Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-cb2448eb505eda12f5ed",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 213,
+              "column": 5
+            },
+            {
+              "title": "no contrast violations on Today/Live, light + dark (desktop)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8681,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== today/desktop/dark — scanned 194 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== live/desktop/dark — scanned 241 nodes, 0 violation(s), 2 decorative-border warning(s) ===\n\n=== today/desktop/light — scanned 194 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n\n=== live/desktop/light — scanned 241 nodes, 0 violation(s), 4 decorative-border warning(s) ===\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:55:55.220Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-3c46099a83b445ee2431",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 193,
+              "column": 5
+            },
+            {
+              "title": "focus indicators clear 3:1 on Today/Live, light + dark (desktop)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7596,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:03.914Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3949f3aece6f96836eaf-7e86458825d01d726831",
+              "file": "qoder-contrast-audit.spec.ts",
+              "line": 213,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-dock-geometry.spec.ts",
+      "file": "qoder-dock-geometry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Copilot dock geometry at phone size",
+          "file": "qoder-dock-geometry.spec.ts",
+          "line": 121,
+          "column": 6,
+          "specs": [
+            {
+              "title": "/v8/live: no actionable element may rest under the dock at any settled scroll position",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3597,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[dock-geometry] /v8/live @top viewport=390x844 dock=215,706 165x54 state=collapsed idle-compact idleCompact=true yieldsAtRest=false scrollY=0/1318 actionableInView=16 coveredByDock=0 coveredByNav=2 nav=768..844\n"
+                        },
+                        {
+                          "text": "      (nav reference) button \"mode-walk\" overlap=318x44px\n"
+                        },
+                        {
+                          "text": "      (nav reference) button \"mode-bicycle\" overlap=318x13px\n"
+                        },
+                        {
+                          "text": "[dock-geometry] /v8/live @middle viewport=390x844 dock=215,706 165x54 state=collapsed idle-compact idleCompact=true yieldsAtRest=false scrollY=659/1318 actionableInView=9 coveredByDock=0 coveredByNav=0 nav=768..844\n"
+                        },
+                        {
+                          "text": "[dock-geometry] /v8/live @bottom viewport=390x844 dock=215,706 165x54 state=collapsed idle-compact idleCompact=true yieldsAtRest=false scrollY=1318/1318 actionableInView=2 coveredByDock=0 coveredByNav=0 nav=768..844\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:11.526Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5fba326aef2ae2716962-8053b9da5f5ddde24b8d",
+              "file": "qoder-dock-geometry.spec.ts",
+              "line": 127,
+              "column": 5
+            },
+            {
+              "title": "/v8/hub: no actionable element may rest under the dock at any settled scroll position",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3626,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[dock-geometry] /v8/hub @top viewport=390x844 dock=215,706 165x54 state=collapsed idle-compact idleCompact=true yieldsAtRest=false scrollY=0/979 actionableInView=16 coveredByDock=0 coveredByNav=0 nav=768..844\n"
+                        },
+                        {
+                          "text": "[dock-geometry] /v8/hub @middle viewport=390x844 dock=396,706 165x54 state=collapsed idle-compact yield-at-rest idleCompact=true yieldsAtRest=true scrollY=490/979 actionableInView=13 coveredByDock=0 coveredByNav=2 nav=768..844\n"
+                        },
+                        {
+                          "text": "      (nav reference) button \"DAY 1FridayArrival · Check in · \" overlap=356x14px\n"
+                        },
+                        {
+                          "text": "      (nav reference) button \"DAY 2SaturdayFive Great Avenues \" overlap=356x36px\n"
+                        },
+                        {
+                          "text": "[dock-geometry] /v8/hub @bottom viewport=390x844 dock=215,706 165x54 state=collapsed idle-compact idleCompact=true yieldsAtRest=false scrollY=979/979 actionableInView=4 coveredByDock=0 coveredByNav=0 nav=768..844\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:15.138Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5fba326aef2ae2716962-f5223d02eb0d10f0fc97",
+              "file": "qoder-dock-geometry.spec.ts",
+              "line": 127,
+              "column": 5
+            },
+            {
+              "title": "a yielded pill is not a ghost control: hidden, unfocusable, and back again",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2880,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:18.777Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5fba326aef2ae2716962-f182b953135ea8c59d22",
+              "file": "qoder-dock-geometry.spec.ts",
+              "line": 204,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-live-structure.spec.ts",
+      "file": "qoder-live-structure.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder Live structure order (Phase 2)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 216,
+          "column": 6,
+          "specs": [
+            {
+              "title": "sections stack Current -> Map -> Disruption -> Replan (bounding rect)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 859,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[live-map] branch=honest-empty-state height=97px\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:21.691Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-8fe4cea0d931505bf77c",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 223,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live accepted transition (Phase 3)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 300,
+          "column": 6,
+          "specs": [
+            {
+              "title": "accepting a proposal surfaces the confirmation before the open warning collapses",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 898,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:22.560Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-22ea606d90cb65a0c691",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 301,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live state-coverage matrix (Phase 1)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 364,
+          "column": 6,
+          "specs": [
+            {
+              "title": "L0 NORMAL: current/next real, no disruption, no Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 405,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:23.467Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-ffa38d39c21dddbeb667",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 366,
+              "column": 3
+            },
+            {
+              "title": "L1 UNRESOLVED: disruption shown, no proposal, no Accept CTA, safe notice",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 439,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:23.879Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-0829f81f3eda08249751",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 373,
+              "column": 3
+            },
+            {
+              "title": "L2 PROPOSAL_READY: one real differing proposal, exactly one Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 407,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:24.324Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-43d0051743cac9314b75",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 381,
+              "column": 3
+            },
+            {
+              "title": "L3 ACCEPTED: Accept CTA gone, handled confirmation shown",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 459,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:24.737Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-484e775d45e1f373643b",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 395,
+              "column": 3
+            },
+            {
+              "title": "L4 MOBILITY_UNAVAILABLE-safe: rejected proposal offers no fake Accept CTA",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 436,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:25.206Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-8e5c20fbb6f6a2fc0110",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 411,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live dark replan-state audit (Phase 4)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 433,
+          "column": 6,
+          "specs": [
+            {
+              "title": "L1 UNRESOLVED and L2 PROPOSAL_READY have no dark contrast violations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 657,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:25.652Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-a8ba0b7140259c272d85",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 434,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Qoder Live map height + first screen (Phase 4)",
+          "file": "qoder-live-structure.spec.ts",
+          "line": 499,
+          "column": 6,
+          "specs": [
+            {
+              "title": "map is 240 normal and 200-216 when a decision is active; disruption reaches the fold",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3641,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[live-map] L0 branch=honest-empty-state height=97px\n"
+                        },
+                        {
+                          "text": "[live-map] L1 branch=honest-empty-state height=97px\n"
+                        },
+                        {
+                          "text": "[live-map] L2 branch=honest-empty-state height=97px\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:26.319Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ee838d5998f356af24a4-dfb800e4ec321076ff0e",
+              "file": "qoder-live-structure.spec.ts",
+              "line": 502,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-mobile-overflow.spec.ts",
+      "file": "qoder-mobile-overflow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder mobile-overflow (Today + Live)",
+          "file": "qoder-mobile-overflow.spec.ts",
+          "line": 81,
+          "column": 6,
+          "specs": [
+            {
+              "title": "no horizontal overflow at 360/412/430 on Today and Live",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10300,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:29.980Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "928439c33d86a090a673-498b293695333fc198ca",
+              "file": "qoder-mobile-overflow.spec.ts",
+              "line": 82,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "qoder-stale-cursor.spec.ts",
+      "file": "qoder-stale-cursor.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a cursor the plan cannot resolve is reported as unresolved, not as a plausible step",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 691,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:56:40.305Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "910d9ee80971ec9af5f6-e3e90a702a2b8c0cf490",
+          "file": "qoder-stale-cursor.spec.ts",
+          "line": 36,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qoder-today-hero.spec.ts",
+      "file": "qoder-today-hero.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qoder Today single-focus hero",
+          "file": "qoder-today-hero.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "hero has one primary CTA, bounded height, no empty Now slot, no overflow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7749,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:41.016Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "924c427cbcbc065904ea-a5e13c5b7149172b2104",
+              "file": "qoder-today-hero.spec.ts",
+              "line": 16,
+              "column": 3
+            },
+            {
+              "title": "reduced-motion disables the hero reveal transform",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3379,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:48.774Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "924c427cbcbc065904ea-81431a8f9fa9ff20553d",
+              "file": "qoder-today-hero.spec.ts",
+              "line": 108,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "real-world-trip-operations-v9.spec.ts",
+      "file": "real-world-trip-operations-v9.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real-world trip operations: inbox to luggage-aware autonomous recovery",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4553,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:56:52.174Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29e7341f982624cf90aa-8a11254deda98461369d",
+          "file": "real-world-trip-operations-v9.spec.ts",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-accessibility.spec.ts",
+      "file": "v10-accessibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 live execution surface has no automated accessibility violations",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1184,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:56:56.781Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29d23d6481181e2cc578-80f18dc7a2cc81332edc",
+          "file": "v10-accessibility.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-inbox.spec.ts",
+      "file": "v10-inbox.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 Journey Inbox exposes text, image, and deterministic code paths",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 541,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:56:57.988Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "64aa652ee6696cfdcc48-dcd8163cddaa1f7f43fc",
+          "file": "v10-inbox.spec.ts",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-live-execution.spec.ts",
+      "file": "v10-live-execution.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V10 live execution panel exposes the server clock and evidence trail",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 729,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:56:58.549Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8db3bb2dfefe9aa0b397-a123abc512c1202ca1b9",
+          "file": "v10-live-execution.spec.ts",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v10-quality-budget.spec.ts",
+      "file": "v10-quality-budget.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "V10 product-quality budget",
+          "file": "v10-quality-budget.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Live Journey becomes usable without layout or server-error regressions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 721,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-19T16:56:59.307Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "097d06b879bafd514efa-c2f90fd859dc33a03d51",
+              "file": "v10-quality-budget.spec.ts",
+              "line": 5,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "v13-5-fully-grounded.spec.ts",
+      "file": "v13-5-fully-grounded.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "City Discovery renders the fully grounded Journey proof",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1517,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:57:00.053Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0bf14543113d88c76d29-4f3ee0ce4dbc72d6f7d8",
+          "file": "v13-5-fully-grounded.spec.ts",
+          "line": 50,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v13-authoritative-integrity.spec.ts",
+      "file": "v13-authoritative-integrity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "accepted authoritative execution truth converges to Dexie offline truth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1266,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-19T16:57:01.592Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f25db6e4799f01ecfe6-e627389b5953c571676c",
+          "file": "v13-authoritative-integrity.spec.ts",
+          "line": 19,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-19T16:55:02.399Z",
+    "duration": 121149.024,
+    "expected": 46,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

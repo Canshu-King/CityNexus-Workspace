@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "warning": "Approximate coordinates must be verified by the owner before live use. The smoke tool rejects them by default.",
+  "project_known_coordinate": {
+    "lat": 24.4581979,
+    "lon": 118.0689473,
+    "source": "backend/tests/test_qoder_physical_identity_contract.py",
+    "meaning": "real Xiamen wrapper/provider pair; exact venue intentionally not asserted"
+  },
+  "points": [
+    {"id": "gao_qi_airport", "label": "Xiamen Gaoqi International Airport", "lat": 24.5440, "lon": 118.1277, "verification_status": "UNVERIFIED_APPROXIMATION"},
+    {"id": "xiamen_north_station", "label": "Xiamen North Railway Station", "lat": 24.6370, "lon": 118.0740, "verification_status": "UNVERIFIED_APPROXIMATION"},
+    {"id": "central_hotel_zone", "label": "Central hotel/POI zone", "lat": 24.4581979, "lon": 118.0689473, "verification_status": "PROJECT_KNOWN"},
+    {"id": "ferry_terminal_side", "label": "Xiamen ferry terminal-side point", "lat": 24.4497, "lon": 118.0678, "verification_status": "UNVERIFIED_APPROXIMATION"},
+    {"id": "shapowei", "label": "Shapowei urban POI", "lat": 24.4364, "lon": 118.0853, "verification_status": "UNVERIFIED_APPROXIMATION"},
+    {"id": "science_museum", "label": "Xiamen Science and Technology Museum", "lat": 24.4933, "lon": 118.1110, "verification_status": "UNVERIFIED_APPROXIMATION"}
+  ],
+  "pairs": [
+    {"id": "airport-to-central", "origin": "gao_qi_airport", "destination": "central_hotel_zone", "costing": "auto"},
+    {"id": "north-station-to-central", "origin": "xiamen_north_station", "destination": "central_hotel_zone", "costing": "auto"},
+    {"id": "central-to-ferry-side", "origin": "central_hotel_zone", "destination": "ferry_terminal_side", "costing": "pedestrian"},
+    {"id": "central-to-shapowei", "origin": "central_hotel_zone", "destination": "shapowei", "costing": "pedestrian"},
+    {"id": "shapowei-to-science-museum", "origin": "shapowei", "destination": "science_museum", "costing": "auto"}
+  ]
+}

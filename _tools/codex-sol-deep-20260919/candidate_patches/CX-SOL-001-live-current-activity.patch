@@ -1,0 +1,51 @@
+diff --git a/frontend/src/app/V8Experience.tsx b/frontend/src/app/V8Experience.tsx
+index eca55ac..e0fa6e7 100644
+--- a/frontend/src/app/V8Experience.tsx
++++ b/frontend/src/app/V8Experience.tsx
+@@ -249,6 +249,25 @@ function nextActivityOf(plan: V8Data["active_plan"]) {
+   return plan.activities[index >= 0 ? index + 1 : 1] ?? null;
+ }
+ 
++/**
++ * Project the authoritative execution cursor into the consumer-facing Live
++ * window. Activities and legs are emitted in sequence order; leg N connects
++ * activity N to N + 1. Falling back to the first activity is only appropriate
++ * before execution has a current cursor, never after the journey advances.
++ */
++function liveActivityWindow(plan: V8Data["active_plan"]) {
++  if (!plan) return { now: null, next: null, nextLeg: null };
++  const cursor = plan.activities.findIndex(
++    (item) => item.id === plan.current_activity_id,
++  );
++  const currentIndex = cursor >= 0 ? cursor : 0;
++  return {
++    now: plan.activities[currentIndex] ?? null,
++    next: plan.activities[currentIndex + 1] ?? null,
++    nextLeg: plan.legs[currentIndex] ?? null,
++  };
++}
++
+ export function V8Experience() {
+   const [route, setRoute] = useState(routeFromPath);
+   const [data, setData] = useState<V8Data | null>(null);
+@@ -2021,9 +2040,7 @@ function Live({
+ }) {
+   const t = useT();
+   const { locale } = useLocale();
+-  const now = data.active_plan?.activities[0];
+-  const next = data.active_plan?.activities[1];
+-  const nextLeg = data.active_plan?.legs[0];
++  const { now, next, nextLeg } = liveActivityWindow(data.active_plan);
+   return (
+     <section className="v8-page" data-testid="v8-live-journey">
+       <div className="v8-page-intro compact">
+@@ -2101,8 +2118,7 @@ function LiveSecondary({
+   const t = useT();
+   const { locale } = useLocale();
+   const zh = locale.startsWith("zh");
+-  const next = data.active_plan?.activities[1];
+-  const nextLeg = data.active_plan?.legs[0];
++  const { next, nextLeg } = liveActivityWindow(data.active_plan);
+   const planDisruptions = data.active_plan?.disruptions ?? [];
+   const disruptions = planDisruptions.filter((item) => !isHandledDisruption(item));
+   const destination =

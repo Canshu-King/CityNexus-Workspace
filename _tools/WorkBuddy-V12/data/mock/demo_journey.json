@@ -1,0 +1,17 @@
+{
+  "journey": {
+    "id": "demo-journey-001",
+    "traveler_id": "demo-traveler-001",
+    "title": "Demo City Trip",
+    "city_code": "CNX-DEMO",
+    "timezone": "Asia/Shanghai",
+    "start_at": "2026-09-14T09:00:00+08:00",
+    "end_at": "2026-09-15T18:00:00+08:00",
+    "budget": {
+      "currency": "CNY",
+      "amount_minor": 500000
+    },
+    "planning_mode": "balanced"
+  },
+  "constraints": []
+}

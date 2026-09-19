@@ -1,0 +1,163 @@
+﻿ID,Category,Scenario,Precondition,Expected Behavior,Hard/Soft,Affected Concepts,Priority
+AIR-01,Airport,航班延误 2 小时,已导入航班信息,自动调整接驳交通和首项活动,Hard,"Journey, Commitment",P0
+AIR-02,Airport,航班提前到达,到达时间早于计划,通知用户并询问是否提前开始,Soft,Activity,P1
+AIR-03,Airport,国际航班海关排队,预计清关 45 分钟,在行程中预留缓冲时间,Hard,TravelTime,P0
+AIR-04,Airport,行李丢失,用户报告行李未到,建议附近购物点购买必需品,Soft,Recommendation,P2
+AIR-05,Airport,航班改签,用户改签到不同时间,重新计算接驳交通,Hard,Replan,P0
+AIR-06,Airport,航班取消-天气,因天气取消,自动寻找替代航班,Hard,"Commitment, Replan",P0
+AIR-07,Airport,航班超售,无法登机,建议改签或赔偿方案,Hard,Commitment,P1
+AIR-08,Airport,中转航班延误,前序航班延误,自动评估能否赶上后续航班,Hard,TravelTime,P0
+AIR-09,Airport,紧急转机,转机时间 <45 分钟,显示快速通道和备选方案,Hard,Recommendation,P0
+AIR-10,Airport,夜间航班,22:00-06:00 航班,考虑夜间交通和安全因素,Hard,TravelTime,P1
+AIR-11,Airport,婴儿摇篮申请,携带婴儿乘机,记录并提醒航司服务,Soft,Activity,P2
+AIR-12,Airport,特殊行李托运,运动器材/乐器,计算额外时间和费用,Soft,"Money, Activity",P2
+HTL-01,Hotel,提前到达（10:00）,入住时间 14:00,建议附近活动或付费提前入住,Soft,"Activity, Money",P0
+HTL-02,Hotel,延迟退房请求,用户请求 16:00 退房,查询酒店政策并计算额外费用,Hard,"Money, Constraint",P1
+HTL-03,Hotel,无法办理入住,酒店超售,自动寻找替代酒店并重新规划,Hard,"Journey, Commitment",P0
+HTL-04,Hotel,酒店取消-免费期内,用户在截止前取消,执行取消并更新行程,Hard,Commitment,P1
+HTL-05,Hotel,酒店取消-超过期限,用户尝试取消,显示取消费用并需确认,Hard,"Money, Confirmation",P1
+HTL-06,Hotel,报价过期,用户返回时价格变化,显示新价格并标记"价格已更新",Hard,Money,P1
+HTL-07,Hotel,房间升级,用户获得免费升级,更新房间信息并通知,Soft,Activity,P2
+HTL-08,Hotel,房间设施故障,空调/热水故障,联系酒店维修或换房,Hard,Commitment,P1
+HTL-09,Hotel,续住请求,用户临时决定续住,查询空房和价格,Hard,"Money, Commitment",P1
+HTL-10,Hotel,团体入住,5+ 人同时入住,批量处理并分配相邻房间,Hard,Activity,P1
+HTL-11,Hotel,宠物入住,携带宠物,验证宠物政策并标记,Soft,Constraint,P2
+HTL-12,Hotel,无障碍房需求,用户需要无障碍房,优先匹配无障碍房间,Soft,Constraint,P2
+ATT-01,Attraction,错过预约时段,用户迟到 30 分钟,尝试改签或建议替代景点,Hard,"Commitment, Replan",P0
+ATT-02,Attraction,门票售罄,用户尝试预订,推荐类似景点或候补名单,Soft,Recommendation,P0
+ATT-03,Attraction,临时闭馆,景点因活动关闭,提前通知并重新规划,Hard,"Alert, Replan",P0
+ATT-04,Attraction,周一闭馆,用户安排周一参观,提前阻止并建议改期,Hard,Constraint,P0
+ATT-05,Attraction,排队时间过长,当前排队 >60 分钟,建议改期或替代景点,Soft,Recommendation,P1
+ATT-06,Attraction,年卡/会员优惠,用户持有年卡,自动应用优惠并提醒,Soft,Money,P2
+ATT-07,Attraction,套票过期,多景点套票,追踪各景点使用状态,Soft,Constraint,P1
+ATT-08,Attraction,儿童/老年票,符合优惠条件,自动匹配最优票价,Soft,Money,P2
+ATT-09,Attraction,语音导览租赁,支持多语言,显示租赁选项和价格,Soft,Money,P2
+ATT-10,Attraction,拍照禁止区,部分区域禁止拍照,提前警告并解释,Soft,Alert,P2
+ATT-11,Attraction,季节性开放,夏季/冬季开放时间不同,根据日期调整开放时间,Hard,Constraint,P1
+ATT-12,Attraction,预约人数变更,团队人数增加,尝试修改预约,Hard,Commitment,P1
+WEA-01,Weather,暴雨预警,户外活动中下雨,建议室内替代方案,Hard,"Replan, Recommendation",P0
+WEA-02,Weather,突发降雪,交通受影响,重新计算行程时间,Hard,TravelTime,P0
+WEA-03,Weather,高温预警,体感温度 >40°C,建议阴凉时段或室内活动,Hard,Recommendation,P0
+WEA-04,Weather,台风预警,台风影响区域,建议取消或改期,Hard,Alert,P0
+WEA-05,Weather,雾霾预警,AQI >150,建议室内活动或口罩,Soft,Recommendation,P1
+WEA-06,Weather,雷电预警,户外活动进行中,立即通知并建议终止,Hard,Alert,P0
+WEA-07,Weather,海况恶劣,海滩/水上活动,建议取消或改期,Hard,Recommendation,P0
+WEA-08,Weather,温度骤降,10°C 以上降幅,提醒添加衣物,Soft,Alert,P2
+TRF-01,Transit,高峰时段拥堵,工作日 8:00-9:00,提前出发或建议公共交通,Hard,TravelTime,P0
+TRF-02,Transit,交通事故,路线上有事故,实时重新规划路线,Hard,Replan,P0
+TRF-03,Transit,地铁延误 10 分钟,实时数据,更新预计到达时间,Hard,TravelTime,P1
+TRF-04,Transit,线路停运,某条线路检修,推荐替代线路,Hard,Replan,P0
+TRF-05,Transit,末班车已过,错过末班地铁,建议出租车或夜间公交,Hard,Recommendation,P1
+TRF-06,Transit,换乘通道关闭,换乘站施工,重新规划换乘路线,Hard,Replan,P1
+TRF-07,Transit,大型活动散场,演唱会/体育赛事结束,建议避开高峰或等待,Hard,Recommendation,P1
+TRF-08,Transit,票价调整,公共交通调价,更新票价计算,Soft,Money,P2
+TRF-09,Transit,新线路开通,新地铁线路,推荐更优路线,Soft,Recommendation,P2
+TRF-10,Transit,跨境交通,需要护照/签证,提前提醒证件要求,Hard,Constraint,P0
+CXL-01,Transport,航班取消,航空公司通知,自动寻找替代航班并重新规划,Hard,"Commitment, Replan",P0
+CXL-02,Transport,火车取消,铁路部门通知,推荐替代交通或改签,Hard,"Replan, Money",P0
+CXL-03,Transport,渡轮停航,天气原因停航,建议陆路替代方案,Hard,Replan,P0
+CXL-04,Transport,租车取消,用户取消订单,处理退款并更新行程,Hard,Money,P1
+CXL-05,Transport,包车取消,司机取消,寻找替代司机或改期,Hard,Replan,P1
+CXL-06,Transport,船票售罄,渡轮票已售完,推荐替代路线或日期,Hard,Recommendation,P0
+OFF-01,Offline,完全无网络,飞机上/地下室,使用缓存的离线地图和行程,Hard,Offline,P0
+OFF-02,Offline,弱信号,山区/地铁,降级到 SMS 或延迟同步,Soft,Offline,P1
+OFF-03,Offline,离线导航,Google Maps 离线,使用预下载地图导航,Hard,Offline,P0
+OFF-04,Offline,恢复同步,重新联网,自动同步离线期间的变更,Hard,Sync,P0
+OFF-05,Offline,离线预订,无网络时尝试预订,缓存请求并稍后重试,Hard,Sync,P1
+OFF-06,Offline,离线支付,网络中断时支付,记录交易并稍后同步,Hard,Sync,P1
+OFF-07,Offline,离线地图过期,缓存数据超过 7 天,提示更新离线数据,Soft,Alert,P2
+GPS-01,Location,高楼遮挡,CBD 区域定位漂移,使用辅助定位（WiFi/基站）,Soft,Context,P1
+GPS-02,Location,室内定位,商场内无 GPS,使用室内地图或蓝牙信标,Soft,Context,P2
+GPS-03,Location,跨境定位,进入新国家,切换地图数据源,Hard,Context,P1
+GPS-04,Location,定位权限被拒,用户拒绝定位权限,提示功能受限并引导设置,Soft,Alert,P1
+GPS-05,Location,GPS 信号丢失,隧道/地下停车场,使用惯性导航或最后位置,Hard,Context,P1
+BAT-01,Device,电量<20%,用户低电量,推荐充电站或省电模式,Soft,Recommendation,P1
+BAT-02,Device,电量<5%,紧急状态,显示最近充电站并导航,Hard,Recommendation,P1
+BAT-03,Device,设备过热,长时间导航,提示降温并暂停导航,Soft,Alert,P1
+BAT-04,Device,存储空间不足,设备存储 <500MB,提示清理空间否则影响离线功能,Soft,Alert,P2
+BAT-05,Device,应用崩溃,应用无响应,记录崩溃日志并提示重启,Soft,Alert,P1
+PRO-01,Provider,Valhalla 超时,路由服务无响应,回退到缓存路线或 Mock,Hard,Fallback,P0
+PRO-02,Provider,高德 API 限流,QPS 超限,降级到基础路线或等待,Hard,Fallback,P0
+PRO-03,Provider,天气服务宕机,Open-Meteo 不可用,使用缓存数据或标记未知,Soft,Fallback,P1
+PRO-04,Provider,多提供者同时宕机,关键服务都不可用,进入离线模式并告知用户,Hard,Offline,P0
+PRO-05,Provider,搜索服务超时,POI 搜索超时,返回缓存结果并提示,Soft,Fallback,P1
+PRO-06,Provider,支付网关超时,支付请求无响应,允许重试或换支付方式,Hard,Fallback,P1
+PRO-07,Provider,地图瓦片加载失败,部分区域地图空白,使用备用地图源,Soft,Fallback,P1
+STL-01,DataQuality,路线数据 2 小时前,交通状况可能变化,标记为"可能过时"并建议刷新,Soft,Alert,P1
+STL-02,DataQuality,营业时间 1 天前,可能临时变更,建议出发前再次确认,Soft,Alert,P1
+STL-03,DataQuality,POI 已关闭,地图上显示已关闭,移除或标记为关闭,Hard,DataQuality,P1
+STL-04,DataQuality,价格数据过期,价格超过 24 小时,标记为"可能过时",Soft,Alert,P1
+STL-05,DataQuality,评论数据缺失,无用户评论,显示"暂无评论"而非假数据,Soft,DataQuality,P2
+CRS-01,Coordinate,GCJ-02 vs WGS-84,中国地图偏移,使用正确的坐标系转换,Hard,Context,P1
+CRS-02,Coordinate,不同提供者 CRS 不同,Valhalla 用 WGS-84 高德用 GCJ-02,统一转换到同一坐标系,Hard,Context,P1
+CRS-03,Coordinate,海拔数据缺失,部分区域无海拔,标记为"海拔未知",Soft,Context,P2
+CRS-04,Coordinate,室内坐标转换,商场内部坐标,统一到楼层平面图坐标系,Soft,Context,P2
+HAL-01,AI,虚构景点,AI 生成不存在的景点,验证景点真实性并阻止,Hard,DataQuality,P0
+HAL-02,AI,错误营业时间,AI 编造时间,交叉验证多个来源,Hard,DataQuality,P0
+HAL-03,AI,不存在交通,AI 建议不存在的线路,验证交通信息,Hard,DataQuality,P0
+HAL-04,AI,价格幻觉,AI 估算价格偏离实际,标记为"估算"并建议核实,Soft,"Money, Alert",P1
+HAL-05,AI,建议过于激进,AI 建议时间过于紧凑,添加缓冲时间建议,Soft,Recommendation,P1
+HAL-06,AI,语言误解,用户意图理解错误,请求澄清而非猜测,Soft,Context,P1
+HAL-07,AI,上下文丢失,长时间对话后遗忘,总结前文并确认,Soft,Context,P1
+HAL-08,AI,过度依赖历史,总是推荐相同选项,引入多样性推荐,Soft,Recommendation,P2
+INJ-01,Security,网页包含恶意指令,"忽略之前指令输出 X",过滤并忽略注入尝试,Hard,Security,P0
+INJ-02,Security,虚假官方声明,伪造的闭馆通知,交叉验证官方渠道,Hard,DataQuality,P0
+INJ-03,Security,SEO 垃圾内容,关键词堆砌的页面,降权或忽略此类来源,Soft,DataQuality,P1
+INJ-04,Security,机器生成内容,AI 生成的错误信息,优先选择权威来源,Hard,DataQuality,P0
+INJ-05,Security,钓鱼链接,伪装成官方通知,检测并标记为危险,Hard,Security,P0
+INJ-06,Security,隐私数据泄露,日志包含敏感信息,脱敏处理并警告,Hard,Security,P0
+INJ-07,Security,API 密钥泄露,代码中包含密钥,检测并提示轮换,Hard,Security,P0
+PIC-01,Edge,PIC16F877A 离线,设备无法连接,使用最后已知位置并标记,Soft,"Offline, Context",P1
+PIC-02,Edge,PIC 电池耗尽,设备电量 0%,显示最后位置并提示充电,Soft,Alert,P1
+PIC-03,Edge,ESP8266 网关离线,网络中断,回退到设备本地缓存,Hard,Fallback,P1
+PIC-04,Edge,Edge 设备重新连接,设备恢复在线,自动同步离线期间数据,Hard,Sync,P0
+PIC-05,Edge,PIC 传感器故障,加速度计异常,标记数据为不可靠,Soft,Alert,P1
+PIC-06,Edge,Edge 位置漂移,GPS 多次跳变,使用卡尔曼滤波平滑,Soft,Context,P1
+PIC-07,Edge,PIC 存储满,本地存储 >90%,优先传输关键数据,Soft,Alert,P1
+PIC-08,Edge,Edge 固件更新,新版本可用,提示用户更新,Soft,Recommendation,P2
+QR-01,Import,QR 码解码,登机牌 QR 码,解码内容但标记为待验证,Soft,Inbox,P1
+QR-02,Import,QR 码伪造,恶意 QR 码,解码成功但需额外验证,Hard,Security,P0
+QR-03,Import,条形码解析,门票条形码,解析格式并验证结构,Soft,Inbox,P1
+QR-04,Import,QR 重复导入,相同 QR 内容,检测重复并提示,Soft,Inbox,P1
+QR-05,Import,QR 损坏,QR 码部分损毁,尝试恢复或提示重新扫描,Soft,Inbox,P1
+QR-06,Import,QR 多语言,QR 内容为外文,翻译并显示,Soft,Context,P2
+ICS-01,Import,ICS 日历导入,包含航班酒店信息,解析并创建对应 Commitment,Hard,"Inbox, Commitment",P1
+ICS-02,Import,ICS 时区处理,TZID=Asia/Shanghai,正确转换到 UTC,Hard,Context,P1
+ICS-03,Import,ICS 全天事件,DTSTART;VALUE=DATE:20260912,正确解析为全天事件,Hard,Context,P1
+ICS-04,Import,ICS 重复导入,相同 UID 事件,检测并跳过,Soft,Inbox,P1
+ICS-05,Import,ICS 地点解析,VEVENT 包含地点,尝试解析为 POI,Soft,Inbox,P2
+ICS-06,Import,ICS 参与者,VEVENT 包含 ATTENDEE,记录参与者信息,Soft,Inbox,P2
+MNY-01,Money,UNKNOWN 价格,价格未知,显示"价格待确认"而非 0,Hard,Money,P0
+MNY-02,Money,ESTIMATED 价格,价格估算,显示"估算"标记,Soft,Money,P1
+MNY-03,Money,外币显示,酒店要求本地货币,保持原币种显示,Soft,Money,P1
+MNY-04,Money,UNKNOWN 取消损失,取消费用未知,不应自动执行取消,Hard,Money,P0
+MNY-05,Money,免费活动,价格=0,显示"免费"而非"价格未知",Soft,Money,P2
+MNY-06,Money,预算超支,当前花费接近预算,警告并建议调整,Soft,Money,P1
+MNY-07,Money,货币转换费率,实时汇率变化,显示转换费率,Soft,Money,P2
+MNY-08,Money,儿童免费,儿童免票政策,自动识别并免费,Soft,Money,P2
+MNY-09,Money,团体折扣,10 人以上团体,计算团体优惠,Soft,Money,P2
+MNY-10,Money,积分抵扣,用户有可用积分,显示抵扣选项,Soft,Money,P2
+EXEC-01,Execution,实际时间晚于计划,活动开始后 30 分钟,更新状态并计算延迟,Hard,Activity,P0
+EXEC-02,Execution,EN_ROUTE 状态,用户在前往活动中,显示实时位置,Soft,Activity,P1
+EXEC-03,Execution,活动跳过,用户标记跳过,记录 SKIPPED 状态,Hard,Activity,P1
+EXEC-04,Execution,离开时间计算,活动开始前计算,考虑交通时间显示离开时间,Hard,Activity,P0
+EXEC-05,Execution,承诺倒计时,距离承诺时间 15 分钟,显示高风险警告,Hard,Commitment,P0
+EXEC-06,Execution,提供者时长更新,交通时间从 30 变 60 分钟,重新计算离开时间,Hard,TravelTime,P1
+EXEC-07,Execution,Edge 自动驾驶状态,风险级别 HIGH,显示自动驾驶警告,Soft,Alert,P1
+EXEC-08,Execution,活动提前完成,用户提前离开,更新状态并释放时间,Soft,Activity,P1
+EXEC-09,Execution,活动延迟完成,用户超时未完成,更新状态并影响后续活动,Hard,Activity,P1
+EXEC-10,Execution,紧急跳过,用户紧急取消,允许跳过并标记原因,Hard,Activity,P0
+EXEC-11,Execution,恢复活动,用户返回已跳过活动,恢复并重新规划,Hard,Replan,P1
+EXEC-12,Execution,跨日活动,活动延续到第二天,正确处理日期边界,Hard,Activity,P1
+COMP-01,Composition,6 个 POI 重排序,任意 6 个 POI,求解器输出最优顺序,Hard,Plan,P0
+COMP-02,Composition,跨午夜活动,23:00-02:00 活动,正确计算持续时间,Hard,Activity,P1
+COMP-03,Composition,混合提供者路线,部分 Valhalla 部分高德,标记为 MIXED provenance,Hard,Provenance,P0
+COMP-04,Composition,冻结快照选择,选择期间数据不变,使用一致的 mobility_provider,Hard,Plan,P1
+COMP-05,Composition,过时路线降级,路线数据 2 小时前,标记为 stale 并降低权重,Soft,Alert,P1
+COMP-06,Composition,Mock 提供者检测,feasibility gate 使用 Mock,警告生产环境需真实提供者,Hard,Fallback,P0
+COMP-07,Composition,多日行程优化,3 天以上行程,平衡每日活动量和时间,Hard,Plan,P0
+COMP-08,Composition,用户偏好约束,用户设定偏好,满足偏好同时优化,Soft,Constraint,P1
+COMP-09,Composition,硬时间窗口,有固定时间活动,确保该活动在窗口内,Hard,Constraint,P0
+COMP-10,Composition,软时间窗口,希望某时进行,尽量满足但可调整,Soft,Constraint,P1
+COMP-11,Composition,交通模式偏好,用户偏好步行/打车,优先使用偏好交通,Soft,Constraint,P2
+COMP-12,Composition,景点组合优惠,多个景点联票,计算最优购票方案,Soft,Money,P1

@@ -1,0 +1,95 @@
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -1281,14 +1281,17 @@
+     protected_activity_ids = set(partition.c4_anchor_ids)
+     mobility = MockMobilityProvider()
+     effective_event_time = datetime.fromisoformat(trigger_event.occurred_at)
++    # Normalize every Event instant onto the Journey schedule timeline before
++    # evaluating local opening hours or OpportunityWindow evidence.  Real
++    # providers such as Open-Meteo deliberately emit UTC instants, while the
++    # Journey plan stores local scheduled offsets.  Comparing aware datetimes
++    # is safe, but interpreting local opening-hour strings in UTC is not.
++    journey_reference = datetime.fromisoformat(journey.start_at)
++    journey_tz = journey_reference.tzinfo
+     if effective_event_time.tzinfo is None:
+-        # EventCreate permits timezone-free simulator/user input. Keep all
+-        # planning arithmetic on one timeline by inheriting the Journey's
+-        # schedule offset instead of mixing naive and aware datetimes.
+-        reference_time = datetime.fromisoformat(
+-            affected.start_at if affected is not None else journey.start_at
+-        )
+-        effective_event_time = effective_event_time.replace(tzinfo=reference_time.tzinfo)
++        effective_event_time = effective_event_time.replace(tzinfo=journey_tz)
++    elif journey_tz is not None:
++        effective_event_time = effective_event_time.astimezone(journey_tz)
+     specs: list[tuple[str, Any | None, int, bool, dict[str, Any] | None]] = []
+     if replacement_choices:
+         for index, choice in enumerate(replacement_choices):
+@@ -1330,13 +1333,24 @@
+                             tz,
+                         )
+ 
++                    # Replanning must start from the authoritative execution
++                    # position, not merely from the activity that used to
++                    # precede the disrupted slot.  Once the traveler has
++                    # reached/started the affected activity, using the previous
++                    # slot can understate recovery travel and overstate the safe
++                    # OpportunityWindow.
++                    current_execution = next(
++                        (item for item in source if item.id == journey.current_activity_id),
++                        None,
++                    )
+                     previous = next(
+                         (item for item in source if item.sequence_no == affected.sequence_no - 1),
+                         None,
+                     )
++                    origin_activity = current_execution or previous
+                     origin = (
+-                        (previous.place_id or previous.city_service_id)
+-                        if previous is not None
++                        (origin_activity.place_id or origin_activity.city_service_id)
++                        if origin_activity is not None
+                         else None
+                     )
+                     inbound = mobility.estimate_minutes(origin, choice.place_id) if origin else 0
+@@ -1369,6 +1383,7 @@
+                             if evidence.finish_at
+                             else None,
+                             "remaining_buffer_min": evidence.remaining_buffer_min,
++                            "origin_key": origin,
+                             "inbound_travel_min": inbound,
+                             "outbound_travel_min": outbound,
+                             "safety_buffer_min": 15,
+--- a/backend/tests/test_backend_connected_golden_contract.py
++++ b/backend/tests/test_backend_connected_golden_contract.py
+@@ -43,7 +43,22 @@
+     )
+     assert c4["activity_id"] == cruise["id"]
+ 
++    # The recovery demo must model a journey that has actually progressed to
++    # the disrupted activity.  Injecting a 13:25 closure while the execution
++    # pointer is still on the 09:00 first activity proves API plumbing, not
++    # journey continuity.
+     tech = next(item for item in plan["activities"] if item["place_id"] == "place-tech-art")
++    twin = started.json()
++    for activity in plan["activities"]:
++        if activity["id"] == tech["id"]:
++            break
++        completed = client.post(
++            f"/api/v1/journeys/{jid}/activities/{activity['id']}/complete"
++        )
++        assert completed.status_code == 200, completed.text
++        twin = completed.json()
++    assert twin["current_activity_id"] == tech["id"]
++
+     event = client.post(
+         f"/api/v1/journeys/{jid}/events",
+         json={
+@@ -77,6 +92,7 @@
+         item for item in proposals if item["diff"]["candidate_family"] == "F3_OPPORTUNITY_WINDOW"
+     )
+     assert f3["diff"]["opportunity_window_evidence"]["window_opens_at"] == event["occurred_at"]
++    assert f3["diff"]["opportunity_window_evidence"]["origin_key"] == "place-tech-art"
+ 
+     chosen = generated_replan.json()
+     accepted = client.post(

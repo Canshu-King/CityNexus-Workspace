@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\app\planning\hard_recovery.py
+# hypothesis_version: 6.168.0
+
+[',', ':', 'ACKNOWLEDGED', 'ACKNOWLEDGE_WARNING', 'DETECTED', 'MAJOR', 'RECOVERY_REQUIRED', 'REPLAN', 'RESOLVED', 'USER_CHANGE', 'USER_REPORTED', 'acknowledged', 'acknowledged_at', 'actions', 'attempted_at', 'candidate_plan_count', 'candidate_plan_ids', 'capability_code', 'capability_params', 'detected_at', 'event_id', 'event_status', 'failures', 'feasibility_failures', 'kind', 'needs_review', 'no_alternative', 'recovery_event_id', 'recovery_required', 'recovery_state', 'replan_attempted', 'replan_failures', 'resolved_at', 'silent_plan_mutation', 'state']

@@ -1,0 +1,44 @@
+{
+  "status": "SEARCH_INCOMPLETE",
+  "gridCm": 0.1,
+  "trialCountRequested": 12,
+  "trialCountExecuted": 12,
+  "bestSolvedCount": 9,
+  "associationCount": 18,
+  "bestOrder": [
+    "A-T-UC-07",
+    "A-CD-UC-04",
+    "A-T-UC-04",
+    "A-CD-UC-05",
+    "A-T-UC-10",
+    "A-CE-09",
+    "A-M-UC-04",
+    "A-T-UC-11",
+    "A-T-UC-02",
+    "A-M-UC-08",
+    "A-M-UC-10",
+    "A-PA-07",
+    "A-CD-UC-10",
+    "A-T-UC-08",
+    "A-B-06",
+    "A-T-UC-06",
+    "A-T-UC-05",
+    "A-T-UC-12"
+  ],
+  "bestFailure": {
+    "route": "A-M-UC-08",
+    "index": 9,
+    "reason": "exhausted",
+    "expanded": 18032,
+    "starts": 24,
+    "goals": 107
+  },
+  "frozenExtendIds": [
+    "EXT-07-06",
+    "EXT-09-08",
+    "EXT-10-09"
+  ],
+  "authoritativeCandidateModified": false,
+  "warning": "Do not render or promote RC6 from planner output. Copy to the official candidate only after external review, then run V2/V3 and the complete test suite."
+}
+EXIT=2

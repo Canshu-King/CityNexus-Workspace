@@ -1,0 +1,13 @@
+backend/app/main.py
+backend/app/integrations/mobility/runtime.py
+backend/app/integrations/mobility/snapshot_capture.py
+backend/app/replanning/provider_snapshots.py
+backend/tests/test_provider_runtime_gate.py
+frontend/playwright.config.ts
+docs/implementation/provider-runtime/CURRENT_STATUS.md
+docs/implementation/provider-runtime/PROVIDER_RUNTIME_ARCHITECTURE.md
+docs/implementation/provider-runtime/PROVIDER_RUNTIME_GAP_ANALYSIS.md
+docs/implementation/provider-runtime/BLOCKERS.md
+docs/implementation/provider-runtime/NEXT_RECOMMENDATION.md
+docs/implementation/provider-runtime/TEST_RESULTS.md
+docs/implementation/provider-runtime/CHANGED_FILES.txt

@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\instrumentation.py
+# hypothesis_version: 6.168.0
+
+['1.4', '<%s of %r at %x>', 'DEL_ATTR', 'InstanceEvents', '_T', '__defaults__', '__del__', '__init__', '__kwdefaults__', '__name__', 'mapper']

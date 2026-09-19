@@ -1,0 +1,4 @@
+# file: D:\moodle\_codex_sol_extreme_v2_20260919\snapshot\citynexus\backend\.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py
+# hypothesis_version: 6.168.0
+
+['%s(%s)', '%s(%s, isdelete=%s)', 'DeleteAll', 'DeleteState', 'PostUpdateAll', 'ProcessAll', 'ProcessState', 'SaveUpdateAll', 'append', 'append_wo_mutation', 'collection append', 'collection remove', 'dependency_processor', 'disabled', 'fromparent', 'history', 'isdelete', 'mapper', 'processed', 'remove', 'set', 'setup_flush_actions', 'sort_key', 'state']

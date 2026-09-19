@@ -1,0 +1,28 @@
+{
+  "baseline": "380e6ff",
+  "truth_v6": "b12f24f",
+  "apple_frontend_group_a": "e330ac2",
+  "apple_frontend_group_b": "a2124c0",
+  "observed_integration": "1de4e0c569349d7eee4bc22995cc49c487e3279e",
+  "simulation_root": "simulated/integration-repo",
+  "ranges": [
+    {"name":"truth","range":"380e6ff..b12f24f","semantic_owner":"backend/provider truth plus ACK/budget frontend contracts"},
+    {"name":"visual_ia","range":"b12f24f..e330ac2","semantic_owner":"frontend visual hierarchy and Live layout"},
+    {"name":"prerequisites","range":"e330ac2..a2124c0","semantic_owner":"types, behavior prerequisites, startup"},
+    {"name":"evidence","range":"a2124c0..1de4e0c","semantic_owner":"contrast gates, real seed, reports/screenshots"}
+  ],
+  "overlap_hotspots": [
+    {"file":"frontend/src/app/V8Experience.tsx","ranges":["truth","visual_ia"],"resolution":"preserve truth helpers and visual structure; apply CX-SOL-001 cursor fix"},
+    {"file":"frontend/src/features/execution/LiveRecovery.tsx","ranges":["truth","visual_ia"],"resolution":"preserve accepted-trigger linkage while retaining reordered decision surface"},
+    {"file":"frontend/package.json","ranges":["truth","prerequisites"],"resolution":"union scripts/dependencies, prove with typecheck/build"}
+  ],
+  "focused_gates": {
+    "backend_truth_and_degradation":"81 passed",
+    "stateful_model":"400000 transitions, 12 invariants, PASS",
+    "frontend_typecheck_all":"PASS",
+    "frontend_build":"PASS",
+    "candidate_browser_regression":"1 passed"
+  },
+  "safe_to_apply_automatically": false,
+  "owner_order": ["freeze source SHA","truth/provider semantics","frontend shared lifecycle helpers","type prerequisites","visual/IA","focused gates","visual evidence"]
+}

@@ -1,0 +1,25 @@
+{
+  "pageName": "P1_UC_Overview",
+  "status": "FAIL",
+  "baseGateStatus": "PASS",
+  "semanticConnectorCount": 21,
+  "candidateRouteCount": 21,
+  "explicitGeometryRouteCount": 21,
+  "properCrossingCount": 0,
+  "collinearOverlapPairCount": 0,
+  "contactPairCount": 46,
+  "uniqueContactCount": 55,
+  "contactCounts": {
+    "crossing": 0,
+    "overlap": 0,
+    "tjunction": 22,
+    "shared_endpoint": 33
+  },
+  "shortSegmentCount": 9,
+  "redundantCollinearPointCount": 88,
+  "failures": [
+    "55 cross-route contacts",
+    "9 segments shorter than 0.1 cm",
+    "88 redundant collinear route points"
+  ]
+}
