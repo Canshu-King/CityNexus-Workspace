@@ -1145,7 +1145,23 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       请求体 / 响应码 / 错误码 / **是否进入该分支**，并明确哪一种形状最先响。
     结论仍只许三种：FALSIFIED / NOT_REACHABLE（这时整句等价声明才算测完）/ PARTIAL（写清还差什么）。
     预算 30 分钟；到点交 PARTIAL + 已有穷举。写域不变：你自己的目录 + 只读权威树。
-  status: DONE@20260920-062740 by 1fb26149（结论 PARTIAL；并更正 F 行理由串里的机制）
+  status: DONE@20260920-062740 by 1fb26149（结论 PARTIAL；并更正 F 行理由串里的机制）；**Commander 已验并据此改了量具**
+  commander_check: |
+    报告在（`_qoder_rx4_20260920/ORD27_OVERLAP_ARM.md`，06:58，7 类重复形状 + 1 对照）。
+    **这条 PARTIAL 比一个"通过"更有用**：它没有推翻"分支不可达"（17 类尝试、分支指纹 0 次、
+    same_key 峰值 1），但**推翻了支撑它的那句机制** —— 7 次里 `ACTIVITY_OVERLAP`
+    一次都没有作为最先响应出现。我采纳并把理由串改掉：
+    `tools/verification/mutation_campaign.py` 里 F 的 `expected_survivor_reason` 已重写为
+    "实测 17 形状 0 次进入本分支；重复之所以不成，是因为 plans/generate 以 `{place.id: place}`
+    建索引而**静默去重**（这是形状巧合不是门）、trip-studio 整单顺序规则、
+    mobility 证据不可用、v12 出发窗口规则；**`ACTIVITY_OVERLAP` 从未在这条路径上出现，
+    不应作为本行理由**"。改后 `--only F` 冒烟：baseline 139/139，
+    F `EQUIVALENT_OR_NON_ACTIONABLE ran=139 (failed=0)`、`source restored byte-exactly: 1/1`、
+    `CAMPAIGN PASSED`，新理由串已随表打印出来（我读过打印全文）。
+    两条口径写清楚，别让后来人误读：
+      (a) 这是**可达性**的实测，不是"这行有门"——F 行仍在分母之外；
+      (b) **"静默去重"是一句值得单独看的产品观察**（重复 place_id 被吃掉而不是被拒），
+          不属于 Mission 002 的收口范围，我没有开单，先记在这里。
   rx4_evidence: |
     基线 a98babb（if_head 9e66d1e 之后；已复核 409 文案仍在 main.py:9019）。沙箱 ord27/=git archive a98babb，
     权威树只读（git status backend 为空），解释器 CityNexus\.venv，独立 DB，无行内改库。
