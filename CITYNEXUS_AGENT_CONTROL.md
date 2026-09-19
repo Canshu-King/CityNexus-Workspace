@@ -58,7 +58,11 @@ RX-4 Worker 交付的 `candidate_tests/test_rx4_protected_commitment_generate_ga
 另记一条该 Worker 的自证坑：demo 巡航是 `locked=True` 且零承诺，任何"付费巡航在 generate 后仍存活"的断言天生为空；
 它用 `test_cruise_protection_is_not_discriminating` 把这条钉住，改用 arrival 场景做哨兵。
 
-**当前状态：RX-4 成立；Mission 002 仍红，剩余为 B（吸收）、C（16 突变矩阵按修正后的守卫地图重跑）、D（Verifier 重做）、E（集成后全量）。**
+**当前状态（03:2x，已验 HEAD `4d2f0c8`）**：A 节通过（7 条按仲裁新裁定保留）。**B 节完成**：RX-1/2/3 已进 `backend/tests` 与 campaign `SUITES`，全量 **889 passed / 15 skipped / 0 failed**，算术 `881 + 9 − 1 = 889`（减的是被退役的空转用例 `test_replan_trigger_event_must_belong_to_same_journey`）。
+C 节两项待办：① `original_text = path.read_bytes().decode("utf-8")` 不做换行归一 → **所有跨行 anchor 永远匹配不上并被静默 skip**（实测 `RX1 anchor missing`；11 个原 sabotage 里 8 个同因），修法为 LF 归一匹配、按原行尾写回；② 第 283 行 `verdict = "KILLED" if code else "SURVIVED"` 仍是退出码定性，仲裁已授权我修该 harness，但实现线正在写同一文件，我不并发写，等它本轮结果，否则以 patch 落 `tools/verification/`。
+待仲裁确认：`F` 被声明为 EXPECTED_SURVIVORS（带理由）与你要求的"0 SURVIVED / 16 KILLED"字面冲突。
+D 节 Verifier 在修自身 harness 的 TypeError；E 节等 C 节修好。
+
 
 
 ## 监督轮次记录（02:2x–02:4x）
