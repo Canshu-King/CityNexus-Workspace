@@ -149,6 +149,30 @@
             （cursor_status=VALID、next_activity_id 非空、Edge next_state=None）。
             三向竞态按仲裁指示保持 UNCONFIRMED，不计入产品缺陷与账面。
             [8c66aa92 DONE@20260920-034901] 00dfd62。edge_snapshot 之前用 legs=[] 调共享投影、再自己按 now_activity_id 反推 index（推不出就落 len(activities)），于是同一份响应里 execution 与设备字段对“有没有 Next”各执一词；你复现的形状正是 cursor 落在已完成活动、后面还有 PENDING。现在 Edge 取同一份腿列表、只问一次 _execution_truth，now/next/mode/eta 全部取自该答案，并新增顶层 next_leg_id 供设备直接引用。新增两向差分门各 1 collected：test_edge_and_v9_agree_on_whether_a_next_step_exists（有 Next 必须两边都给状态）、test_edge_and_v9_agree_when_there_really_is_no_next_step（没有 Next 两边都给 null）。突变验证：让 Edge 再自己反推 -> 1 failed / 15 passed，killer 是前者；后者在反推下仍通过，所以两个方向都留了独立节点。三向竞态按你的指示未动、未计入账面。
+- id: ORD-0008
+  to: 8c66aa92
+  priority: urgent
+  if_head: 00dfd62
+  order: 把 RX-4 的两份门吸收进权威测试树 —— 源文件在
+         D:\moodle\_qoder_rx4_20260920\delivery\test_rx4_c4_generate_gate.py（7 条）与
+         test_rx4_c4_protection_surface_gate.py（3 条）。吸收后 backend/tests 必须能收集到这两支文件。
+         原因：我上一轮给 tools/verification/mutation_campaign.py 的 SUITES 加了
+         "tests/test_rx4_c4_generate_gate.py"，而权威树里这文件还不存在 —— 现在权威树上的 campaign
+         会因为这条 SUITE 收集失败而直接 HARNESS_INVALID。要么吸收这两支，要么明确告诉我先撤这行。
+         吸收后在权威树上正式跑一轮 campaign，交 17 行表（16 actionable + 1 equivalent），
+         每行带 ran/passed/failed 与杀它的测试名。
+  status: OPEN
+  evidence: Commander 沙箱（RX-4 门纳入 SUITES 后）实测：baseline ran=133；
+            campaign: 16 killed / 0 survived / 17 attempted -> CAMPAIGN PASSED
+            （actionable=16 killed=16 survived=0 harness_invalid=0 equivalent=1）。
+            C4G 由 test_unresolvable_paid_anchor_refuses_generation_instead_of_omitting_it 杀掉；
+            C4A 由 test_confirmed_external_arrival_is_built_into_every_candidate 等两条杀掉。
+            权威树 backend/tests 目前无 rx4 文件（已核）。另 ORD-0006 我已独立复核通过：
+            在 00dfd62 上构造 legs(4) > activities(3) 且游标不可解析，投影为
+            cursor_status=STALE / now=None / next=None / next_leg_id=None / next_mode=NONE / next_eta_min=0 /
+            now_state=STALE_CURSOR —— 泄漏已封；但 next_mode 用的是既有哨兵 "NONE"、next_eta_min 用 0，
+            不是字面 null，需仲裁确认这是否满足 Amendment B 的"必须为 null"。
+
 ```
 
 
