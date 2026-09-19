@@ -1038,7 +1038,27 @@
          因为吞掉原因就是缺陷本身。修好后请先回答这一问，再交回归。
     边界：只改这两个 e2e 基础设施文件 + 一条回归；**不要**碰 `V8Experience.tsx`、不要碰
     `LiveRecovery.tsx`（你在做 ORD-0011/0017/0024）、UI 车道只读使用这两个文件（已写进 FILE_OWNERSHIP）。
-  status: OPEN
+  status: **VOID@20260920-061500 by commander —— 我的测量伪果，不是产品/地基缺陷。不要做这单。**
+  void_reason: |
+    错因：**我用 `env VAR=1 node …` 启动**（MSYS 的 `env` 会断掉 Windows 可执行文件的
+    stdout/stderr 继承 → 空输出 + exit 0）。这台机器上早已记过同型坑（`env -u VAR python -c`）。
+    改用 bash 原生赋值重跑**同一条命令**：
+```
+CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qoder-live-recovery-cursor --list
+  → exit 1
+  → stderr 1505 B：Error: [citynexus e2e] authoritative mode refuses to start:
+    CITYNEXUS_E2E_PORT must be set explicitly (the frontend must not be borrowed)
+    + "fix the invocation, not the assertion" + playwrightEnv.ts:30 / :38 / :72 栈
+```
+    ⇒ **拒绝路径本来就响亮且非零，设计是对的**（`refuse()` throw、消息点名缺哪个变量）。
+    我那条"对照组 `--config=nope.config.ts` 会大声报错"也不成立：两条命令唯一的差别就是 `env` 前缀，
+    我把**启动器当成了被测对象**。连"跨树复现"我也用了同一个坏启动器，所以它只重复了我的错误，
+    没有提供任何新信息。
+    **留下的真规矩**（对本机所有车道生效，非本单内容）：跑任何"空输出可疑"的命令时，
+    用 `VAR=value prog` 而不是 `env VAR=value prog`；出现"0 输出 + exit 0"时，
+    **先换启动器复现，再谈缺陷**。这条已写进记忆 `user-windows-toolchain-traps`。
+    代价如实记着：一个假的 P1、一次发给实现线的 urgent 派单、以及一次发给仲裁方向的"最严重缺陷"叙述，
+    约 25 分钟后自我否证。账本、终态包与 `reports/E2E_REFUSE_SILENT.md` 同步改为撤回。
   evidence: |
     Commander 05:55 亲测，四组对照全部留档在 `verify/commander_e2e/`：
     `plain.out` 523 B / `plain.err` 183 B（非权威模式正常），
@@ -1068,6 +1088,27 @@
     与已修的 `LiveRecovery.tsx`（`954edaa`）、已封的 `V8Experience` Live/LiveSecondary 同族；
     FLASH-F1 的 28 行清单（`_qoder_flash_f1_20260920/FLASH_EXECUTION_TRUTH_AUDIT.md`）里
     SUSPECT_* 17 条尚未逐条归零，这条是其中第一个被实现线自己确认的。
+
+- id: ORD-0027
+  to: 1fb26149
+  priority: normal
+  if_head: 9e66d1e
+  order: |
+    你 ORD-0019 的 PARTIAL 我收了，而且**结论比 FALSIFIED/NOT_REACHABLE 更值钱**：
+    `LOCKED_COMMITMENT_LOST` 那一臂**第一次拿到直接测量**（C3/C4/C5/C8 都是它先响，
+    分支从未进入），409 文案指纹 `accepted replan cannot remap an active C4 commitment`
+    我也在 `backend/app/main.py:9019` 核到、`RemapConflict(matched=…)` 的形状对得上。
+    但你自己在报告里划的那条边界要闭：**"重复它会被 `ACTIVITY_OVERLAP` 先拦下"这半句仍然是未测断言。**
+    → 请把同一套 instrumentation 用在这一臂上：构造"提案里让受保护承诺**重复/重叠**"的若干形状
+      （同刻重叠、跨活动复制、把锚点挪到另一条同刻活动上），逐条给出
+      请求体 / 响应码 / 错误码 / **是否进入该分支**，并明确哪一种形状最先响。
+    结论仍只许三种：FALSIFIED / NOT_REACHABLE（这时整句等价声明才算测完）/ PARTIAL（写清还差什么）。
+    预算 30 分钟；到点交 PARTIAL + 已有穷举。写域不变：你自己的目录 + 只读权威树。
+  status: OPEN
+  evidence: |
+    来源：`D:\moodle\_qoder_rx4_20260920\ORD19_F_REACHABILITY.md`（05:28，10 类穷举表 +
+    "覆盖不全，故不能判 NOT_REACHABLE"一节）。Commander 复核：409 文案与 `RemapConflict`
+    的 `matched` 计数（0/many）均在 `commitment_remap.py:168-186` / `main.py:9019` 核到。
 ```
 
 
