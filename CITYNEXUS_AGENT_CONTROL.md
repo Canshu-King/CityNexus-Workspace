@@ -251,6 +251,34 @@
             styles.css 断点确为 `@media (max-width: 380px)`；e2e/qoder-mobile-overflow.spec.ts 的 WIDTHS=[360,412,430]、高度恒 844、只测 Today+Live → 390/915 与 Wallet/setup 无覆盖。
             FLASH-F3 的 BLOCKER 3 / HIGH 5 / MEDIUM 5 / LOW 4 与上述一致，其"截图未取得"已如实声明，不计作视觉验收证据。
 
+- id: ORD-0010
+  to: 8c66aa92
+  priority: urgent
+  if_head: 00dfd62
+  order: |
+    FLASH-F1 报出一条我已在权威树上亲自确认的**同类残留缺陷**（我此前只封了 V8Experience 的 Live/LiveSecondary，漏了这个消费者）：
+    (1) `frontend/src/features/execution/LiveRecovery.tsx:198` 读 `context?.execution?.current_activity_id`，
+        但 `_execution_truth()` 返回的字典里**没有这个键**（它给的是 `now_activity_id / next_activity_id /
+        cursor_status / persisted_cursor`）。于是 currentId 恒为 null，
+        第 199-200 行 `activities.find(a => a.id === currentId) ?? activities[0] ?? null`
+        **永远回退到第一个活动** —— 行程推进后这张卡还是把首站当"现在"，正是 CX-SOL-001 那一类，
+        只是换了个文件。修法：读 `persisted_cursor`（或直接读 `now_activity_id`），
+        并且游标存在但不可解析时 fail closed，不要 `?? activities[0]`。
+    (2) `main.py:5220` 的 twin 顶层 `projection_status` 只在 DEGRADED/READY 之间取值，
+        STALE 投影在 twin 层不可见（v9 内部与 Edge 都能看见，twin 看不见）。
+        是否新增 "STALE" 取值属契约变化，我已把这条同时报给仲裁，未得裁定前不要动 schema，
+        先把 (1) 与它的前端门做掉。
+    (3) 门：新增一条前端断言 —— 游标落在中后段活动时，Live 恢复卡显示的 Now 必须等于该活动，
+        且游标不可解析时不得出现任何 Now。请在权威内容上跑 campaign 时把它算进 C4/A 行之外。
+  status: OPEN
+  evidence: |
+    Commander 亲测（HEAD 00dfd62）：`grep '"current_activity_id"' backend/app/operations/v9.py` 只出现在函数参数与
+    `persisted_cursor` 输出，返回字典无该键；LiveRecovery.tsx:198-200 原文已核对。
+    FLASH-F1 完整清单：D:\moodle\_qoder_flash_f1_20260920\FLASH_EXECUTION_TRUTH_AUDIT.md（28 行，SUSPECT_* 17 条）。
+    另 FLASH-F2 的量具审查已被采纳：run_suite 对每个突变跑同一全局池并复制同一个 collected 数字，
+    且从不校验"杀它的是不是预期那条断言" —— 我已给 harness 加上 EXPECTED_KILLER 映射与
+    KILLED_UNVERIFIED 类（py_compile exit 0），你不需要改这个文件。
+
 ```
 
 
