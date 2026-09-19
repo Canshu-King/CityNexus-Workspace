@@ -717,7 +717,7 @@
       3. `git status --porcelain` 在你交回时必须只剩 `index.html` 那一批（若 ORD-0018 已在做），
          并给每批的 commit sha。
     然后再做 ORD-0018。**不要**因为"改动已验证"就跳过第 2 步 —— 验证的是工作区，不是提交。
-  status: OPEN
+  status: CLAIMED@20260920-064500 by e345b9d6
   evidence: |
     Commander 05:34 亲测：`git -C D:\moodle\_qoder_ui_overnight_20260920 rev-parse --short HEAD`
     = `00dfd62`；`git status --porcelain -- frontend src` 有 4 条 `M`（含 index.html），无该批的 commit。
@@ -726,7 +726,10 @@
 
 - id: ORD-0021
   to: 1fb26149
-  priority: urgent
+  priority: normal   # 05:36 由 urgent 降级：实测门活着，丢的只是"前提作为断言"的保险
+  scope_corrected: 见本单 order 第 (1)-(3) 项 = 把三条前提钉回断言；**不要恢复退役文件**。
+                    `dc19d662` 与本会话独立复述：掐掉 `active_c4_hard_constraints` 的返回后
+                    rx4 文件 7 collected → 1 failed，红的恰是拒绝那条 ⇒ 门有鉴别力。
   if_head: 954edaa
   order: |
     **吸收 RX-4 的时候丢了一条门，请你补回来。** `dc19d662` 的节点差集查明、我也逐条复述码：
@@ -747,13 +750,36 @@
     写在 `test_rx4_c4_generate_gate.py` 里（你的文件），或另起一个明确命名的文件，
     但**不要**改 `test_rx3_stale_cursor_fails_closed.py`（那是 ORD-0011 的地盘）。
     回报：collected 条数、无差别失败突变下的红项名。
-  status: OPEN
+  status: CLAIMED@20260920-053415 by 1fb26149（HEAD 954edaa 即 if_head；fb34d8a^ 的原文已取出逐条对照）
   evidence: |
     三方独立一致：`dc19d662`（`verify/dc19d662_mission002_d/NODE_SET_DIFF.md`）、
     Commander 复述（`git log --diff-filter=D` 显示 `fb34d8a` 删的正是该文件；
     `git grep -l C4_ANCHOR_UNRESOLVED HEAD -- backend/tests` 全仓仅 `test_rx4_c4_generate_gate.py`）、
     收集事实（tip `954edaa` collected **922**，Commander 自采 1.35s）。
     顺带一条口径修正：账本"909 passed / 15 skipped = 924"是**推导值**，已按收集事实作废。
+
+- id: ORD-0022
+  to: 6af4cf53
+  priority: normal
+  if_head: 954edaa
+  order: |
+    ORD-0015 我复核通过（剔 seed-state 后 **696 文件 / 10,091,919 B**，我逐行重求和一致；
+    清单里已无 seed-state；暂存树无 `.git`；清单 696 条与暂存树文件数**完全对齐、无缺无夹带**）。
+    只剩**一件事**没落地：**发布包里现在没有交接文档。**
+    你写的 `handover_authoritative.md`（05:14，含 §1 HEAD / §4 两条限制 / §5 111 条分组）
+    在 `_qoder_publish_manifest_20260920\` 里，**不在 `_cnx_auth_stage\` 里** ——
+    我按 `find _cnx_auth_stage -maxdepth 2 -iname "*handover*"` 查为 0，
+    清单里唯一的 "handover" 命中是 `backend/tests/test_sol_plan_handover.py`（同名巧合，不是它）。
+    仲裁 Amendment E 第 5 条的最后一项要的是"**最小交接**要能说明权威 HEAD 与已知限制"，
+    而交接文档若留在包外，发布出去的分支就是**自我说明缺失**的。
+    → 把 `handover_authoritative.md`（以及收敛摘要，一页即可）放进包内一个明确位置
+      （建议 `qoder-handoff/`，与已有交接材料同处），重出清单与总数，
+      并让交接正文里的 HEAD 与你实际发布的内容自洽（写全 sha，不要只写短号）。
+    仍然：不建分支、不推送、不 force-push。
+  status: OPEN
+  evidence: |
+    Commander 05:40 亲测：`696 / 10,091,919` 重算一致；seed-state 0 命中；`os.walk` 暂存树 696 个文件；
+    清单路径逐条 `os.path.exists` 全在（0 缺）；`handover_authoritative.md` **不在暂存树**。
 ```
 
 
