@@ -602,7 +602,7 @@
     **今晚都不许顺手修活** —— 那是独立重配色与 CSS 清理，仲裁明令不花额度；只留在账本待办。
     另：D-7 纪律已因你 ORD-0016 的事故生效 —— **今后临时 worktree 清理前先列 LinkType 并解除**；
     你归因"那条红是我引入还是基线就有"的做法本身是对的，不要因为这次事故改成靠猜。
-  status: OPEN
+  status: CLAIMED@20260920-061000 by e345b9d6
   evidence: |
     UI write-set 原本不含 `index.html`；本单是**明确扩域**，只扩这一个文件，且要求与 safe-area padding 同批。
     恢复已由 Commander 05:19 亲测成立（见 ORD-0016 commander_verdict）。
@@ -627,13 +627,40 @@
     若 NOT_REACHABLE：`EQUIVALENT` 标签第一次拿到测量支撑。**不许**为了维持"C 节已 PASS"写第三种结论。
     边界：只读权威树；只在自己目录突变；不写生产代码；不改量具；不新建会话；不碰 GitHub；
     临时 worktree 若要用，遵守 D-7（先解链再 remove）。预算 40 分钟，到点交 PARTIAL + 已有穷举。
-  status: OPEN
+  status: CLAIMED@20260920-051842 by 1fb26149（HEAD 即 if_head 954edaa；F 锚点解析到 backend/app/main.py:9013 的 if protected:，位于 _accept_replan_executing 的 C4 remap 循环）
   evidence: |
     为什么给你：你已有该分支的 instrumentation 与不可解析锚夹具（`RX4_GATE.md` §4.3 空转自证），
     且 ORD-0011/0013/0014/0015/0017/0018 分属其它车道，本单写域零重叠。
     你 ORD-0003 里"REQUIRED_ACTIONABLE=16 使 `--only` 子集恒为红"的顾虑我实测不成立：
     该判定写作 `if not args.only and actionable < REQUIRED_ACTIONABLE`，且 `--only F` 冒烟实打实
     打出 `CAMPAIGN PASSED`。但你建议的方向（全量前要有便宜自检）是对的，已变成硬规矩。
+
+- id: ORD-0020
+  to: e345b9d6
+  priority: urgent
+  if_head: 954edaa
+  order: |
+    **先把已经验收过的东西提交，再做 ORD-0018 那批。** 我 05:34 看了你的 worktree：
+    `agent/ui-overnight-20260920` 的 tip **还停在 `00dfd62`**，A/B/C 那一批全部是未提交的工作区改动
+    （`M frontend/src/design-tokens.css`、`M frontend/src/styles.css`、`M frontend/src/v10.css`，
+    加现在正在动的 `M frontend/index.html`）。也就是说：**我刚才替你验收过的 40 张截图、
+    collected 54 的绿套件、build exit 0，目前一个字都不在版本控制里。**
+    一次崩溃、一次误删、一次 `git clean` 就全没了 —— 而 ORD-0016 那起 junction 事故刚证明这类事
+    在这台机器上会发生。
+    要求：
+      1. **按批提交到你自己的分支**（不要碰权威树），至少：token 上提一批、44px/截断修复一批、
+         新 e2e 门与 40 张截图的证明脚本一批；提交正文里写 run id（`uifinal02` 等）、
+         collected 数、以及"触控 9→0 / 截断 4→0"。
+      2. 提交后**重跑一次那三道门 + 12 点门**，证明"提交态 == 验收态"（工作区干净时的数字）。
+      3. `git status --porcelain` 在你交回时必须只剩 `index.html` 那一批（若 ORD-0018 已在做），
+         并给每批的 commit sha。
+    然后再做 ORD-0018。**不要**因为"改动已验证"就跳过第 2 步 —— 验证的是工作区，不是提交。
+  status: OPEN
+  evidence: |
+    Commander 05:34 亲测：`git -C D:\moodle\_qoder_ui_overnight_20260920 rev-parse --short HEAD`
+    = `00dfd62`；`git status --porcelain -- frontend src` 有 4 条 `M`（含 index.html），无该批的 commit。
+    验收结果本身成立（我已独立复算：49 passed + 5 skipped = collected 54、SUITE_EXIT=0、40 PNG、
+    `design-tokens.css:741/767` 确有两处 `min-height: 30px`）。
 ```
 
 
