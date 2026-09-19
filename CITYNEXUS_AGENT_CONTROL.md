@@ -502,7 +502,8 @@
     (3) 交接文档里必须点名：权威 HEAD、上面两条限制、以及被排除的 111 类路径的分组理由
         （你 `convergence.json` 里的 `excluded` 正好 111 条，我核过数）。
     仍然：不建分支、不推送、不 force-push，等 Mission 002 最终 HEAD 冻结 + 绿灯。
-  status: CLAIMED@20260920-052000
+  status: DONE@20260920-054000 by 6af4cf53；**Commander 05:44 独立复核通过**
+          （696 / 10,091,919 逐行重求和一致、seed-state 0 命中、无 .git、清单与暂存树逐条对齐）
   evidence: |
     Commander 亲测（`D:\moodle\_cnx_auth_stage`，HEAD `954edaa`）：
     清单 697 条 → **696 条存在于 HEAD**，唯一不在 HEAD 的就是 (1) 那个 seed-state；
@@ -845,7 +846,10 @@
       （建议 `qoder-handoff/`，与已有交接材料同处），重出清单与总数，
       并让交接正文里的 HEAD 与你实际发布的内容自洽（写全 sha，不要只写短号）。
     仍然：不建分支、不推送、不 force-push。
-  status: CLAIMED@20260920-055500
+  status: DONE@20260920-055500 by 6af4cf53；**Commander 05:52 独立复核通过**
+          （交接已在包内 `qoder-handoff/handover_authoritative.md`；重出后
+          **698 文件 / 10,100,098 B** 逐行重求和一致；`os.walk` 也是 698，无缺无夹带无 `.git`；
+          seed-state 0 命中 ⇒ Amendment E 第 5 条五件事全闭）
   evidence: |
     Commander 05:40 亲测：`696 / 10,091,919` 重算一致；seed-state 0 命中；`os.walk` 暂存树 696 个文件；
     清单路径逐条 `os.path.exists` 全在（0 缺）；`handover_authoritative.md` **不在暂存树**。
