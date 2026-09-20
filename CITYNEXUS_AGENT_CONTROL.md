@@ -4957,6 +4957,43 @@ B 的 `sim-action-taps-land-on-the-button-not-the-nav` 从"面板被顶出屏幕
 它**继续往下量**，把"面板被顶出去"追成了"预留量算少了 13px"——
 **从现象追到根因，而不是把红改成绿**。这是今晚我最想要的行为。
 
+### ⚖️ commander 裁定 @2026-09-21 07:0x —— B 那条门现在卡在一个**真产品缺陷**上，**不许放宽门，要修 token**
+
+**先把状态说清**：B 已把面板从"被顶出屏幕"修好（`animation-name: none` 解掉 containing block，
+我读码确认它自己独立追到了同一个根因，注释里连 `top: -374, bottom: 337` 都写着），
+并把面板 `bottom` 改成 `calc(var(--cn-nav-clearance) + var(--cn-s-16))` 让它抬高一个档。
+
+**但它那条门还有第二个断言过不去，而这个断言是对的**：
+```js
+expect(sheet.reserved >= sheet.navHeight, ...)
+```
+我独立实测（`raw/nav_clearance.json`）：
+```
+--cn-nav-h         = calc(max(48px,44px) + 8px + 7px)  →  63px
+.v8-mobile-nav     rendered height = 76px   (top=768, bottom=844)
+.v8-product-shell  padding-bottom = 63px
+```
+⇒ **预留 63px、实际 76px，差 13px。** 而 `--cn-nav-clearance` 是**每个页面底部 padding 的来源**
+（`design-tokens.css:164` + `styles.css:178` 的 `.v8-product-shell { padding-bottom: var(--cn-nav-clearance) }`）
+⇒ **这不只是面板的问题：任何页面的最后一点内容都可能压在导航下面。**
+**B 找到的是一条比"面板重叠"更宽的真缺陷**，我认它。
+
+**我的裁定（给 `e345b9d6`，不用等我再确认）**：
+1. **不要放宽那条断言**，也不要把它删掉 —— 它守的是"预留量不得小于被预留的东西"这条真契约。
+2. **修 `--cn-nav-h`**：现在它是**推导式** `item + padTop + padBottom`，而实测 76px 说明
+   **按钮内容本身超过了 `min-height: 48px`**（图标+文字+`gap:4px` 叠起来更高；
+   `min-height` 只是下限，**不封顶**）。两条路二选一：
+   - **(甲) 把它设成够大的常量**（≥76px，留余量），并注明"这是量出来的，不是算出来的"；
+   - **(乙) 运行时测量**（`ResizeObserver` 把 `.v8-mobile-nav` 真实高度写进 CSS 变量）。
+   **推荐甲**（改动最小、无副作用、可读）；乙更"自动"但引入一个观察者。
+3. 顺手记一条：`--cn-nav-item-h: max(48px, var(--cn-touch-min))` 这个写法让"48px"看起来像上限，
+   实际不是 —— **注释里写清"下限不等于实际高度"**，免得下一个人又按公式推。
+4. **判据不变**：我那张 20 点扫描全部 0 个被吃 + 你自己那条"每个动作行都能在某个姿势下被按到"。
+
+**我为什么现在就裁**：这一条已经耗掉它 5 轮（06:42→06:52）。**它在正确地往下追**，
+但"要不要动 `--cn-nav-h`"是**产品决定**（影响全站底部间距），该由我拍，不该让它自己纠结。
+**拍完了：动它，按甲。**
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
