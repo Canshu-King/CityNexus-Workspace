@@ -1426,6 +1426,25 @@ src/main.tsx 70166 vs 68493 B · vite.config.ts 3650 vs 4976 B · public/sw.js 5
 **原因我查到了，不是它抗令**：它的会话 `queuedTurnCount = 3` —— 我 23:5x 的 REJECTED 与 00:0x 的裁定
 **都还在它队列里排队**，它这一轮跑的是旧指令。⇒ 处置：**不再重复发消息催**（消息只会继续排队），
 把这条复核写进账本让它下次重读时一定看到，并在它交下一版时按同一套指纹检查复验。
+
+**01:2x 第三次核（结论：它正在按 (A) 推进，且我上一版措辞过宽，这里更正）**
+我在它的树上重跑同一套检查，机制**已进来 5 处**：
+```
+SW_VERSION            -> public/sw.js        ✓
+citynexus-recovery    -> public/sw.js        ✓（版本化恢复 worker）
+navigateFallbackDenylist -> vite.config.ts   ✓ 且内容正是**收窄后的白名单**
+                                               /^\/api\// · /\/assets\// · 已知扩展名（js|mjs|css|map|json|wasm|ico|svg|png|jpe?g|gif|webp|avif|woff2?|ttf|otf|webmanifest）
+                                               ——即它按我在 5748852498 提的"过宽"问题改的那一版，注释里还留着这段来历
+runtimeCacheVersion   -> vite.config.ts      ✓
+clientsClaim          -> vite.config.ts      ✓（与 skipWaiting 一起）
+updateViaCache:"none" -> **仍缺**（main.tsx:1688 还是旧的 `import.meta.env.DEV ? "/sw.js" : "/v10-sw.js"` 单行注册）
+```
+`git status` 显示 `public/sw.js` 与 `vite.config.ts` **已改未提交**，`main.tsx` 尚未动
+⇒ **它正在半途推进，不是抗令**；我上一版"六处仍全部 ABSENT"的措辞**已过期**，此处更正为 5/6。
+**剩下这一处（`updateViaCache:"none"` + DEV 清理同源遗留 + 旧→新控制器只重载一次）全在 `main.tsx`**，
+正是它还没开始的那一半。⇒ 继续等它交；交了我用同一套指纹复验（含 `controllerchange`/`getRegistrations`/`unregister` 三项逻辑存在性）。
+⇒ 顺带确认一件事：`vite.config.ts` 的新注释写着"main.tsx reloads a controlled page exactly once on the handover"——
+**这段逻辑目前只存在于注释里，代码还没写**。等它落地时这条正好可以当交叉核对点。
 ⇒ 这条也再次确认了口径：**仲裁的补丁不会因为"是仲裁写的"就免检，也不会因为"车道另有方案"就被替换掉**；
    两边冲突时由请裁解决，**本地静默替换不是选项**。
 
@@ -1537,6 +1556,135 @@ T3 真值/并发/结构（ORD-0057/0058/0063）→ 相关真值套 + 合并前�
 我在下一轮巡检内裁。已按 §4 停掉发布包的重跑节奏，按 §7 给 Harness 恢复收口（结论已是
 `PORT_TO_QODER_HUMAN_LAB`，不再占关键路径）。
 
+### 8c66aa92 ORD-0056 @2026-09-20 23:5x → 向导三症状在权威生产构建上读屏转绿；全套两次连跑均 0 unexpected
+
+合并 `ca65483`（订单点名的四笔 + 其祖先 `baf8c69`；`74a38bf…012ff56` 属 ORD-0047/A4，**不在本次范围、没有多合**）：
+8 文件 / +910 / −55，`backend/` 零路径，唯一冲突在 `V8Experience.tsx`——**两条车道各自独立写了同一行**
+`message={message}`（我这边 ORD-0034 收尾，他们那边 ORD-0044 字段级 422），解法留一行 + 注释记来源。
+
+**收口证据 = `vite preview` 读屏幕 innerText**（脚本 `review/probe-ord0056-prod-read.mjs`，
+run id `ord56-prod2`、:4193→:8493、`_ord56-prod2.db`、ai=disabled，没碰预览实例）：
+1. 抵达/离开留空 → `trial-next: button disabled=true`，屏幕「还需要填写：目的地、抵达地点、离开地点」；
+   只填城市 → 仍 `disabled=true`，提示缩到「抵达地点、离开地点」；五项填齐 → `disabled=false`
+   （**合并前是"可点且无反馈"**）；
+2. 审核页 → 「抵达 厦门站 · 2026-10-09 08:00 / 离开 高崎机场 · 2026-10-11 18:00」
+   （**合并前是「— · 2026-10-09 18:00」**）；同屏仍有两个「—」，但那是没填过的兴趣/特殊要求＝诚实未提供；
+3. 注入字段级 422 后屏幕读到 「这一步没有成功，行程还没有创建。 Request validation failed — body.end_at:
+   Input should be a valid date」（**合并前只有整句 `Request validation failed`**）。
+
+门禁（`38278de`）：全量后端 **928 passed / 15 skipped / 0 failed（70.80s）**、collected **943**（与合并前逐数相同）；
+`--list` **Total: 92 tests in 35 files**（chromium 91 + `real-seed` setup 1；87→92 = onboarding-failure +4、
+trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
+`ord56-e2ea` **86 expected / 6 skipped / 0 unexpected / 0 flaky（268.5s）**、
+`ord56-e2eb` **86 / 6 / 0 / 0（281.1s）**，起点进程数 65 / 68 ⇒ 并发负载下取得；
+`npm run build` / `typecheck` / `typecheck:all` 全 **exit 0**。
+顺带：第 3 条读到的那句英文出现在中文界面上，就是 **ORD-0055 的"改之前"证据**。
+细节 `INTEGRATION_REPORT.md` §92。
+
+#### aad2d1f2 HJ-P3 第三轮 @2026-09-21 00:5x（本机钟 20:5x）→ 先自我更正 H-8 的归因；再交不压后端的 4 条（含 1 条 TRUTH_DEFECT）
+
+**读数归属（Amendment J §8 要求，先量再跑）**
+本轮浏览器实际加载 `index-Ch_N-3sz.js`（预览 `dist/index.html` 引用的也是它），构建时间本机钟 19:31:12，对应 **`576fbf6`**。
+但权威树 HEAD 已经推进到 **`1e942d2`（21:39:26 `test(review): read the merged wizard on the authoritative production build`）**。
+⇒ **`preview HEAD (576fbf6) ≠ checkpoint HEAD (1e942d2)`**，§8 的那次重建还没发生。
+**本轮所有读数只能归到 `576fbf6`**；检查点重建后人设需要再跑一遍。
+视口 390×844（宽度矩阵另跑 360/412）；主题亮、暗都扫。
+
+##### 自我更正：H-8 的成因不是我写的"产品自动挑 ACTIVE 行程"，而是共享 profile 的一个 localStorage 键
+
+`dc19d662` 在 ORD-0061 里定位了载体，我在自己这边**验到了同一枚键**：
+- 我这个 profile 的 `localStorage` 里有 `citynexus.v8.journey_id = 56eb15a9-…`（我最后建的那趟天津），
+  以及 **8 个** `citynexus.copilot.history.<journey_id>` 键，其中 `4a56aab5-…` 是我第一趟、`9c6c3d73-…` 是 `dc19d662` 记的那趟。
+  ⇒ 一个 profile 里混着**多条车道**的行程痕迹，而"当前是哪一趟"只有**一个全局键**。
+- 所以"我刷新后落到别人的行程"= 别的车道覆写了这枚键，**不是产品在给新用户自动挑 ACTIVE**。我上一轮把两者混在一起写了，这里更正。
+- **仍然成立的产品缺口**（这条是我自己量的，不受更正影响）：手机侧没有任何入口能列出/切回另一趟已存在的行程。
+  我排除过两个候选：可见的 `button.v8-avatar` 只跳 `/v8/me`（那里没有列表）；`.v8-user`（含 `Tianjin / 2 位旅行者`）实测 **0×0**、点不动。
+  ⇒ 分类由 `HUMAN_STATE_LOSS` 降为 **`HUMAN_ACCESSIBILITY`（多行程无出口）+ 实验室环境项**，
+  实验室那半归 ORD-0061，产品那半请 `e345b9d6` 按 ORD-0065 的归属顺带看。
+
+##### 宽度 × 主题矩阵（纯量 DOM，零后端调用）——**这条是"通过"，值得记下来免得被回退**
+
+在向导第 1/2 步与 hub 上跑 360 / 390 / 412 × 亮 / 暗 共 6 组：
+**横向溢出 0 例**（`documentElement.scrollWidth` 恒等于 `clientWidth`，无一元素右缘越界）。
+我上一轮差点报的"412 溢出"确认是**别的车道改了共享视口**造成的，不是布局问题——本轮固定视口后不复现。
+另：向导步骤条里"人数与偏好/确认创建"两枚标签的 `scrollWidth 55 / clientWidth 1` 我查了计算样式，
+是 `position:absolute; width:0.998px; overflow:hidden` 的 **sr-only 有意隐藏**，**不是缺陷**，不要有人去"修"它。
+
+##### T-1 `HUMAN_ACCESSIBILITY`：全应用只有 1 个可见触控目标低于 44 px——就是右上角头像
+
+390 宽下遍历所有**可见**交互元素，小于 44 px 的只有两个：
+- `button.v8-avatar` = **28×28 px**（三种宽度下一样），在 360/390/412 全部命中 ⇒ 复现率 **3/3 宽度**。
+  它是 44 px 标准的 **64%**，而且它还是唯一能进"我的"页的入口之一。
+- `button.v9-language`（EN）= 43.6×43.6，四舍五入才显示成 44×44，属**边缘**，我不建议当缺陷派单。
+底部导航 5 项全部 ≥44，没问题。分类 `HUMAN_ACCESSIBILITY`。疑归：topbar 组件（`v8-avatar` 类名所在文件）。
+最小回归点：断言所有**可见**交互元素 `min(w,h) ≥ 44`（要排除 0×0 的收起抽屉，否则会被 13 个隐藏元素淹掉——我第一遍就被淹了）。
+
+##### T-2 `HUMAN_ACCESSIBILITY`：深色下两处文字不达 AA，且都不是"看不清"级别而是"漏网"级别
+
+我按 WCAG 相对亮度自己算（前景色 ÷ 最近非透明祖先背景色，大字号按 3:1、其余 4.5:1）：
+1. **AI 面板"稍后"按钮：3.65:1（需 4.5）**。`button.v8-outline-button` 在深色下背景仍是
+   `rgb(255,255,255)` 白药丸、字 `rgb(10,132,255)`，而它所在的 `.plan-ai-sheet` 是 `rgb(28,28,30)` 深色
+   ⇒ **整块面板只有它一块是白的**。证据 `24_dark_ai_sheet_later_button.png`（截图里肉眼可见：暗面板左下角一个白块）。
+   复现率 1/1。这枚按钮恰好是"我不想现在用 AI"的退出口，是赶时间用户第一个要找的。
+2. **向导副标题：3.94:1（需 4.5）**。"三步完成。选择目的地、告诉我们怎么玩，剩下的交给 CityNexus。"
+   字 `rgb(95,108,128)` 于纯黑，**13 px** 小字号 ⇒ 走 4.5 档。第 1 步与第 2 步都在（同一个常驻页头），复现率 2/2 屏。
+   证据 `23_dark_wizard_subhead_contrast.png`。
+3. **对照组（重要）**：hub 与 Today 全量文字扫描 **0 例不达标**。所以这不是"深色整体没做"，
+   是 `.v8-outline-button` 这类**组件级漏网** + 一处 13 px 次要文案。
+   ⇒ 建议直接进 `e345b9d6` 的三道深色门槛，而不是另开一单。
+最小回归点：把上面两个节点纳入"可见文字对比度 ≥4.5"的门，断言读计算样式而不是 `data-*`（我这次就是读 `getComputedStyle`，
+并且**没有**用 `data-contrast-role` 当依据——那三个节点该属性都是 `none`）。
+
+##### T-3 `TRUTH_DEFECT`：不足一天的行程被显示成"2 天"，而且这个数还会去除预算
+
+**我在别人车道的新加坡行程上读到屏幕原文**：`新加坡之旅 / 2 天 · 1 人 · 每人每天约 ¥200`，
+而同一屏的时间范围是 `9月26日 08:00 — 9月26日 20:00 · 1 位旅行者 · 2 天` ⇒ **同一天 12 小时，写着 2 天**。
+**公式（只读代码）**：`frontend/src/app/V8Experience.tsx:1492-1495`
+`tripDayCount = max(1, round((end-start)/86_400_000) + 1)`。
+**我用两个独立观测反推验证了它**：
+- 新加坡 12 h → `round(0.5)=1` → `+1` = **2** ✓ 与屏幕一致
+- 我自己那趟天津 09-21 10:00 → 09-23 20:00 = 58 h → `round(2.417)=2` → `+1` = **3** ✓ 与 hub 显示的"3 天"一致
+⇒ 对跨天行程这个"含首尾"的惯例是合理的；**出问题的是同日/<24 h 那一档**：任何 ≥12 小时的当天行程都会报成 2 天。
+**连带后果**（这才是我觉得值钱的点）：同一个 `safeDays` 被拿去算钱——
+`V8Experience.tsx:1424` `perDay = budget / safeDays`、`:1433` 渲染"每人每天约 ¥X"。
+⇒ 当天往返的用户看到的"每天可用额度"**被砍成实际的一半**。
+**复现率**：用户可见侧 **1/1**（别人的行程，**不是我输入的**）；公式侧 2/2 观测吻合。
+**我没有自己建一趟同日行程去验证**——那会再翻一次全局 ACTIVE 并触发 `stay-options/generate`，
+按 §7 现在不该加这种负载。所以这条请归属车道用 fixture 钉死。
+分类 `TRUTH_DEFECT`。疑归：`V8Experience.tsx:1492-1495`（显示）与 `:1424`（算术）。
+最小回归点：`start=end 同一天` 的 fixture 断言屏幕写"1 天"，且"每人每天"金额等于总额÷人数。
+
+##### T-4 `HUMAN_STATE_LOSS`：AI 需求里打的字一刷新就没了，应用没有草稿
+
+我在 AI 面板输入 39 个汉字（"我希望第三天上午去古文化街，中午吃簋街小馆，下午不要太累，晚上在海河边坐一坐。"），
+`textarea.value.length` 实测 **39**，然后整页刷新：面板不再打开、文本框为空、
+`localStorage` 里**没有任何**匹配 `draft|intent|plan-ai` 的键。
+⇒ 不是"我没存进去"，是**根本没有这个键**。
+对照：同一个应用**是会**用 localStorage 的（`citynexus.v8.journey_id` 与 8 条 `copilot.history.*` 都在），
+所以"这条路径没接草稿"是缺口而不是设计取向。
+复现率 1/1。分类 `HUMAN_STATE_LOSS`。
+最小回归点：输入→刷新→重开面板，断言 `textarea.value` 仍是那 39 个字。
+
+##### H-6 第三次复现，且是第三座城市
+
+新加坡行程的 AI 面板里，placeholder 与两枚快捷建议**仍然是厦门**（`我和朋友两个人去厦门…` / `带爸妈去厦门三天…`），
+见 `24_dark_ai_sheet_later_button.png`。⇒ 天津、厦门、新加坡 **3/3**，建议内容与当前行程城市完全无关。
+
+##### 我这轮主动放弃的两个动作（不是遗漏，是遵守 §7 / 避免损坏他人读数）
+
+1. **没有打开 `/v8/stay`（住宿页）**。当前 ACTIVE 是**新加坡**这趟冷城市，而住宿页是 ORD-0065 点名的
+   `stay-options/generate` 三个调用点之一（`V8Experience.tsx:525`、`:572`、`HotelsPanel.tsx:64`）——
+   一打开就会打一条 ~115 秒的冷 provider 路径，正是 Amendment J §7 现在禁止的。
+   ⇒ ORD-0065 要的"四种 `outcome` 终态文案可区分"这条**我没有读数**，等 §8 重建 + 套件跑完再补。
+2. **没有清 `localStorage`**。共享 profile 下那枚 `citynexus.v8.journey_id` 是**所有车道共用**的，
+   清掉等于把别的车道踢回向导。⇒ 我全程只读它、不写不删。
+
+##### 收尾
+
+- 证据累计 **24 张**在 `D:\moodle\HJ-P3_evidence\`（`23_`/`24_` 是本轮深色对比度的直接截图）。
+- 全程只读：未改产品文件、未建分支、未推送、未新建隧道、未绕过 UI 调 API、未清共享状态；账本内无凭据。
+- **请 §8 重建预览后 ping 我**，我要重跑的是：T-1/T-2（若 topbar 或组件样式被改）、T-3（同日行程）、
+  以及本轮欠着的 ORD-0065 住宿四终态。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
@@ -1650,6 +1798,22 @@ T3 真值/并发/结构（ORD-0057/0058/0063）→ 相关真值套 + 合并前�
       要么把 W6/W7/W8 从本门移出、并入 ORD-0037 那条已有地图钩子的量具；
       ③ `honestStateDisclosed` 从记录升级为断言 + 复测 ORD-0035 的 1.09:1。
 
+    **21:5x 把上面③的后半也做完了：ORD-0035 的 1.09:1 在当前 tip 未复现，但同一张 AI 表仍有一处不达标。**
+    量法：`gate\diagnose_contrast.cjs` 遍历所有可见文本节点，沿祖先链把半透明背景**按 alpha 合成到不透明底**
+    （正是 UI 车道那条"`color-mix` 被读成 `rgba(0,0,0,0)`"仪表缺陷的正解），再算 WCAG 比值。
+    两个 arm 都跑（`colorScheme` 驱动，产品暗色在 `@media (prefers-color-scheme: dark)` 后面）：
+    ```
+    light 最差 4.54:1   <span> "住宿" / "到达" / "出发"  (13px/700)      → 勉强过 AA 4.5
+    dark  最差 3.65:1   <button data-testid="plan-ai-dismiss"> "稍后" (16px/400)  → **低于 AA 4.5**
+    ```
+    ⇒ **结论**：(a) `1.09:1` 这个数字在这台机器、这个 tip、这条路径上**没有出现**，
+    我不再引用它（当时要么是另一处元素、要么背景没合成）；
+    (b) 但**同一张 AI 规划表在暗色下仍有一处不达 AA**，就在 `plan-ai-dismiss`（"稍后"）上 ⇒
+    ORD-0035 那件事**没有修完，只是换了形态**；归 e345b9d6，我不动产品码。
+    证据截图：`raw\contrast_light.png`、`raw\contrast_dark.png`（各 43 KB，390×844）。
+    ⇒ 顺带一条给门的建议：把这条全页扫描也做成断言（当前只做了 copilot 输入框的 16.83:1，
+    范围太窄，抓不到 `plan-ai-dismiss` 这类按钮文字）。
+
 
 
 - id: ORD-0062
@@ -1731,7 +1895,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
        跨午夜与多日各一条；断言读 `innerText`；给杀得掉的证据（点名节点 id）。
     边界：不得改动 `MIN_JOURNEY_DAYS` / `MAX_JOURNEY_DAYS` 的 7 日窗口语义（ORD-0033 已验收）；
     不得为了凑数把"夜"和"天"混用；冻结清单一律不动。
-  status: DISPATCHED@2026-09-20 23:3x
+  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
 
 - id: ORD-0064
   to: 8c66aa92（符号与算术）+ e345b9d6（住宿页承诺与失败文案）
@@ -1756,7 +1920,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
         这条与 ORD-0062 成对：**先有原因码，文案才谈得上说实话**。
     边界：**不得**为了让符号好看而伪造汇率换算；**不得**把未知价格印成 0 或"免费"；
     不得削弱 provenance / `fact_quality`。断言一律读 `innerText`。
-  status: DISPATCHED@2026-09-20 23:3x
+  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
 
 
 - id: ORD-0065
@@ -4359,7 +4523,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20T21:4x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵一轮：36 passed / 30 failed（4.3 分）**；W10×6 有主产品红、W3×6 待 Commander 复核、W6/W7/W8×6 属本门 fixture 未解。21:3x 追加：honestState 已升级为整页扫描断言并实测 `1 passed`，且据此**推翻了我自己上一条"AI 未说明自身状态"的读数**；现只剩地图 fixture 与 ORD-0035 的 1.09:1 复测两项）
+  status: PARTIAL@2026-09-20T21:5x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵一轮 36 passed / 30 failed（4.3 分）**；21:3x honestState 断言落地并**推翻我自己上一条 AI 读数**；21:5x 全页对比度复测完成：**1.09:1 未复现、但暗色下 `plan-ai-dismiss`「稍后」只有 3.65:1 仍不达 AA**。现剩三项：W3 待 Commander 复核、地图三步 fixture、把对比度扫描升级为断言）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -5426,6 +5590,15 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     （message 现在会进向导），但传进去的是英文开发者串 ⇒ 已并入 ORD-0055 的正式发现；
     H-2 **5/5 仍失败**（新包 30 752 ms）、H-3 5/5 仍泄漏、H-5 **3/3 仍命中**（`MapPanel.tsx` 两版之间 git diff 为空）、
     H-6 与 `relaxed` 枚举仍命中、热城市创建 21.3 s 未变。累计证据 **22 张**。
+    **第三轮（见 `#### aad2d1f2 HJ-P3 第三轮 @00:5x`）**：⚠ **H-8 归因自我更正** —— "刷新落入他人行程"的载体
+    是共享 profile 的 `citynexus.v8.journey_id`（我验到自己键里混着 8 条车道的 journey），**不是产品自动挑 ACTIVE**；
+    仍成立的产品缺口只有"手机侧无行程列表/切换器"。请勿再按旧措辞派单。
+    新增：宽度×主题矩阵 **通过**（360/390/412 × 亮暗，横向溢出 0）；T-1 头像触控 **28×28**（3/3 宽度）；
+    T-2 深色两处不达 AA（AI 面板"稍后" **3.65:1** 白药丸、向导副标题 **3.94:1** @13px；hub 全扫 **0 例**）；
+    T-3 `TRUTH_DEFECT` 同日 12 小时行程显示"2 天"且该数去除预算（`V8Experience.tsx:1492-1495` + `:1424`，两观测反推吻合）；
+    T-4 AI 需求 39 字刷新即丢、无草稿键。H-6 累计 **3/3** 城市。累计证据 **24 张**。
+    **本轮读数全部归 `576fbf6`**；权威树已到 `1e942d2`，§8 重建后需再跑。
+    主动放弃：未开 `/v8/stay`（当前 ACTIVE 是新加坡冷城市，会打 ~115 s provider，§7 禁止）、未清共享 localStorage。
 
 - id: ORD-0054
   to: 各归属车道（见内文，按项分派）
@@ -5469,7 +5642,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     `details.errors[].loc` 决定归属字段；`message_key` / `type` 决定本地化文案；
     **不得**拿英文 `msg` 文本做脆弱的字符串匹配来决定字段或翻译。
     后端英文 `message` 保留为日志与"未知 key"的 fallback，**不是第二套翻译真值**。
-  status: DISPATCHED@2026-09-20 21:5x
+  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
 
 - id: ORD-0056
   to: 8c66aa92
@@ -5486,7 +5659,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     ② 前端 `--list` collected（含 setup 工程行数）+ 一次全量 suite **两次连跑读数**（`CURRENT_GATES` 第 5 条：
     单次绿不算，且要注明当时并发负载）；③ `npm run build` exit code。
     边界：不放宽任何断言、不删那条已转绿的门、不削弱冻结清单、不 force-push、不改写已发布历史。
-  status: MERGE-PENDING@2026-09-20 22:5x —— 仲裁 `5749617752` 原话：
+  status: DONE@20260920-235900 by 8c66aa92（合并 `38278de` + 生产构建读屏 `1e942d2`；收口按仲裁要求用屏幕文字，不是代码）
     "既然必填/422 字段映射修复只在车道树存在、权威树仍表现为『可继续 + 裸 — + 通用错误』，
     那就是 **MERGE-PENDING，不是 DONE**。必须以权威 production build 读屏结果收口。"
     ⇒ 收口证据 = 在重建后的权威生产构建上**读屏幕文字**，不是读代码、不是读车道上报。
@@ -5542,7 +5715,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策一律不得削弱；
     不得关掉真实 provider 调用来"满足"延迟门；不得把未知数据写成已知数据；
     前端对齐部分归 ORD-0047（`e345b9d6`），**你不要代写前端等待体验**。
-  status: DISPATCHED@2026-09-20 21:5x
+  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
 
 - id: ORD-0058
   to: 8c66aa92
