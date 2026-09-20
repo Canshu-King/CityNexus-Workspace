@@ -3860,6 +3860,16 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
 > 因为 `external_ref=mock-booking:…`，屏幕必须明确标 **"模拟承诺"**，否则就是把 mock 穿西装送给老师。
 
 **我按"未证"记账**（我不替产品宣布它已满足，也不宣布它一定不满足——我还没读屏）。
+
+**补充证据（03:3x 再核一遍，把范围说死）**：
+- `grep -rn "wallet\.commitments\|wallet?.commitments" frontend/src/` = **0 命中** ⇒ 该字段从未被读取；
+- 全仓 `commitments` 的其它命中都在**别的对象**上（`twin.upcoming_commitments`、
+  `what_if.protected_commitments`、`replan.locked_commitments_preserved`），与 Wallet 无关；
+- `Wallet` 类型（`V8Experience.tsx:83-88`）里 `commitments` 与 `reservations` 并列声明，
+  而 `Bookings` 只画 `reservations`（`:2806`）与 `:2962` 另一处同样只取 reservations。
+
+⇒ **结论收紧为**：Wallet 里 `commitments` 的渲染点**不存在**（不是"可能没做"），
+所以 `external_ref=mock-booking:…` **不可能上屏**。ORD-0084 依据充分。
 **处置**：派一张新单给 B（ORD-0084），要求把 `commitments` 上屏、并**按 `external_ref` 前缀
 `mock-` 显式标"模拟承诺"**；真值来源仍是后端字段，**不许前端自己判断"这大概是假的"**。
 **这一条排在 M2 可见之后、M3 之前**，因为它决定 M4 能不能诚实地讲。
