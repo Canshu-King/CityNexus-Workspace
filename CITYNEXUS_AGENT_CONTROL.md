@@ -1307,6 +1307,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - `git show --numstat <sha>` 证明这一笔只新增 1 个文件、0 行业务改动。
 
     回报一行即可：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
+  status: DISPATCHED@2026-09-21 00:0x
 
 
 - id: ORD-0001
