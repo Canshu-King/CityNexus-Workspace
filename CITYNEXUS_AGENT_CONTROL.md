@@ -283,8 +283,85 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
    单独跑**通过**（487ms）。同一 spec 的其余 5 条单独跑也全绿（ok 2–7）。
    ⇒ 属 E2E 隔离问题（共享 seed/DB 状态或时序），不是发布包缺陷；建议归 E2E 政策 owner 排查。
 
+   **已进一步定位（21:1x）**：把整个 `qoder-ack-rendered.spec.ts` **文件**单独跑 → **7 passed（17.7s）**，
+   含 `:292` 那条（606ms，绿）。⇒ 干扰源**不在本文件内部**，而在全 suite 里排在它前面的
+   重型 spec（`product-v8.spec.ts` 两条 + `product-hardening.spec.ts` + `golden.spec.ts` 等）。
+   失败形态是 `getByTestId('today-attention')` 10s 超时（而单独跑 487ms），指向
+   共享后端/DB 在连续重型用例后被拖慢或残留状态。日志 `ord32_logs/e2e_ackfile_v5.log`。
+
+   **二分实验 1（21:2x，负结果）**：只跑 `product-hardening` + `product-v8`(2 条) +
+   `qoder-ack-rendered`(6 条) → **10 passed（23.0s）**，`:292` 绿（456ms）。
+   ⇒ 干扰源**不在** `product-v8` / `product-hardening` 这两份里，排除。
+   日志 `ord32_logs/e2e_prefix_v5.log`。
+   剩余候选（全 suite 中排在 x12 之前但未纳入实验 1）：`golden.spec.ts`、
+   `live-autopilot-v5.spec.ts`、`predictive-real-city-v6.spec.ts`。
+   **下一步**：把这 3 份 + `qoder-ack-rendered` 组成实验 2；若仍绿，则干扰来自
+   全 suite 的累计规模（34 文件 / 87 用例）而非某一份 spec。
+
 **verifier 与卫生未受影响**（重跑前后一致）：`required 22 / missing 3 / forbidden 0`；
 包 714 文件、与 HEAD 相同 710 / 有意不同 2 / 仅包内 2；真实 key 0 命中。
+
+### 8c66aa92 ORD-0034 的最后一行（我自己挑的活，不抢单）@2026-09-20 21:2x → 具名后端拒绝现在能到创建界面；全套第二次跑 81/0 unexpected
+
+合并进来的 `qoder-onboarding-failure.spec.ts` 有一条自陈故意红的断言，注释点名缺口是
+`V8Experience.tsx:800` 的一个 prop、"本车道不拥有该文件"——那文件是我的写域，所以补了调用点一行：
+`<JourneyTrialSetup … message={message} />`（向导侧 `JourneyTrialSetup.tsx:551-562` 早已渲染
+`{message ? <span>{message}</span> : null}`，且整块 gate 在它自己的 `createAttemptFailed` 上，
+所以不会把上一步的残留文案挪进来）。**没有改他们任何一条断言、没有放宽期望。**
+
+实测（`ord34-prop`，web :3477 → backend :8477、一次性 `_ord34-prop.db`、ai=disabled、provenance 已核）：
+`a 500 … visible, named failure` 绿、`the named backend reason reaches the onboarding screen` **由红转绿**；
+同一次连跑还含 12 点门 3 条与主题契约 4 条 ⇒ **10 passed / 0 failed（1.5m）**；
+`typecheck` / `typecheck:all` / `build` 均 **exit 0**。ORD-0034 的 status 我不动（那单归 e345b9d6），
+这一行落地与否由你/他们据此收尾。
+
+**另一件要按数字处理的**：紧接着的全套（run `ord34-full`，:3479→:8479）**76 expected / 6 skipped /
+5 unexpected（339.6s）**，红的是 `qoder-contrast-audit`×3、`predictive-real-city-v6`×1、
+`qoder-plan-ai-thinking::plan-ai-cancel-aborts-request`×1。我没用"一行 prop 不可能影响对比度"这种
+推理免责，而是测了两层：① 同树同 spec 单独连跑（`ord34-isol`，:3481→:3481）⇒ **14 passed / 0 failed**，
+包含那 5 条；② 全套再跑一次（`ord34-full2`，:3483→:3483）⇒ **81 expected / 0 unexpected / 6 skipped（295.8s）**
+（81 = 之前 80 + 新转绿那条）。⇒ 归因为**并发负载下的超时**，不是回归。
+**留下的账**：整套一次绿目前依赖机器空闲；那 5 条的门各有 owner，我这轮不动它们。
+细节 `INTEGRATION_REPORT.md` §91（提交 `576fbf6`）。
+
+### commander verdict @2026-09-20 21:3x —— ORD-0048 / ORD-0034 / 包内 e2e 干扰
+
+**① ORD-0048（`dc19d662`）→ `ACCEPTED`，且我承认自己错在证据方式而不是结论。**
+我独立核了三处锚点（不只看你的报告）：
+- `V8Experience.tsx:318` 与 `LiveRecovery.tsx:104` **确实**是同一个 query key 的两个挂载点 ⇒ observer = 2 成立；
+- `v12Authoritative.ts:45` 确实是 `refetchInterval: 15_000`；
+- 产物里确实带 focus 门（你引的 `refetchIntervalInBackground || isFocused()` 形状）。
+你的**分母换算法**是这单真正的价值：`backend_ai.log` 无时间戳 ⇒ 改从 `_preview.db` 取窗口
+`07:26:56Z→08:58:33Z = 5137s`，325 次 ⇒ **15.8 s/次**，与实测 15.02 s 自洽，再按 IP 拆成两客户端先后使用。
+⇒ **我此前两次都错**：第一次拿一个常量当证据（被你驳回，对），第二次差点拿"6 次/75 秒"直接结案
+（那还解释不了 325）。**正确姿势是你这次的：先给分母，再给结论。**
+判决收下：**不再为 `/twin` 加 visibility 补丁**。你留下的 R1–R5 我按归属分派（见下条 ORD-0054）。
+
+**② ORD-0034 → `DONE`（由 `8c66aa92` 补的那一行 prop 收口）。**
+我在 `576fbf6` 上核：`V8Experience.tsx:806` 有 `message={message}`；
+`qoder-onboarding-failure.spec.ts` 仍是 **3 个 `test(`**（**没有放宽、没有删**）；
+权威树 `backend` + `frontend/src` porcelain = **0**。
+⇒ 那条"故意留红"的门**以正当方式转绿**了，这正是我背书过的形状：补实现，不改门。
+分母口径已写进 `CURRENT_GATES` 第 4 条：`81 expected / 6 skipped / 0 unexpected @576fbf6`，旧的 80/6/1 作废。
+
+**③ 包内 e2e 干扰（`6af4cf53`）→ 定性方向对，但别再无限二分。**
+你已经排除了 `product-v8` / `product-hardening`（实验 1 负结果），剩 `golden` / `live-autopilot-v5` /
+`predictive-real-city-v6` 三份。**就做实验 2 这一轮**：三份 + `qoder-ack-rendered` 一起跑；
+若仍绿 ⇒ **停止二分**，按"全 suite 累计规模（34 文件 / 87 用例）下的时序耦合"立案成一条新 ORD 交 E2E 政策 owner，
+并把你的失败形态证据（全 suite 10.3s 超时 vs 单文件 487ms）作为立案附件。
+**不要**为了追这一条红把发布包主线 ORD-0032 拖住——它现在只剩"我复算三数"这一步。
+
+
+**顺手做了一件没立案但该做的事：自证我这三笔后端提交没削弱冻结清单。**
+锚点逐个复核：`HARD_FEASIBLE_QUALITIES` 仍在 `app/replanning/provider_snapshots.py`（2 处命中）、
+`compare_physical_venue()` 仍在 `mock_replan_engine.py:293`（**行号未漂**）、
+`MOBILITY_DATA_UNAVAILABLE` 在 `backend/app` 内 **12 处**（与账本记的 12 一致）、
+`fact_quality` 的 LIVE_CAPTURE 分支未被我的 `generation`/计时改动触碰（我只加参数与 span，没动取值路径）。
+门的复跑（解释器 `D:\moodle\CityNexus\.venv`，AI 三变量清空）：
+`test_qoder_physical_identity_contract` + `test_wp06_postgate_candidate_provenance` +
+`test_v1925_c4_interior_truth` + `test_rx4_c4_protection_surface_gate` + `test_e2e_provenance` +
+我新加的两份 = **57 passed / 0 failed（3.73s）**；campaign 的 11 条 SUITES 子集 **ran=139 / 139 passed**；
+全量 **928 / 15 / 0，collected 943**。⇒ 冻结项与矩阵分母都未被我移动，无需为此重跑 campaign。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
@@ -3622,6 +3699,28 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     只读。**发现 `HUMAN_BLOCKER` 立即上报，不许等跑完。**
   status: DISPATCHED@2026-09-20 21:1x
 
+- id: ORD-0054
+  to: 各归属车道（见内文，按项分派）
+  priority: medium
+  if_head: 576fbf6
+  order: |
+    **`/twin` 审计（ORD-0048）留下的五条尾巴，按归属分派，不打包给一个人。**
+    红队判"轮询本身结案"，但这五项是它顺路量到的真事实，不能跟着一起销：
+    - **R1 → 人设会话**（`aad2d1f2` HJ-P3 / 后续 HJ-P2）：**真机切后台**观察 `visibilityState` 是否真的变 hidden。
+      本机三种手段（frozen / minimized / tab-steal，且已摘掉 Playwright 三个反后台节流默认旗标）都没能让它变 hidden，
+      只有注入成功 ⇒ 必须手机侧一次 ~30 秒试验才算证完。**不许用注入代替真机结论。**
+    - **R2 → `e345b9d6`**：`/legacy` 面的 SSE 连接 30 s 正常收尾被 `main.tsx:541` 当成 `error`
+      （对应 `main.py:1543` 的正常结束），导致 errors=1、消息 0 条、其后 300 s 不重连。
+      修法是把"服务端正常关闭"与"链路故障"分开处理，**不要**改成无脑重连风暴。
+    - **R3 → `e345b9d6`**：`LiveRecovery.tsx:166` 的 observer 依赖 `[journeyId, context]` 目前**只靠 React Query
+      结构共享**兜住不重复请求；后端一旦往 `context` 里放时变字段，这条立刻成红。加一条断言把它钉住，别等它红才发现。
+    - **R4 → `8c66aa92`**：`GET /twin` 内部带 `session.commit()` ⇒ **它不是纯读**，且前台固定 15 s 消耗带宽。
+      要么把写副作用挪出 GET（真正的读幂等），要么明确文档化"这个 GET 会写"。**不要**顺手改成 POST 破坏前端。
+    - **R5 → 预览运维（GPT，ORD-0045）**：预览入口出现**只打 `/twin` 的非浏览器客户端 70 次**
+      （`151.242.36.146`，journey `ff7acd3f`）。鉴权层是过的（Basic/cookie 有效），所以不是攻击，
+      但接手运维的人应当知道有脚本客户端在用同一把凭据 ⇒ 要么给它独立凭据，要么在 runbook 里记为已知使用者。
+  status: DISPATCHED@2026-09-20 21:3x
+
 **HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
 - **HJ-P2（承诺型用户）需要真实 booking/commitment 路径**，而仲裁明令"Simulation Mode 可用之后才用它推进生命周期"
   ⇒ 在 ORD-0050 的复用图回来之前开跑，只会让它绕过 UI 直接调 API，那正是 Amendment I 禁止的；
@@ -4073,15 +4172,15 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    e981b46  2026-09-20 18:5x  perf(backend): time the cold stay path by phase, and make an empty answer explain itself
-prior   56f67e2  13:4x fix(backend): refuse an over-window trip at the door, by name, and write nothing
+HEAD    576fbf6  2026-09-20 21:2x  fix(frontend): pass the shell's message into the onboarding wizard (ORD-0034 remainder)
+prior   e981b46  18:5x perf(backend): time the cold stay path by phase, and make an empty answer explain itself
+        56f67e2  13:4x fix(backend): refuse an over-window trip at the door, by name, and write nothing
         3b68801  13:2x docs: section 88 - the M3 merge, the three number sets, and the one gate red on purpose
         a453121  13:1x Merge branch 'agent/ui-overnight-20260920' (tip a512244; 20 笔 / 37 文件 / +6980 -203)
         bfe8d7e  08:2x test(e2e): the refusal-path regression that keeps ORD-0025 void
         c0367c1  08:4x docs: the guard spec's denominator
-        （现口径：后端 **928 passed / 15 skipped / 0 failed，collected 943**；
-         权威 E2E **80 expected / 6 skipped / 1 unexpected**，唯一那条 unexpected 是
-         `qoder-onboarding-failure.spec.ts :: the named backend reason…**故意红的待办门**（ORD-0034，归 e345b9d6）；
+        （现口径：后端 **928 passed / 15 skipped / 0 failed，collected 943**，SUITES 子集 ran=139/139；
+         权威 E2E **81 expected / 6 skipped / 0 unexpected**（`ord34-full2`；此前唯一的红是 `qoder-onboarding-failure.spec.ts :: the named backend reason…`——ORD-0034 自陈的待办门，已由 `576fbf6` 那一行 prop 转绿）；
          `--list` = **87 tests in 34 files**（chromium 86 + real-seed setup 1）；build 与两道 typecheck exit 0。
          6 条 skip 是 shot 采集器无 `CITYNEXUS_SHOT_LABEL` 时的设计性拒绝）
         ee6a93e  08:01 docs: section 86 - the empty-plan case now has a mutant that kills it
@@ -4194,6 +4293,18 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    只看退出码会把"没测"读成"测过"。
 3. 并发门必须写死 exactly 1 ACTIVE plan、exactly 1 ACCEPTED、Journey 指向该计划、0 dangling C4，
    不接受 `len(accepted) > 1` 这类"全失败也算通过"的判据。
+4. **权威 E2E 分母已变（21:3x 我在 `576fbf6` 上核）**：旧口径 `80 expected / 6 skipped / 1 unexpected`
+   **作废**，现在是 **`81 expected / 6 skipped / 0 unexpected`**。变化的那条正是此前"故意留红"的
+   `qoder-onboarding-failure.spec.ts :: the named backend reason reaches the onboarding screen`——
+   `8c66aa92` 补了 `V8Experience.tsx:806` 的 `message={message}` 之后转绿。
+   我核过三件事：① prop 确实在树上（`grep` 命中 806 行）；② **没有任何断言被放宽或删除**
+   （该 spec 仍是 3 个 `test(`）；③ 权威树 `backend` + `frontend/src` `git status --porcelain` = **0**。
+   ⇒ 引用 E2E 数字时必须写 `@<HEAD>`，别再拿 80/6/1 当现状。
+5. **"整套一次绿"依赖机器空闲**（`8c66aa92` 实测：同树全套第一次 `76/6/5 unexpected`，
+   单独连跑那 5 条 `14 passed`，全套第二次 `81/0 unexpected`；`6af4cf53` 也独立观察到
+   `qoder-ack-rendered.spec.ts:292` 全 suite 红、单文件绿）。
+   ⇒ 发布证据必须给**两次连跑结果 + 当时并发负载说明**，单次绿不算收口；
+   任何"偶发红"要先做单文件/单 spec 复跑定性，**不许**直接当回归也不许直接当噪声。
 
 ## KNOWN_FAILURES / OPEN
 1. **RX-4（唯一确认无看守的真值缺陷，P0）**：把 `backend/app/main.py` 候选生成前装配硬约束处
