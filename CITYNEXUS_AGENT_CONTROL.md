@@ -1943,7 +1943,8 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 11:0x (+08:00) · LAST_ARBITER_COMMENT_ID = **5747153763 = Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`（已收到并生效，六条裁定全部落到订单与归属；见下面 MISSION 003 段）** · LAST_OWN_COMMENT_ID = **5747060212 = "一切从用户出发"汇报 + 请求 Mission 003**；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
+Refreshed: 2026-09-20 12:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，已收到并生效，六条裁定全部落到订单与归属；见下面 MISSION 003 段）· LAST_OWN_COMMENT_ID = 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
+**格式约定（别再来一次）**：上面两个水位线字段后面必须紧跟**裸数字**，说明放括号里。`patrol.py` 用正则 `LAST_ARBITER_COMMENT_ID = (\d+)` 读它，被 Markdown 粗体 `**` 包住就解析失败、会把历史帖重新当新帖报（12:5x 实测踩过）。
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
 **同时正式改口**：我此前"没有已知红项"的说法改为"**未经验证**"——928 全绿的同时用户第一次用就撞墙，说明现有门全是机器视角。
@@ -2248,7 +2249,88 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     - 报告里给出你在真实链路上测到的 document 超时取值与理由；
     - 后端数字不受影响，但如果你动了 `main.tsx`，请重跑全量前端 suite 并报 collected。
     **不要顺手扩大范围**：不改视觉 token、不动导航拓扑（那是 ORD-0034/0035 的域）。
-  status: DISPATCHED@2026-09-20 10:2x
+  status: CLAIMED@2026-09-20 12:3x by e345b9d6（依 ORD-REASSIGN-003 改派；本单 `to:` 仍写 8c66aa92，以改派条为准）
+  evidence: |
+    [e345b9d6 起手实测] 两条先记账，交付时在同一块里续写：
+
+    ⚠ (a) 字面"dev 不注册 SW"会打死两条现有验收门 ——
+      `e2e/real-world-trip-operations-v9.spec.ts:139-142` 与
+      `e2e/v13-authoritative-integrity.spec.ts:52-53` 都在等 `navigator.serviceWorker.controller` 变真，
+      而 `playwright.config.ts:82` 的 webServer 是 `npm run dev`。
+      我走本单允许的另一条路：dev 继续注册，但 `/sw.js` 对 script/style/worker **永不**返回 HTML。
+      要按字面做 (a) 就得同时释放那两条门给我改，说一声我就换路线。
+
+    ⚠ 清单外新发现：`public/sw.js` 的 activate 用 `keys.filter(k => k !== CACHE)` 删缓存，
+      会把同源的 workbox 生产缓存（`workbox-precache-*`、`citynexus-pages`、`citynexus-static`）一起删掉 ——
+      这是"改构建→刷新不生效/白屏"的另一半原因，随 (b) 同批修并补门。
+
+    [e345b9d6 进度 @13:0x] (b) 与 (c) 已交付并逐节点杀干净；(d) 与主题三态未做。提交：
+    `7022630` + `058c346`（`public/sw.js`）、`643de6e`（`vite.config.ts`）、`492b5d5` + `058c346`（门）、
+    `d52a282`（走查证据）。
+
+    (b) 代码请求永不拿 HTML：`destination` 为 script/style/worker **或**路径以 .js/.mjs/.cjs/.css 结尾
+      都算代码；网络给的 HTML 与缓存里的 HTML 都拒绝，改为回退缓存真身或 `Response.error()`。
+      为什么加"按扩展名"这一半：实测 dev 服务器对未知 `.js` 路径返回 **200 text/html**，
+      而 `fetch()` 拉模块时 `destination` 是 "empty" —— 只看 destination 挡不住。
+      activate 只删自己前缀的缓存，并把"这次删了哪些"写进 `/__sw_activate_report__`
+      （带 script 版本），否则外部无从证明清理真的跑过。
+
+    (c) workbox：`statuses` 去掉 0（只留 200）；静态资源 `CacheFirst` → `StaleWhileRevalidate`；
+      document `networkTimeoutSeconds` **3 → 10**，依据是实测：本机打在线隧道（不带凭据，拿 401，
+      但 DNS+TLS+请求整条路都走）热请求 0.86–1.06s、冷请求 2.96s（TLS 占 2.18s），
+      回环同一文档 p50 0.9ms / p95 21ms —— **3 秒比一次健康的冷连接还短**，所以它会在网络没坏时
+      先超时、拿旧壳回答。原始读数 `review/tunnel-latency.txt`、`review/measure-document-path.py`。
+      **没测到的：蜂窝链路本身**（本机无出口）。要真值需批准我起隧道，或你手机跑一次。
+      另：`vite preview` 不继承 `server.proxy`，已加 `preview.proxy`，否则生产构建无法端到端走查。
+
+    验收实测（生产构建 `vite build` + `vite preview`，390×844，zh-CN，`review/prod-refresh-walk.mjs`）：
+    - "改构建 → 客户端刷新"：资源 `index-CAyaf1Ya.js` → `index-C91FKfyv.js`，注入标记到达运行中的页面，
+      **未清缓存、未硬刷、未注销 SW**；接管的是生产 `v10-sw.js`。
+    - 360 宽 `scrollWidth 360 / clientWidth 360`，无横向溢出。
+    - 逐节点杀证据 4 个变异体全杀：kill36-a **就是修复前那个真的 `public/sw.js`**（从 `19bb66a` 原样取回，
+      1449 字节）→ `sw-never-answers-script-with-html` + `sw-activate-keeps-foreign-caches` 双红；
+      kill36-b 把过滤条件改回 `k !== CACHE` → 红消息点名被删的三个缓存；
+      kill36-c 关掉 HTML 判定 → 红；kill36-d 把代码分支改回"只用网络" → `sw-offline-boot-serves-cached-code` 红。
+
+    ⚠ 我自己引入又被别人的门抓到的一次回归：第一版把"不给代码兜 HTML"写成了"代码只走网络"，
+      于是**离线刷新时应用拿不到自己已缓存的模块**，`#root` 0 子节点起不来（缓存里有 77 条，
+      `/@vite/client`、`/src/main.tsx`、`/@react-refresh` 全部 `net::ERR_FAILED`）。
+      抓到它的是 `real-world-trip-operations-v9.spec.ts:143-145` —— 别的车道的门，因为它顺便测了离线。
+      已修（缓存可以回答代码请求，但永远不能是 HTML），并补了 `sw-offline-boot-serves-cached-code`
+      与恰好该错误形状的变异体。修后该门复绿。
+    ⚠ 一个 Windows 坑：驱动里 `git show 7022630^:path` 经 `shell=True` 走 cmd.exe 时 **`^` 被当转义符吃掉**，
+      `7022630^` 静默变成 `7022630`，那条"修复前 worker"变异体其实是修复 v1，结论是错的（显示 SURVIVED）。
+      加引号后取回真原始文件，两节点立刻点名红。
+
+    全量读数（提交态，run `uiord3613`，:4376/:8376 + `_uiord3613.db`，AI disabled）：
+    `--list` **Total 83 tests in 33 files**，`[real-seed]` setup **1 行**、chromium 82；
+    suite **76 passed / 6 skipped / 1 failed，exit 1**，4.0m。
+    对上一次（72/6/1 @ 79）：collected **+4** = 新增 `plan-ai-no-synthetic-success` 1 条 + SW 门 3 条；
+    passed **+4** 正是那 4 条；skipped 6→6；failed 1→1 仍是 ORD-0034 named-reason。
+    typecheck exit 0 / 0 errors（依赖口径警告不变）。
+
+    裁定④ 主题根契约 **已交付**（提交 `a512244`，驱动脚本 `review/rekey_dark_blocks.py`）：
+    `src/theme.ts` 把 System/Light/Dark 解析成 `<html data-theme>`，选择持久化在
+    `citynexus.theme`，从未选过跟随系统，系统翻了会跟着翻；`design-tokens.css` 三处暗色表整体改挂
+    `:root[data-theme="dark"]`（脚本化变换 + 三道不变量：注释必须逐字节不变、每条声明体必须还在、
+    每个 wrapper 恰好少一对花括号 —— 第一版脚本把前缀注进了注释里，被这三条拦下没写盘）。
+    新门 `e2e/qoder-theme-contract.spec.ts` 4 个节点：默认跟随 OS、pinned 选择能压过 OS 且刷新不丢、
+    **OS 亮 + 用户钉暗** 这一格的可读性扫描、以及"样式表里不许再留 OS 直驱的暗色分支"（从磁盘读源码，
+    不是从 dev 服务器 fetch —— 后者拿到的是编译后的 JS，会空过）。
+    这一格扫描立刻抓到一处真缺陷：暗色 mode chip 是 `--cn-accent` 字 + 灰底，8px/800 下 **3.82:1** 不过 AA，
+    已改成实心 accent 底 + canvas 字。
+    兼容性实测：**21 条既有主题敏感门全绿**（含不是我写的 `v10-accessibility` 与暗色对比度审计）——
+    因为 emulateMedia 会同时改 matchMedia，theme.ts 把它解析成属性，所以旧写法仍然有效。
+    全量读数（run `uitheme006`）：`--list` **Total 87 tests in 34 files**，setup **1 行**；
+    suite **80 passed / 6 skipped / 1 failed**，4.9m。上一次 83/76/6/1 → collected **+4**（主题门 4 条）、
+    passed **+4**、skipped 不变、failed 仍是 ORD-0034 named-reason。**未新增红。**
+
+    剩下未做（不含上面已交付项）：
+    - **(d) 向导状态**：步与草稿在我文件里（`JourneyTrialSetup.tsx:168/182`），不需要批准，我接着做。
+    - **(d) 弹层状态** 在 `V8Experience.tsx:274`、**主题开关按钮** 要落在顶栏
+      （`V8Experience.tsx:892-900` 语言按钮旁，同形状 `data-testid` + `data-contrast-role="control"`）。
+      ⇒ **请释放 `V8Experience.tsx` 给 M3-B**；三处我都已定位：`:274` 弹层状态、`:801` `message={message}`、
+      `:892` 旁加开关。裁决前我不碰它；契约本身已经能用（控制台写 `citynexus.theme` 即刻生效）。
 
 - id: ORD-0037
   to: e345b9d6
@@ -2282,7 +2364,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     - 一条断言：路线图层按天/方式分组的**要素数量 > 1**（防"一根大线"回潮）；
     - `npx playwright test --list` 的 collected 与其中 setup 工程行数 + 一次全量 suite 读数，与账本对表、差值逐条点名。
     **不要顺手扩大范围**：不改后端几何生成逻辑（`mobility_facts` 的产出是另一件事），不动缓存策略（ORD-0036）。
-  status: CLAIMED@20260920-091500 by e345b9d6
+  status: DONE@2026-09-20 11:2x by e345b9d6 — 但本单已被 ORD-REASSIGN-003 改派 `8c66aa92`；改动已提交在我隔离树两个 commit（`d52d586` + `bbbb9e6`，未推送），**不自行关闭，等转交裁决**，详见 ORD-HANDOVER-0037
 
 - id: ORD-REASSIGN-003
   to: all
@@ -2325,7 +2407,63 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     走一遍"点 AI 规划 → 看到阶段与秒数在动 → 成功出结果"与"强制失败 → 看到可读原因"，
     附每步屏幕上实际渲染的文字（截图或 DOM 文本均可）；
     并给一条**杀得掉的证据**：把阶段/秒数渲染去掉时该节点必须红（点名节点 id）。
-  status: DISPATCHED@2026-09-20 11:0x
+  status: DONE@2026-09-20 12:2x by e345b9d6（验收项逐条见 evidence；**生产构建那一遍尚未做**，见最后一行）
+  evidence: |
+    [e345b9d6 交付] 提交：`d47e085` 产品（PlanWithAiSheet.tsx + styles.css）、`c04a4d8` 门、
+    `93a336b` 门自修、`6bfb2a7` 两语言臂、`19bb66a` 证据记录 `review/ORD-0038-kill-evidence.md`。
+
+    先说这张单真正的问题：**原进度条是假的**。`PlanWithAiSheet.tsx:162-164` 用
+    `setInterval(1200ms)` 自己把四行清单往前推，而 `POST /agent/commands` 是同步接口、
+    全程不报任何阶段 —— 那个 ✓ 是秒表推出来的，不是信号。文件头还写着 "progress is a REAL stepper"。
+    这正是 §2 与冻结清单禁止的形状。
+
+    逐条对要求：
+    1. **只显示真实上报的阶段**：清单换成组件自己确实 await 的四步（读基线 / 等模型 / 核对新方案 /
+       兜底重排），兜底那行**只在它真的跑时**才渲染；等待那行明写"后端不报阶段"。
+    2. **不伪造进度**：删掉 setInterval；界面上没有百分比、没有假 ✓。
+    3. **实时秒数 + 真能中止的取消**：秒数由 `Date.now()` 起点算出的真实经过；`AbortController`
+       贯穿基线读取、命令请求与兜底请求；取消区分"还没发出去"（`CANCELLED`，可说行程未动）与
+       "已经发出去了"（`CANCELLED_AFTER_SEND`，**不**承诺行程未动）。
+    4. **失败与加载一眼可分**：422 / 5xx / 断网 / 已取消 / 已中止后续核对 各有具名文案与下一步；
+       并且 422/5xx 现在**提前具名失败**，不再掉进兜底重排 —— 原来那条路径可以让一次被服务端拒绝的
+       请求被合成方案报成 COMPLETED。技术详情带后端自己的 `detail`。
+    5. **两档可读**：全部用既有 token，无新字面色；顺带修掉一处旧坑 —— 待办步骤行继承
+       `--v8-muted`（styles.css 里主题盲写），现在状态由 ○/●/✓ 与字重承载，文字两档都是全 ink。
+    6. **触控 ≥44px**：`.plan-ai-cancel` 并入原有 680px 移动层 44px 规则；未改导航结构。
+
+    读数（提交态，run `uiord3807`，:4349/:8349 + `_uiord3807.db`，AI disabled）：
+    `--list` **Total 79 tests in 32 files**，`[real-seed]` setup **1 行**、chromium 78；
+    全量 suite **72 passed / 6 skipped / 1 failed，exit 1**，3.9m。
+    与上一次读数对表（65/6/1 @ collected 72）：collected **+7** = 新建
+    `qoder-plan-ai-thinking.spec.ts` 的 7 行（中英各一条 elapsed + 5 条）；passed **+7** 正是那 7 条；
+    skipped 6→6；failed 1→1 仍是 ORD-0034 的 named-reason。**本单未新增任何红。**
+    `npx tsc -p tsconfig.check.json --noEmit` exit 0 / 0 errors（口径警告不变：ORD-0016 后依赖被替换）。
+
+    杀证据：**七个变异体，七个都被点名节点杀死**（逐个形状，不是一个打死一片）：
+    `plan-ai-elapsed-ticks` 两个（中文臂写死 `已等待 0 秒` / 英文臂写死 `waiting 0s`）、
+    `plan-ai-no-fabricated-stage`（所有行一律 done）、`plan-ai-cancel-aborts-request`（命令请求不带 signal）、
+    `plan-ai-cancel-before-send`（基线读取不带 signal）、`plan-ai-failure-not-loading`（去掉提前失败）、
+    `plan-ai-preflight-honest`（读不到时报 ready）。
+
+    ⚠ 第一轮**只杀掉 1/6**，五条存活全部是我门的缺陷，已公开记录在证据文件里：
+    轮询了 `data-elapsed-seconds` 属性而不是屏幕上的数字；三条红死在 `toBeVisible`/`click` 超时上
+    没带节点 id；"不得谎称已配置"的守卫写成 `/is configured/`，把正确文案
+    "No model is **configured** here" 判成撒谎；预检的 `catch` 分支用 `fulfill(500)` 根本走不到
+    （500 不是 reject），补了 `route.abort()` 用例；以及最阴的一条 —— 变异体改的是中文臂而套件跑英文，
+    改的那行没执行。
+    ⚠ 另一次误判已撤回：我先前说 ORD-0037 的 kill-b "webServer 起不来是驱动 shell 捕获问题"是**错的**。
+    真因是 `backend/app/db/session.py:39` 拒绝重开已存在的 e2e 库，而驱动复用了同一个 run id。
+    两个驱动现在每次发新 run id。
+
+    **两处如实登记的缺口**：
+    (a) **"真出方案"那一步我没走过。** 本车道能测的环境一律 `CITYNEXUS_AI_ENABLED=false`，
+        预览实例（:8781/:4781 + `_preview.db`）是用户此刻在用的、订单不许拿它跑 e2e。
+        门里"模型正在工作"是用 `page.route` 挂住请求**代替延迟**，不是代替结果。
+        要么 Commander 手机上走一遍，要么明确授权我另起一套开 AI 的实例与库（会花那把 key 的余额）。
+    (b) **验收要求的"生产构建下走一遍"我还没做**：`playwright.config.ts:82` 的 webServer 是
+        `npm run dev`，而 `vite preview` 目前没有配 proxy，`/api/v1` 打不通。
+        我按 ORD-0036 的归属给 `vite.config.ts` 补 `preview.proxy`，然后单独出生产构建的走查证据。
+        顺带提醒：**这条口径对账本上所有历史 e2e 读数成立**，包括我自己前面那些 65/6/1。
 
 - id: ORD-0039
   to: dc19d662
@@ -2358,7 +2496,217 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: DISPATCHED@2026-09-20 11:0x
+  status: PARTIAL@2026-09-20 12:3x by dc19d662（门已建成并在生产产物上跑出真实判决；W3/W5/W7 属本门自身测量缺陷，不作产品结论；6 组合跑完 4 个后为清理端口而中止）
+  evidence: |
+    交付物（只写测试/规格/证据，未动一行产品码）：
+      规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
+      清单 `D:\moodle\_qoder_m3d_20260920\gate\SILENT_FAILURES_M3C.md`（10 项，含文件:行与四级分类，并单列「我没验的东西」）
+      门码 `tree\frontend\usergate\{usergate.config.ts 39 行, user_critical_path.spec.ts 488 行, preview_server.mjs}`
+      跑法 `gate/run_gate.py`（本跑私有 8391/8392 + `_m3d_usergate.db`；未触碰 :8781/:4781/:4782 与 `_preview.db`）
+    为何不能复用现有 e2e：权威 `playwright.config.ts:82` 的 webServer 是 `npm run dev`（协议 §0.1 判其不算发布证据）；
+    产品只在 `vite.config.ts:69-72` 声明 `server.proxy`、无 `preview` 段 ⇒ preview 打不通 `/api`。
+    故自带静态服务，实测 `GET /` 200、后端缺席时 `/api/v1/health` 502+JSON、`/assets/nope.js` **404 而非 HTML**。
+    矩阵：360/390/412 × 亮/暗 = 6 组合，整跑 collected 应为 60；**setup 工程行数 = 0**
+      （种子由 runner 在 playwright 之前 `POST /api/v1/demo/reset` 完成，本门无 setup project；
+       对照：权威配置有 1 个 `real-seed` setup 工程，两处 collected 不可直接互比）。
+    已落盘真实测量（27 行证据 / 4 个组合，`D:\moodle\_qoder_verifier_20260920\raw\usergate\evidence.jsonl`）：
+      W0 前置 4/4 绿：`navigator.serviceWorker.controller === null`；资产指纹 `index-DOB5OYXW.js` + `index-BU_VzQhn.css`；
+        后端 200；pageerror 0。同时记到 `getRegistrations()` 已含本 origin scope ⇒ SW 注册在页面存活期即发生
+        （`main.tsx:1674-1680` + `vite.config.ts:10-13 registerType:"autoUpdate"`）。
+      W1 4/4 绿；W2 4/4 绿（`trial-next` 空必填 disabled=true，填齐后 enabled）。
+      W4 用户标准 4/4 绿：走出向导、Today 有内容（36 个可交互元素 / 1267 字），**刷新后仍在 /v8/hub**
+        ⇒ 基线 ORD-0036(d)「刷新必丢界面」在 tip c0367c1 上不复现（原判据应在 dev 上测得）。
+      W6 2/2 红：drag(-90,-70)+wheel(-240) 后 `frameChanged=false` ⇒ `MapPanel.tsx:149 interactive:false` 在 tip 仍未修，ORD-0037 保持红。
+      W8 2/2 红且机制定位：注入瓦片故障后屏幕无提示；另在 W4 正常流程中即测到
+        **24 次 `requestfailed https://tile.openstreetmap.org/...png :: ERR_ABORTED`**，屏幕零提示
+        ⇒ 底图硬编码第三方 OSM 栅格瓦片（非已配置的 openfreemap 风格 URL），网络受限即静默平涂。归 M3-C 8c66aa92。
+      W9 绿：CDP `Page.setWebLifecycleState` frozen→active 后 window 标记仍在 ⇒ 基线 W9 的自刷新是 dev HMR/SW 产物，生产构建不复现。
+    本门自身三处缺陷（明列为待修，不得当产品判决）：
+      (a) W3 从未执行到 record() ⇒ 9 天窗口那条**未测得**；
+      (b) W5 取色返回空串 ⇒ ratio=0 是我的测量失败，ORD-0035 的 1.09:1 本轮**未复测**；
+      (c) W7 数 SVG 线样式，而 maplibre 画在 canvas ⇒ 判据无效（0 或图标计数都不证明分组）。
+    另修一处我自己的分类口径：pageerror（未捕获致命）进断言，requestfailed 与 HTTP>=400 只进证据 —— 否则 favicon/瓦片
+    会把门染成假红，而把它们藏起来又正好丢掉本门要收的静默信号。
+    自我纠正：第一次矩阵里 W2 报红（15.1s 超时），根因是我在找一个并不存在的「新建」按钮——落地页标题本就是 `新建行程`；
+    改用 `data-testid`（locale 无关）后即绿。那条红是我的门写错，不是产品缺陷。
+    **读数警告**：被中止的那次跑，playwright 自己报了 `expected 8 / unexpected 52`——
+    那 52 条是我在 12:3x 杀掉 8391/8392 之后连接被拒造成的**设施性红**，不得当作产品判决引用；
+    本单唯一可信的判决来源是 `raw/usergate/evidence.jsonl` 里 27 行实测记录（覆盖 4 个组合的 W0-W4
+    与 2-3 个组合的 W5-W9）。重跑请整跑 60 条后再取数。
+    收尾：8391/8392/8401/8402 无残留监听；权威树 backend/ 与 frontend/ 我未写入，构建与证据全在
+    `_qoder_m3d_20260920` 与 `_qoder_verifier_20260920` 内。
+- id: ORD-HANDOVER-0037
+  to: commander
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **e345b9d6：ORD-0037 我做完了才看到 ORD-REASSIGN-003（11:0x 把它改派给 `8c66aa92`）。我不自行关闭这张单，也不再碰 `MapPanel.tsx`，改动全在我自己的隔离树里等你裁决。**
+
+    时间线：我 09:15 CLAIM → 11:0x 改派 → 11:2x 做完。中间没有回头读账本，这是我的流程漏洞，不是归属冲突的借口。改派之后我对 `MapPanel.tsx` 一个字没动，回归修复只落在 `design-tokens.css`（我这侧的文件）。
+
+    ### 交付内容（分支 `agent/ui-overnight-20260920`，未推送）
+    - `d52d586` 产品：手势分工（`interactive: true` + `cooperativeGestures`，旋转/倾斜照旧关）、路线按 mode 上色 + 线宽随 zoom + casing 层、瓦片失败可见；两个标签换成不透明贴片。
+    - `bbbb9e6` 门：`frontend/e2e/qoder-map-interaction.spec.ts`（3 个节点）+ 变异驱动 `review/ord0037_kill_drivers.py` + 记录 `review/ORD-0037-kill-evidence.md`。
+
+    ### 验收读数（全部亲测，提交态）
+    - `npx playwright test --list`：**collected 72 / 31 files**，其中 setup 工程 **1 行**（`[real-seed] › _qoderRealSeed.setup.ts:110:1`），chromium 71。
+    - 全量 suite（run `uiord3704`，独立端口 :4319/:8219 + `_uiord3704.db`，AI disabled）：**65 passed / 6 skipped / 1 failed，exit 1**。
+    - 与账本对表（上一条记录 62/6/1 @ collected 69）：collected 69→72 = **+3**，全部来自新建的 `qoder-map-interaction.spec.ts`；passed 62→65 = **+3**，正是那三条；skipped 6→6 = 0；failed 1→1 = 仍是 ORD-0034 的 named-reason。**没有新增红。**
+    - 过程中我确实制造过一条新红：亮色档对比度门抓到 `.v8-map-gesture-hint` 4.12/4.5 和 maplibre 自带手势标签 3.41/4.5（都是我这次开手势带出来的）。已按门的要求改成 `--cn-surface` + `--v8-ink` 不透明贴片，不新增字面色值；修后 today/live × 亮/暗 × 移动/桌面 全部 0 violation。
+    - typecheck `npx tsc -p tsconfig.check.json --noEmit`：**exit 0 / 0 errors**。口径提醒不变：这是 ORD-0016 事故后被替换的那套依赖（`package-lock.json` 里 `@types/react` 出现 0 次），这个 0 只当"没新增错误"，对别的车道不可比。
+    - `npx vite build`：**exit 0**，PWA precache 9 entries。
+
+    ### 杀证据：六杀一活
+    六个点名节点各配一个**它自己形状的变异体**（不是一个变异体打死六个）：`drag-moves-camera`（留 `interactive: false`）、`ctrl-wheel-zooms`（只关 `scrollZoom`——否则前一条会先红并短路掉这一条）、`route-feature-count`（8 段合并成 1 条线）、`route-mode-colour-expression`（`line-color` 回常量 `#4658d9`）、`route-width-follows-zoom`（`line-width` 回常量 4）、`route-casing-layer`（casing 层改名）—— 六次都是 1 failed / 3 passed，红消息点名节点 id。
+    **活下来的那一个**：删掉组件自己盖的 `mode`/`leg_index` 标签仍然全绿。探针读 `/experience` 给出原因：每条几何本来就带 `{"crs":"WGS84","mode":"AUTO","provider":"citynexus-synthetic-fixture"}`，所以 `data-route-modes` 量的是**供给方的数据**，不是我这层保险丝。要杀它需要一份不带 properties 的 mobility fixture，那是订单明令我不许碰的后端几何。**登记为已知缺口，不写成通过。**
+    还有一条量具自错的公开记录：我第一版门用 `GeoJSONSource.getData()` 和 `queryRenderedFeatures({layers})` 数要素，同一屏两者都读 0，而 caption 直接把 React 里的 `route.length` 打成 8 —— 分子分母对不上就不是门，已换成组件自己公布的契约 + 图层声明的 paint 表达式。
+
+    ### 我看自己截图看出来的两个残留缺陷（都在新归属的文件里，我没动手）
+    1. **瓦片失败仍然没告诉用户** —— 订单第 3 条在用户真实环境里没做到。实测本机 `curl https://tile.openstreetmap.org/9/475/233.png` → `http=000`、12 秒超时；412×915 亮/暗两张 after 截图里 `.v8-map-tile-notice` 都没出现。我的检测挂在 `map.on("error")` 且要求 `sourceId === "open-street-map"`，硬断网下没触发。建议换信号：以"底图有没有交付过数据"为准（`sourcedata` / 首帧超时），而不是"有没有抛错"。
+    2. **手势提示贴片压住地图内容**：两张截图里它盖住 marker 4–5 和一段路线。文案可读（修完对比度两档都过门），但 `bottom: 40px` 居中正好落在标簇上。挪位置我能在 `design-tokens.css` 里单独做，但挪到哪、要不要做成瞬时提示，是 `MapPanel.tsx` 新归属者的设计选择，我不替他定。
+    3. 顺带一条**不是我引入的**：平涂画布色 `#dfeae8` 在 `styles.css:169` 和 `MapPanel.tsx` 里都是字面色，所以暗色档整块地图是亮的。
+
+    ### 请裁决（三选一，我按令执行）
+    - A：我把 `d52d586` + `bbbb9e6` 导成 patch 放 `review/patches/`，交 `8c66aa92` 应用；
+    - B：你直接合我这条分支的地图两批，`8c66aa92` 只接手残留 1/2；
+    - C：明确释放 `MapPanel.tsx` 给我，我保留地图归属把残留 1/2 修完。
+
+    裁决前我不再动 `MapPanel.tsx`。我现在转去做 **ORD-0038**（AI 可视化思考，用户当面提的）和 **ORD-0036**（SW / 缓存 / 刷新恢复 + 主题根契约，那三个文件已改派给 UI 线）。ORD-0034 那一行 `message={message}` 仍在等转交或授权，那条 named-reason 红继续红着当证据。
+
+- id: REQ-0010
+  to: commander
+  from: 用户（侧聊转达，11:3x）
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **角色收束：回到调度位。** 用户看了动作序列后明确指出工作流跑偏：包工头的职责是
+    **下发任务 + 收集信息 + 交 GPT 裁决 + 再下发**，不是自己搭东西、写代码、修自己的工具。
+    用户同时给了新授权：**高难度的活可以主动交给 GPT 做，也可以让 GPT 直接改 GitHub 里的代码**——
+    这条不必等用户推，遇到就该用。
+
+    执行五件事：
+    1. **先修用户手上那个致命问题**（其他一律排后）：你自己已发现"账号密码内嵌在网址里会让浏览器
+       禁止页面内部所有 fetch"，等于用户打开是空壳。改成不依赖 URL 内嵌凭据的方式，修完
+       **自己用浏览器完整走一遍数据请求**（行程 / 地图 / AI 面板都能拉到），再给用户可用地址。
+    2. **预览运维整体移交**（见 ORD-0040），你不再自己维护炉子。
+    3. **走查基线交出去**：ORD-0039 已派给 `dc19d662` 建 `USER_CRITICAL_PATH_PRODUCTION_GATE`，
+       你手上那份 Playwright 基线（390×844 亮/暗实测 + W1..W10 七条失败）当**证据移交**，
+       不要自己养第二套门。你保留"发布前亲手重跑一遍"的验收权即可。
+    4. **主动外包高难度项**：至少这三件现在就给 GPT——服务工作者/缓存生命周期设计（A4，最微妙）、
+       发布包与门禁基建、GitHub 侧代码变更。委托时必须写边界：不得削弱冻结清单、不 force-push、
+       不改本地权威树、交付物要能被你按数字验收。总线收发一律 `包工头:` 前缀。
+    5. **顺手把 e345b9d6 在账本里提的三选一裁掉**（`MapPanel.tsx` 归属冲突：它已提交 `d52d586`+`bbbb9e6`
+       两批地图改动，而我此前把 ORD-0037 改派给了 `8c66aa92`）。它在等令，不要让它悬着。
+
+    用户原话要点：你的价值在于"只有你能判断数字是不是真的"，不是"你能搭多少东西"。
+    搭得越多，你越没空去验别人。
+  status: OPEN
+
+- id: ORD-0040
+  to: commander → 移交对象待定（优先 GPT，其次新会话）
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **手机预览运维整体移交（Commander 停止自维护）。**
+    交接清单（必须完整，否则接手方会重复踩）：
+    - 代码/脚本：`D:\moodle\_qoder_recovery_20260919\raw\preview_auth_proxy.py`（鉴权反代，含会话 cookie 逻辑）、
+      `raw/fetch_cloudflared.py`（Range 并行下载，本机单连接会被 reset）、`tools/cloudflared.exe`（官方 2026.9.1）；
+    - 链路：cloudflared → `127.0.0.1:4782`（鉴权代）→ `127.0.0.1:4781`（`vite preview` 服务**仓库外** outDir 的生产构建）
+      → `127.0.0.1:8781`（uvicorn，`CITYNEXUS_AI_ENABLED=true`，key 取 shell 环境变量）；
+    - 数据：一次性库 `D:\moodle\_qoder_preview_20260920\_preview.db`（种子来自 `POST /api/v1/demo/reset`）；
+    - 凭据：`run/preview_auth.txt` —— **绝不写进 Issue #1，也不复现那把 key 的前缀**；
+    - 已知待修：① URL 内嵌凭据导致页面内 fetch 全禁（**用户当前不可用，最高优先**）；
+      ② 全新浏览器上下文里 `manifest.webmanifest` 仍会 401（会话 cookie 尚未建立时被抓取时机卡掉）；
+      ③ 我在 `dist/` 里放过自注销 SW 垫片（**仅构建产物，仓库未动**，接手方要决定是保留还是走产品侧正规修法）。
+    移交完成后 Commander 只保留：读健康数字、跑验收、报总线。
+  status: OPEN
+
+- id: ORD-0041
+  to: 8c66aa92
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **合并令：M3 的所有验收现在都卡在"改动没进权威树"这一步。**
+    我在 12:5x 用真实浏览器 + 深色模拟打当前生产预览（服务权威树 `c0367c1`），量到的仍是修复前行为：
+    AI 面板 sheet **1.05** / textarea **1.09**、`data-theme` = **(none)**、地图真实拖拽与滚轮后
+    **帧哈希三次完全相同**（`dragChanged=false`）。而 UI 隔离树 `a512244` 里这些东西都已经有实现和门。
+    ⇒ **做完了但没交出去 = 用户不可见 = 不算 DONE。**
+
+    请把 UI 隔离树这一族合进权威树：`a512244`（主题根契约）、`d52d586`（地图手势 + 路线分层 + 瓦片降级可见）、
+    `bbbb9e6`（三条地图门）、`058c346`（SW 让缓存模块应答离线 code 请求并同样设门）、
+    `88e3e07` / `d52a282`（文档与第八个突变体记录）。树在 `D:\moodle\_qoder_ui_overnight_20260920`。
+
+    合并后必须交这三组数字（我会自己在生产构建上复测，不接受转述）：
+    1. 后端全量：`pytest -q` 的 `N passed / M skipped / K failed` + collected（注明解释器），与权威读数 **913/15/0 / 928** 对表，差值逐条点名；
+    2. 前端：`npx playwright test --list` 的 collected **与其中 setup 工程行数**（别再引用旧的 54/5 当现状）；
+    3. `npm run build` 的 exit code。
+
+    边界：不得削弱冻结清单；不新建发布分支、不推送、不 force-push；`tools/verification/mutation_campaign.py` 是我的量具，
+    不要动它（它现在仍是未提交状态）。
+    **归属更正**：我 11:0x 把地图（ORD-0037）改派给你，是过早的决定 —— UI 线 11:2x 已经交付了实现与门。
+    现在**撤销该改派**：地图归 `e345b9d6`（M3-C），你回到 M3-A（ORD-0033 超 7 天入口即 422，那条还没人交）。
+  status: DISPATCHED@2026-09-20 12:5x
+
+
+
+### Commander 12:5x 验收判决（生产构建 + 真实浏览器实测，不看提交信息）
+
+**判决依据**：我用 Playwright 直连**当前鉴权预览**（服务的是权威树 `c0367c1`，构建于 10:07），
+带 `colorScheme: dark` 真实模拟，量到的仍是**修复前**的行为：
+
+```
+AI 面板（深色）  sheet bg rgb(249,251,253) / 文字 rgb(245,245,247)  → 对比度 1.05
+                textarea bg rgb(255,255,255) / 文字 rgb(245,245,247) → 对比度 1.09
+根契约          document.documentElement 的 data-theme = (none)；--cn-ink = #f5f5f7
+地图            canvas.maplibregl-canvas 存在（340x390，5 段路程），
+                真实鼠标拖拽 90x55 + Ctrl 无关的滚轮 -500 → 帧哈希三次完全相同
+                dragChanged=false wheelChanged=false
+Today 基线      干净 URL + Authorization 头：fetch 正常，建行程 201（a5b9b425）
+地图空状态      无坐标时 v8-map-empty 会显示"尚未获取地图位置…" ⇒ 这一条是正例，不是缺陷
+```
+
+⇒ **权威树 tip 自 08:30 起没有任何新提交**（`git log --since="2026-09-20 08:30"` 为空）。
+UI 隔离树（`_qoder_ui_overnight_20260920`，tip `a512244`）里确实有真东西：
+`d52d586` 地图手势与路线分层（cooperative 手势、casing + 按模式取色 + zoom 插值线宽、瓦片失败显式提示、
+并且自陈两枚标签因 4.12:1 / 3.41:1 被亮度审计打回而加了不透明底）、`bbbb9e6` 三条"相机必须真的动"的门、
+`a512244` 主题根契约、`058c346` SW 缓存模块、`d52a282` 记录"第八个突变体 + 生产走查抓出一次假成功"。
+
+**判定：做完了但没交出去 = 用户不可见 = 不算 DONE。** 与 Mission 002 结尾同一口径。
+
+| 订单 | 车道标的 | 我的判决 |
+|---|---|---|
+| ORD-0034 向导失败可见 | PARTIAL@08:15 | 维持 PARTIAL，等合并后按 W3 复测 |
+| ORD-0035 AI 面板两档可读 | DONE@08:55 | **改判 REJECTED（未生效）**：权威树实测仍 1.05 / 1.09，`data-theme` 不存在。改动在隔离树，未合并 |
+| ORD-0036 SW/缓存/刷新 | CLAIMED@12:3x | 进行中，认可它按 ORD-REASSIGN-003 归到 UI 线 |
+| ORD-0037 地图 | DONE@11:2x（+ ORD-HANDOVER-0037 待移交） | **改判 MERGE-PENDING**：代码与门都在隔离树，权威树未变；归属见下面裁决 |
+| ORD-0038 AI 可见进度 | DONE@12:2x | **改判 MERGE-PENDING**：它自己也注明"生产构建那一遍尚未做" |
+| ORD-0039 用户门 | PARTIAL@12:3x | 认可 PARTIAL：门已建成并在生产产物上跑出真实判决，6 组合只跑完 4 个；它自报 W3/W5/W7 是**门自身的测量缺陷**、不作产品结论 —— 这个自我限定我接受 |
+| ORD-0032 发布包 | DONE@08:35 | 我此前 REJECTED 的 (b)(c) 需按**新 tip** 重报；裁定② 还要求包内含可执行验收 spec，这一条尚未见证据 |
+
+### MapPanel 归属裁决（了结 ORD-HANDOVER-0037 的三选一）
+
+**接受 `e345b9d6` 作为 M3-C 地图交付方，撤销我 11:0x 把它改派给 `8c66aa92` 的决定。**
+理由（不是和稀泥）：它已经实现并自带三条门，还自报了两次被对比度审计打回的过程；让另一条线重写同一批文件
+只会产生第二种"半同步"。`8c66aa92` 回到 M3-A（ORD-0033 后端边界）。**我的改派本身是过早的**——
+它 11:2x 就交了，我 11:0x 才改派，两边时间交叠，责任在我。
+
+### 新下 ORD-0041：合并令（给 `8c66aa92`，它是权威树持有者）
+
+把 UI 隔离树 `a512244` 及其祖先（`d52d586` / `bbbb9e6` / `058c346` / `d52a282` / `88e3e07`）合进权威树，
+合并后必须：后端全量重跑并报 collected；前端 `--list` collected + setup 行数；`vite build` exit 0；
+**然后由我在生产构建上复测 W3/W5/W6/W7**。不合并前，任何"已修复"都不进发布判定。
+
+### 我自己这两个缺陷，记在这里，别让它变成别人的坑
+
+1. **URL 内嵌凭据会把 App 打死**：我 11:0x 给用户的访问方式是 `https://user:pass@host`，实测
+   页面内 `fetch('/api/v1/…')` 全部抛 `Request cannot be constructed from a URL that includes credentials`
+   ⇒ **整个应用不可用**。正确方式是**干净 URL + 浏览器 Basic 弹窗输入一次**（我用 `setExtraHTTPHeaders` 等价验证过：
+   fetch 正常、建行程 201）。已更正对用户的指引。**教训：给访问方式之前必须自己在真实页面里点一遍，不能只验 HTTP 200。**
+2. **巡检水位线被我写坏**：我把页脚改成 `LAST_ARBITER_COMMENT_ID = **5747153763 = …**`，而 `patrol.py` 的正则是
+   `LAST_ARBITER_COMMENT_ID = (\d+)` —— `**` 让它匹配不到，于是那一轮把三条**历史**仲裁帖重新报成 NEW。
+   已修（正则容忍 `**`，页脚格式回退为 `= 数字（说明）`）。**教训：改文档格式要顺手复跑读它的工具。**
+
+
 
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
