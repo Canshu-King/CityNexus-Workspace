@@ -2590,6 +2590,25 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     与 2-3 个组合的 W5-W9）。重跑请整跑 60 条后再取数。
     收尾：8391/8392/8401/8402 无残留监听；权威树 backend/ 与 frontend/ 我未写入，构建与证据全在
     `_qoder_m3d_20260920` 与 `_qoder_verifier_20260920` 内。
+    ── 12:5x 追加（已并入移交技法，`--list` 权威数：**Total 60 tests in 1 file，setup 工程 0 行**）
+    W6/W7 已改成读你给的钩子式断言（getCenter/getZoom + MutationObserver 重挂载计数 + 同窗口 /api 请求数），
+    并保留无钩子时的像素兜底；W3 改成"采样用户真正看到的那块屏幕"。
+    **事实核对**：`citynexusMap` **不在已提交 tip c0367c1**（`git grep` 全仓 0 命中），它在工作树里
+    （`MapPanel.tsx` + 新增 `frontend/e2e/qoder-map-interaction.spec.ts` + `review/patches/0001,0002`），
+    即 ORD-0037 的修复在飞、未提交。所以我的门写成"有钩子读相机、没钩子像素也必须动、量不到就记 unmeasured 不得算过"。
+    **W3 现在 5.1 秒出判决**（之前 418s 是我自己门的错：`trial-setup` 节点关掉后仍在 DOM 里，
+    `count()` 恒为 1 而 `innerText` 为空，我把"屏幕上没东西"误判成"还在向导里"；这已是同一步第三次我的锅，前两见下方自我纠正）。
+    390x844-dark 实测（`raw/usergate/evidence.jsonl`）：`reachedReviewStep=true`、`leftWizardAtMs=1516`、
+    `primaryActionBlockedMs=3017`、`stageVisible=false`、`renderedReasonOnScreen=false`、`fatalEvents=0`、`httpIssues=12`
+    （12 条全是 `tile.openstreetmap.org/*.png ERR_ABORTED`）。
+    **比基线更重的一条**：9 天行程点"确认创建"后，屏幕上渲染的是
+    `"Trip created. Tell the AI how you want to travel..."` —— 也就是**对一个 stay-options 生成没成功的行程声称成功**。
+    这已不是"失败不可读"，而是**假成功**，正撞仲裁冻结清单"不得把未知谎报成已知"。请 e345b9d6（M3-B）按假成功处理，优先级高于"补错误文案"。
+    **必须说清的边界**：我这跑的城市是 `天津`，且 runner 会先 `demo/reset` 播种 ⇒ **是热城市**，
+    所以 114.98s 冷城市那条路径**没有被本门触发**（正是你警告的"别拿缓存热了的会话当第一次使用"）。
+    门的 W3/W4 现在都会命中同一路径 ⇒ 需要加一条**冷城市**用例（用不在 replay 快照里的城市），否则矩阵会系统性地看不见 ORD-0047。这条我没来得及写完，属未完成项。
+    我未复测的（不作判决）：ORD-0035 的 1.09:1（W5 取色仍返回空串，是我的门）；矩阵仅跑到 4/6 组合即因清理端口中止，那轮 `expected 8 / unexpected 52` 是连接拒绝的设施性红，不得引用。
+    隧道：我没有新建、没有触碰 :4781/:4782 与 `_preview.db`，也没有按消除法杀任何进程（只按端口精确停掉自己起的 8391/8392/8401/8402，现已全部无监听）。
 - id: ORD-HANDOVER-0037
   to: commander
   priority: urgent
@@ -2936,7 +2955,19 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
       ① quick tunnel 每次重启换域名 ⇒ 用户书签失效；请用命名隧道或固定入口，并把"用户实际在用的那条"写回账本；
       ② 现在同时只有 1 个入口（我 17:5x 收敛掉了 2 条），不要再加第二条。
     - 移交完成后 Commander 只保留：读健康数字、跑验收、报总线。
-  status: DRAFTED@2026-09-20 17:5x（**未送达**：受 REQ-0011 敲门失败牵连，投递需与 ORD-0044/四问一起敲门）
+  status: DELIVERED+ANSWERED@2026-09-20 18:3x —— 已投递（`5749040587`）、已 `browser-use` 敲门、仲裁已回（`5749096433`）。
+    它给的状态口径我照录：
+    - **`TEMPORARY_PREVIEW_ACCEPTED`**：单实例 quick tunnel + 鉴权反代**允许继续支撑 Mission 003**，
+      **不构成产品代码收口 blocker** ⇒ 我不因固定入口没建起来就关预览，也**不阻塞 A2/A4/A5/USER_GATES 的验收**；
+      前提它逐条列了：只 1 条公网入口、前面必须鉴权层、endpoint 落 `run/preview_endpoint.txt`、PID 唯一记录、
+      匿名健康仍 401、凭据不进 URL、不开第二条、公网 AI 继续受鉴权保护。
+      ⇒ **20:0x 我复核：以上前提当前全部成立**（1 个 cloudflared 进程 PID 53336；health/root 均 anon=401 / auth=200）。
+    - **`FIXED_ENTRY_HUMAN_BLOCKED`**：等用户回答"有没有 Cloudflare 账号 / 托管域名"（交互式登录我不代做）。
+      若答"没有" ⇒ 把实现约束从"必须 Cloudflare Named Tunnel"改成
+      **"必须提供稳定、可记录、单实例、HTTPS、前置鉴权的固定 ingress"**，验收契约不变（重启 hostname 不变、
+      单一 ingress、可指向 `127.0.0.1:4782`、endpoint 落文件、按 PID 确定性启停、匿名 401、不把长期密钥写进仓库）。
+    - **明令**：*"不要把'先去买一个域名'升级成 Mission 003 的强制前置条件"* —— 课程项目预览运维不值得为此拖用户进 DNS 采购。
+      fixed entry 只在**正式对外 demo / 长期交接**前才成为必须收口项。
 
 - id: ORD-0046
   to: GPT（外部仲裁）via 总线
@@ -2952,7 +2983,12 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     ⇒ 请由**你在 GitHub 侧**把"清单 ↔ 真实文件名"这件事做成基建：要么在分支里正式新增那个 spec 并给出它的
     可运行命令，要么改清单为真实文件名。Commander 不按"应该有"验收，只按 `--list` 实到数与一次全量读数验收。
     边界：不削弱冻结清单；不 force-push；不改已发布历史；不碰本地权威树。
-  status: DRAFTED@2026-09-20 17:5x（同上，待敲门）
+  status: DONE@2026-09-20 18:3x by **GPT 自己在 GitHub 侧交付**（分支 `m3/release-package-manifest` @ `24649bb`，
+    3 文件我已 REST 核过）：`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts`，**不改名**；
+    并且 5749096433 确认**发布包以产品根为基准**（`frontend/...`），A4 分支里的 `_tools/qoder-integration-20260919/`
+    前缀只是工作区镜像布局，**不得为了让 verifier 变绿去改 manifest 适配它**。
+    我已把它的 verifier 实跑一遍：`required 22 / missing 3 / forbidden 0 / exit 1`，三条红全部有归属（ORD-0043 ×2、ORD-0039 ×1）。
+    ⇒ 本条为准；账本里另一条同名 ORD-0046（18:0x 我补写的 VOID 记录）是重复登记，内容一致，以本条为权威。
 
 - id: ORD-0047
   to: e345b9d6
@@ -3070,7 +3106,8 @@ cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloud
     验收原则（仲裁原话落地）：**不允许无控重叠刷新循环；后台/空闲行为必须有明确理由与节奏**。
     若确有安全轮询意图 ⇒ 写清节奏并做成 visibility-aware；否则就是误触发的循环，报触发点给归属车道，
     **你不要自己动产品代码**。
-  status: DISPATCHED@2026-09-20 18:0x
+  status: CLAIMED@2026-09-20T18:14+08:00 by dc19d662（evidence-only，不动产品代码）
+  evidence: 待填——7 项采集（间隔直方图 / initiator 栈 / 可见性分段 / RQ 侧 / 重入 / EventSource 关联 / 重叠）
 
 - id: ORD-0049
   to: 8c66aa92
