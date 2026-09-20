@@ -2277,7 +2277,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     - 一条断言：路线图层按天/方式分组的**要素数量 > 1**（防"一根大线"回潮）；
     - `npx playwright test --list` 的 collected 与其中 setup 工程行数 + 一次全量 suite 读数，与账本对表、差值逐条点名。
     **不要顺手扩大范围**：不改后端几何生成逻辑（`mobility_facts` 的产出是另一件事），不动缓存策略（ORD-0036）。
-  status: DISPATCHED@2026-09-20 10:2x
+  status: CLAIMED@20260920-091500 by e345b9d6
 
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
