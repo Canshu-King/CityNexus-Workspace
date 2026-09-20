@@ -1837,9 +1837,19 @@ Refreshed: 2026-09-20 07:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（A
 **构建阻塞**：包内 `frontend/src/lib/` 少 **`executionWindow.ts`**，而包内 `V8Experience.tsx:12` 与
 `V10LiveExecutionPanel.tsx:13` 都 `import { liveActivityWindow } from "../lib/executionWindow"` ⇒ 包内 `npm run build` 必挂。
 **证据缺口**：包内 e2e 24 份 / HEAD 27 份，缺 `qoder-mobile-ui-overnight.spec.ts`（= Amendment E 的 <44px 移动门）、其使用者 `_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`。
-⇒ 已下 **ORD-0032**（`6af4cf53`，urgent，已直接派消息唤醒该会话）：重出清单 + **包内** build + **包内**权威模式 e2e + 双扫描 0 命中，验收口径见该订单 a–e 条。
-tip 现 `ee6a93e`（`8579cbb..ee6a93e` 与 `5a33eaf..8579cbb` 全是 docs，`git diff --name-only` 只 `INTEGRATION_REPORT.md`；§80.2 结案 16+1 口径、§86 给空计划例补了它自己形状的突变体 M5 ⇒ `1 failed / 5 passed` @ `spec:138`）。
+⇒ 已下 **ORD-0032**（`6af4cf53`，urgent，已直接派消息唤醒该会话）：整树重出清单 + build + 权威模式 e2e（**跑在包外副本**，见下方 08:0x 措辞更正）+ 双扫描 0 命中，验收口径见该订单 a–e 条。
+tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 `qoder-e2e-config-guard.spec.ts`；更早两提交全是 docs）
 巡检循环已从夜间版改为**晨间降频版**：每 30 分钟一轮、`expiresAt 12:00`，指令已重写（禁止重发状态字更正帖；唯一在飞事项 = ORD-0032）。
+**控制面自纠（08:05）**：我给仲裁的那篇自纠帖**首发时第一行误写成 `裁判:` 前缀** —— 这条总线两端是同一个 GitHub 账号，
+前缀是唯一区分"仲裁裁决 / Commander 自述"的手段，写错就让 `patrol.py` 把我的话当令存档（确实存成了 `arbiter_5746196501.md`）。
+已用 `raw/edit_bus_comment.py 5746196501 raw/ws_publish_drift_20260920.md` **就地 PATCH**（http=200，回读 sha1 `f4bdb671a15d` 两侧一致，首行现为 `包工头:`），
+本地误档已改名 `raw/commander_5746196501_edited.md`；`patrol.py` 同时加固：除前缀外再扫首行的 `Commander`/`494abfd7`/`包工头`，并把存档从 `write_text` 改成 **`write_bytes`**（LF 不再被翻成 CRLF，sha1 才可比）。复跑 patrol：`new arbiter comments = 0` ✓。
+**ORD-0032 第一轮交付已按实测处置**：车道 07:50 CLAIM / 07:59 DONE，我在 `bfe8d7e` 复跑同一把尺子核收六格
+（704 文件 / 10,233,260 B、700 同、2 不同、2 仅包内、禁路径 0、真实 key 0，另 `test -e` 逐个确认 5 个补入文件、包内 spec 27），
+但**退回唯一一项 (c)**：它自陈已把 `qoder-e2e-config-guard.spec.ts` 补进包，读数却仍是补入前的旧分母 54/5
+（`bfe8d7e` 提交信息自陈 54→58；我按可跑 spec 复核 26→27）。榜上现为 `REJECTED=1`。
+我自己在这条订单上犯的两处也一并认：措辞"在**包内**跑 build/e2e"直接把 28,048 个禁路径文件诱导进了交付物；
+"补上那三份 spec 读数会变高"的预期是错的（那两份本就在我的 54/5 分母里，车道反驳成立）。
 
 ## MISSION 002 已交付（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）→ 状态字 `CNX_CMD_002_COMPLETE`（评论 5746109359）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
