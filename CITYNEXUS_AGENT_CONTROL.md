@@ -377,6 +377,46 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
 另注：`tools/verification/mutation_campaign.py` 与 `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`
 在我这一笔提交里**保持未暂存**（前者归 Commander，后者是 `6af4cf53` 的 sanitize 件）。
 
+### 8c66aa92 ORD-0057 + ORD-0067 @2026-09-20T23:5x+08（本机钟）→ ORD-0067 DONE；ORD-0057 **PARTIAL：全量后端不绿，红在我自己新加的门里**
+
+**ORD-0067（提交形状）选 A，两笔已落，数字即验收**
+
+```
+605e2c5 chore(models): normalize … 1022/1022   ← 只改行尾
+2bce875 feat(backend): ORD-0057 业务切片  backend/app/db/models.py 33/0
+证：git show HEAD~1:…models.py 与 HEAD:…models.py 各自 tr -d CR 后 sha256 相同（aa42a808a == aa42a808a）
+其余文件行尾未动：main.py 132/46（HEAD 与工作树都 0 CRLF）、schema.sql +32/-0、
+stay_mobility.py 写完归 CRLF 后 count(LF)==count(CRLF)==1961
+mutation_campaign.py 与 qoder-handoff/*.patch 继续不暂存、不提交、不"顺手修"
+```
+
+**ORD-0057 已落的部分**：`POST …/stay-generations` 202、`GET …/{operation_id}`、`POST …/abandon`；
+状态机 + 守卫写 + 部分唯一索引 + `WORKER_LOST` 回收 + `phase` 只发真阶段 +
+`max(30.0, real_city_timeout_seconds)` 改回配置即超时。
+`/stay-options/generate` 变成"同一个 operation 等到底"，四条旧契约（200 体、`X-CityNexus-Phase-Ms`、
+命名 422、四态 outcome）逐条有门。新文件 21 条门；**变异 10/10 由点名节点杀掉**、每次 SHA-256 还原一致
+（A9 第一次那轮不可归因——我当时在并行编辑同一个 `main.py`，已单独重跑并取得杀证；教训写进 §94）。
+门禁：`phases`+`window`+`v8_stay_mobility` = 19 passed；`v8_stay_mobility`+新文件 = 25 passed。
+
+**没做完/不粉饰的部分（这就是 PARTIAL 的原因）**
+
+1. **全量后端不绿**：`970 passed / 2 failed / 15 skipped，collected 987（166.72s，`.venv`，AI 变量清空）`。
+   红与错**全在** `tests/test_qoder_stay_generation_operations.py` 自己：
+   读到的两条：`test_the_terminal_answer_keeps_the_four_cases_apart`（FAILED）与
+   `test_a_different_question_is_a_different_operation`（ERROR，drain fixture）。**2 failed 里还有一条节点名在
+   tail 之外、我没读到**，下一轮重跑整套时一并取准，不猜。该文件单跑 **21/21 绿**，
+   与 `v8_stay_mobility`、`v16` 配对绿；只在整套顺序下出现。已排除行尾/`demo/reset` 互抹/状态机语义。
+   假设（未证实）：4 槽 executor 被整套里"真 provider 冷链路"（本机无外网出口，每主机吃满 12s）占住，
+   我的 drain 30s 墙先到。下一步顺序写在 §94.6：drain 先打印可定位信息 → 测试用可注入执行器 → 全量两次连跑绿才转 DONE。
+2. **受理延迟 p50/p95/max 没有数**：探针在真 uvicorn 上第一笔 POST 返 500（TestClient 不复现），
+   已把服务端 stderr 收进 `D:\moodle\_qoder_ord30_evidence_20260920\ord57\uvicorn.log`，下一轮直接读栈。
+   没实测数我不写数。
+3. **顺带查出并如实登记一条产品事实**：一次生成从第一条 offer 落库到排序结束**独占全库写能力**（同步时代同样成立，
+   不是这次引入）；`main.py` 里两处天气端点仍内联 `generate_stay_options`。根治要把证据落库分阶段提交，
+   那是独立一单，我不在收口里顺手改。abandon 的进程内事件语义按 `PROCESS_LOCAL_ONLY` 口径披露。
+
+证据：`ord57_mutants.json`、`ord57_A9.json`、`INTEGRATION_REPORT.md` §94、`review/probe-ord57-acceptance-latency.py`。
+
 #### aad2d1f2 HJ-P3 第三轮 @2026-09-21 00:5x（本机钟 20:5x）→ 先自我更正 H-8 的归因；再交不压后端的 4 条（含 1 条 TRUTH_DEFECT）
 
 **读数归属（Amendment J §8 要求，先量再跑）**
@@ -673,9 +713,108 @@ rebase/reset/clean 收尾 —— 那等于自己造一个死锁。
 ```
 第 3 步我预期零冲突，但**预期不算证据**，合并后我会把 `git diff --name-only` 与冲突数贴出来。
 
+### dc19d662 ORD-0039（W3 结案）@2026-09-21 00:1x → 两次误读都由我自己撤回；最终形状是"失败被承认、原因被丢弃"
+
+`STATUS: W3-REFUTED-AS-FALSE-SUCCESS_AND_REPLACED | HEAD 我的门跑 git archive 56f67e2 导出树（主账本候选 576fbf6；权威在动）| files frontend/usergate/user_critical_path.spec.ts(W3), gate/w3_evidence.cjs | tests W3 单跑 collected 1 / passed 0 / failed 1（红在"原因未上屏"）；矩阵上一轮 collected 66 / 36 passed / 30 failed | blocker 无 | evidence raw/w3_final2.jsonl, raw/w3_final.jsonl, raw/w3_screen.png；条目正文在 CITYNEXUS_AGENT_CONTROL_ARCHIVE.md 名下 ORD-0039`
+
+- **撤回 ①（00:4x）**：`POST /journeys` 422 是**门进程自己直连**的调用，向导那次是 201；页面全部请求零 `>=400`。
+- **撤回 ②（00:5x，你 23:1x 指出的机制）**：`trial-arrival`/`trial-departure` 是**地点**字段
+  （`JourneyTrialSetup.tsx:296/:305`），天数来自 `trial-start`/`trial-end`；屏幕上"3 天"是组件默认值，
+  我那句"回读一致 ⇒ 用户提交了 10 天"又一次把门的填法当成用户请求。
+- **用对字段后（`trial-start=2026-09-21T10:00`、`trial-end=2026-10-01T20:00`，11 天）**：
+  页面自己发出 `POST /api/v1/journeys → **422**`；屏幕 alert 是
+  `"This step did not complete — no journey was created."` ⇒ **没有假成功**；
+  但后端同一次 422 带的 `"The trip is longer than the supported journey window of 7 days. Shorten the dates and try again."`
+  （`V13_JOURNEY_DAYS_OUT_OF_BOUNDS`）**没有出现在界面上** ⇒ 用户既不知道原因、也不知道该怎么改。
+- 断言已按此改正：被拒分支只要求 reason 上屏（被拒留在向导里是正确行为，不再用阻塞时长判它），
+  耐心阈值移到成功分支；两次误读的字段名与因果写进节点注释。
+- 与你 00:0x 备注的接续：你留的"瓦片被墙时降级文案是否真出现"归 ORD-0039 ⇒ 我的 W8 正是这条，
+  但它现在被地图 fixture 挡住（`v8-map-empty`，且本机 `tile.openstreetmap.org` 不通、`nominatim` 10s 不可达），
+  仍属未验，不会拿空转冒充红或绿。
+
+
+
+### commander 亲测 @2026-09-20 23:4x（本机钟）—— 三件事：全量后端第一轮**红**（我保留原始结果）、红队那条"原因被丢弃"**在当前 tip 上已经修好**、插话排队实测
+
+**① 全量后端第一轮（HEAD `2bce875`）：`7 failed / 965 passed / 15 skipped / 1 error / 179.01s`。我不藏这个红。**
+```
+FAILED tests/test_agent_runtime_gate.py::test_agt06_hard_fail_and_agt07_c4_damage_are_denied
+FAILED tests/test_agent_runtime_gate.py::test_agt08_degraded_provider_and_agt09_critical_event_require_confirmation
+FAILED tests/test_agent_runtime_gate.py::test_agt13_cross_journey_proposal_is_rejected
+FAILED tests/test_agent_runtime_gate.py::test_agt14_15_stale_or_resolved_event_rejected[stale]
+FAILED tests/test_agent_runtime_gate.py::test_agt14_15_stale_or_resolved_event_rejected[resolved]
+FAILED tests/test_agent_runtime_gate.py::test_agt16_accept_time_gate_remains_authoritative
+FAILED tests/test_contract.py::test_openapi_runtime_method_parity_includes_v7_surface
+ERROR  tests/test_qoder_stay_generation_operations.py::test_a_different_question_is_a_different_operation
+collect：987 tests collected in 2.49s（= 账本 943 + ORD-0063/0064 的 23 + ORD-0057 的 21，算术自洽）
+```
+**先分类再归因（CURRENT_GATES 7 的规矩）**：这一轮**机器不空闲** —— `8c66aa92` 正跑在它那一轮的
+步骤 64/68、`e345b9d6` 也在跑；而 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT`。
+失败的 7 条里 6 条集中在 `test_agent_runtime_gate.py`、1 条是 OpenAPI 表面 parity —— **都不是** ORD-0057 的文件；
+唯一落在新文件上的是 **ERROR（不是 FAILED）**，而同一文件我单独跑是 **21 passed / 19.18s** 全绿。
+⇒ 我目前的判断是"并发干扰嫌疑大"，**但这只是嫌疑，不是结论**。
+**我自己的量具错误也要记**：我这一轮用了 `pytest … | tail -25`，**把 traceback 截掉了**，
+所以现在拿不到失败正文 —— 是我限制了自己的证据。
+**下一步（已排）**：等 `8c66aa92` 那一轮结束、机器 quiescent 后，**完整输出落盘**重跑一次全量；
+若转绿，按 7⑤ **两次结果都保留**（红的第一轮不许删）；若仍红，逐条归因并开单。
+在第二轮出来之前，`2bce875` 的后端状态我记为 **UNVERIFIED-RED-PENDING-RERUN**，不记绿也不记"产品缺陷"。
+
+**② 对 `dc19d662` 刚落的那块（:676）的裁定：两次自撤我接受；但它那条"具名原因没上屏"**在 `56f67e2` 上真、在 `2bce875` 上已经修好**。**
+它自己的 STATUS 行写着门跑在 **`git archive 56f67e2` 导出树**（13:4x 的快照）。而"把 `message` 传进向导"
+是 **18:4x `4516777` / 18:5x `ca65483`** 才落地的 —— 它的测量**早于修复约 5 小时**。
+我在当前 tip 上把整条链读完了（不是推断，逐行）：
+```
+后端 422 body.error.message = "The trip is longer than the supported journey window of 7 days. …"（它自己的 jsonl 里有）
+  → rejectionReason()        V8Experience.tsx:96-115   headline 取 body.error.message（:112）
+  → v8Request() throw        :117-124                  throw new Error(rejectionReason(body, status))
+  → createJourney() catch    :611                      setMessage(error.message)
+  → message prop 传入向导     :832                      message={message}   ← 18:4x/18:5x 才有的那一行
+  → 渲染                      JourneyTrialSetup.tsx:700-712
+                                <div role="alert" data-testid="trial-create-error">
+                                  <strong>这一步没有成功，行程还没有创建。</strong>
+                                  {message ? <span>{message}</span> : null}   ← 具名原因在这里
+```
+⇒ 在当前 tip 上，那句 7 天原因**会**出现在 `role="alert"` 的 div 里，紧跟通用句后面。
+它量到的"只有通用句"与 `56f67e2` 上 `message` 为 null 完全吻合（那棵树没有 :832 那一行）。
+**裁定**：
+- 它的**两次自撤成立**，我接受；"失败被承认、原因被丢弃"作为**对 `56f67e2` 的描述成立**；
+- 但**不得据此开新单或改代码** —— 在当前 tip 上这已是修好的形状；
+- **正确的下一步是复测而不是重做**：在**由 `2bce875`（或更新）构建的生产产物**上重跑它那条断言，
+  断言改为"通用句与具名原因**同时**在 `trial-create-error` 里出现"。这正是仲裁对 ORD-0056 的要求
+  （"须以权威生产构建读屏收口"）的同一口径；
+- 给它一句正面记录：它这次**把两次误读的字段名与因果写进了节点注释**，并且明说 W8"仍属未验，
+  不会拿空转冒充红或绿" —— 这是我要的诚实形状。
+- 顺带：它块里的时间戳又标成了 `2026-09-21 00:1x`（实际 23:4x 前后）。**我不改它的块**，
+  但按我 23:1x 立的规矩：读账本别按印出来的钟点排先后。这个毛病现在两条车道都染上了，
+  我在 LANE_PROTOCOL 里补一条通用提醒。
+
+**③ 插话排队实测（用户 23:4x 拿截图给我看）：`8c66aa92` 跑到步骤 64/68 时，我发的插话**还在队列里**。**
+⇒ 插话**不是**长工具循环回合内的实时打断；我 21:4x "实测有效"的结论**过宽，撤回**。
+处置已写进 `## ORDERS` 顶部的 `⛔ HOLD`：**停手类指令一律进账本 ORDERS 顶部**（车道在动作之间必须读它），
+消息只保留"叫醒 cold/ready 会话"这一个用途。我不再把"消息已发送"当"指令已送达"。
+
 
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+
+### ⛔ HOLD @2026-09-20 23:4x（给 `8c66aa92`，**写在这里是因为消息通道被量出不可靠，见下**）
+**立刻停止一切与 `backend/app/db/models.py` 行尾有关的动作：不 revert `605e2c5`、不 reset、不 rebase、不再改它的行尾。**
+原因：仲裁 23:31:59Z 裁的是 **B**（本切片内恢复原行尾形状），但 **A 路第 1 笔 `605e2c5` 在 23:29 已经落地**，
+业务提交 `2bce875`（models.py 干净 33/0）又坐在它上面 ⇒ 现在字面执行 B = 带冲突的 revert = **第二次** 1022 行 blob 重写。
+我已把对账数据（含"blame 在下单前就 100% 归于一笔 bulk import、全历史只 3 笔碰过这文件"）发上总线请它改判 **A'**
+（保留 + `.git-blame-ignore-revs` + 冻结到 Simulation 之后的独立 hygiene checkpoint）。**在它回话前，行尾的事冻结。**
+你继续推：ORD-0057 剩下的仲裁验收点（**幂等复用**、**刷新恢复同一 operation** —— 延迟探针没覆盖这两条）
+与 ORD-0068 的测量。**先别重跑变异批**：我这边全量后端刚跑完一轮（见 DELIVERIES 23:4x），机器不空闲，
+现在重跑会让两边的数字都不可信；等我第二轮 quiescent 复跑完再说。
+
+**为什么 HOLD 写在账本而不是发消息**（用户 23:4x 拿截图指给我看的实测）：
+你那一轮跑到 **步骤 64/68** 时，我发的插话消息**还在队列里排队**，要等你这轮结束才可见。
+⇒ **插话不是长工具循环回合内的实时打断**，我 21:4x 那次"实测有效"的结论**过宽了，撤回**：
+它只在回合边界/空闲时即时生效。所以从今往后：
+- **任何"必须停手/必须改方向"的指令，一律写进 ORDERS 顶部并加 ` HOLD` 标记**（你在动作之间要读本区）；
+- 消息只用于**叫醒 cold/ready 的会话**（那是它唯一可靠的用途）；
+- 我不再依赖消息做实时控制，也不再把"消息已发送"当成"指令已送达"。
+
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
 `evidence` 写清 collected/deselected 条数与关键断言；不认领别人的单、不改别人的文件；
@@ -932,7 +1071,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - 其余 6 个文件的行尾**已经是对的**，别一起动。
     - 本单**不改变** ORD-0057/0063/0064 的任何要求与优先级，只处理提交形状。
     按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
-  status: PARTIAL@2026-09-20 23:3x（A 路第 1 笔已由 Commander 亲测通过；第 2 笔业务提交尚未落地，**本单不关闭**）
+  status: DONE@2026-09-20T23:5x+08 by 8c66aa92（A 路两笔都落了：第 1 笔 `605e2c5` 1022/1022 只翻行尾（你已亲测）；第 2 笔 `2bce875` 里 `git show --numstat 2bce875 -- backend/app/db/models.py` = **33/0**；其余 6 文件行尾未动、量具与 handoff patch 未代提交；见 DELIVERIES 同名块）
   evidence: |
     [Commander 亲测 @2026-09-20 23:3x，本机钟] `8c66aa92` 选了 **A 路**并已提交第 1 笔：
     `605e2c5 chore(models): normalize models.py line endings to LF, no semantic change`。
@@ -1621,7 +1760,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策一律不得削弱；
     不得关掉真实 provider 调用来"满足"延迟门；不得把未知数据写成已知数据；
     前端对齐部分归 ORD-0047（`e345b9d6`），**你不要代写前端等待体验**。
-  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
+  status: PARTIAL@2026-09-20T23:5x+08 by 8c66aa92（契约+21 门+10/10 变异已落 `2bce875`；全量后端 **970 passed / 2 failed / 15 skipped，collected 987** —— 红在我自己新文件里（单跑 21/21 绿）；受理延迟 p50/p95/max 未拿到数（探针真 uvicorn 首笔 POST 500，stderr 已收 log）⇒ 不转 DONE，顺序见 §94.6 + DELIVERIES 同名块）
 
 - id: ORD-0058
   to: 8c66aa92
