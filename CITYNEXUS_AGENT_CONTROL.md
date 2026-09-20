@@ -1642,6 +1642,64 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     ⇒ **本单关闭**。配方已同步给将来的全仓 hygiene checkpoint（那时每个被规范化文件都要用这条配方复核）。
 
 
+- id: ORD-0070
+  to: e345b9d6
+  priority: high
+  if_head: fb53500
+  order: |
+    **后端刚把"存储正忙"从裸 500 改成具名 503（`fb53500`，我核过它的日志是真的）。
+    但前端三个调用点里有一个会把这个拒绝**显示成"没有住宿"** —— 这不是"没处理"，是说假话。**
+
+    我把三个调用点逐个读了（@`fb53500`，不是回忆）：
+    ```
+    调用点                                          出错时会不会上屏
+    V8Experience.tsx:549  createTianjinDemo 路径    **会**：外层 catch `setMessage(error.message)`（:553-554）
+    V8Experience.tsx:596  createJourney 路径        **会**：同一 catch 链 → `message={message}` :832
+                                                    → `JourneyTrialSetup.tsx:700-712` 的 role="alert"
+    HotelsPanel.tsx:64    `await fetch(...)`        **不会**：见下
+    ```
+    `HotelsPanel.tsx:58-69` 的原文形状：
+    ```js
+    try {
+      await fetch(`…/stays/offers/capture`, { method: "POST" });
+      await fetch(`…/stay-options/generate`, { method: "POST" });
+      list = await read();
+    } catch {
+      /* fall through to the honest empty state */
+    }
+    ```
+    ⇒ **`fetch` 对 5xx 不抛异常**（只有网络层失败才抛）。所以 503 根本不会进 `catch`：
+    代码继续 `read()`，读到空列表，于是渲染**空状态**。
+    注释写的是 "fall through to the honest empty state" ——
+    **可它这次不 honest**：真实原因是"服务器拒绝尝试（写锁被上一次生成占着）"，
+    屏幕说的却是"没有符合条件的住宿"。用户会去改日期、改预算、换城市，
+    而无论怎么改结果都一样。**这是 `TRUTH_DEFECT`，不是 `POLISH`。**
+    （与 ORD-0062 那条"11 次调用全 200、屏幕说没有可行方案"同族：**空与失败混成一个显示**。）
+
+    要求：
+    1. `HotelsPanel` 那两次 `fetch` 必须**检查 `response.ok` / 读具名码**，
+       把"被拒绝或正忙"与"确实没有结果"**分成两种显示**；
+    2. 后端给的是 `GENERATION_STORE_BUSY` + `message_key: "generation.store_busy"` + `retry_after_ms`
+       ⇒ 按 ORD-0055 的规矩**用 `message_key` 取本地文案**（中文界面不许直接印英文 `msg`），
+       并给出**可执行的下一步**（"稍等几秒再试"，最好用 `retry_after_ms` 说清等多久）；
+    3. 不许把 503 伪装成空结果；也不许无上限自动重试把用户锁在原地（重试要有次数上限且看得见）；
+    4. 验收：断言读**渲染文字**——"存储正忙"场景下屏幕**不得**出现"没有/未找到住宿"这类空态文案；
+       给一条杀得掉的证据（把 503 改回走空态分支，门必须红，点名节点 id）。
+
+    边界：
+    - **不得**为了让界面好看而隐藏拒绝；`provenance` / `fact_quality` 冻结清单不许削弱；
+    - 后端契约与状态机**不动**（那是 `8c66aa92` 的 ORD-0057），本单只做"前端说实话"那一半；
+    - 与 ORD-0062 / ORD-0047 合并考虑，**别造第三套等待显示**；
+    - 排在 ORD-0066 修订版之后（那条是可达性，我改了口径，见其正文）。
+
+    **另有一件我已替你去问仲裁的**（你不用等它，先把上面做完）：
+    `fb53500` 让受理门口在存储忙时返回 **503**，而批准的契约是"受理 p95≤1s"。
+    "排队等" 与 "拒绝并让你稍后再试" 是**两种不同的产品承诺**；
+    车道自己也写了"这个取舍请裁，不静默决定"。
+    ⇒ 若仲裁裁定"必须受理"，后端会改成排队，**那你这边两种显示都要能出**（按具名码分支，别写死）。
+  status: DISPATCHED@2026-09-21 00:3x
+
+
 - id: ORD-0001
   to: 8c66aa92
   priority: urgent
