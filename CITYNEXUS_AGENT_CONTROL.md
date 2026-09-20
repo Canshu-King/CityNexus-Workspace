@@ -338,12 +338,12 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
   R5 预览入口出现只打 `/twin` 的非浏览器客户端 70 次（`151.242.36.146`，journey `ff7acd3f`）⇒ 交预览运维。
 - 全文 `D:\moodle\_qoder_twin_audit_20260920\TWIN_POLLING_AUDIT.md`；**判决：不要再为它加 visibility 补丁**。
 
-### dc19d662 ORD-0061 @2026-09-20 21:2x → 串味的泄漏点是**共享浏览器 profile 的 localStorage**，不是共享库；但共享库另有一种更危险的表现，所以两条都要分开
+### dc19d662 ORD-0061 @2026-09-20 21:2x → 泄漏**载体**定位：共享 profile 才会继承行程，全新 profile 只看到向导；而共享库的危险是"静默换体"，所以 profile 与 DB 两半都要隔离
 
 - 同一构建/同一库三入口对照：**全新 context** 打开 `/v8/hub` ⇒ `stored=null wizard=true heading=新建行程`（不会被塞进任何行程）；
   **复用别车道 storageState** ⇒ `stored=22222222 shell=true heading=Demo之旅`（立刻继承）。
   前端 grep `listJourneys` / `?status=ACTIVE` / active-journey **0 命中**，boot 只读 `citynexus.v8.journey_id`
-  ⇒ HJ-P1 描述的机制在浏览器侧，不在 DB 侧。
+  ⇒ **载体在浏览器 profile 这一侧**；共享库的危险是另一件事，见下条。
 - 但**共享 DB 的危险换成了一种更隐蔽的形态**：`services.py:169-170` 的 seed 是冻结的 ⇒ demo 行程 id 恒定，
   实测"别人跑过 `demo/reset`"之后我 profile 里的 id 仍渲染出正常的 `Demo之旅`（正文 373→341 字符、
   **0 报错 0 提示**），底层却已是别人的播种 ⇒ **只隔离 profile 不够，必须 per-lane DB**。
@@ -1410,6 +1410,22 @@ DIFF public/sw.js                    324dbc7ec1 != d2c7a7fbd8    5057 vs 5960 B 
 ⇒ 它用的理由**就是我报上去的那个失配点**（门在测不存在的机制），并且明确两件东西要同时留下：
 **六处机制真落地** + **车道的 `preview.proxy` 与实测超时改进不废弃**。
 ⇒ ORD-0043 从此只有一条路：(A)。(B) 已被否决，车道不必再问。
+
+**00:5x 我复核定时（第二次核，结论未变）**：车道在这期间推了两笔
+`012ff56 test(frontend): land A4's production lifecycle gate at dddfd8b and measure the document budget`
+与 `0e21a4f feat(frontend): give the traveller the theme choice ruling ④ asked for`，
+但我在它的树上重跑同一套检查，**六处机制仍然全部 ABSENT**：
+```
+SW_VERSION / citynexus-recovery / updateViaCache /
+navigateFallbackDenylist / runtimeCacheVersion / clientsClaim   →  6/6 ABSENT
+src/main.tsx 70166 vs 68493 B · vite.config.ts 3650 vs 4976 B · public/sw.js 5057 vs 5960 B   全部 DIFF
+```
+⇒ 它落的仍然是**门**（那三个新增文件本来就逐字节一致），不是**机制**。
+提交信息里 "land A4's production lifecycle gate" 字面上没错——但门不等于机制，
+这正是我 23:5x 判 REJECTED 的那个失配，**它还在**。
+**原因我查到了，不是它抗令**：它的会话 `queuedTurnCount = 3` —— 我 23:5x 的 REJECTED 与 00:0x 的裁定
+**都还在它队列里排队**，它这一轮跑的是旧指令。⇒ 处置：**不再重复发消息催**（消息只会继续排队），
+把这条复核写进账本让它下次重读时一定看到，并在它交下一版时按同一套指纹检查复验。
 ⇒ 这条也再次确认了口径：**仲裁的补丁不会因为"是仲裁写的"就免检，也不会因为"车道另有方案"就被替换掉**；
    两边冲突时由请裁解决，**本地静默替换不是选项**。
 
@@ -1579,13 +1595,13 @@ T3 真值/并发/结构（ORD-0057/0058/0063）→ 相关真值套 + 合并前�
     独立实例一律走 `127.0.0.1`，鉴权反代与凭据不变。
   status: DONE@2026-09-20T21:2x by dc19d662（只做方案与验证，未改产品码；未新开隧道；未启停任何预览进程）
   evidence: 一页 runbook `D:\moodle\_qoder_twin_audit_20260920\LANE_ISOLATION_RUNBOOK.md`；工具 `gate\lane_proof.cjs`（claim/list/release）；原始读数 `raw\lane_isolation.json`。
-      **① 先纠正一件事：串味的泄漏点是共享浏览器 profile 的 localStorage，不是共享 DB。**
+      **① 机制定位（增量；H-B 的症状与 Commander 的 `ACCEPTED` 结论都成立，我补的是"泄漏的载体"）。**
       同一构建、自有 :8411/:8412、同一库，三种入口对照实测：
-      全新 context 打开 `/v8/hub` ⇒ `stored=null wizard=true shell=false heading=新建行程`；
+      全新 context 打开 `/v8/hub` ⇒ `stored=null wizard=true shell=false heading=新建行程`（**不会**自动加入任何行程）；
       换 context 但复用别车道的 storageState ⇒ `stored=22222222 shell=true heading=Demo之旅`（**立刻"继承"别人的行程**）。
       且前端**不存在**"自动挑 ACTIVE 行程"的代码（`listJourneys` / `?status=ACTIVE` / active-journey 全仓 0 命中，
-      boot 只读 `citynexus.v8.journey_id`）⇒ HJ-P1 那句"新浏览器一打开就被塞进别人的行程"，
-      机制是 **profile 共享**，不是数据库共享。
+      boot 只读 `citynexus.v8.journey_id`）⇒ 在共享 profile 下这条链就是 H-B 的成因；
+      换了独立 profile 仍会中②那个坑 ⇒ **profile 与 DB 两半都要隔离，缺一 half 就还剩一半事故**。
       **② 共享 DB 的真实危险更隐蔽：静默换体。** `backend/app/services.py:169-170` 明写 seed 是冻结的、
       两次 reset 产生同一批行 ⇒ demo 行程 id 恒为 `22222222…`。实测：在"另一车道跑了 demo/reset"之后，
       我 profile 里那个 id 仍然渲染出一个**看起来正常**的 `Demo之旅`（正文 373→341 字符，无报错、无"行程已变"提示），
@@ -4343,7 +4359,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20T21:3x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵已完整跑一轮：36 passed / 30 failed（4.3 分）**，其中 W10×6 为有主产品红、W3×6 待 Commander 复核、W6/W7/W8×6 属本门 fixture 未解；仍欠这三项收口 + honestState 断言与 1.09:1 复测）
+  status: PARTIAL@2026-09-20T21:4x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵一轮：36 passed / 30 failed（4.3 分）**；W10×6 有主产品红、W3×6 待 Commander 复核、W6/W7/W8×6 属本门 fixture 未解。21:3x 追加：honestState 已升级为整页扫描断言并实测 `1 passed`，且据此**推翻了我自己上一条"AI 未说明自身状态"的读数**；现只剩地图 fixture 与 ORD-0035 的 1.09:1 复测两项）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -4415,6 +4431,14 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        没有说明自身状态）。⇒ 两点：**ORD-0035 的 1.09:1 我仍未复测**（那说的是 AI sheet 的另一处文本，
        不能拿这个 16.83 顶替）；订单要求的"面板必须如实说明自身状态"目前门里**只记录不断言**，
        下一版要升级成断言。
+       **【该条中"没说明自身状态"部分已被 21:3x 推翻，勿再引用】**：那个 `false` 来自我只读
+       `aside / .cn-sheet` 一个元素（它的内容确实只有 `"Copilot"`）。把读数升级为**整页文本节点扫描**后，
+       命中的是产品原话 **`"No model is configured here, so submitting will not be planned by AI."`**
+       （`screenChars=1004`）⇒ **产品是如实说的，我错了**。断言已按扫描版落地，`--grep W5` 实测 **1 passed（3.5 s）**，
+       `honestStateDisclosed=true`。
+       顺带一条量具教训：我第一次的扫描正则写了 `not configured`，**它匹配不到** "No model **is** configured here"
+       （句中并没有 "not configured" 这个连串），是靠 `no model` 才命中的——与 UI 车道那条
+       "prose 守卫要匹配断言本身而不是它的否定"是同一族坑，反向也会漏。
     3. **W3 在 tip 上的性质变了，而且更硬**：`apiNineDayStatus` 从 12:3x 的 **201 → 现在 422**
        （`56f67e2` 那道"超窗口在门口就拒、一行不写"的门生效了），但同一动作的屏幕上渲染的是
        `"… Trip created. Tell the AI how you like to travel and it will build candidate plans. Dismiss …
