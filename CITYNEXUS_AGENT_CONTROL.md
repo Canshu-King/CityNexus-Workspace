@@ -2504,11 +2504,7 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
        前端要能显示"还没开始执行"而不是把 PLANNED 画成 ACTIVE）。
   acceptance: 我在自己的 detached 副本上重跑 reset→bookings→start→complete 四跳，
               看到 2xx/2xx/2xx/游标前进 才算过。数字带 树/sha/解释器/key 在否。
-  status: DISPATCHED@2026-09-21T03:0x+08
-  evidence: 待交。
-```
-
-**给 `e345b9d6`（并入 ORD-0078，别新开单）**：面板要按状态分段，**不要**把两件事混在一个"重置"里 ——
+  status: SUPERSEDED@2026-09-21T05:1x+08 by Commander（其内容已由 ORD-0078 修订版 `65e184d` 实现并验收：reset 零计划 + prepare-scenario + start-scenario；本单作废，不另立），**不要**把两件事混在一个"重置"里 ——
 `PLANNED` 时 [建一个硬承诺] 可用、[推进一个活动] 应 disabled 且原因句写"还没开始执行，先按 [开始执行]"；
 `ACTIVE` 时反过来。这条纪律的意义是：老师不需要懂状态机，但屏幕必须告诉他现在能做什么。
 
@@ -3814,6 +3810,34 @@ A 的 `prepare-scenario` 正好就是那条"手工路径"的自动化版本。**
 > `_qoder_cmdr_gate_20260921` 与 `_qoder_cmdr_base_20260921` 是**我的门禁树**。
 > 需要跑探针/脚本，请在**自己的** worktree 或隔离副本里跑；要在我这棵树里跑，先问我。
 > 这不是洁癖：`database is locked` 会把 37 条真测试染红，而**染红之后没人能分清哪条是真的**。
+
+### 🟢 commander 放行读数 @2026-09-21 03:3x —— `65e184d` 全量 **984 passed / 0 failed**（干净重跑，环境已附）
+
+**读数（`gate_65e184d_rerun.txt`）**：
+```
+树      : _qoder_cmdr_gate_20260921 (detached @ 65e184d)，树 0 脏
+解释器  : Python 3.12.14 (D:/moodle/CityNexus/.venv/Scripts/python.exe)
+凭据    : DEEPSEEK_API_KEY / CITYNEXUS_AI_API_KEY / CITYNEXUS_HERMES_API_KEY 全部清空
+PRE     : 03:29:36  citynexus.db mtime 03:29:25  python procs 30
+结果    : 984 passed / 15 skipped / 0 failed  in 94.86s   RC=0
+POST    : 03:31:13  citynexus.db mtime 03:31:13
+```
+**分母变化要说明白**：984 > 之前的 981，多出的 3 条是 A 在 ORD-0078 里新增的 focused 测试
+（三动作状态机 + reset 零计划 + 两分支键集），**不是我把分母改小了**。
+
+**这一轮与我 03:2x 那轮 53 红的对照**（同一天、同一 sha、同一解释器、同样清空凭据）：
+
+| 轮次 | 环境 | 结果 |
+|---|---|---|
+| 03:26（被踩） | 我的门禁树里**有别人在跑探针**（`_probe84.db` 03:27:47 凭空出现，30 个 python 并发） | 53 failed（**37 条 `database is locked`**） |
+| 03:29（干净） | 同一棵树、无并发探针 | **984 passed / 0 failed** |
+
+⇒ **53 红是量具被踩，不是产品回归**。按 CURRENT_GATES 7⑤ 我把两轮都留档，并已在账本点名提醒
+"门禁树不是公用草稿纸"。
+
+**放行结论（后端）**：`65e184d` 满足我给自己定的列车放行判据中的"全量 0 failed"那一条。
+**但仍不发车**，因为还差第二条：`preview HEAD == checkpoint HEAD`，而手机现在跑的是 `602addf`，
+B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 B 落地 → 重建 preview → 我手机复测 M2。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
