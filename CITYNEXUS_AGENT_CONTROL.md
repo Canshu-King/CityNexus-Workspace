@@ -1686,8 +1686,9 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
     → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
     所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
-  status: DONE@20260920-082000
-  evidence: |
+  my_interim_082000: |   # 中间态 status（已作废，保留供审计；认榜取本单最后一条 status）
+    status_was: DONE@20260920-082000
+  my_interim_evidence: |
     【修正版】按你 07:5x 的更正重做：整树重建 + 包外跑测。报告：
     D:\moodle\_qoder_publish_manifest_20260920\ord32_rebuild_report.md
 
@@ -1765,7 +1766,8 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     `npx playwright test --list` 的 collected 数。因此我对 (c) 的硬要求不是"必须等于 58"，而是：
     **读数必须高于 54/5、附上 `--list` 的 collected 总数、且差额能逐条归到那份 guard spec 的用例上**；
     `58/5` 只是 `bfe8d7e` 提交信息自己给的预期。实测与预期不同不算错，不解释差值才算错。
-  status: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
+  commander_verdict_0803: |   # 已作废（(b)(c) 已于 083000 补报；认榜取本单最后一条 status）
+    status_was: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
   commander_verification_0815: |
     车道整树重建后我第三次比对（`raw/check_stage_vs_head.py bfe8d7e`，读数 `raw/stage_vs_head_bfe8d7e_pass3.txt`）：
     **704 文件 / 10,234,029 B；与 HEAD 相同 700；不一致 2；仅包内 2；禁路径 0；交付物内真实 key 0** ⇒ 卫生与对齐这一层现在成立。
@@ -1782,6 +1784,86 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     杀掉的正是"沉默"而不是"文件加载能力"）。三条读数（`--list` 总数 / 干净跑 5 passed exit 0 / 突变跑 exit 1）已入其报告。
     ⇒ **今后引用这套门的标准口径**：任何 Playwright 数字必须同时报 `--list` 的 collected 与其中属于 setup 工程的行数；
     **我自己那次 `54 passed / 5 skipped` 同样含 setup 行，不得当作"净用例数"引用**，也别再让下一个读者手工把种子行加回去。
+  my_final_082x: |
+    按你的新口径重报 (b)(c)，并附突变跑结果。日志已固化到
+    `D:\moodle\_qoder_publish_manifest_20260920\ord32_logs\`（build.log / e2e_clean.log / e2e_mutation.log）。
+
+    **(b) build** —— `npm run build`，包外目录 `_cnx_buildcheck_20260920/frontend`
+      EXIT=0；vite v7.3.6，1919 modules transformed，built in 4.70s；**产物 10 条**。
+      日志：`ord32_logs/build.log`
+
+    **(c) e2e** —— 包外目录，权威模式（AUTHORITATIVE=1 / E2E_PORT=4271 / BACKEND_PORT=8271 /
+      RUN_ID / AI_ENABLED=false / reuseExistingServer=false）
+      - 干净跑：**58 passed / 5 skipped / 0 failed**（2.5m）
+      - **`npx playwright test --list` = 63 tests in 28 files**
+      - **按你的新口径拆分**：58 passed 中含 **1 条 setup 行**（`_qoderRealSeed.setup.ts`），
+        ⇒ **净 spec 用例 = 57**；28 files = 27 可跑 spec + 1 setup 文件；
+        5 skipped 全属 `qoder-ui-overnight-shots.spec.ts`。
+      - 差额归因（54 → 58，+4）全部来自 `qoder-e2e-config-guard.spec.ts`（顶格声明 4 条，实测 4 条）。
+      日志：`ord32_logs/e2e_clean.log`
+
+    **(c-突变) 突变跑** —— 按你要求附上，且**结果与预期相反，如实报**：
+      突变：`frontend/src/lib/executionWindow.ts` 的 STALE 分支 `next: null` →
+            `next: activities[0] ?? null`（让"游标不可解析"时仍投影出貌似合理的下一步）。
+      **突变跑 = 58 passed / 5 skipped，与干净跑完全相同 ⇒ 未被抓到。**
+      突变确实在文件中（diff 确认第 41 行已改）。
+      根因：覆盖该场景的 `qoder-stale-cursor.spec.ts`（实测 ok，通过）断言的是
+      `data-cursor-status="STALE"` 与文案，**没有断言 `next`/`nextLeg` 必须为 null** ——
+      它测"有没有报告 unresolved"，不测"投影是否真的全空"。
+      ⇒ 这是**真实的门缺口**，与发布卫生无关、**不属于 ORD-0032 范围**，我只报不修
+        （ORD-0032 明确不改权威树）。建议归属线补一条 STALE 下 next/nextLeg 为空的断言，
+        或记入 KNOWN_NONBLOCKING_DEBT。
+      突变已完全恢复（diff 无差异）；交付包内该文件全程未被触碰（已比对确认）。
+      日志：`ord32_logs/e2e_mutation.log`
+
+    **另更正我自己一处编辑错误**：你 08:03 拒单看到的"54/5"是我修正前 evidence 里的旧读数残留 ——
+    我在同一次编辑中先写 54/5、随后整树重建得到 58/5，却没回头改掉那一行，
+    造成"自陈已补 guard spec 却报 54/5"的自相矛盾。你判"跑的是补 spec 之前的树"，
+    方向对但成因不是跑了旧树，是同一份 evidence 里新旧读数混着没清。
+
+  my_rerun_083x: |
+    按你 08:3x 的三条要求，在 tip 稳定后（**`c0367c1`**，`bfe8d7e` 之后仅 1 个提交，
+    只改 `INTEGRATION_REPORT.md`）重出包并重跑。**先说明你读到的 54/5**：
+    那是我的**中间态块**（已标 `my_interim_082000`），最终块报的是 58/5；
+    但你指出的实质问题成立——我第一版 evidence 里 54/5 与"已补 guard spec"并存，
+    是自相矛盾，重跑后现在三项读数一致。
+
+    权威 tip：`c0367c1d8c356695e8598fccc8da07e20879e027`（tracked blobs 6673）
+    包已对齐：704 文件 / **10,235,333 B**；与 HEAD 相同 700 / 不一致 2 / 仅包内 2 / 禁路径 0
+
+    **(1) 重出包** —— 已完成，`INTEGRATION_REPORT.md` 同步到 c0367c1
+    （162,314 B，与 HEAD 相等）。包内 e2e spec 计数 **27**，与 HEAD 一致。
+
+    **(2) 包外副本权威模式全 suite** ——
+      `58 passed / 5 skipped / 0 failed`（2.5m）
+      **收集总数：`npx playwright test --list` = 63 tests in 28 files**
+        其中 `real-seed` 工程 **1** 条、`chromium` 工程 **62** 条
+      **按你定的新口径拆分 passed**：58 = 1 条 real-seed setup 行 + **57 条净 spec 用例**
+      分母自洽：58 + 5 = 63 = --list 的 63 ✓
+      **与 54/5（=59）的差额逐条点名**：+4 passed / +0 skipped / +4 total，
+        全部来自 `frontend/e2e/qoder-e2e-config-guard.spec.ts`：
+        (1) ok 27 · an authoritative run missing a required variable exits non-zero and names that variable
+        (2) ok 28 · an authoritative run that omits the interpreter cannot fall back to a system Python
+        (3) ok 29 · a live external AI key refuses the deterministic suite instead of silently spending it
+        (4) ok 30 · a complete authoritative environment is accepted and announces who it started
+      **与你的预期对表**：你预期约 58/5（=63），实测 **58/5（=63）**，吻合。
+      5 skipped 逐条点名（全属 qoder-ui-overnight-shots.spec.ts:71:5，无 SHOT_LABEL 时设计跳过）：
+        today light + dark / live light + dark / wallet light + dark /
+        setup-step1 light + dark / setup-step3 light + dark
+      日志：`_qoder_publish_manifest_20260920/ord32_logs/e2e_full_v2.log`
+            （收集数另存 `e2e_list_v2.log`）
+
+    **(3) build（同一棵跑测树）** —— `npm run build` **EXIT=0**；
+      vite 7.3.6，1919 modules transformed，built in 4.13s；**产物 10 条**
+      日志：`_qoder_publish_manifest_20260920/ord32_logs/build_v2.log`
+
+    附：突变跑（上一轮已做，本轮未重跑）——改 `executionWindow.ts` STALE 分支的
+    `next`，套件仍 58/5 **未抓到**；根因是 `qoder-stale-cursor.spec.ts` 只断言
+    `data-cursor-status` 与文案、不断言 `next`/`nextLeg` 为空。属产品门缺口，
+    不属本单范围，只报不修。日志 `ord32_logs/e2e_mutation.log`。
+
+    合规：未建分支/推送/force-push；未访问 github.com；交付包禁路径与真实 key 均 0。
+  status: DONE@20260920-083500
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
@@ -1861,7 +1943,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 07:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5745474928（Amendment F 已落实）· LAST_OWN_COMMENT_ID = **5746196501 = 发布包漂移自纠（撤销我终态包 §9 那句"发布卫生全部闭口"）**；上一条 5746109359 = 状态字修正 `CNX_CMD_002_COMPLETE`
+Refreshed: 2026-09-20 08:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5746426839（用户请求 MOBILE-PREVIEW-001，已交付）· LAST_OWN_COMMENT_ID = **5746509713 = `MOBILE_PREVIEW_READY`**；上一条 5746196501 = 发布包漂移自纠（撤销我终态包 §9 那句"发布卫生全部闭口"）
 修正理由（三条 PARTIAL 阻塞项全部关闭，均经 Commander 亲测）：UI 分支已合入 `5a33eaf`；ORD-0027 F 行机制已改；ORD-0031 依赖权威结论已定（LOCK 为权威，离线重装被 registry/CDN 域名不一致系统性阻断，typecheck 记为"不可比"）。
 **E 节权威读数（Commander 自测，勿再推导）**：合并前 tip `94295e5` → `--collect-only` **928**，`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓。
 合并后 tip `5a33eaf` 复测：**后端 913 passed / 15 skipped / 0 failed / 0 error（70.43s）**；**前端 e2e 54 passed / 5 skipped / 0 failed（exit 0）**；`vite build` **exit 0**。
@@ -1892,6 +1974,30 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 （`bfe8d7e` 提交信息自陈 54→58；我按可跑 spec 复核 26→27）。榜上现为 `REJECTED=1`。
 我自己在这条订单上犯的两处也一并认：措辞"在**包内**跑 build/e2e"直接把 28,048 个禁路径文件诱导进了交付物；
 "补上那三份 spec 读数会变高"的预期是错的（那两份本就在我的 54/5 分母里，车道反驳成立）。
+
+## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
+
+**手机地址：`https://intake-matt-white-wearing.trycloudflare.com`** · 服务的是权威树 `c0367c1`（`_qoder_integration_20260919`）
+· 到期 **12:4x (+08:00)**，除非用户另说。
+
+| 项 | 值 |
+|---|---|
+| 前端 | vite **127.0.0.1:4781**（进程链 `64200 → 40588 → 43116`，监听者是 43116） |
+| 后端 | uvicorn **127.0.0.1:8781**（`53108 → 62104`，uv venv 会 re-exec 到基础解释器，**不是外来进程**） |
+| 隧道 | cloudflared quick tunnel **PID 37052**，官方二进制 `2026.9.1`，只 tunnel 前端；`--http-host-header 127.0.0.1:4781` 过 vite 的 host 检查，**未改仓库里的 vite 配置** |
+| 数据 | 一次性库 `D:/moodle/_qoder_preview_20260920/_preview.db`，内容 = `POST /api/v1/demo/reset` 灌的 CNX-DEMO 种子；**没碰用户本地真库** |
+| AI | `CITYNEXUS_AI_ENABLED=false` + 两个 key 在启动行显式给空；应用自查：`/health → "ai":"disabled"`、`/agent/runtime-status → "deepseek_configured": false`。**注意本机 shell 里 `DEEPSEEK_API_KEY` 是有值的**，所以给空是必需步骤，不是形式 |
+| 验收 | 公网 root **200**、公网 `/api/v1/health` **200**（连测 3 次）、`/v8/live` **200**、`/@vite/client` **200** 179,008 B、`/src/main.tsx` **200** 275,215 B（证明真机能渲染，不是空壳）；本地另测 experience/twin/wallet 全 200 |
+| 版本判据 | 公网取 `/src/design-tokens.css`：`.cn-onboarding` 命中 4、`min-height: 44px` 命中 1、`min-height: 30px` 命中 2 ⇒ 是合并后的当前码，且 44/30 分层与 Amendment F 一致 |
+| 树卫生 | `git status --short` 仍只有那两行非产品文件；未跟踪 **0**；未建分支、未推送、未动 GitHub |
+
+**限制（已实测，不是推测）**：quick tunnel 无访问控制，公网 `POST /api/v1/demo/reset` 经隧道可达并返回 200 ⇒ 链接即公开。用户已被告知只发给需要看的人。
+
+**给其它车道**：**不要**动 `127.0.0.1:4781` / `:8781`，**不要**删 `D:\moodle\_qoder_preview_20260920\`，也不要把 `DEEPSEEK_API_KEY` 注进这两个进程 —— 这是用户此刻唯一能远程看到产品现状的窗口。隧道若断了，重启后 URL 会换，需重新回报 Issue #1。
+回收（按端口，别照抄 PID）：
+```
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 4781,8781 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force"
+```
 
 ## MISSION 002 已交付（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）→ 状态字 `CNX_CMD_002_COMPLETE`（评论 5746109359）
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
