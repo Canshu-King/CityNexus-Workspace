@@ -1943,7 +1943,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 12:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，已收到并生效，六条裁定全部落到订单与归属；见下面 MISSION 003 段）· LAST_OWN_COMMENT_ID = 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
+Refreshed: 2026-09-20 17:2x (+08:00) · LAST_ARBITER_COMMENT_ID = 5748570219（GPT **直写分支交付** Mission 003 A4 SW lifecycle 候选，`m3/a4-sw-lifecycle` tip `a6cfaca`，6 提交/6 文件；我逐行核过内容、已回贴 `ACCEPT-WITH-CONDITIONS`，落地与跑门派给 `e345b9d6` = ORD-0043）· LAST_OWN_COMMENT_ID = 5748912218（ORD-0044 **主断言自纠**：我那句"201 之后无请求、成功路径吞掉"被后端日志判死，真根因是车道找到的锚点留空→422 不上屏；另附 `GET /twin` 轮询与预览鉴权 DENY 两项新事实 + 催 A4 四问。⚠ **敲门状态：DELIVERED-UNACKNOWLEDGED 第 1 轮**——机器通道均不可用，见 REQ-0011 status）；链：5748852498（A4 验收回贴 `ACCEPT-WITH-CONDITIONS`）→ 5748608817（自纠：URL 内嵌凭据害得页面内 fetch 全禁）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
 **格式约定（别再来一次）**：上面两个水位线字段后面必须紧跟**裸数字**，说明放括号里。`patrol.py` 用正则 `LAST_ARBITER_COMMENT_ID = (\d+)` 读它，被 Markdown 粗体 `**` 包住就解析失败、会把历史帖重新当新帖报（12:5x 实测踩过）。
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
@@ -2628,6 +2628,45 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 
     裁决前我不再动 `MapPanel.tsx`。我现在转去做 **ORD-0038**（AI 可视化思考，用户当面提的）和 **ORD-0036**（SW / 缓存 / 刷新恢复 + 主题根契约，那三个文件已改派给 UI 线）。ORD-0034 那一行 `message={message}` 仍在等转交或授权，那条 named-reason 红继续红着当证据。
 
+- id: REQ-0011
+  to: commander
+  from: 用户（侧聊转达，17:3x）
+  priority: urgent
+  if_head: 56f67e2
+  order: |
+    **机制纠正：GPT 不会自己去看 GitHub。总线是信箱，不是订阅。**
+
+    用户当场指出：*"那你不给 GPT 发消息，GPT 会自己去看 GitHub 吗？应该是发一次信息，GPT 才会去看一次。"*
+    这条成立，并且直接判定了你此前一个判断是错的：你在 17:1x 梯子断掉时说过
+    "把回给 GPT 的验收结论发到总线——那才是权威通道，**它恢复后自会读到**"。
+    **它不会自会读到。** 没有人在窗口里叫它，它就不会去拉 Issue #1。
+
+    实测后果就在眼前：你 17:19 那条 **催 A4 四问**（总线评论 `5748912218`）只落在信箱里，
+    没有敲门 ⇒ GPT 至今不知道该回。而 16:06 GPT 能交付 `m3/a4-sw-lifecycle`，
+    恰恰是因为那一次**有人在窗口里叫过它**。
+
+    从现在起固定成两步协议，缺第二步就算没送达：
+    1. **投递**：内容写进总线（一律 `包工头:` 前缀，回读比 sha1）。
+    2. **敲门**：立刻在 ChatGPT 窗口发一条极短消息——只要 `评论 id + 一句"请读并回"`，
+       正文不要重复（省 token，也避免两边版本漂移）。
+    3. 敲门后在账本记一行 `knock@时间 → 评论号`，让巡检循环知道哪条已敲、哪条没敲。
+    4. **窗口不可达（梯子断/页面不渲染）时不得记为"已送达"**：标 `DELIVERED-UNACKNOWLEDGED`，
+       每轮巡检重试敲门；连续 3 轮仍不通，就在回报里明写"对方未收到，需人工敲门"，不要继续等。
+    5. 反方向不用敲门：GPT 往总线丢交付是它主动写的，**你必须每轮主动读总线**（这条你已经在做）。
+
+    **立刻动作**：现在就去窗口把 `5748912218`（催 A4 四问）捅给 GPT 一次，并把敲门结果记进账本。
+    顺带把 REQ-0010 那五条一起收尾——它现在还是 `OPEN`，一条都没落地。
+  status: PARTIAL@2026-09-20 17:4x by commander —— 协议已接受并生效，但**本轮敲门未成功**：
+    - 通道 1（桌面自动化驱动用户 Chrome 里的 ChatGPT 页）：被 host 的 `browser_url_policy /
+      insufficient_url_confidence` 直接停掉本轮 Computer Use，无法读取也无法输入。**不重试、不改法绕开。**
+    - 通道 2（Qoder 会话总线 `send_message_to_chat_session`）：枚举全部 23 个会话，**没有 ChatGPT 会话**，
+      且侧聊本就不可派单 ⇒ 无通道。
+    ⇒ 按本条第 4 款记：`5748912218` = **DELIVERED-UNACKNOWLEDGED（第 1 轮）**，巡检每轮重试敲门；
+      连续 3 轮仍不通即在回报里明写"对方未收到，需人工敲门"。**不得**因为"已落总线"就当作已送达。
+    - 交回用户的一句话（粘到 GPT 窗口即可，正文不重复以省 token）：
+      `读 Issue #1 最新评论 5748912218（催 A4 四问）并回复`
+    - knock 记录：`knock@2026-09-20 17:4x → 5748912218 = FAILED-NO-CHANNEL (attempt 1/3)`
+
 - id: REQ-0010
   to: commander
   from: 用户（侧聊转达，11:3x）
@@ -2655,7 +2694,36 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 
     用户原话要点：你的价值在于"只有你能判断数字是不是真的"，不是"你能搭多少东西"。
     搭得越多，你越没空去验别人。
-  status: OPEN
+  status: DONE@2026-09-20 17:5x by commander（五条逐条落地，见 evidence）
+  evidence: |
+    **① 用户手上那个致命问题**：URL 内嵌凭据已废弃，改成干净地址 + 浏览器 Basic 弹窗 + 会话 cookie。
+      本轮（17:5x）在存活入口上实测：`/api/v1/health` anon=401 / auth=200(83B)；
+      `/v8/live` anon=401 / auth=200；`/manifest.webmanifest` anon=401 / auth=200(314B)。
+      页面内部 fetch 不再被禁 ⇒ 这条真的能用了，不是"应该能用"。
+    **② 预览运维移交**：开 **ORD-0045** 交给 GPT（它已证明能直写 GitHub 分支，且本机隧道类活它没有环境负担），
+      交接清单沿用 ORD-0040 那一版并补本轮新事实。Commander 只保留：读健康数字、跑验收、报总线。
+    **③ 走查基线交出去**：`reports/USER_WALK_PROTOCOL.md`（W1..W10 + 390×844 亮/暗实测 + 十条七败基线）
+      连同今晚三条新实测（见本块末）一并移交给 `dc19d662` 作为 **ORD-0039** 的种子证据；
+      **我不再养第二套门**，只保留"发布前亲手重跑一遍"的验收权。
+    **④ 主动外包高难度项（三件）**：
+      (a) SW/缓存生命周期 = A4 —— GPT 已直写 `m3/a4-sw-lifecycle`，剩四问挂在 `5748912218`（敲门失败，见 REQ-0011）；
+      (b) 发布包与门禁基建 —— 开 **ORD-0046** 交 GPT：它裁的"包内含可执行 spec"要求包里有 `qoder-mobile-tap-targets.spec.ts`
+          这种权威树不存在的名字，正是它自己该补的基建，而不是我本地补齐再报数；
+      (c) GitHub 侧代码变更 —— 明确授权 GPT 继续在 `CityNexus-Workspace` 建分支直写（边界：不 force-push、
+          不改已发布历史、不碰本地权威树、交付必须能被 Commander 按数字验收）。
+    **⑤ `MapPanel.tsx` 归属三选一：裁 C —— 释放给 `e345b9d6`。** 裁据不是立场，是数字：
+      我 17:4x 在生产构建 + 真触摸上下文里亲测，`Ctrl+滚轮` 使 zoom **8.9739 → 9.3196**、
+      `拖拽` 使中心 **(117.2385, 39.1126) → (117.3485, 39.0443)**，两处改动**都持续到 2.5s 之后**；
+      4 秒静置窗口内 canvas 重挂载 **0** 次、API 请求 **0** 条；`interactive:true / cooperativeGestures:true`
+      与提示文案"两指拖动或缩放地图 · 单指仍然滚动页面"都在屏上。⇒ 修订已落地且有效，作者应继续持有该文件。
+      `8c66aa92` 保留**合并**职责（它本来就只有这一件），此后不再写 `MapPanel.tsx`；
+      `ORD-HANDOVER-0037` 与 REQ-0009 的悬案同时关闭。
+    **今晚新实测（移交证据 + 新缺陷）**：
+      - `stay-options/generate` 在**冷城市**上 **114.98 s 且返回 options=0**，紧接着同参数重复调用 **2.52 s / options=4**；
+        **热城市**（天津）**0.14 s / options=4**。⇒ 用户说的"卡住、要重试好几次才进得去"第一次有了数值：
+        不是玄学，是 115 秒零结果 + 界面上没有进度 ⇒ 这就是 M3-C 的 **SILENT_BLOCKER** 正主（原 ORD-0044 主断言已被我作废并改写，见本账本 17:3x 那条）。
+      - 合法路径（锚点填齐）创建 → 壳层 **344 ms** 出现 ⇒ 成功路径本身是通的。
+      - 向导第 1 步"抵达/离开地点"看起来可选，后端 `minLength 1` 强制 ⇒ 留空 422，且 422 的 `loc/msg` 一个字都没上屏。
 
 - id: ORD-0040
   to: commander → 移交对象待定（优先 GPT，其次新会话）
@@ -2845,6 +2913,85 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     这条门的期望串要跟着换成新契约，不能把 `V13_…:9` 硬留在测试里。
 
 
+
+- id: ORD-0045
+  to: GPT（外部仲裁）via 总线；备选 `dc19d662`
+  priority: high
+  if_head: 56f67e2
+  order: |
+    **手机预览运维整体移交（REQ-0010 第②条落地）。Commander 从此不自维护炉子。**
+    交接清单在 ORD-0040 那一版的基础上，加/改这几条本轮新事实：
+    - 当前**唯一存活入口**：`https://unexpected-somerset-seekers-neural.trycloudflare.com`（PID 53336，16:50 起）
+      → `127.0.0.1:4782` 鉴权反代（PID 38296）→ `127.0.0.1:4781` vite preview（PID 57856，服务**仓库外**
+      `D:\moodle\_qoder_preview_20260920\dist`）→ `127.0.0.1:8781` uvicorn（PID 33880，`CITYNEXUS_AI_ENABLED=true`）。
+      凭据仍在 `run/preview_auth.txt`（**绝不进 Issue #1，也不复现那把 key 的任何部分**）。
+    - 17:5x 实测：`/api/v1/health`、`/v8/live`、`/manifest.webmanifest` 全部 anon=401 / auth=200。
+    - **接手方必须解决的两件我没解决的**：
+      ① quick tunnel 每次重启换域名 ⇒ 用户书签失效；请用命名隧道或固定入口，并把"用户实际在用的那条"写回账本；
+      ② 现在同时只有 1 个入口（我 17:5x 收敛掉了 2 条），不要再加第二条。
+    - 移交完成后 Commander 只保留：读健康数字、跑验收、报总线。
+  status: DRAFTED@2026-09-20 17:5x（**未送达**：受 REQ-0011 敲门失败牵连，投递需与 ORD-0044/四问一起敲门）
+
+- id: ORD-0046
+  to: GPT（外部仲裁）via 总线
+  priority: high
+  if_head: 56f67e2
+  order: |
+    **发布包与门禁基建外包（REQ-0010 第④b 条）。** 你在裁定②里要求发布包必须含"可执行验收 spec"，
+    并在 A4 交付的 A 判断里点名 `qoder-mobile-tap-targets.spec.ts` 等文件。两项我核过的事实：
+    - 权威树 `56f67e2` 里**不存在** `qoder-mobile-tap-targets.spec.ts`；<44px 那道门实际在
+      `qoder-mobile-ui-overnight.spec.ts`（`--list` 口径：87 tests / 34 files）。
+    - ORD-0032 那份包按当前 tip 需要重报，且要含 `playwright.sw.config.ts` + `qoder-sw-lifecycle.spec.ts`
+      （只存在于你的分支 `m3/a4-sw-lifecycle`）。
+    ⇒ 请由**你在 GitHub 侧**把"清单 ↔ 真实文件名"这件事做成基建：要么在分支里正式新增那个 spec 并给出它的
+    可运行命令，要么改清单为真实文件名。Commander 不按"应该有"验收，只按 `--list` 实到数与一次全量读数验收。
+    边界：不削弱冻结清单；不 force-push；不改已发布历史；不碰本地权威树。
+  status: DRAFTED@2026-09-20 17:5x（同上，待敲门）
+
+- id: ORD-0047
+  to: e345b9d6
+  priority: urgent
+  if_head: 56f67e2
+  order: |
+    **M3-C 分类为 SILENT_BLOCKER 的正主：冷城市首次生成要等 ~115 秒，而这 115 秒屏幕上没有任何进度。**
+    我 17:5x 直接计时（经生产预览 :4781，走的就是用户那条链路）：
+
+    ```
+    冷城市 Xiamen：travelers 201 0.03s → journeys 201 0.00s
+                    stay-options/generate 200  114.98s  options=0
+                    同参数立刻重复          200    2.52s  options=4
+    热城市 Tianjin：stay-options/generate 200    0.14s  options=4
+    ```
+
+    两个缺陷叠在一起：
+    (a) **第一次调用返回 `options=0`**（200 而非错误）——花 115 秒换来空结果，界面无事发生；
+    (b) 这期间**没有任何可见进度/预计时间/取消入口**，用户只能盯着不动的屏幕 ⇒ 他必然重试，
+        而重试第二次才拿到 4 条 ⇒ 完全对应"点了没反应、要重试好几次才进得去"。
+    要求：
+    1. 这 115 秒必须变成**有内容的等待**：阶段名 + 已用秒数 + 可取消（与 ORD-0038 同一套契约，不许做假进度）；
+    2. `options=0` 不能再当成功渲染——要么明确说"这次没找到可推荐的住宿方案"+给下一步动作，
+       要么在真允许的前提下自动重试并显示第几次；**不得**把"零结果"画成"正在加载"或空白；
+    3. 查明 114.98s → 2.52s 的差别是什么（缓存/预热/optimizer 首次初始化？）并把结论写进回报——
+       如果是冷启动初始化，**发布包里要有一条把这段等待变成可见状态的验收**，不是把超时调大了事；
+    4. 验收：一条 e2e 断言"生成期间屏幕上必须持续可见阶段文案"，并给杀得掉的证据（把进度组件摘掉即红）。
+    边界：不动后端契约与优化器语义（`HARD_FEASIBLE_QUALITIES`、provenance、fact_quality 冻结）；
+    不通过关掉真实调用来"修"等待；`MapPanel.tsx` 归你（REQ-0010 第⑤条已裁 C，释放给你）。
+  status: DISPATCHED@2026-09-20 17:5x
+
+### 17:5x 隧道收敛记录（含我的一次误杀，如实记）
+
+- 起手实测：`Get-CimInstance` 列出 **3 个** cloudflared 进程（PID 46652@10:56、59108@16:29、53336@16:50），
+  公网侧 **2 个入口活着**：`unexpected-somerset-seekers-neural` 与 `lecture-interfaces-edit-publisher`（都 401=活），
+  另有历史残留 `intake-matt-white-wearing` 已 530。三条命令完全相同（`--url http://127.0.0.1:4782`）。
+- **我犯的错**：cloudflared 的 PID↔域名没有本机可查映射（日志被复用、无 handle 工具），我用**消除法**先杀最老的
+  46652 —— 结果它正是**用户书签里那条** `lecture-interfaces-edit-publisher`（杀后 401→530）。
+  账本只记过这条域名，我事前 grep 到了却没据此避让它，是流程漏洞不是运气问题。
+- 处置：再杀 59108 后 `unexpected-somerset…` 仍 401 ⇒ 确认 53336 是它。现在**公网入口恰好 1 条**：
+  `https://unexpected-somerset-seekers-neural.trycloudflare.com`，同一套凭据、同一份 dist，
+  17:5x 实测 health/root/manifest 全 anon=401 / auth=200。
+- **用户需要知道**：旧地址已死，请改用上面这条；Quick Tunnel 无法保留原域名（这是 ORD-0045 ① 要求换命名隧道的原因）。
+- 规则追加（D-8）：**凡"多实例同配置、无 ID↔目标映射"的进程，禁止用消除法杀**；先建立映射（改启动脚本落 PID+URL 到
+  同一文件），映射不了就整组停掉重启一条并在回报里明写地址变化。
 
 ### 13:1x 新根因（红队发现，我独立复核确认）：autoUpdate 静默换版才是"挂后台回来自动刷新"
 
