@@ -2154,7 +2154,7 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 裁定回执 @2026-09-21 03:2x（本机钟，HEAD `9334d43`，仍只在 agent/sim-component-20260921、未 push、权威树 0 改动）：**第 2 项已执行**——路由仪器直连 `:8681` 只发 GET，**29/29 全中**：17 条 POST-only 动作与 M3/M4 写侧前提全部 `405 / "Method Not Allowed"`（start·complete·skip·accept·reject·provider-fixture·bookings·demo/reset·plans/generate·select·depart·arrive·begin·bookings/cancel·transactions·orders·recovery/acknowledge），6 条读侧路径全部"命中而非路由层 404"（/events·/replans·/twin·/plans/{id}·/commitments/{id}·/demo/scene），5 条声称没有的路由全部 `404 / "Not Found"`（bookings/confirm·activities/confirm·demo/clock·demo/now·providers/v9/degrade）⇒ F 的表与 M3/M4 的端点前提没有一条是假的；`GET /demo/scene` 实到 **10 键**、demo_mode=true、journey_status=ACTIVE、basis=CURSOR、evidence_state=NO_FROZEN_EVIDENCE、expires=null（与你 02:5x 的 M3 blocker 完全对应）。报数四件事：**树/sha**＝:8681 命令行只有 `python -m uvicorn app.main:app --port 8681`（pid 67040），**cwd 我读不到**，sha 只能用行为反证：它答 10 键 ⇒ 必含 ORD-0074，`_qoder_cmdr_gate_20260921`@`f8d9dc2`（9 键）已排除；**解释器**＝`D:/moodle/CityNexus/.venv/Scripts/python.exe` 我当场核到 **3.12.14**，:8681 用的是同版本 uv cpython；**key**＝`DEEPSEEK_API_KEY` 在我这一侧 shell 里存在（len 35），:8681 进程环境读不到，但本层只发 GET 不进 AI 路径，与本批读数无关（这就是分母）；**写入**＝零。顺带量到：我两次 GET 之间 `effective_now` 从 12:00 变 15:30 ⇒ 有别人在推这台子，不是我（我全是 GET，返回只有 405/404/200）。**第 3 项已做**：spec 全量改指 B 的实际 testid（sim-panel/sim-banner/sim-scene-facts/sim-journey/sim-window/sim-basis/sim-evidence/sim-action-<id>/sim-blocked-<id>/sim-outcome/sim-entry-summary），断言只读 innerText，外加 `aria-disabled`+`aria-describedby` 这条可访问关系本身（ORD-0066 口径）；B 的 9 行 id 我从盘上实测为 reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己那份适配层的字段/门禁测试**整层删了**——不在交付线上的文件测绿了也是自证。**第 4 项已加两条必红的**：(i) ORD-0078：完全不碰 localStorage，只按 [重置到场景起点]，断言 `today-heading` 与 `sim-panel` 必须自己出现，失败信息里写着你给的机制 `V8Experience.tsx:493/528`；(ii) 动作面完整性：**`跳过活动`（路由 :5802 确实存在）在面板上没有控件**，而 `开始模拟` 被折进 reset 的真实流水线——那是**待裁的产品决定**，我没替你承认，所以这条现在红；你签"折叠可接受"我改成断言等价物，不签就补控件，**不会把它删掉**。执行状态如实：路由层 29/29 **执行过**；其余 12 个 test 源点（collected 13，含 390/412 两宽度）**一条都没跑过**（C 树无 node_modules、派单禁装），计数由接线方在 production build 上回填。
 点名回执 @2026-09-21 03:2x（本机钟 date=03:23:57 +0800，HEAD `2449d29`，未 push、权威树 0 改动）：**① 路由自证再跑一遍 = 28/28 于 `:8681`（GET-only，零写入）**，同一份清单打到生产链路 `127.0.0.1:4781` 也是 **28/28**：17 条 POST-only 全 `405/Method Not Allowed`、6 条读侧全命中、5 条"没有路由"的能力全 `404/Not Found`、`/demo/scene` 恒 10 键。**② B 层 testid 重指向**已在上一笔 `9334d43` 完成（B 实测 9 行 id：reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己适配层的字段/门禁测试整层删了）。**③ ORD-0082 红门已加并在生产构建上现场演算 ⇒ RED**（bundle `index-BPtBTSpD.js`，390×844，只读、未点任何写按钮）：banner `2026-10-10 09:00` = 后端 `effective_now` ✓，但 `接下来 09:00 Old Town Gate` 是**游标当前站**，服务器 twin 的 next 是 `Riverside Museum @10:30` ⇒ 判据(2)红。**方法学一条要记：只比"时刻"看不见这条缺陷** —— 游标停在第一站时 09:00 对 09:00 满足任何 `>=` 规则却仍指错站，所以我把判据换成"必须等于 twin 说的下一站站名"，`>=` 只留作第二道。**顺带撤回我自己的一处疑心**：我 03:1x 看见 banner 17:00 而后端已 09:00，一度怀疑面板说假话；**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题（reactivity），不是真值缺陷；红门里因此先 reload、再在**同一次 JS 回合**内同时读 DOM+scene+twin，免得把竞态当缺陷报给你。报数四件事：`:8681` 进程 cwd 我读不到（命令行只有 `python -m uvicorn app.main:app --port 8681`，pid 67040），sha 靠行为反证（答 10 键 ⇒ 含 ORD-0074；`_qoder_cmdr_gate_20260921`@`f8d9dc2` 只 9 键，已排除）；生产侧我量的是 `:4781` 服务的 `index-BPtBTSpD.js`（就是你 03:4x 部署的 `f56e9cb` build）；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（当场核）；`DEEPSEEK_API_KEY` 在我这侧 shell 里存在（len 35），被测进程环境读不到，但这两层只发 GET、不进 AI 路径，与本批读数无关。执行面仍如实：路由层两次执行过；spec 13 个 test 源点（collected 14，含 390/412 两宽度）里 **2/3/4 层仍未由 Playwright 执行**（C 树无 node_modules、派单禁装），ORD-0082 那条的**读数**我已按上面用只读浏览器在生产构建上取到，计数请接线方回填。B 的文件我一个都没碰。
 
-### D 车道 ORD-0083 预验 @2026-09-21 03:2x（只读 + 自起 :8581 + 自复制 DB）→ **仲裁顺序在当前 tip `12dd81a` 上整条演通，逐请求实测全 2xx**
+### SESSION=c01d72a3 · D 车道 ORD-0083 预验 @2026-09-21 03:2x（只读 + 自起 :8581 + 自复制 DB）→ **仲裁顺序在当前 tip `12dd81a` 上整条演通，逐请求实测全 2xx**
 
 先说归因：**tip 在我量的一小时内动了两次**（`602addf` → `12dd81a`）。我先在 `602addf` 上量的"reset 后 bookings 必 422"是**旧 tip 的真相**，A 的 `12dd81a`（注释里直接引了 `commerce/validators.py:33-41`）已经把它解掉 ⇒ **本块以 v4 表为准**，v1-v3 只留作过程。每轮都用 `git archive <tip> backend data` 抽只读固定副本（`pinned_602addf` / `pinned_12dd81a`），**不含权威树在飞的脏改动**；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**。
 
@@ -2449,6 +2449,33 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
 **解释器版本** 与 **凭据在不在**，否则读数无效；仪器自己检查不了这两项的，不许上线。
 `post_bus.py` / `pull_arbiter_file.py` / `anchor_guard.py` 已带 `sys.stdout.reconfigure(utf-8)`，
 Windows GBK 控制台打印中文/箭头不再崩 —— 仪器在报警途中死掉等于没有仪器。
+
+### 🟥 (SESSION=494abfd7) E 车道第二轮收单 @04:5x —— 一条新形状 HUMAN_BLOCKER + 两条真值矛盾，全部受理
+
+**ORD-0085 → `e345b9d6`（并入 0082/0081 写域，同库同轮提交）**：
+390×844 下面板动作区与固定底部导航有**重叠带**；红队实测（`SESSION=dc19d662`，tab 指纹已钉）点
+[触发一次中断]被导航**静默吃掉**并跳到 `/v8/map`。"按钮看得见但点了没反应"比 disabled 更伤演示
+——老师会认为产品坏了。判据：390×844（Light/Dark）下**所有**动作按钮用 `elementFromPoint`
+在按钮中心验证命中的是按钮自身；若布局确实无空间，允许把动作区改成可折叠，但默认状态不得有重叠带。
+
+**两条真值矛盾并入 ORD-0082**（同根：Today 投影对服务器游标/状态的引用错误）：
+1. "下一站之后暂无安排" 与服务器自己报的下一站**同屏矛盾**，且与墙钟无关；
+2. `接受方案` 可点而 `GET /replans` 返回 `[]` —— 无 proposal 时接受/拒绝必须 disabled，
+   原因句写"服务器还没有给出方案"，不许可点（这是"可点却无物可接受"的真值缺陷，不是 UI 偏好）。
+
+**E 车道的往复（撤回→复现→放回）我追认**：实测优先于面子，撤早了就放回来，账本留全程 —— 这就是红队该有的样子。
+它还抓到我一个事实：preview bundle 已在 `602addf` 对齐为 `index-BPtBTSpD.js`（比我 03:4x 拍的 f56e9cb 包又新一版）
+⇒ **以后所有读数请标 bundle 名**（HUD 一行），否则两张"同一页面"的截图可能来自两个世界。
+
+**总线身份事故正式处置（已上总线 5752087352 告知仲裁）**：
+车道**不得**以 `包工头:` 前缀发总线（`5752064381` 是转述帖，内容我追认，身份不认）。
+今后仲裁以"账本 ORDERS/DELIVERIES 同内容"为唯一确认条件；我的总线帖从此每条在账本留同内容副本。
+车道转述请署自己名（如 `车道A:`）并标注"转述 Commander 立场，非本人原创"。
+
+**给 `8c66aa92` 的状态同步**：修订版五条（reset 零计划 + prepare-scenario + start-scenario）
+是我当前最优先等待的交付；E/B 的新增都不碰 `backend/**`，你的写域仍然独占，放心改。
+D 车道已用独立复现验证"仲裁顺序在 `12dd81a` 上可演通"——它与 35 红不矛盾（正向链路 vs 回归面），
+但**修订版仍是必须的**，因为 33 条真契约测试不能为 Demo 改写。
 
 ### ✅ M4 的 Booking→Wallet 我实测走通了（走的是产品正常路径，不是 demo 后门）@03:3x
 
