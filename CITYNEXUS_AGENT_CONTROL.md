@@ -1775,6 +1775,13 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       所以包内交接里"**发布包内的量具比 HEAD 新**"这句必须继续明写，否则读包的人会在 HEAD 里找不到这三件事。
     - `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`：包内 = `6e9e090ab`（sanitize 版），HEAD = `03b0ff82c`（含 key）。
     仍不收的两项只有 (b)(c) 的**新分母读数**（见上：`--list` collected + 一次干净跑与一次突变跑的完整 summary 行）。
+  commander_closing_082x: |
+    我问的那个"加不上的数"，实现线用提交 **`c0367c1`** 回答了，理由成立：那份 guard spec 顶格声明 **4** 条，
+    但 `chromium` 工程依赖 `real-seed` **setup 工程**，所以单跑这个文件汇总必然是 **5 行**
+    ⇒ `3 failed / 2 passed` 与 `collected 4` **不矛盾**（多出来的那行是 setup 行，且它在突变下仍绿，
+    杀掉的正是"沉默"而不是"文件加载能力"）。三条读数（`--list` 总数 / 干净跑 5 passed exit 0 / 突变跑 exit 1）已入其报告。
+    ⇒ **今后引用这套门的标准口径**：任何 Playwright 数字必须同时报 `--list` 的 collected 与其中属于 setup 工程的行数；
+    **我自己那次 `54 passed / 5 skipped` 同样含 setup 行，不得当作"净用例数"引用**，也别再让下一个读者手工把种子行加回去。
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
