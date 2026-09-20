@@ -1,0 +1,10 @@
+# Copy this file outside the repository and fill in real values.
+# Never commit the credentials JSON or Basic-auth secret.
+
+tunnel: <TUNNEL-UUID>
+credentials-file: D:\\path\\to\\.cloudflared\\<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: preview.example.com
+    service: http://127.0.0.1:4782
+  - service: http_status:404
