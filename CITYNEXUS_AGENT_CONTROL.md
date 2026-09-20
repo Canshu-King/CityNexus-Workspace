@@ -4682,6 +4682,10 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     3. 验收：中文 locale 下这两条 422 的屏幕文字必须是中文，且**断言读 `innerText` 渲染文字**，
        不读 data 属性、不读 state；并给一条杀得掉的证据（去掉本地化查表即红，点名节点 id）。
     边界：不改 422 的判定语义与"被拒不落库"不变式；不新增前端自造规则去覆盖后端。
+    **仲裁 `5749617752` 补充的字段映射规矩（必须照做）**：
+    `details.errors[].loc` 决定归属字段；`message_key` / `type` 决定本地化文案；
+    **不得**拿英文 `msg` 文本做脆弱的字符串匹配来决定字段或翻译。
+    后端英文 `message` 保留为日志与"未知 key"的 fallback，**不是第二套翻译真值**。
   status: DISPATCHED@2026-09-20 21:5x
 
 - id: ORD-0056
@@ -4699,7 +4703,10 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     ② 前端 `--list` collected（含 setup 工程行数）+ 一次全量 suite **两次连跑读数**（`CURRENT_GATES` 第 5 条：
     单次绿不算，且要注明当时并发负载）；③ `npm run build` exit code。
     边界：不放宽任何断言、不删那条已转绿的门、不削弱冻结清单、不 force-push、不改写已发布历史。
-  status: DISPATCHED@2026-09-20 21:5x
+  status: MERGE-PENDING@2026-09-20 22:5x —— 仲裁 `5749617752` 原话：
+    "既然必填/422 字段映射修复只在车道树存在、权威树仍表现为『可继续 + 裸 — + 通用错误』，
+    那就是 **MERGE-PENDING，不是 DONE**。必须以权威 production build 读屏结果收口。"
+    ⇒ 收口证据 = 在重建后的权威生产构建上**读屏幕文字**，不是读代码、不是读车道上报。
 
 - id: ORD-0057
   to: 8c66aa92
@@ -4770,8 +4777,19 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     3. **唯一新增读端点** `GET /api/v1/demo/scene` → `{demo_mode, scene_start_at, effective_now, evidence_expires_at}`。
        理由：现在没有任何端点告诉客户端"场景是哪一天"（`execution-clock` 只回设备/冻结钟 + `current_activity_id`），
        所以横幅与 `todayKey` 只能自己 `new Date()` —— 这是唯一真正的读侧缺口。
-    4. `backend/app/services.py`：**seed 时把冻结证据 TTL 与场景日对齐**（推荐"改数据不改门"，
-       待仲裁确认；见本块末"裁决点"）。
+    4. `backend/app/services.py`：**seed 时把冻结证据 TTL 与场景日对齐** ——
+       **仲裁 `5749617752` 已确认："改 seed 数据，不动两道陈旧证据门"**。六条护栏（照抄，不得走样）：
+       ① 只在明确的 Simulation seed 路径生成与场景时段一致的证据有效期；
+       ② **不改全局 provider TTL 常量**，不影响普通真实城市请求；
+       ③ seed 证据必须保留 simulation/demo provenance，**不得因此晋升成 real/live provider truth**；
+       ④ seed 的 `observed_at / expires_at` 必须彼此自洽、覆盖场景实际需要推进的窗口，
+          **不得**简单写一个"永不过期"的日期；
+       ⑤ 场景窗口之外仍必须能被原 stale gate 正常拒绝；
+       ⑥ 至少两组回归：(a) Simulation seed 在合法窗口内推进 >4h 仍能完成
+          select/start/booking/replan 生命周期；(b) 普通非 Simulation 证据超过真实 TTL 时，
+          原两道 stale gate 仍按**原错误码**拒绝。
+       需要场景结束边界时**从 scenario/seed 契约显式计算**，不要散落 `+24h` / `+7d` 这种魔法数字。
+       一句话口径：**修"测试数据与场景时钟不一致"，不修"系统会拒绝陈旧证据"这个正确行为。**
     外加 `frontend/src/app/V8Experience.tsx`（该文件归你）：常驻可见横幅「模拟体验 / Simulation」
     + **把 Today 的 `Date.now()`（实测字面量只有 `:1484`）改成消费服务端场景时刻**，
     即**消掉**墙钟而不是复制它。
@@ -5417,6 +5435,11 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    "机器空闲"的可操作定义 = 没有另一条 CityNexus 全量 E2E 同跑 + 没有并行 production build +
    没有 persona/harness 会话同时压同一 backend/browser/provider 路径。
    若未来两次 quiescent 连跑仍随机 timeout ⇒ 升级为 harness flakiness defect；现在先按环境敏感性管理。
+8a. **Wallet 真实后端覆盖 = 未偿验收债**（仲裁 `5749617752` 定为硬事实保留）：
+    "Wallet 尚未被真实后端路径跑通；目前已有绿灯来自 route stub，
+    **不得把它计作真实产品能力已验收**。" ⇒ HJ-P2 / 承诺型 persona 的 journey
+    **只有在 Wallet + booking/commitment 真实后端链路跑通后才计入 persona acceptance**，
+    不许用现有 stub 结果凑 fleet denominator。
 8. **异步生成契约的性能门**（`5749459724` 批准，实现在 ORD-0057）：
    门不是"结果 10 秒内出来"，而是**命令受理 p95 ≤ 1s**（环境抖动可放宽到 ≤2s 硬门，但要记录），
    且 **provider 工作必须移出 HTTP 请求关键路径**。
