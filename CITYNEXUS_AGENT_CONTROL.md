@@ -4821,6 +4821,40 @@ bash raw/restart_phone_backend.sh [port]     # 默认 8681
 
 **我仍不发车**：B 的工作区还没提交（`qoder-today-follows-the-stage.spec.ts` 06:24 仍在改）。
 
+### 🔎 commander 定位 @2026-09-21 06:3x —— B 那条 Wallet 门为什么红：**面板默认瞄的是不可订的那一站**
+
+B 的 `ord0087-booked-commitment-is-on-the-wallet-screen` 红了，报"六个活动全部 422"。
+我读了它的选靶逻辑，并在隔离 DB 上把六站的**真实身份字段**打出来，机制很清楚：
+
+```
+activity_id | title                   | place_id               | city_service_id | status
+3a58c470    | Old Town Gate           | place-old-town         | None            | PLANNED
+abe4e842    | Riverside Museum        | place-riverside-museum | None            | PLANNED
+61e3096d    | Central Food Hall       | place-food-hall        | None            | PLANNED
+98af0be5    | Tech Art Center         | place-tech-art         | None            | PLANNED
+74f10240    | Nexus River Cruise Pier | place-river-cruise     | None            | PLANNED   ← 唯一可订
+2cbb2a5d    | Skyline Dinner House    | place-skyline-dinner   | None            | PLANNED
+```
+
+B 的排序是 `sort((a,b) => Boolean(b.city_service_id) - Boolean(a.city_service_id))` ——
+**但这六个活动的 `city_service_id` 全是 `None`**，排序完全不动，于是默认靶是**第一个**
+`Old Town Gate`，而它答 **422**（`commerce/service_impl.py` 的 place→service 只硬编码两条：
+`place-river-cruise → service-river-cruise-booking`、`place-food-hall → service-food-preorder`，
+而冻结 catalog 的 `booking_services` 只有 cruise 一条）。
+⇒ **B 的"下一个候选"机制是对的（它确实提供了换靶的按钮），但默认靶选错了。**
+
+**给 `e345b9d6` 的精确修法**（我已实测，照做即可）：
+- 排序键不该是"有没有 `city_service_id`"（全 None，等于没排），而应是**"是不是已知可订的 place"**；
+  当前唯一已知可订的是 **`place-river-cruise`**（D 的 `ORD_0083` 与我的隔离实测都指向它）；
+- 更稳的写法：**按 `place_id` 白名单优先**（`place-river-cruise` 第一），其余保持原序，
+  这样默认靶就是能成的那一站；
+- `Food Hall` 的语义是**"点餐/下单"（`POST /orders`）不是"预订"**，别把它算进 book 候选，
+  否则老师会看到一个永远 422 的按钮。
+- **判据不变**：真链路建出一笔 `CONFIRMED`，Wallet 上看得见且标"模拟承诺"。
+
+**这条不是 B 的错**：它按"有没有 service id"这个**合理但错误的启发**排的，
+而真相（六个活动只有 cruise 可订）是我和 D 各自实测才拿到的。**现在把实测给它，它能一次改对。**
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
