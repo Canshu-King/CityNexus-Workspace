@@ -4376,6 +4376,47 @@ POST    : 03:58:00  db mtime 03:58:00
 目前仍是 disabled（要求先触发中断），而且它发的事件**没有带 `affected_activity_id`** ⇒
 即使解禁也会撞 `REPLAN_TARGET_UNRESOLVED`。**这属于"后端通了、前端还没接对"**，与 M2 同族。
 
+### 🎬 commander 实测 @2026-09-21 04:2x —— **M4 老师完整生命周期，后端 11 步全绿**（隔离 DB，我自己的脚本）
+
+我写了 `raw/m4_walk.py`（真 TestClient、隔离 DB 副本 `sim_m4.db`、未碰演示台），
+**按老师 3 分钟的顺序**走完，读数落 `raw/m4_walk.txt`：
+
+```
+step                               code  detail
+1  reset                           200   status=reset
+1b scene after reset               200   status=DRAFT plans=None          ← 三动作的 reset 正确
+2  prepare-scenario                200   status=prepared
+2b plans                           200   total=3 selected=1
+3  booking (tradable stop)         201   ref=mock-booking:6312f5d3-…      ← 6 个里唯一可订的那个
+4  wallet                          200   commitments=1 offline_ready=False
+4b commitment truth                200   C3_Guaranteed {amount_minor:12000,currency:CNY} KNOWN mock=True
+5  start-scenario                  200   status=started
+6  twin before advance             200   cursor=3a58c470
+7  advance (depart)                200   projection_status=READY
+7b after advance                   200   cursor=3a58c470 sceneNow=2026-10-10T09:00:00+08:00
+8  trigger event                   201   provenance=SIMULATED
+9  request replan                  201   status=PRESENTED c4kept=True
+10 accept replan                   200   journey,proposal,twin
+10b new ACTIVE plan                200   plan=594e11d6 (was 55523d40)    ← 新 ACTIVE 计划真的换了
+11 refresh/resume                  200   projection=READY cursor=7837febc
+```
+
+**四条要点（都从这张表读出来的，不是推断）**：
+1. **`reset` 之后 `status=DRAFT`、`plans=None`** ⇒ 三动作设计按预期工作，且**那 35 条红不会回来**。
+2. **Wallet 真值三件套齐**：`C3_Guaranteed` / `120.00 CNY` / `KNOWN`，且 **`mock=True`**
+   （`external_ref` 以 `mock-` 开头）⇒ 仲裁 AR2 第 2 门要的数据**后端全有**，
+   缺的只是前端把它画出来（ORD-0084）。
+3. **`replan` 的 `c4kept=True`** ⇒ **C4 保护在提案里被明确报为保留**，
+   这正是"已确认承诺不被重规划吃掉"的证据。
+4. **第 7 步的诚实说明**：`advance (depart)` 返回 200 但**游标没动、场景时间没动** ——
+   因为 `depart` 只是五步状态图的第一步（`NOT_STARTED→EN_ROUTE`），
+   **游标要等活动 COMPLETED 才前进**。这与我一整晚的实测一致（要点 5 次才换站），
+   **不是缺陷**；面板的 `推进当前活动` 标签会跟着服务器状态变（出发→到达→开始→完成），所以 UI 是对的。
+
+⇒ **后端侧：M1 入口 / M2 推进 / M3 重规划 / M4 全生命周期，四条链全部实测跑通。**
+**卡点 100% 在前端接线**（三动作 + 重规划三字段 + Wallet 承诺上屏 + 英雄区时钟），
+且我已把每一项的确切字段路径都实测出来交给 B。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
