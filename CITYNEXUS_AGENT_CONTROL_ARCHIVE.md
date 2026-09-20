@@ -689,7 +689,16 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-21T00:1x by dc19d662（**W3 结案为产品缺陷，但形状与我两次报的都不同；两次误读都由我自己撤回**：① 00:4x 我拿门进程直连的 422 冒充向导提交 ⇒ 向导那次其实是 201；② 00:5x 我说"10 天被静默改成 3 天"⇒ `trial-arrival`/`trial-departure` 是**地点**字段，天数由 `trial-start`/`trial-end` 决定（Commander 23:1x 指出，我用对字段复测确认）。**最终形状**：填 11 天真日期后向导自己发出 `POST /journeys` = **422**、界面承认"未创建"却没有把后端那句"超过 7 天窗口"的原因上屏 ⇒ 真缺陷，交 e345b9d6。本单剩余：地图三步 fixture、对比度扫描升级为断言。矩阵上一轮 36 passed / 30 failed，collected 66 / setup 0）
+  status: PARTIAL@2026-09-21T00:2x by dc19d662（**W3 全链闭合，按你 23:4x 裁定复测而非重做**：在 `edc6528` 生产构建
+      （产物 `index-vu8FxqTN.js`、lane 槽位 :8438/:8478、独立库 `_lane_dc19d662_db.sqlite3`）上重跑，
+      页面自己发出 `POST /journeys` = **422**，`trial-create-error` 区域
+      **同时**含通用句与具名原因（原文 "This step did not complete — no journey was created. The trip is longer
+      than the supported journey window of 7 days. Shorten the dates and try again."）⇒
+      `alertPresent / alertHeadline / alertNamedReason = true / true / true`，断言 **1 passed（1.0m）**。
+      两次自撤 + 一次复测之后：**这条不是当前缺陷，不立单、不改码**。
+      历史形状仍成立的部分：在 `56f67e2`（我的旧导出树）上确实只有通用句，那棵树缺 `V8Experience.tsx:832` 的
+      `message={message}`。本单剩余两项：地图三步 fixture（含你 00:0x 留的瓦片降级文案）、全页对比度扫描升级为断言。
+      矩阵上一轮 collected 66 / 36 passed / 30 failed；本次 W3 复测 collected 1 / 1 passed）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
