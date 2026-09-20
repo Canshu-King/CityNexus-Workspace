@@ -2043,6 +2043,54 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     **不要顺手扩大范围**：不动后端、不改导航拓扑、不动 `V8Experience.tsx` 的壳层结构。
   status: DISPATCHED@2026-09-20 09:2x
 
+- id: ORD-0035
+  to: e345b9d6
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **用户真机反馈（09:27 截图）："AI 帮我规划"打开是一片白，字看不清；而且一进应用就是夜间模式。**
+    这不是观感问题，是我逐条实测出来的因果链，四条都成立：
+
+    ```
+    (1) src/styles.css 里 `@media (prefers-color-scheme: dark)` 命中数 = 0
+        ⇒ 整个 styles.css 是**只有亮色**的；暗色重绑全部在 design-tokens.css（:92 / :478 / :587 三段）。
+    (2) `grep -rn "plan-ai" src/design-tokens.css src/v10.css` = **0 命中**
+        ⇒ "AI 帮我规划"这块面板（`.plan-ai-sheet` 等 20 余条规则，styles.css:673-790）**完全没有暗色绑定**。
+    (3) styles.css:673 `.plan-ai-sheet { background: #f9fbfd; }` 硬写浅色，且该规则**不设 color**；
+        styles.css:710 `.plan-ai-field textarea { background: #fff; color: inherit; }`
+        ⇒ textarea 的 `color: inherit` 从 body 继承 `color: var(--v8-ink)`（design-tokens.css:1005），
+          暗色下 `--cn-ink = #f5f5f7`（design-tokens.css:97）⇒ **近白字压在白底上**，就是你截图里那一大片。
+    (4) 主题**只有** `@media (prefers-color-scheme: dark)`，全仓没有 `data-theme`、没有应用内开关
+        ⇒ "为什么一进去就是夜间模式"= 手机系统开了深色，应用无条件跟随；用户侧唯一的即时解法是
+          把手机切到浅色（我已经在聊天里告诉他了），这是权宜不是修复。
+    ```
+
+    这属于你们车道早就自陈过的那族债：design-tokens.css 里那几段手工 `color: #fff !important` 的注释写着
+    "off-path panels intentionally left as declared debt"。**`.plan-ai-sheet` 就是那批 off-path 面板里
+    第一次被真实用户在真机上撞到的一个**。所以我要的不是再补一条 !important 补丁。
+
+    要求：
+    1. 给 `.plan-ai-*` 整套（面板底、textarea、示例按钮、步骤条 `.plan-ai-steps`、结果 `.plan-ai-result`
+       三种 tone、`.plan-ai-detail`）做**成体系的暗色绑定**，用现有 token（`--cn-canvas/--cn-surface/--cn-ink/
+       --cn-ink-secondary/--cn-accent`），不要再发明字面色值；
+    2. **禁止 `color: inherit` 落在硬写浅底的元素上**（这是白上白的根因）。要么面板自己声明 foreground，
+       要么底色改走 token。请顺手在同一批规则里查有没有同形状的坑（浅底 + inherit），一并列出来；
+    3. 亮、暗**两档都要有证据**：截图或计算值都行，但必须给出实际对比度比值，正文与输入文字都要 ≥ AA；
+    4. 仍然遵守 Amendment F：不要为了修对比度把面板搬进 `.v8-product-shell`，不要引入底部主导航，
+       触屏触控目标 ≥44px、桌面 30px 密度照旧；
+    5. 主题开关（应用内手动切换 / 或明确"只跟随系统"是产品决定）**不在你权限内**，不要顺手加。
+       你只把这条的事实与影响写进报告，我转成裁决请求。
+
+    **验收（按数字认）**：
+    a. 新增/改动的 e2e 门：`npx playwright test --list` 的 collected 与其中属于 setup 工程的行数；
+    b. 一条**对比度断言**（在暗色下取 `.plan-ai-sheet` 与其中 textarea 的计算色，算出比值并断言 ≥ AA），
+       并给出**它杀得掉的证据**：把 textarea 的 foreground 改回 `inherit` 时该节点必须变红（点名节点 id）；
+    c. 一次全量 suite 的 `N passed / M skipped / K failed`，与账本读数对表，差值逐条点名；
+    d. 报告里写清：这批 off-path 面板**还有哪几块**是同样"styles.css 亮色唯一 + 无暗色绑定"的形状
+       （给我类名与行号，不用修，我要据此决定是否立一张总单）。
+    **不要顺手扩大范围**：不改产品语义、不动后端、不加主题开关。
+  status: DISPATCHED@2026-09-20 09:3x
+
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
 **手机地址：`https://intake-matt-white-wearing.trycloudflare.com`** · 服务的是权威树 `c0367c1`（`_qoder_integration_20260919`）
