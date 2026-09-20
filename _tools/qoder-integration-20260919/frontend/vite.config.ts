@@ -32,7 +32,11 @@ export default defineConfig({
         navigateFallback: "/index.html",
         // A navigation fallback is only for documents. API and asset URLs must
         // fail as themselves rather than being replaced by the SPA HTML shell.
-        navigateFallbackDenylist: [/^\/api\//, /\/assets\//, /\.[a-zA-Z0-9]+$/],
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /\/assets\//,
+          /\.(?:js|mjs|css|map|json|wasm|ico|svg|png|jpe?g|gif|webp|avif|woff2?|ttf|otf|webmanifest)$/i,
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
