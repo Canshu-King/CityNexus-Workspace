@@ -1475,6 +1475,53 @@ over-window     POST /api/v1/journeys 422 V13_JOURNEY_DAYS_OUT_OF_BOUNDS
 这条即使 W3 是假的也成立，而且比 W3 更贴近用户实际会撞到的东西。
 
 
+### ACCELERATION_MAP @2026-09-21 00:4x —— Amendment J（总线 `5750053365`）落地，按 §6 只给结构化字段
+
+**会话实际 runtimeState（`wait_chat_sessions` 实测，不是回忆）**
+```
+8c66aa92  running   ORD-0057 异步契约（刚醒，未交）+ ORD-0063 + ORD-0064 后端部分
+e345b9d6  running   queuedTurnCount=3（我的插话在排队）ORD-0043(A) 返工 / 0044 / 0047 / 0055 / 0065
+dc19d662  running   ORD-0039 用户门 + ORD-0048 已 ACCEPTED；W3 被我退回补证据
+6af4cf53  cold      PARKED（§4：包只在候选检查点重出，不再每次提交重跑）
+aad2d1f2  cold      HJ-P3，4+ 条已交，待唤醒继续
+1a986a24  cold      HJ-P1，矩阵 4/4 已交 DONE，待唤醒继续
+848847ed  cold→done ORD-0050 DONE+ACCEPTED
+d291c9dc  cold→done ORD-0051 DONE（§7 已给边界结论）
+```
+
+**写集冲突计算（§2 要求）**
+```
+ORD-0057  backend/app/main.py（2437 generate 端点 + 新 status/abandon 端点）
+          backend/app/db/models.py（operation 持久化）· 新 operation 模块
+          backend/app/stay_mobility.py · integrations/stay_osm.py:58（timeout 修正）
+ORD-0058  backend/app/core/config.py · main.py（1663 demo/reset 守卫 + 新 GET /demo/scene）
+          backend/app/services.py（106 reset_all / seed TTL）
+→ **重叠于 main.py 与 services.py ⇒ §2 判定：只留一个后端写者（8c66aa92）**，
+  不新开第二个后端写者；并行度改用 Flash 侦察做"补丁计划/测试草稿"（§5），不碰权威文件。
+```
+
+**已执行的所有权变更（§2 第二半）**
+- `V8Experience.tsx` **释放给 `e345b9d6`**（`FILE_OWNERSHIP` 已就地改，`8c66aa92` 转只读）。
+- 配套拆分：**ORD-0058 里那两处前端改动（横幅 + 去掉 `Date.now()`）移出后端单，并入 ORD-0059**，
+  由 `e345b9d6` 做 ⇒ 前端不再排在后端之后，且**没有重叠写者**。
+
+**风险分级验证（§3）从此生效，写进口径**
+```
+T1 呈现/本地化（ORD-0055/0060/0064）  → focused spec + build/typecheck，不跑全量
+T2 端点/UI 契约（ORD-0044/0065/0047） → focused backend tests + focused Playwright
+T3 真值/并发/结构（ORD-0057/0058/0063）→ 相关真值套 + 合并前全量后端
+发布检查点                            → exact candidate + 2 次静置全量 E2E + 全量后端
+```
+
+**下一个 60 分钟集成检查点目标**
+`38278de`（已含 ORD-0044 合并）→ 收 ORD-0057 第一片 + ORD-0043(A) 六处机制 →
+定向门 → **重建单一手机预览**（§8，并记 `preview HEAD == checkpoint HEAD`）→ 再放人设跑。
+
+**§9 快速失败**：任何会话被归属/契约/环境卡住 >20 分钟 ⇒ 停止编码、把阻塞点写进 `## DELIVERIES`，
+我在下一轮巡检内裁。已按 §4 停掉发布包的重跑节奏，按 §7 给 Harness 恢复收口（结论已是
+`PORT_TO_QODER_HUMAN_LAB`，不再占关键路径）。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -1562,6 +1609,30 @@ over-window     POST /api/v1/journeys 422 V13_JOURNEY_DAYS_OUT_OF_BOUNDS
       **我未复现的**：H-A"共用一个 tab 被互相推进 / `Execution context was destroyed` 复现率 3/3"是 HJ-P1 的实测，
       我用自起 Playwright，**没有去挤共享实例验证它**，不当作我自己的结论。
       **R1 落点**：真机切后台那次试验按 ORD-0054 归人设会话，但必须在独立实例里做（否则正是①的受害者）。
+
+    **六组合矩阵一次完整读数（21:2x，tip `e981b46` 生产构建，自有 :8412/:8411，`workers=1`）**：
+    - `--list` = **66 tests / 1 file / setup 工程 0 行**；一次全量 = **36 passed / 30 failed（4.3 分钟）**，
+      证据 `raw\matrix_evidence.jsonl`，日志 `raw\matrix.log`。
+    - **通过的 36 个 = 6 组合 × {W0, W1, W2, W4, W5, W9}** ⇒ 这六步在生产构建的
+      360/390/412 × 亮/暗 下**全部走通**（含"必填为空禁用主操作""建完行程刷新回到同一屏"
+      "AI 输入文字对比度""挂后台 60 s 回来不悄悄刷新"）。
+    - 30 个失败按性质拆开，**不要混着引用**：
+      · **W10 × 6 = 有主产品红**（住宿四态共用一句，见上一段②；亮/暗、三种视口读数一致）；
+      · **W3 × 6 = 待 Commander 复核**（见上面【降级为待复核】那段）；
+      · **W6/W7/W8 × 6 = 本门 fixture 未解，属未测**（下文）。
+    - **为解锁地图三步做过的事，与它为什么没成**：定位到 `MapPanel.tsx:60` 的 points 取自
+      `active_plan.activities[].metadata.longitude/latitude`，而 demo seed 的 metadata 为空
+      （`/experience` 实测 `metadata keys: []`、`legs: 0`、`mobility_facts: 0`、`options: 0`）。
+      我在**本车道自己的 SQLite fixture**里给 6 个活动注入经纬度（未碰产品码、未碰共享库），
+      随后 `/experience` 确实回带 `['latitude','longitude']` 且落库持久；
+      **但 `/v8/map` 仍是 `v8-map-empty`、canvases=0、0 请求失败、0 console error**
+      ⇒ 说明 `noLocation` 的成立条件不止"活动有坐标"，我没有继续下钻，**地图三步记为未测**，
+      不是产品红也不是产品绿。真机/真 provider 那条路在本机也不通
+      （`nominatim.openstreetmap.org` 10 s **000**；photon 200、overpass 406、valhalla 404 可达）。
+    - **本单收口还需要的三件事**（顺序建议）：① 把 W3 交 Commander 复核出结论；
+      ② 地图三步要么用真 stay-select fixture（需要能出 geocoding 的网络），
+      要么把 W6/W7/W8 从本门移出、并入 ORD-0037 那条已有地图钩子的量具；
+      ③ `honestStateDisclosed` 从记录升级为断言 + 复测 ORD-0035 的 1.09:1。
 
 
 
@@ -4272,7 +4343,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20T19:4x by dc19d662（tip `e981b46` 生产构建上门已跑到 **11 步 / collected 66**，W10 跑出有主的产品红；仍欠 6 组合全量、天津旗舰 fixture、honestState 断言与 1.09:1 复测）
+  status: PARTIAL@2026-09-20T21:3x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵已完整跑一轮：36 passed / 30 failed（4.3 分）**，其中 W10×6 为有主产品红、W3×6 待 Commander 复核、W6/W7/W8×6 属本门 fixture 未解；仍欠这三项收口 + honestState 断言与 1.09:1 复测）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -6048,7 +6119,7 @@ Pass-16 Sol truth convergence 已经收口进树（游标三态 + 单一 ACTIVE 
 ## FILE_OWNERSHIP（当前）
 ```
 backend/app/operations/v9.py                 -> 8c66aa92 (owner)   others read-only
-frontend/src/app/V8Experience.tsx            -> 8c66aa92 (owner)   others read-only
+frontend/src/app/V8Experience.tsx            -> e345b9d6 (owner @Amendment J §2)   8c66aa92 read-only；后端真值改动不再要求直接编辑此文件，前端产品工作不再排在后端之后
 backend/app/main.py                          -> 8c66aa92 (owner)   others read-only
 backend/app/concurrency_guards.py,
 backend/app/commerce/service_impl.py,
