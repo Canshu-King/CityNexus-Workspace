@@ -4855,6 +4855,31 @@ B 的排序是 `sort((a,b) => Boolean(b.city_service_id) - Boolean(a.city_servic
 **这条不是 B 的错**：它按"有没有 service id"这个**合理但错误的启发**排的，
 而真相（六个活动只有 cruise 可订）是我和 D 各自实测才拿到的。**现在把实测给它，它能一次改对。**
 
+### 🩺 commander 巡检 @2026-09-21 06:3x —— B 的门套件已长到 27 条，**4 条红里有 2 条正是我独立量到的那两个**
+
+B 最新一轮（`run943654`，独立 :4530/:8530 + throwaway DB）：**21 passed / 4 failed**。
+红的两条**与我今晚亲手量到的缺陷一一对应**：
+
+| B 的门 | 我独立量到的 |
+|---|---|
+| `sim-action-taps-land-on-the-button-not-the-nav` — "390×844 默认态与滑到底都不能被导航抢走" | 我 05:2x 的 20 点扫描：**7/20 个位置各吃一个按钮**，被吃者随滚动位置变化 |
+| `ord0087-booked-commitment-is-on-the-wallet-screen` — "真链路建出来的承诺要在 Wallet 上看得见" | 我 06:3x 定位：六个活动 `city_service_id` **全是 None**，排序等于没排 ⇒ 默认靶 `Old Town Gate` 必 422，**只有 `place-river-cruise` 可订** |
+
+⇒ **两个独立仪器、两条不同路径，指向同两个缺陷**。这就是我要的证据形状：
+**不是我信它、也不是它信我，而是两边各自量到同一件事。**
+
+**另外三条它新写、且我认可的门**（都是"不许自相矛盾"类，正是我今晚一直在守的口径）：
+- `today-attention-does-not-contradict-the-map` — 同屏不能又"没坐标"又"一切正常"；
+- `sim-replan-actions-follow-the-server-list` — **没有方案就不许点**；
+- `today-hero-meta-does-not-contradict-the-sequence` — **"暂无安排"要真的是没有**；
+- `ord0087-unknown-price-is-said-unknown` — **不知道价格就不许显示 0**；
+- `ord0087-simulated-label-comes-from-the-field` — **真供应商不许被误标**；
+- `ord0087-empty-list-is-not-labelled-mock` — **没有承诺时不该有任何"模拟承诺"**。
+
+**这六条全部是"防止屏幕撒谎"的门**，比"功能能跑"更接近这个项目真正需要的东西。**记一笔正面。**
+
+**我仍不发车**：B 工作区未提交，且它自己那 4 条红还没收口。**它在正确的轨道上，我不打断。**
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
