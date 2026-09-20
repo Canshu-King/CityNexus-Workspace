@@ -79,6 +79,14 @@
 ORD-0032 单张 17377 字符）。放进**下一个集成检查点**做，届时先冻结写者再动结构。
 **车道状态巡检也收窄**：只查活跃 4~5 条，只看 `runtimeState + queuedTurnCount` 两个字段。
 
+**ORD-0066 的收口口径（仲裁 `5750593629` §4 逐条，`e345b9d6` 照做）**：
+① disabled 主按钮关联到**稳定提示 id**（`aria-describedby` 或等价可访问关系）；
+② 动态缺失字段提示用 `aria-live` / `role="status"`，**避免每次键入高优先级打断**（不要 assertive）；
+③ 文案仍指名"抵达地点、离开地点"（现有文案很好，别改差）；
+④ **360px + 亮/暗主题**下可见；
+⑤ 断言必须验证**可访问关系本身**，**不能只断言 DOM 里有那句话**
+（这正是我抓到缺口的方式：`innerText` 有、`aria-describedby` 是 `null`）。
+
 ### 02:0x 同步阻塞的根因与处置（侧聊量出根因，我执行；三个量具都改了）
 
 **根因（侧聊只读实测，我复现认可）**：账本涨到 652,695 B ⇒ base64 后 PUT 请求体 **~849 KB**；
@@ -103,6 +111,14 @@ ORD-0032 单张 17377 字符）。放进**下一个集成检查点**做，届时
 断言拦住了落盘，我从备份还原了两次才修对：现在抽页脚 → 重建 → **原样追加回末尾**，
 并在落盘前断言 `LAST_ARBITER_COMMENT_ID` **与** `LAST_OWN_COMMENT_ID` **同时**存在。
 ⇒ 教训：**改结构前先断言"改完还要存在的东西"**，而不是只断言"删掉的确实删了"。
+
+**分卷把我自己的巡检脚本打坏了两处（都已修；记下来因为它们是"看起来健康"的坏）**：
+① `patrol.py` 用 `ledger.index("## 仲裁修正案")` 当 ORDERS 段结束点，而该段已搬进归档 ⇒ `ValueError` 整轮中断；
+② 改成"下一个 `## ` 标题"之后，`ledger.index("## ORDERS")` **命中了 LANE_PROTOCOL 正文里引用的
+   `## ORDERS` 那行说明文字** ⇒ 订单板解析出 **`orders total=0`**：输出一切正常、只是**看不见任何单**。
+⇒ 这是最危险的一类坏：**不报错、静默给零**。修法：按**行首精确匹配** `## ORDERS（收件箱` 取偏移，
+用下一个 `## ` 标题行收尾。修后实测 `orders total=17`（APPROVED 1 / DISPATCHED 4 / DONE 9 / PARTIAL 2 / VOID 1）。
+**教训**：分卷/重构之后，量具的"零结果"要当作可疑信号去核，**不能**当作"当前没有单"。
 
 **处置二：读回不再下载整文件**（侧聊建议 2，正是失败的那一步）
 `raw/sync_ledger.py` 的 `remote_blob_sha()`：用 `git/ref` + `git/trees?recursive=1` 拿远端 blob id，
@@ -1792,6 +1808,18 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     **不得把它计作真实产品能力已验收**。" ⇒ HJ-P2 / 承诺型 persona 的 journey
     **只有在 Wallet + booking/commitment 真实后端链路跑通后才计入 persona acceptance**，
     不许用现有 stub 结果凑 fleet denominator。
+8b. **A4 服务工作者生命周期：完成条件 = 6/6 机制 + 定向门跑通**（仲裁 `5750593629` §2，长期有效）。
+    当前状态 **PARTIAL / 5-of-6，不得签收**。已进权威树：`SW_VERSION`、`citynexus-recovery`
+    版本化恢复 worker、**收窄后的** `navigateFallbackDenylist`、`runtimeCacheVersion`、`clientsClaim`。
+    **仍缺** `main.tsx` 那一半，且它不是"补一个字符串"：
+    ① production register 必须带 `updateViaCache:"none"`；
+    ② DEV 不注册生产 SW，并**清理同源遗留 registration**；
+    ③ old controller → new controller **只允许一次受控 reload**；
+    ④ 现有 lifecycle spec 必须在这三处机制**真实存在之后**才算有效。
+    ⇒ **"门在、机制 5/6" 不能叫 DONE。**
+8c. **检查点等式必须标明范围**（仲裁 `5750593629` §3）：`preview HEAD == 1e942d2` 只对
+    **frontend 构建**成立；后端工作树里未提交的改动**不能**被这个等式顺带算进去。
+    后续 user/persona 证据若依赖后端新行为，**必须等后端也进入同一个可标识 checkpoint 后再签**。
 8. **异步生成契约的性能门**（`5749459724` 批准，实现在 ORD-0057）：
    门不是"结果 10 秒内出来"，而是**命令受理 p95 ≤ 1s**（环境抖动可放宽到 ≤2s 硬门，但要记录），
    且 **provider 工作必须移出 HTTP 请求关键路径**。
@@ -1880,4 +1908,4 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
 
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
-Refreshed: 2026-09-20 22:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749925104（**批准 Simulation TTL 方向：改 seed 数据、不动两道陈旧证据门**，并给六条护栏；接受复用图抽查，把「Wallet 绿灯来自 route stub，不得计作真实能力」定为硬事实；ORD-0056 判 **MERGE-PENDING 不是 DONE**，须以权威生产构建读屏收口；ORD-0055 补字段映射规矩：`loc` 定字段、`message_key`/`type` 定文案、禁止拿英文 `msg` 做脆弱匹配） · 前一条 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5749610916（异步契约落成 ORD-0057 + 复用图验收 + TTL 请裁 + ORD-0055/0056 两条新缺陷）；链：5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）→ 5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+Refreshed: 2026-09-20 22:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5750593629（**批准 Simulation TTL 方向：改 seed 数据、不动两道陈旧证据门**，并给六条护栏；接受复用图抽查，把「Wallet 绿灯来自 route stub，不得计作真实能力」定为硬事实；ORD-0056 判 **MERGE-PENDING 不是 DONE**，须以权威生产构建读屏收口；ORD-0055 补字段映射规矩：`loc` 定字段、`message_key`/`type` 定文案、禁止拿英文 `msg` 做脆弱匹配） · 前一条 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5749610916（异步契约落成 ORD-0057 + 复用图验收 + TTL 请裁 + ORD-0055/0056 两条新缺陷）；链：5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）→ 5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
