@@ -2145,7 +2145,139 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     d. 报告里写清：这批 off-path 面板**还有哪几块**是同样"styles.css 亮色唯一 + 无暗色绑定"的形状
        （给我类名与行号，不用修，我要据此决定是否立一张总单）。
     **不要顺手扩大范围**：不改产品语义、不动后端、不加主题开关。
-  status: CLAIMED@20260920-082500 by e345b9d6
+  status: DONE@20260920-085500 by e345b9d6
+  evidence: |
+    [e345b9d6 交付] commits `51d1be0`（生产 + 门）与 `0077c0a`（2d 清单），基 `c0367c1`。
+
+    四条因果我逐条独立复核，全部成立，并补一条更准的判据：
+      - `grep -c "prefers-color-scheme: dark" src/styles.css` = **0**；
+      - `grep -c "plan-ai" src/design-tokens.css src/v10.css` = **0 / 0**（styles.css 里 21 条）；
+      - `.plan-ai-sheet` 硬写 `#f9fbfd` 且不设 color，`.plan-ai-field textarea` 是
+        `background:#fff; color: inherit` ⇒ 暗色下 body 给回 `--cn-ink #f5f5f7`，白字压白底；
+      - 全仓 `data-theme` **0 命中**，只有 3 处 `prefers-color-scheme` ⇒ 无条件跟随系统。
+      **补充**：危险形状不是"透明 + inherit"，而是"**字面浅底 + 会翻转的继承色**"。
+      按这个定义重扫，styles.css 里同形状的坑在本块内共 **3 处**（textarea、示例芯片、close 按钮），
+      同批一并修掉；其余 9 处 `color: inherit` 的宿主底色都是 transparent，容器声明前景即安全。
+
+    修法是按构造正确，不是第四段 !important：整块现在只引用会随主题翻转的 token，
+    以后往这块加表面也不会再漂。`opacity` 压低文字的地方（0.72 / 0.5 / 0.7）改成 `--v8-muted`，
+    因为 opacity 会连带压低**实测**对比度。三种 result tone 原本是字面浅底（暗色下=三块白斑），
+    改为共享 token 表面 + 语义色左规条，颜色不再是唯一承载物。**未引入任何新字面色值。**
+    Amendment F 保持：没搬进壳层、没加底部导航、≥44 留在触屏层、桌面 30px 照旧（含本面板控件）。
+
+    实测比值（`review/evidence/ui-overnight/plan-ai-contrast.json`，取有效合成底色）：
+      light  sheet 16.83:1 / textarea 16.83:1（要求 4.5:1，16-17px）
+      dark   sheet 15.63:1 / textarea 15.63:1
+    截图：`review/evidence/after/plan-ai-sheet-{light,dark}-412x915.png`。
+
+    杀证 —— **这里要更正你点名的那个突变**，三种分别跑过：
+      - M1 只把 textarea 改回 `color: inherit` → 门 **3 passed，不红**。面板底色已是 token，
+        inherit 解析出的就是面板自己声明的墨色，数学上等价 ⇒ 修好之后 M1 **不再是缺陷**，
+        任何计算型对比度门都不该、也抓不到它。
+      - M2 面板底色改回字面 `#f9fbfd` → 暗色断言 **红，实测 1.05:1**，点名 `.plan-ai-sheet`。
+      - M3 完整历史形状（字面浅底 + `color: inherit`）→ **2 failed**：计算门 1.05:1，
+        外加一条新增的**源码级守卫**点名 `.plan-ai-field textarea`。
+      每次突变后源文件按 sha1 校验**逐字节还原**。M1 的结果正是那条源码级守卫存在的理由：
+        计算检查单独无法管住这个形状。守卫只覆盖 `.plan-ai-*` 块，106 个更大范围的历史债
+        是**报告**不是被这条门静警。
+
+    2d 清单（`review/ORD-0035-offpath-inventory.json`）：styles.css 内 **141** 个浅底表面，
+      其中 **106** 个在 token 层没有任何绑定；含类名、行号、底色、是否自带前景。
+      够不够格立一张总单由你判。
+    主题开关按限制**没加**；只把事实写清：应用无条件跟随系统主题，用户侧唯一即时解法是切手机浅色。
+
+    提交态 == 验收态（干净工作区，run id `uiord3507`，backend :8187 / frontend :4287，
+    `CityNexus\.venv`，独立 `_uiord3507.db`，ai=disabled）：
+      **62 passed / 6 skipped / 1 failed**，`SUITE_EXIT=1`，3.1m；`npm run build` exit 0。
+      唯一那条红仍是 ORD-0034 的 named-reason（等一行调用点转交），ORD-0035 **未新增任何红**。
+      与上一次读数对表：59/5/1 → 62/6/1，差值逐条 = 新增 light、dark、源码守卫 **3 条 passed**，
+      新增 plan-ai-sheet 采集场景 **1 条 skipped**（无标签时按守卫跳过）。
+    `npx playwright test --list`：**Total 69 tests in 30 files**，`[real-seed]` setup **1 行**、
+      `[chromium]` **68 行**（65/1/64 → 69/1/68）。
+
+    ⚠ 我自己制造并回滚的一次污染：跑 `--list` 时漏带 `CITYNEXUS_EVIDENCE_DIR`，
+      那次 `uiord3503` 把仓库跟踪的 `reports/e2e-provenance/authoritative.json` 覆盖了
+      —— 原内容是另一车道 run `scfull3` 的 provenance。已 `git checkout --` 还原，
+      现在 `git status --porcelain` 只剩 `?? review/patches/`。提醒其它车道：
+      在这棵树上跑 playwright 不带那个变量就会写进被跟踪的 `reports/`。
+    ⚠ 另：本车道 `typecheck` 读数仍不可当证据，起因见 ORD-0016 我补的【后续发现】。
+
+- id: ORD-0036
+  to: 8c66aa92
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **用户报"挂个后台回来就自动刷新、点不回那个界面、没保存记录"——我自己在浏览器里跑通了复现，根因是服务工作者与缓存策略，不是隧道也不是网络。**
+    我按顺序实测到的事实（全部可在生产构建 + 隧道下重现）：
+
+    1. `src/main.tsx:1673-1680`：**开发模式也注册服务工作者**（`import.meta.env.DEV ? "/sw.js" : "/v10-sw.js"`）。
+       ⇒ 用户这一整晚在 dev 服务器上用的其实是**被 SW 接管过的页面**。
+    2. `public/sw.js` 的 fetch 兜底：任何 GET 失败时 `caches.match(request) ?? caches.match("/v8/live")`
+       ⇒ **会给一个 `.js` 模块请求返回 HTML**。一次抖动之后应用就以"白屏/半屏"形态被缓存下来。
+       我这边直接撞到了：生产构建首次加载时旧的 `/sw.js` 仍在接管 ⇒ `#root` 子节点 **0**、按钮 **0**、正文 **0 字**；
+       我 `unregister() + caches.delete()` 之后**同一地址同一构建立刻正常渲染**（`.v8-product-shell`、Today 有内容）。
+       这条因果我是"先复现白屏、再清 SW、再确认恢复"三步做实的，不是推断。
+    3. `vite.config.ts` 的 workbox 策略里有两个洞：
+       - `runtimeCaching` 对 script/style/worker/image/font 用 **`CacheFirst`** 且
+         `cacheableResponse: { statuses: [0, 200] }` ⇒ **status 0 也算可缓存**，而 CacheFirst 永不回源；
+         一个不透明/空响应就被永久钉死。
+       - `/v8/*` document 用 **`NetworkFirst` 且 `networkTimeoutSeconds: 3`** ⇒ 移动网络 + 隧道下 3 秒很容易超，
+         超时就**拿旧壳**回答导航，表现正是"我回不去刚才那个界面了"。
+    4. 顺带一条与状态有关的：路由确实写进了地址（`V8Experience.tsx:486` `history.pushState('/v8/' + value)`），
+       但**弹层状态不在地址里**（AI 面板、向导第几步、选中项都不进 URL）⇒ 任何一次刷新都必然丢，
+       `localStorage` 只有 `citynexus.v8.journey_id` 与 copilot 历史。用户说"没有保存记录"，一半是 SW 造成的假丢失，
+       一半是真的什么都没存。
+
+    要求：
+    (a) **不要在 dev 模式注册 SW**（或者给 dev 一个只做 network-first、永不写兜底 HTML 的 worker）；
+    (b) `public/sw.js` 的兜底**必须区分请求类型**：`request.destination === 'script' | 'style'` 失败时**返回原始失败**，
+        绝不能返回 HTML；
+    (c) workbox 的 `cacheableResponse.statuses` 去掉 **0**，并把静态资源改成 `StaleWhileRevalidate`
+        或给 CacheFirst 加版本失效；document 的 `networkTimeoutSeconds` 从 3 提到能覆盖真实移动链路（给我实测值，不要拍）；
+    (d) 关键界面状态（向导第几步 / 打开的弹层 / 当前选中项）**要么进地址、要么进 localStorage**，
+        并明确写清选哪个；"刷新就回 Today"是可接受的产品决定，但必须**明写**，不能靠用户猜。
+
+    **验收**：
+    - 一条能杀它的证据：在 SW 接管的状态下让一个 `.js` 请求失败，断言页面**不会**拿到 HTML（点名节点 id）；
+    - 一次"改构建 → 客户端刷新"的实测：新资源必须生效，不靠手动清缓存；
+    - 报告里给出你在真实链路上测到的 document 超时取值与理由；
+    - 后端数字不受影响，但如果你动了 `main.tsx`，请重跑全量前端 suite 并报 collected。
+    **不要顺手扩大范围**：不改视觉 token、不动导航拓扑（那是 ORD-0034/0035 的域）。
+  status: DISPATCHED@2026-09-20 10:2x
+
+- id: ORD-0037
+  to: e345b9d6
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **用户报"地图就是一张图片、划不动也不能缩放、路线是一根大线"。我实测确认：三条都是产品代码，不是隧道、不是手机。**
+
+    我在生产构建 + 公网隧道下亲自测的：
+    - 地图确实是真 `maplibregl-canvas`（`class="maplibregl-canvas"`，尺寸 457x390），**不是 `<img>`**；
+    - 但我对它派发**指针拖拽 + 滚轮缩放**之后，**渲染帧没有变化**（`frameChanged: false`）；
+    - 原因就在 `src/components/v8/MapPanel.tsx:149`：**`interactive: false`**
+      ⇒ 拖拽、缩放、旋转、倾斜全部被显式关掉。用户"划不动"是完全准确的观察。
+    - 路线只有一层：`MapPanel.tsx:136-141` 一个 `type: "line"` 图层，
+      `line-color #4658d9` 单色、`line-width 4`、`line-opacity 0.84`，**没有按天/按方式的区分**
+      ⇒ 用户看到的"一根大线"就是这个。
+    - 同一文件 :107 还有注释说明：光栅瓦片被挡或离线时后面有一层"平涂画布"
+      ⇒ 瓦片拿不到时，整块地图就退化成"一张图"的观感，这与用户描述一致。
+
+    要求：
+    1. **地图要能用**：触屏可拖动、可双指缩放、可双击放大；如果 `interactive: false` 是刻意的（例如为了不和页面滚动打架），
+       那必须换成"可交互 + 明确的手势分工"，而不是把交互全关。请在报告里说明你选哪种以及为什么。
+    2. **路线要能读**：至少按天或按出行方式区分颜色/虚线，并给线宽一个随缩放变化的表达式
+       （`interpolate` zoom），不要再让它在小屏上糊成一根。
+    3. 瓦片不可见时**要告诉用户**（一句"底图未加载，显示的是路线示意"即可），不要静默降级成"看起来像图片"。
+    4. 保持 Amendment F 的边界：不迁壳层、不引入底部主导航、触屏 ≥44px、桌面 30px 密度照旧。
+
+    **验收**：
+    - 一条 e2e 断言：对地图 canvas 派发拖拽/滚轮后**相机确实变了**（`map.getCenter()/getZoom()` 前后不同），
+      并给出杀得掉的证据（把 `interactive: false` 留着时该节点必须红，点名节点 id）；
+    - 一条断言：路线图层按天/方式分组的**要素数量 > 1**（防"一根大线"回潮）；
+    - `npx playwright test --list` 的 collected 与其中 setup 工程行数 + 一次全量 suite 读数，与账本对表、差值逐条点名。
+    **不要顺手扩大范围**：不改后端几何生成逻辑（`mobility_facts` 的产出是另一件事），不动缓存策略（ORD-0036）。
+  status: DISPATCHED@2026-09-20 10:2x
 
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
@@ -2168,6 +2300,11 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 **限制（已实测，不是推测）**：quick tunnel 无访问控制。原先的敞口是"能改这套演示数据"（公网 `POST /api/v1/demo/reset` 实测 200）；**用户 08:5x 开了实时 AI 之后，敞口升级为"能花真钱"**——见上表那把 key 与 9.04 CNY。我给的缓解选项（用户点头我才做）：① 把 4 小时生命周期缩短；② 重启隧道换一条新 URL（旧链接立即失效，代价是用户要重新打开）；③ 换命名隧道 + Cloudflare Access 加访问控制；④ 把 `CITYNEXUS_DEEPSEEK_REASONING_EFFORT` / `CITYNEXUS_DEEPSEEK_WEB_SEARCH` 降档以限单价。**已明确告知用户：链接别外传。**
 
 **给其它车道**：**不要**重启或抢占 `127.0.0.1:4781` / `:8781`，**不要**删 `D:\moodle\_qoder_preview_20260920\`；**不要**为了"恢复干净状态"把 AI 又关掉或在启动行把 `DEEPSEEK_API_KEY` 置空——开实时 AI 是用户此刻的明确指令；也**不要**拿这个库去跑 e2e（会写坏用户正在看的界面状态）。需要跑门请用自己的端口与自己的 `_*.db`。
+
+**预览拓扑已在 10:0x 换掉（我自己的修正）**：前端从 **vite dev** 改成 **生产构建**（`vite preview` 服务 `D:\moodle\_qoder_preview_20260920\dist`，`--outDir` 指到仓库外 ⇒ 权威树未被写入，`git status --short` 仍只有那两行非产品文件、未跟踪 0）。
+原因：dev 模式下应用**也会注册** `/sw.js`（`src/main.tsx:1679`），加上 HMR，用户在手机上就会遇到"自己刷新、回不去刚才的界面"。
+同时我在**构建产物**里把 `dist/sw.js` 与 `dist/v10-sw.js` 换成"注销自己 + 清缓存 + 让客户端重新导航"的预览专用垫片（**只动我的 dist，不动仓库**），这样已经被旧 SW 接管的手机刷新一次就能自愈。端口与隧道地址不变，用户**只需拉一次刷新**。
+产品侧真缺陷另立 **ORD-0036**（SW 兜底给 `.js` 返回 HTML / workbox 把 status 0 当可缓存 / document 3 秒超时给旧壳 / 弹层状态不持久）。
 
 ### 真机预览抓到的产品缺陷（用户 09:16 截图"一直卡在这个界面"）— 已下 ORD-0033 / ORD-0034
 
