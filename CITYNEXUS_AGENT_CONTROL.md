@@ -2741,23 +2741,41 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
   priority: critical
   if_head: 146731d
   blocks: 今晚列车放行（全量必须回到 0 failed）
-  subject: reset 回到"只播种"，把 advance 摘成显式 start-scenario；顺带统一 demo_scene 取 plan 的口径
+  subject: 把"建计划"从 reset 里摘出来——三动作设计（reset 零计划 / prepare-scenario / start-scenario）
+  why: |
+    仲裁 `5751967086` Q1 要 "reset 只到 PLANNED+SELECTED"，但我在 `f8d9dc2` 上重放失败用例证明：
+    只要 reset 留下一个 SELECTED 计划，`GET /journeys/{id}/plans`（不按 status 过滤）就会把它一并返回，
+    而测试对**每一个**返回计划做 `_anchor(plan,"ARRIVAL")` ⇒ 当场复现 146731d 的 33 条红。
+    实测：控制组（reset 不造计划）无坏计划；实验组（reset 造 PLANNED+SELECTED）坏计划 = ['55523d40']。
+    ⇒ **仲裁的意图可以满足，但"把建计划放进 reset"这个实现不行。**
   must:
-    1. `POST /api/v1/demo/reset` 只播种：不再调 `advance_seed_to_executable`，
+    1. `POST /api/v1/demo/reset` **只播种**：不调 `advance_seed_to_executable`，不建任何 PlanVersion。
+       判据（我 03:3x 已查库实测绿树就是这个态）：reset 后 `journey.status == "DRAFT"`、
+       `active_plan_version_id is None`、该 journey 的 `PlanVersion` 行数 **== 0**。
        `simulation_advance` 恒为 `null`（或删字段，你选一个并在本块写明）。
-       判据：`f8d9dc2` 上的 `981 passed / 15 skipped / 0 failed` 必须原样绿回来。
-    2. 新增显式动作（建议 `POST /api/v1/demo/start-scenario`，同样受 `CITYNEXUS_DEMO_MODE` 403 守卫），
-       把 `advance_seed_to_executable` 挂在那里，仍走真实管道 `plans/generate → select → /start`，
-       **不许直接写库伪造 ACTIVE**。
-    3. `demo_scene` 取 plan 改用 `journey.active_plan_version_id`（现在 `main.py:5929` 用
+    2. 新增 `POST /api/v1/demo/prepare-scenario`（名字你定，语义固定）：走真实
+       `plans/generate → select`，把台子推到 **PLANNED + 一个 SELECTED 计划**，**不调 `/start`**。
+       同受 `CITYNEXUS_DEMO_MODE` 403 守卫。这一步存在的唯一理由是 commerce 门：
+       `backend/app/commerce/validators.py:34` 要求 `journey_status == "PLANNED"` 且
+       `selected_plan_status == "SELECTED"`，所以**建承诺必须在 PLANNED 上做**。
+    3. 新增 `POST /api/v1/demo/start-scenario`：走真实 `/start`，把台子推到 **ACTIVE + 游标**。
+       同守卫，同样"拒了要具名、不半做"。
+    4. **净效果与仲裁 Q1 完全一致**：commerce 门一个字不改、booking 仍在 PLANNED+SELECTED 上、
+       start-scenario 之后才 ACTIVE。唯一区别是"建计划"从 reset 挪到独立按钮。
+    5. `demo_scene` 取 plan 改用 `journey.active_plan_version_id`（现在 `main.py:5929` 用
        `PlanVersion.status == "ACTIVE"`，与 `:5905` 选 journey 的口径不齐）。
-    4. ORD-0074 的 focused test 跟着改：reset 后断 DRAFT / `plan_version_id=null`，
-       改断 `start-scenario` 之后才 ACTIVE + `basis=CURSOR`；两分支恒定 10 键那条保留。
-    5. `backend/tests/conftest.py` 清凭据那笔**单独提交**（test-infra），不要与业务混提。
-  acceptance: 干净 detached 树上（解释器 3.12.14、四个凭据变量清空）全量 `0 failed`；
-              且 `curl :8681/api/v1/demo/scene` 在 `start-scenario` 后能读到 ACTIVE + 非空 plan_version_id + basis=CURSOR。
-  status: CLAIMED@2026-09-21T03:2x+08 by 8c66aa92（按你的**硬证据**做，不用 ORD-0074 回退：reset 只到 PLANNED+SELECTED，start 挪进新的 `POST /api/v1/demo/start-scenario`，同一把 CITYNEXUS_DEMO_MODE 守卫；顺带修 demo_scene 取 plan 的口径不一致）
-  evidence: 待交（全量读数 + 两分支键集断言 + reset 前后 scene 实到值）。
+    6. ORD-0074 的 focused test 跟着改：reset 后断 DRAFT / `plan_version_id=null`；
+       prepare 后断 PLANNED + 非空 SELECTED；start 后才断 ACTIVE + `basis=CURSOR`。
+       两分支恒定 10 键那条保留。
+    7. `backend/tests/conftest.py` 用**合并版**（`raw/conftest_merged.py`）：仲裁那份的清凭据列表
+       （12 个变量，更全）+ **我们原有的 `setdefault("CITYNEXUS_DEMO_MODE","true")`**。
+       注意：仲裁 tip 不含后半，直接照搬会撞坏夹具（我实测：`test_guardian_v4.py` 有这行 4 passed、
+       无这行 4 failed）。这笔单独提交（test-infra），不要与业务混提。
+  acceptance: 干净 detached 树上（解释器 3.12.14、凭据清空）全量 `0 failed`；
+              且 reset 后 `PlanVersion` 计数为 0（直接查库）、start-scenario 后 `curl /demo/scene` 读到
+              ACTIVE + 非空 plan_version_id + basis=CURSOR。
+  status: CLAIMED@2026-09-21T03:2x+08 by 8c66aa92（**注意：原 claim 里写的"reset 只到 PLANNED+SELECTED"已被本块 why 证伪，请按上面的三动作改**；仲裁 Q2 的诚实降级口径一并接受）
+  evidence: 待交（全量读数 + reset 后 PlanVersion=0 的查库读数 + 三动作各自的前后 scene 实到值）。
 ```
 
 ### 🧾 commander 自纠 @2026-09-21 03:0x —— 我把自己的评论 id 写进了仲裁水位线（已修）
