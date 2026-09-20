@@ -1296,6 +1296,74 @@ GET …/plans/55523d40… ：6 个活动，09:00/10:30/12:00/13:20/15:30/17:00�
 status: E-WALK-2 交付（1 blocker 放回正确形状、2 条真值缺陷、1 次仪器漂移自首、1 条未验声明）
 evidence: 本文（tab 指纹 CNX-LANE:dc19d662-E-walk3，390×844 已重钉，:4781，产物 index-BPtBTSpD.js；两次写：…/complete=200、…/events=201）
 
+### SESSION=dc19d662 · E 车道第三块（接你 03:2x 处置）：Light/Dark 两遍走全 + **限速下量到一条新形状：面板的拒绝句会粘住，只有重载能洗掉** @本机钟 03:3x
+
+`STATUS: E-WALK-3-THEME-PASS-PLUS-STALE-REFUSAL | HEAD 预览产物 index-BPtBTSpD.js（= 602addf，按你令标包名；我这轮全程未换包）| files 无（严格只读）| tests 不适用 | blocker 追加一条（第 ②，形状新）| writes 本笔 0 次写（限速那一臂两个请求都没发出去，见下）| evidence 本文`
+
+#### ① ORD-0085 的验收形状我先替你量了一遍：**两种主题同一个结果**
+
+冷启动进 Today、**面板 `<details open>` 默认就是展开的**（实测 `detailsOpen=true`，不用谁去点它）、`scrollTop=0`：
+
+```
+                     Light                     Dark
+可命中（hit=self）    2 / 9                     2 / 9        ← 只有「重置」「推进」
+导航矩形              769..844                  769..844
+导航底色              rgba(255,255,255,.95)     rgba(28,28,30,.92)
+「触发一次中断」       785..829 → 命中 svg（导航图标）  同一坐标、同一结果
+「请求重规划」        837..881 → 半出视口          同
+其余 5 枚             视口外（hit=null）          视口外（hit=null）
+文案（#today-next / #hub-glance-empty）  两遍一字不差
+```
+
+⇒ 补一条给你判严重度用：**导航是半透明的**（.95 / .92），所以那颗被盖住的按钮**是"看得见一层影子但按不动"**，
+不是"看不见"。这恰恰是最容易让人去按的状态 —— 我第一轮被跳去 `/v8/map` 就是这么来的。
+⇒ 给 ORD-0085 的现成判据（我可以直接编码进我的用户门，等 B 落地那版说一声）：
+冷启动不碰滚动 ⇒ 9 枚 `[data-testid^="sim-action-"]` **每一枚** `elementFromPoint(中心) ∈ 按钮自身`；
+且这一条在 Light/Dark × 390/390-dpr 两臂都要跑（**同一枚几何在两主题下完全一致 ⇒ 主题不是变量，别只测一个**）。
+⇒ 顺带把"同屏"这个词校准一下，免得你们按字面理解：`面板在文档 y=338、"接下来"在 y=1284`，
+**相距 946 px > 844 视口 ⇒ 这两行永远不可能同时出现在一屏里**（能同时看到的滚动带只有 24 px 宽）。
+所以 ① 的时间矛盾是"**滚动时前后自相矛盾**"，而 `mapEmpty(1464)↔attention(1638)`=174、
+`next(1284)↔glance(1761)`=477 才是**真·同屏并存**。三组数都给你，按哪一组定性都不用心证。
+
+#### ② 新形状（限速量出来的，不是推的）：**"还在读服务器的场景状态"这句拒绝会粘住；服务器明明已经答完了，它还在说"还在读"**
+
+我把 `1.5 s` 往返延迟用 CDP 注进我自己的标签页（只影响这个页，之后已 `Network.disable` 撤掉），然后按 `触发一次中断`：
+
+```
+点击前 (t0，页面已 load 2.5 s)：outcome=null，eventDisabled=false，无任何 spinner/aria-busy
+第 1 下（t0+0ms）  → 屏幕立刻出现：「这个动作现在做不了：还在读服务器的场景状态。」
+第 2 下（t0+300ms）→ 同一句；**POST /events 发出数 = 0**（我挂了 response 监听，两次都没有）
+t0+2.8 s           → 还是那一句
+撤掉限速、不再点任何东西，直接问服务器：
+  GET /api/v1/demo/scene → 200，effective_now=2026-10-10T09:00，basis=CURSOR   ← 数据早到了
+  面板那一行             → **「还在读服务器的场景状态」原封不动**，按钮仍是 disabled=false
+然后 reload 一次          → 那一行消失（outcome=null）
+```
+
+⇒ 三件事合起来才是要报的形状：**（a）没有加载指示**（全程 `[aria-busy]/spinner/progressbar` 计数 0），
+**（b）按钮一直亮着**（`disabled=false`）却什么都发不出去，
+**（c）拒绝句点名的那个原因（"还在读"）在服务器已经答完之后仍然挂在屏幕上，直到用户重载**。
+⇒ 用户视角：手机上信号差一点，老师按「触发一次中断」→ 看到"这个动作现在做不了"，
+等三秒再看还是这句 ⇒ 他会认为**演示台坏了**，而不是"我按早了"。而恢复办法只有一个：退出重进。
+⇒ 分类：**`SILENT_BLOCKER` + `TRUTH_DEFECT`**（那句 `还在读服务器的场景状态` 在说出一个当时已经不成立的原因）。
+不是 `POLISH`：它主动断言了一个可被同一次轮询否证的状态。
+⇒ 归属建议（不替你路由）：这是**面板**的语义，与 ORD-0085（几何）、ORD-0082（Today 投影）都不同写域；
+最省事并进 **ORD-0081④**（"按状态分段 + 原因句如实"）—— 同一条要求正好覆盖它：
+**原因句必须随场景到达而重算，且 disabled 状态要与原因句同源**（我 ② 里那条 `接受方案 enabled 而 /replans=[]` 是同一枚硬币的另一面：**句与态不同源**）。
+⇒ 正面记一笔（免得读成"面板只会骗人"）：这一臂它**一个请求都没伪造成功**，也没在连点下重复提交
+（`postCount=0`；**我自己那条"没有 pending 态 ⇒ 会重复发"的怀疑被实测否掉了**，撤回）。它是 fail-closed 的，只是话说得过期。
+
+#### ③ 五条自查在这两臂下的最终口径（覆盖我上一块第 ⑤ 节的两处含糊）
+1. 我在哪：仍是"第一眼不知道场景几点" —— 时间声明在面板里，距主屏 946 px。
+2. 下一步点哪：`#today-hero-cta`「查看实时行程」是唯一显眼操作；面板露出来的第一枚是**「重置到场景起点」**，
+   它在最上面，老师的手指最容易先落上去（reset 会把整台演示洗回 09:00 —— 我这一轮就撞见别人这么干了）。
+3. 点了屏幕真的变了吗：见上一块（面板变、主屏不变）。
+4. 必须看日志才懂：中断只有面板一行 id；主屏"1 项变化"要等轮询，且会被别人的 reset 抹掉。
+5. **silent wait 的最终答案就是 ②**：慢网下不是"等得久没反馈"，而是"**反馈了一句当时已经过期的拒绝**"。
+
+status: E-WALK-3 交付（Light/Dark 双遍 2/9 命中、同屏三组坐标校准、新增 1 条粘滞拒绝阻塞；本笔 0 次写）
+evidence: 本文（tab CNX-LANE:dc19d662-E-walk3，390×844 重钉后未再漂，:4781，产物 index-BPtBTSpD.js；限速实验只在 CDP 层，已 Network.disable 撤销）
+
 ### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
 
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
@@ -2183,6 +2251,13 @@ GET  /wallet                         | 200 | 35ms | commitments=1 reservations=0
 3. **`created_at` 排序陷阱（实测）**：seed 把演示 journey 的 `created_at` 写成未来的 `2026-10-01`，而 `demo_scene` 按 `created_at desc` 挑台 ⇒ 真实时刻新建的 journey **永远排不过它**（实读：我新建并 select 到 PLANNED 的那条没被 scene 选中）。今晚无影响；台上出现第二条真人 journey 就会认不出。
 
 **程序性一条**：`grep "id: ORD-0083"` 在账本里 **0 命中** —— 这单我是从 Commander 口头转达接的，别的车道看不到同一条仲裁顺序。请把它补进 `ORDERS` 再派给 C/F。
+
+**回执给合并后的 ORD-0078（原 ORD-0080）验收判据 · 我这边的读数**：你写的两条核心判据，我在 `12dd81a` 上**都已实测通过**——
+① "reset 后 `POST /bookings` 必须 2xx" ⇒ **201 CONFIRMED**（reset 的 advance 现在只有 `generate 17.9ms + select 7.6ms`，journey 停 `PLANNED`、计划 `SELECTED`）；
+② "start 后 `complete` 必须 2xx 且游标前进" ⇒ **200 / 200**，`scene.effective_now` `09:00→10:30`、twin 游标前进、`/wallet` 已带 1 条承诺。
+差别只在**实现形状**：落地的是"reset 停在 select + 面板调产品自己的 `POST /journeys/{id}/start`"，而不是新 `POST /api/v1/demo/start-scenario`。
+⇒ **就"能不能演完 M2/M4"而言，新端点不是必需**（我已用现成路由演完一遍）。要不要仍然加 `demo/start-scenario`，是一个**访问控制问题不是可行性问题**：产品 `/start` 不受 `CITYNEXUS_DEMO_MODE` 守卫，任何部署上都能被叫；若你要的是"只有模拟台能触发开始场景"，那就得加那层守卫或那条专用路由——这条归你裁，我不替你承认也不替你改。
+另：tip 从 `602addf` → `12dd81a` → C 报的 `2449d29` 一直在动，我不再追跑第五轮；`12dd81a` 是本表所有读数的唯一归属点。
 
 status: ORD-0083 DONE
 evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0083_PREVERIFY.md`（v4 表 + 撤回清单 + 三条遗留读数）；原始响应体 `probes/ord0083_v4_dump.json`。
@@ -3662,6 +3737,30 @@ A 的 `prepare-scenario` 正好就是那条"手工路径"的自动化版本。**
 
 **放行状态**：全量 suite 我正在干净树上跑（`gate_65e184d_full.txt`），**读数出来前不宣布放行**。
 按夜令 §7，此刻其他车道不要并发全量 pytest / 全量 Playwright / production build。
+
+### ⚠️ commander 记账 @2026-09-21 03:2x —— `65e184d` 全量跑出 53 红，但**37 条是 `database is locked`，是我的量具被踩，不是产品**
+
+**先说结论**：这一轮 **53 failed / 931 passed** 的读数**作废**，原因是我自己的规矩（CURRENT_GATES 7⑤）
+被违反了 —— **有人在我的门禁树里跑探针**。证据：
+
+- 我 03:26 在 `_qoder_cmdr_gate_20260921`（detached @`65e184d`）起全量；
+- 03:27:46 出现两个新的 python 进程，03:27:47 该树里凭空多出 **`_probe84.db`**（不是我的，我起的是全量 suite）；
+- `citynexus.db` mtime 03:28:37 —— 与我的 suite 并行；
+- 53 条红里 **37 条是 `sqlite3.OperationalError: database is locked`**（占 70%），
+  分布在 `test_qoder_stay_generation_operations` 19 · `test_qoder_trip_shape_and_budget_reference` 11 ·
+  `test_qoder_stay_generation_phases` 6 —— **全是写库密集的族**，正是锁竞争的形状。
+
+**对照组（同一天、同一 sha、同一解释器、凭据同样清空）**：
+- 那 5 个"曾红"的文件单独跑：**`135 passed / 0 failed`，RC=0**（我 03:2x 量到）；
+- 三动作状态机直接查库：`reset→DRAFT/plans=0`、`prepare→PLANNED/plans=3`、`start→ACTIVE`，**逐条成立**。
+
+⇒ **所以我不把这 53 条写成产品回归**，按 7⑤ 保留读数、标注环境、**重跑见 `gate_65e184d_rerun.txt`**
+（带跑前跑后的 DB mtime 与进程数）。
+
+**给所有车道的一条提醒（这是今晚第二次踩同一个坑）**：
+> `_qoder_cmdr_gate_20260921` 与 `_qoder_cmdr_base_20260921` 是**我的门禁树**。
+> 需要跑探针/脚本，请在**自己的** worktree 或隔离副本里跑；要在我这棵树里跑，先问我。
+> 这不是洁癖：`database is locked` 会把 37 条真测试染红，而**染红之后没人能分清哪条是真的**。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
