@@ -4880,6 +4880,48 @@ B 最新一轮（`run943654`，独立 :4530/:8530 + throwaway DB）：**21 passe
 
 **我仍不发车**：B 工作区未提交，且它自己那 4 条红还没收口。**它在正确的轨道上，我不打断。**
 
+### 🎯 commander 定位 @2026-09-21 06:4x —— B 卡住的那条门，**根因就在它自己打印出来的诊断链里**
+
+B 连续两轮卡在同一条门（`run944075` / `run944162`，都是 `1 failed / 1 passed`），
+失败信息是"light at bottom: **no action row was on screen**, so this pose asserts nothing"。
+**它自己的诊断已经把答案打出来了**（这段是它写的，我原样读）：
+
+```
+Sheet = {"position":"fixed", "bottom":337, "top":-374, "navTop":768, "scrollable":true, ...}
+chain = [
+  {"el":"SECTION.cn-sim",          "position":"fixed",  "transform":"none", ...},
+  {"el":"DETAILS.cn-sim-entry",    "position":"static", "transform":"matrix(1, 0, 0, 1, 0, 0)",
+   "animation":"cn-rise", ...},                       ← 就是这一行
+  ...
+]
+```
+
+**机制（CSS 规范，不是猜）**：面板是 `position: fixed`，但**它的祖先 `DETAILS.cn-sim-entry` 带着
+`animation: cn-rise`**（`design-tokens.css:192-199`，`.v8-page > *` 那条），
+而该动画结束时把 `transform` 停在 **`matrix(1,0,0,1,0,0)`** ——
+**这是个"不是 `none`"的值**。按规范，**祖先只要 `transform` 不是 `none`，就会成为 `position: fixed`
+后代的包含块**（containing block）。于是面板的 `fixed` **没有相对视口定位，而是相对那个 68px 高的
+`DETAILS` 定位** ⇒ `bottom=337`（而不是接近视口底 844）⇒ **面板被顶到屏幕上方之外**，
+"滑到底"那一姿势里**一个动作行都不在屏幕上**。
+
+**B 其实已经问到点子上了**：它的代码注释写着
+"Why is `position: fixed` not anchoring to the viewport? **These are exactly the properties that make
+an ancestor the containing block**, so read them instead of guessing."
+⇒ **它已经知道要看哪些属性，而且把 `animation: cn-rise` 打出来了。它只差把这行连起来。**
+
+**给 `e345b9d6` 的精确修法（三选一，都不改产品语义）**：
+1. **让面板脱离那个动画祖先**：把 `.cn-sim-entry` 从 `.v8-page > *` 的 `cn-rise` 规则里排除
+   （如 `.v8-page > *:not(.cn-sim-entry)`），或给 `.cn-sim-entry` 显式 `animation: none`；
+2. 或**把 `fixed` 面板挪到动画祖先之外**（挂到 body 层 / 用一个 portal 式的容器）；
+3. 或**不用 `fixed`**，改成"给滚动容器加底部安全高度"（我 05:2x 建议的甲方案），
+   这样根本不依赖 containing block。
+
+**验收判据不变（我会亲测）**：我那张 20 点扫描（每 60px 一档、`elementFromPoint` 打按钮中心）
+**全部 0 个被吃**；外加 B 自己那条"每个动作行都必须能在某个姿势下被按到"。
+
+**我为什么现在写下来而不是等它**：它已经卡了两轮，而答案在它自己的输出里 ——
+**把两个已打印的事实连起来，比再跑两轮便宜得多。**
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
