@@ -661,6 +661,49 @@ frontend（2 + 1 新）：
 - **未启动后端、未发任何 HTTP 请求、未改系统时钟、未开浏览器**；问 5 第③条（naive `?now=` 致 500）明确标为静态推断而非实测。
 - 未向任何车道发消息（协议：账本唯一信道）；未认领 `to:` 不是 `848847ed` 的单；**未写一行产品代码** —— 实现归属仍在 `8c66aa92` 自开的 ORD-0054。
 
+### commander 独立复核 @2026-09-20 22:0x —— ORD-0050 `SIMULATION_REUSE_MAP`（`848847ed`）→ `ACCEPTED`
+
+我按自己的规矩抽查，不采信报告本身（`cd _qoder_integration_20260919`，HEAD `576fbf6`）：
+
+| 它的断言 | 我的复核 | 结果 |
+|---|---|---|
+| `CITYNEXUS_DEMO_MODE` 全仓 0 命中 | `grep -rc` 扫 `backend/app` + `frontend/src` | **0 命中，成立** |
+| Today 自己用墙钟 | `V8Experience.tsx:1484 const nowMs = Date.now();` | **成立** |
+| "只能建未来日期"的门口在向导 | `JourneyTrialSetup.tsx:86 futureLocalAt()` + `:186-187` 默认 `T+1 10:00 → T+3 20:00` | **成立 —— 这就是用户"等不到那天"的字面原因** |
+| 骨架只挂在 `/legacy` | `main.tsx:1663 if (path.startsWith("/legacy")) return <LegacyApp />` | **成立** |
+| `POST …/{aid}/skip` 无 UI 调用方 | `frontend/src` 里只有 `generated/api.ts:1233` 的类型 | **成立** |
+| **Wallet 从未被真后端跑通** | `grep -rln wallet backend/tests` → **0 个文件**；`e2e/qoder-live-structure.spec.ts:155` 与 `qoder-budget-rendered.spec.ts:162` 都是 `if (pathname.endsWith("/wallet")) return send({reservations: [], commitments: [], offline_ready: true})` | **成立，且这是本图最重的一条** |
+
+⇒ 最后一行的后果要写明白：**Amendment H 的验收项"Wallet 显示已确认的承诺"目前没有任何真后端覆盖**，
+它是拿桩跑绿的。所以 Simulation Mode 落地时，**Wallet 必须当验收面，不能当已知量**（侦察也是这么建议的，我背书）。
+
+**两处我要挑的毛病（不影响验收，但要记）**：
+1. 它写"把 Today 的 `Date.now()` 换成服务端场景时刻（`1484/1490/1505/1516`）"—— 实测**字面量只有 `:1484` 一处**，
+   `1486/1505` 是消费 `nowMs`，`:1490` 是 `dateKeyInZone(new Date()…)`。表述过宽，容易让实现方去找不存在的东西。
+2. 它引 `ORD-REASSIGN-003` 说 `MapPanel.tsx` 归 `8c66aa92` —— 那是**旧账**：
+   REQ-0010 第⑤条我 17:5x 已裁 C 释放给 `e345b9d6`（账本里有我的裁决块）。
+   结论不受影响（本图判定 `MapPanel.tsx` **无需写**，冲突自动消解），但**它读的是过期归属**，提一句免得下次照旧裁。
+
+**它做对的两件事，值得当模板**：① 全程只读且**主动不报任何门禁通过数**（明写"我引用的 928/15/0 来自账本他人登记，不是我的实测"）；
+② 把"静态推断"和"实测"分开标（问 5 第③条 `?now=` naive/aware 比较，它明写没起服务、没实测，要求实现方**先补一条门再依赖它**）。
+
+**实现归属拆分（按文件所有权切，避免多写者挤同一批文件）**：
+- **ORD-0058 → `8c66aa92`**：`core/config.py` 的 `CITYNEXUS_DEMO_MODE` 开关、`main.py` 的
+  `demo/reset` 加 403 守卫（现状是**无任何守卫地 DELETE 52 张表**，这本身是既有缺陷，顺手收）、
+  新增**唯一一个读端点** `GET /api/v1/demo/scene`、`services.py` 场景日期/TTL 对齐；
+  外加 `V8Experience.tsx` 的常驻"模拟体验"横幅 + 消费服务端场景时刻（该文件归它）。
+- **ORD-0059 → `e345b9d6`**：`JourneyTrialSetup.tsx` 的 `futureLocalAt` 门口（让场景可以"从今天开始"）、
+  新文件 scene 面板 + `frontend/src/lib/sceneClock.ts`（无主，零冲突）。
+- **新增写端点 = 0 个**（仲裁与侦察一致）；明确**不要** `advance` / `simulate` / `fake-day` / 假页面。
+
+**唯一需要仲裁点头的产品裁决点（我已列入下一次请裁）**：
+场景一旦推进超过 **4 小时**，`/plans/{id}/select`、`/start`、`/bookings`、replan gate 会因
+`STALE_RECOMPOSE_REQUIRED` / `STALE_FROZEN_EVIDENCE` 在门口全拒（`main.py:4137-4141`、`4420-4428`
+直接拿 `datetime.now(utc)` 比 `expires_at`，而 mock 证据 TTL 只有 4 小时，`stay_mobility.py:1268`）。
+侦察的推荐是 **"改数据不改门"**：seed 时把证据 TTL 与场景日对齐（`services.py`）；
+把这两处改成吃场景钟 = **削弱陈旧证据语义，它不建议，我同意**。
+⇒ 请仲裁确认这条推荐，确认后 ORD-0058 照"改 seed 数据"实现。
+
 ### 1a986a24 HJ-P1 ORD-0052（中期）@2026-09-20 19:3x → 立即上报两处**测量污染**，另附 3 条界面缺陷
 
 **人设+场景**：HJ-P1 穷游背包客（1 人出行、只坐公共交通、预算很紧、景点可换），在生产构建预览上像真用户一样排行程。
@@ -4268,6 +4311,68 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     不得关掉真实 provider 调用来"满足"延迟门；不得把未知数据写成已知数据；
     前端对齐部分归 ORD-0047（`e345b9d6`），**你不要代写前端等待体验**。
   status: DISPATCHED@2026-09-20 21:5x
+
+- id: ORD-0058
+  to: 8c66aa92
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **Simulation Mode 后端地基（Amendment H；依据 = `848847ed` 的 `SIMULATION_REUSE_MAP`，我已 ACCEPTED）。**
+    原则：**模拟输入，真实管道**。执行侧写能力 100% 已存在 ⇒ **新增写端点 0 个**。本单只做四件事：
+    1. `backend/app/core/config.py`：新增 `CITYNEXUS_DEMO_MODE`（实测全仓当前 **0 命中**），**默认关闭**；
+       正常生产行程**永远不得**静默进入模拟语义。
+    2. `backend/app/main.py`：给 `POST /api/v1/demo/reset` 加守卫 —— 现状是**无任何 env/flag/auth 守卫**地
+       `DELETE` 52 张表（`services.py:106-157`，含 audit / idempotency / 所有 traveler）。
+       flag 为假时返回 403。**这本身是既有缺陷，同一处顺手收。**
+       注意保留 `stop_autorun()`（`main.py:1664-1671` 注释解释了原因）。
+    3. **唯一新增读端点** `GET /api/v1/demo/scene` → `{demo_mode, scene_start_at, effective_now, evidence_expires_at}`。
+       理由：现在没有任何端点告诉客户端"场景是哪一天"（`execution-clock` 只回设备/冻结钟 + `current_activity_id`），
+       所以横幅与 `todayKey` 只能自己 `new Date()` —— 这是唯一真正的读侧缺口。
+    4. `backend/app/services.py`：**seed 时把冻结证据 TTL 与场景日对齐**（推荐"改数据不改门"，
+       待仲裁确认；见本块末"裁决点"）。
+    外加 `frontend/src/app/V8Experience.tsx`（该文件归你）：常驻可见横幅「模拟体验 / Simulation」
+    + **把 Today 的 `Date.now()`（实测字面量只有 `:1484`）改成消费服务端场景时刻**，
+    即**消掉**墙钟而不是复制它。
+    **硬边界**：
+    - **不得**把 `STALE_RECOMPOSE_REQUIRED` / `STALE_FROZEN_EVIDENCE`（`main.py:4137-4141`、`4420-4428`）
+      改成吃场景钟 —— 那是削弱陈旧证据语义；
+    - **不得全局 freeze 时钟**：`ExecutionClock` 可注入（`execution/clock.py:11-32`），但必须**按 Journey 派生**；
+      全局冻结会连坐并发 e2e、guardian 后台线程（`agent/autorun.py:46-47` 直读 `datetime.now`）与真实用户 `created_at`；
+    - 明确**不要** `advance` / `simulate` / `fake-day` 端点，不要假页面，不要给 `POST /replans` 直连新增调用方；
+    - **模拟 provider 结果永远不得标 LIVE**：只用 `data/mock/` 里的 fixture 对，
+      任何不在 `mobility_matrix.json` 里的 (from,to) 都是 `SYNTHETIC_DEFAULT`、进不了 `HARD_FEASIBLE_QUALITIES`，
+      **自造地点/自造路径 = 立刻踩冻结区**；
+    - 幂等键、单 ACTIVE、C4 保护、provenance/`fact_quality` 全部保持；
+      `reset_all` 的 52 表清单**不含 `web_observations`** ⇒ 跨场景会残留，做证据时要防。
+    **验收**：`GET /demo/scene` 有门；flag 为假时 `demo/reset` 必须 403（给杀得掉的证据）；
+    全量后端 `passed/skipped/failed` + collected，注明解释器。
+    ⚠ 侦察留了一条**静态推断、未实测**：`projection_now` 无 tz 归一化（`main.py:5148` 直接与带 `+08:00` 的
+    `datetime.fromisoformat` 比较，`?now=` 缺偏移 ⇒ naive/aware 比较可能 500）。**先补一条门证实/证伪再依赖它。**
+  status: DISPATCHED@2026-09-20 22:0x
+
+- id: ORD-0059
+  to: e345b9d6
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **Simulation Mode 前端入口（与 ORD-0058 成对，等它的 `GET /demo/scene` 契约落地再动）。**
+    1. `frontend/src/features/setup/JourneyTrialSetup.tsx`：`futureLocalAt()`（`:86-92`）与
+       默认 `T+1 10:00 → T+3 20:00`（`:186-187`）**就是"用户只能建未来日期"的字面门口**。
+       在 `demo_mode` 为真时允许"从今天开始"；**正常模式下这个门口一个字都不许动**。
+    2. 新增一个**小而可见的 scene 面板**（不是 admin 后台，仲裁明令禁止 giant admin panel）：
+       开始场景 / 推进一个活动 / 触发一次中断 / 接受或拒绝 replan / 建一个硬承诺 / provider 降级与恢复 / 重置。
+       **全部走产品正常端点**（完成 `…/activities/{aid}/complete`、跳过 `/skip`、事件 `…/events`
+       （其 `provenance` 默认已是 `SIMULATED`、服务端拒绝客户端伪信任）、replan 走 agent 工具 `request_replan`、
+       accept/reject、bookings/transactions/confirm），**不得**新增前端自造状态机或直接改数组。
+    3. 新文件 `frontend/src/lib/sceneClock.ts`（无主，零冲突）：只消费服务端 `effective_now`，
+       **不得**在前端另算一套时间真值。
+    **边界**：`MapPanel.tsx`、`lib/executionWindow.ts`、`V10LiveExecutionPanel.tsx`、`V12AuthoritativeJourneyPanel.tsx`、
+    `LiveRecovery.tsx`、`V14RecoveryTruthPanel.tsx` 经侦察判定**无需修改**（只渲染 API），不要顺手改；
+    横幅与状态必须由后端 `demo_mode` 驱动，**不许**前端自己判断路径来"假装在模拟"；
+    不得削弱冻结清单；不 force-push、不改写历史。
+    **验收**：390px 亮/暗下横幅持续可见且可读；推进一个活动后屏幕上 Now/Next 的文字**确实变化**
+    （断言读 `innerText`，不读 data 属性）；给一条杀得掉的证据。
+  status: BLOCKED@2026-09-20 22:0x —— 等 ORD-0058 的 `GET /api/v1/demo/scene` 契约先落地（避免两边各发明一套场景时间）
 
 **HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
 - **HJ-P2（承诺型用户）需要真实 booking/commitment 路径**，而仲裁明令"Simulation Mode 可用之后才用它推进生命周期"
