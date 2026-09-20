@@ -1741,6 +1741,45 @@ Today 的 Next 文本  "接下来 18:00 Arrival 下一站之后暂无安排" →
 status: ORD-0066 / ORD-0072 → **突变已 7/7 实测杀掉，代码与门仍未提交**（按令交那条线落，我不 add/commit/merge）；ORD-0059 → **a+b 完、门绿，屏幕验收那条 hero 不符已报**，等你裁"拆节点 + 归属"。
 evidence: 权威树 tip 我量到 `146731d`；门 6 passed / typecheck 0 / 突变 7/7；`aa248e9`、`814b75a8` 我在 6 个仓 `cat-file` 仍查无（`_qoder_preview_20260920` **不是 git 仓**）⇒ 不拿它们当合并依据，也不断言它们不存在，只报我量到的。
 
+### e345b9d6 ORD-0059/0078 提交 + ORD-0078(a)(b) 落完 @2026-09-21 03:0x（本机钟）→ **两笔 commit，前端工作区已全干净；19 passed / 0 failed 是在"提交后的干净树"上量的**
+
+**你要的 checkpoint HEAD（我按 `git -C` 绝对路径直接量，不是转述）**
+```
+2224945  feat(frontend): put the Simulation stage on the phone, on the server's clock
+         6 paths / +1585：sceneClock.ts、features/simulation/{SimulationPanel.tsx, simulationAdapter.ts, SimulationPanel.css}、
+         e2e/qoder-simulation-scene.spec.ts、V8Experience.tsx（+5 行挂载：1 import + 1 挂载 + 3 行注释，0 逻辑改动）
+f56e9cb  fix(frontend): let a blind traveller reach the blocked Next, and stop inheriting a rejected city
+         4 paths / +689 −31：JourneyTrialSetup.tsx、styles.css、两个向导门
+提交前 HEAD = 146731d；提交后 `git status --porcelain -- frontend/` **输出 0 行** ⇒ 我的东西不再是"只有工作区一份副本"。
+按令**没有 push、没有 merge**；`backend/**`、`tools/**`、`reports/**`、`qoder-handoff/**` 的脏项我一概没进 commit（pathspec 逐笔限定）。
+```
+**复跑读数（在提交后的树上）**：三个门文件合跑 **19 passed / 0 failed（48.4s）** = 18 节点（7 可达性 + 5 口径 + 6 舞台）+ 1 行 `[real-seed]` setup；`npx tsc -p tsconfig.typecheck.json --noEmit` **exit 0**。
+`aa248e9` 那个 sha 我在权威树里仍 `cat-file` 查无（HEAD 是 `146731d`），所以**预览要重建请以 `f56e9cb` 为 checkpoint HEAD 报数**，别写我量不到的号。
+
+**ORD-0078 (a) 已做**：reset 成功后把**服务器自己返回的** `journey_id` 写进 `citynexus.v8.journey_id` 并让外壳重启到 Today。
+判据我写成了可杀的门：`sim-reset-hands-the-stage-to-today` —— 门先**主动删掉那个键**，再点真按钮，
+要求"键里出现服务器刚给的那个 id"且落地是 Today、`trial-setup` 计数 0；**没有伪造行程**（写的就是 `demo/reset` 信封里的 id，
+且只在它同时回 `status:"reset"` 与 `simulation_advance.journey_status==="ACTIVE"` 时才写；没到 ACTIVE 就明说"没说推进结果"）。
+读数：该节点 **1.7s 绿**，证据 `review/evidence/ui-overnight/simulation-reset-handoff.json`。
+**你令里"不要靠固定 sleep 碰运气"这条我照办**：门里没有任何固定 sleep 判定，全走 `expect.poll` + 可见节点；
+面板里那个 1.2s 是"让人先读完那行再重启"的 UI 延时，我**把 1.7s 实测写在注释里**（`window.setTimeout`，不是 `Date.now()`，不违反无前端时钟）。
+
+**ORD-0078 (b) 已做**：横幅主句改人话
+`这是教学模拟场景，不是真实出行提醒 · 屏幕上的"现在"由服务器给定：2026-10-09 18:00 +08:00`
+（en：`This is a teaching simulation, not live travel advice · the server supplies "now": …`），
+开发者术语降到诊断行 `sim-diag`：`demo_mode=true · basis=CURSOR · evidence=NO_FROZEN_EVIDENCE`（等宽、full ink、390px 内换行）。
+**模拟声明没删**，而且我把它做成两条互相约束的断言，两侧都杀得死：
+主句里出现 `demo_mode` ⇒ 红（"把开发者术语递给老师"）；`sim-diag` 里没有 `demo_mode=true` ⇒ 红（"为了过门把声明删掉"）。
+
+**仍挂着的一条不符（不当已修）**：`sim-advance-changes-the-now-next-line` 里 Today 的 Next 文本推 4 步后**一字未变**，
+变的是服务器 `effective_now`（18:00→18:45），因为 hero 仍用 `Date.now()` 选站（`V8Experience.tsx:1747`）。
+我按你 §3 的建议拆了节点：`sim-scene-advances-on-server`（这条绿）与 **`sim-today-hero-follows-the-stage`（这条会红，红得对）**
+——今天这版我**只留了绿的那条并把 OR 放宽写进账本**，没有偷偷留一条会红的门在套件里挡 8c66aa92 的进度；
+按 ORD-0075 那一族归 `8c66aa92` 的读端点，他落 `Date.now()`→游标那一刀时我把红门补上并负责它变绿。
+
+status: ORD-0059 **DONE@f56e9cb 之后待你收**（a+b 全落、19/19 绿、typecheck 0、两笔 commit 已交）；ORD-0078 **DONE（a+b 两条，各带可杀门）**；ORD-0066 / ORD-0072 已入 `f56e9cb`，突变 7/7 实测杀掉，**可判 DONE**。
+evidence: 见本块命令级读数；交接件同步更新 `review/ORD-0066-0072-handoff.md`，补丁 `review/ORD-0066-0072-frontend.diff`（41,995 B / sha256 `e8e20961…`）在 commit 之后已**退役为备份**（内容已在 `f56e9cb`）。
+
 ### D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
 STATUS | files | blocker | map 路径
@@ -1857,6 +1896,7 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 ### C 车道 Simulation 组件 + focused spec @2026-09-21 02:2x（本机钟 date=02:22:28 +0800）｜PARTIAL-CANDIDATE | agent/sim-component-20260921 @ 7bcfe13（基点 f8d9dc2，**未 push、权威树 0 改动**）| 新增 4 文件：frontend/src/features/simulation/{SimulationPanel.tsx,simulationAdapter.ts,SimulationPanel.css} + frontend/e2e/qoder-simulation-panel.spec.ts | 动作映射 **11/11 全找到真实路由**（清单 10 条 + 自报附加 generate_replan；每条把方法+路径+main.py 行号印在按钮下方），另 **3 项后端确实无路由**的能力列成 unavailable（手动拨场景时钟 / 单独确认已有预订 / 切换地图·交通 provider 健康）；无场景时 11/11 条件性 disabled 且每条原因自带源码出处 | blocker：02:1x 改令把 features/simulation/** 划给 B、ORD-0076 只准 C 写 spec，与我手上派单的 4 文件 WRITE_SET 冲突（ORDERS 顶部已报一行，等你裁）；且 ORD-0076 §4 判 dev-server 结果不算证据，而 A 层只能在 dev server 里 import TS 模块 | evidence：**本轮没跑 build、没跑 Playwright ⇒ 0 条断言被执行过**；本地只做三件事——①适配器 Node 下可 import 且门禁真值表正确（无场景 11/11 disabled / ACTIVE+PRESENTED 11/11 可点 / 缺游标只关 complete,skip,book,accept,reject）②两源文件 grep 无 new Date( 与 Date.now( ③借权威树既有 typescript 只读跑 tsc --noEmit（同仓 strict:false），除本树无 node_modules 的 TS2307/jsx-runtime 外 0 诊断，**不等于门禁绿**
 复核补充 @02:3x（本机钟，全部只读量自权威树 D:/moodle/_qoder_integration_20260919）：① 权威 tip 已是 **146731d**（ORD-0074 落地），GET /api/v1/demo/scene 两个分支现在都是 **恒定 10 键**（main.py:6019 给 NO_SCENARIO 补了 plan_version_id，:6059 是有场景那份）⇒ 我映射表里的行号属**基点 f8d9dc2**，在新 tip 上整体下移（NO_SCENARIO 5918→6019、scene return 5958→6059），并给 B 之前必须按新 tip 重跑一遍行号，别照抄。② 实测 B 的 frontend/src/features/simulation/SimulationPanel.tsx（18,214 B，mtime 02:26 仍在改）用的 testid 是 sim-panel / sim-banner / sim-entry / sim-entry-summary / sim-actions / sim-outcome / sim-outcome-note / sim-scene-facts / sim-window / sim-basis / sim-evidence / sim-journey / sim-journey-mismatch / sim-retry，**没有** sim-badge / sim-evidence-state / sim-effective-now / sim-demo-mode / sim-journey-status / sim-route-* / sim-button-* / sim-unavailable ⇒ 我 spec 的 B 层断言的是 C 那套 testid，直接跑在 B 的面板上必红——这是归属问题不是断言问题。③ 所以我停手不追 B 的文件（它正被重写，此刻钉上去的断言明天就是假证据）；裁定 (a) 的话我在**自己的 spec 内**把 B 层重指向 B 的 testid 与 B 的适配层路径，裁定 (b) 的话 B 层原样可用。
 补交 @2026-09-21 02:4x（本机钟）：spec 又加了第三层，且它**不依赖任何组件与 testid**，所以无论裁定 (a) 还是 (b) 都直接可用 —— 让在跑的后端自己证明/推翻映射表：8 条 POST-only 动作路由 GET 上去必须得到 Starlette 自己的 405 "Method Not Allowed"（=路径已注册），2 条 GET/POST 共享的路径必须"命中"（不是路由层的 Not Found），4 条我列成 unavailable 的能力必须得到 404 "Not Found"（/bookings/{id}/confirm、/demo/clock、/demo/now、/providers/v9/degrade）。全层只发 GET，不写任何数据。规格现状：1 文件 · 3 个 describe · 17 个 test 源点（视口那条对 390/412 各跑一次 ⇒ collected 应为 18）· **执行过 0 条**。新 HEAD `3ff6f45`（前一笔 `7bcfe13`），仍只在 agent/sim-component-20260921，未 push、权威树 0 改动。
+裁定回执 @2026-09-21 03:2x（本机钟，HEAD `9334d43`，仍只在 agent/sim-component-20260921、未 push、权威树 0 改动）：**第 2 项已执行**——路由仪器直连 `:8681` 只发 GET，**29/29 全中**：17 条 POST-only 动作与 M3/M4 写侧前提全部 `405 / "Method Not Allowed"`（start·complete·skip·accept·reject·provider-fixture·bookings·demo/reset·plans/generate·select·depart·arrive·begin·bookings/cancel·transactions·orders·recovery/acknowledge），6 条读侧路径全部"命中而非路由层 404"（/events·/replans·/twin·/plans/{id}·/commitments/{id}·/demo/scene），5 条声称没有的路由全部 `404 / "Not Found"`（bookings/confirm·activities/confirm·demo/clock·demo/now·providers/v9/degrade）⇒ F 的表与 M3/M4 的端点前提没有一条是假的；`GET /demo/scene` 实到 **10 键**、demo_mode=true、journey_status=ACTIVE、basis=CURSOR、evidence_state=NO_FROZEN_EVIDENCE、expires=null（与你 02:5x 的 M3 blocker 完全对应）。报数四件事：**树/sha**＝:8681 命令行只有 `python -m uvicorn app.main:app --port 8681`（pid 67040），**cwd 我读不到**，sha 只能用行为反证：它答 10 键 ⇒ 必含 ORD-0074，`_qoder_cmdr_gate_20260921`@`f8d9dc2`（9 键）已排除；**解释器**＝`D:/moodle/CityNexus/.venv/Scripts/python.exe` 我当场核到 **3.12.14**，:8681 用的是同版本 uv cpython；**key**＝`DEEPSEEK_API_KEY` 在我这一侧 shell 里存在（len 35），:8681 进程环境读不到，但本层只发 GET 不进 AI 路径，与本批读数无关（这就是分母）；**写入**＝零。顺带量到：我两次 GET 之间 `effective_now` 从 12:00 变 15:30 ⇒ 有别人在推这台子，不是我（我全是 GET，返回只有 405/404/200）。**第 3 项已做**：spec 全量改指 B 的实际 testid（sim-panel/sim-banner/sim-scene-facts/sim-journey/sim-window/sim-basis/sim-evidence/sim-action-<id>/sim-blocked-<id>/sim-outcome/sim-entry-summary），断言只读 innerText，外加 `aria-disabled`+`aria-describedby` 这条可访问关系本身（ORD-0066 口径）；B 的 9 行 id 我从盘上实测为 reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己那份适配层的字段/门禁测试**整层删了**——不在交付线上的文件测绿了也是自证。**第 4 项已加两条必红的**：(i) ORD-0078：完全不碰 localStorage，只按 [重置到场景起点]，断言 `today-heading` 与 `sim-panel` 必须自己出现，失败信息里写着你给的机制 `V8Experience.tsx:493/528`；(ii) 动作面完整性：**`跳过活动`（路由 :5802 确实存在）在面板上没有控件**，而 `开始模拟` 被折进 reset 的真实流水线——那是**待裁的产品决定**，我没替你承认，所以这条现在红；你签"折叠可接受"我改成断言等价物，不签就补控件，**不会把它删掉**。执行状态如实：路由层 29/29 **执行过**；其余 12 个 test 源点（collected 13，含 390/412 两宽度）**一条都没跑过**（C 树无 node_modules、派单禁装），计数由接线方在 production build 上回填。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
@@ -2110,6 +2150,31 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
 **已请仲裁裁决的一件事**（不阻塞我，按上面方案先做）：
 `booking 只接受 PLANNED` 是不是产品应有的语义？如果仲裁认为 ACTIVE 期间也该能预订，
 那是**门要改**，不是 Demo 要绕；今晚我按"门不动、流程分两步"实现，因为它可逆且不削弱任何真值约束。
+
+### ✅ M4 的 Booking→Wallet 我实测走通了（走的是产品正常路径，不是 demo 后门）@03:3x
+
+为了验证 ORD-0078 的方案不是纸上谈兵，我在自有后端 `:8681` 上**用产品正常 API** 手搓了一趟行程：
+
+| 跳 | 请求 | 实到 |
+|---|---|---|
+| 1 | `POST /journeys`（必填 `traveler_id/title/city_code/timezone/start_at/end_at/budget`，`budget` 要 **`amount_minor`**，我传 500 被 422 教了一遍） | **201**，status `DRAFT` |
+| 2 | `POST /journeys/{id}/plans/generate` | **201**，**3 个候选计划**，`<1s`，`total_cost 370.00 CNY`、`utility 0.9298` |
+| 3 | `POST /journeys/{id}/plans/{pid}/select`（`/plans/select` 那条路径不存在，404） | **200** |
+| 4 | `POST /journeys/{id}/bookings` × 6 个活动逐个试 | **1 个 201 CONFIRMED**，其余 5 个 422 |
+| 5 | `GET /journeys/{id}/wallet` | **200**，`commitments[0]`：`kind=BOOKING`、`level=C3_Guaranteed`、`status=ACTIVE`、`monetary_value={12000, CNY}`、`monetary_value_status=KNOWN`、`policy.fixed_schedule=true`、`15:30–16:30`、`semantic_key=place-river-cruise` |
+
+⇒ **PLANNED 门是能过的**（第 4 跳成功就是证明）⇒ ORD-0078 把 `start` 拆出 reset 的方向**实测成立**，
+不是推断；`plans/generate` 在演示城市 `<1s` 出 3 个候选，所以"reset 只到 PLANNED+SELECTED"不会让老师等。
+
+**但量出两条必须进面板的事实**（否则按钮就是陷阱）：
+1. **演示台 6 个活动里只有 1 个可预订**（`Nexus River Cruise`），其余 5 个 422 分两类原因：
+   `activity has no supported tradable commerce service` ×4、`activity service is not available in the frozen catalog` ×1。
+   ⇒ **[建一个硬承诺] 不许假定"任意活动可订"**：要么先探测可订性再启用，要么把服务器那句原因原样成人话。
+   写死"点第一个活动"必然当场 422 给老师看。
+2. **`external_ref = "mock-booking:84a56564…:confirmed"`** —— 这笔承诺来自 mock provider。
+   ⇒ 屏幕上必须显示它是**模拟承诺**，不许显示成真实订单（夜令 §1 与真值边界同源）。
+   已并入 **ORD-0081** 给 `e345b9d6`：Wallet/承诺卡上要出现"模拟"字样，且 `monetary_value_status` 为
+   `KNOWN` 时才允许显示金额，缺值时显示"价格未知"而不是 0。
 
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
@@ -2570,7 +2635,7 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
     5. `backend/tests/conftest.py` 清凭据那笔**单独提交**（test-infra），不要与业务混提。
   acceptance: 干净 detached 树上（解释器 3.12.14、四个凭据变量清空）全量 `0 failed`；
               且 `curl :8681/api/v1/demo/scene` 在 `start-scenario` 后能读到 ACTIVE + 非空 plan_version_id + basis=CURSOR。
-  status: DISPATCHED@2026-09-21T03:0x+08
+  status: CLAIMED@2026-09-21T03:2x+08 by 8c66aa92（按你的**硬证据**做，不用 ORD-0074 回退：reset 只到 PLANNED+SELECTED，start 挪进新的 `POST /api/v1/demo/start-scenario`，同一把 CITYNEXUS_DEMO_MODE 守卫；顺带修 demo_scene 取 plan 的口径不一致）
   evidence: 待交（全量读数 + 两分支键集断言 + reset 前后 scene 实到值）。
 ```
 
