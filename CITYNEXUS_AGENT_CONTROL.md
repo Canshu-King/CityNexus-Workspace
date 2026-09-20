@@ -2094,6 +2094,58 @@ f56e9cb  fix(frontend): ORD-0066(甲) + ORD-0072（4 paths / +689 −31）
 status: ORD-0078 **(a)(b) 现才真是 DONE@602addf**（上一块的 DONE 作废）；ORD-0059 DONE@602addf 待你收；ORD-0066 / ORD-0072 仍在 `f56e9cb`，突变 7/7，可判 DONE。
 evidence: `review/evidence/ui-overnight/simulation-advance.json`（bannerBefore/bannerAfter/heroChanged/outcome）、`simulation-reset-handoff.json`（resetStatus=reset、journeyId=22222222…）、日志 `review/run-run931*.log`。
 
+### e345b9d6 ORD-0081① 实测（**判未达成，我报红**）+ ORD-0070(b) 链审计 + 一个我量不到的 sha @2026-09-21 03:4x（本机钟）
+
+**(1) ORD-0081①「从向导出发、不手工碰 localStorage、按[重置]走到 Today」= 未达成。**
+我写了三臂量具 `frontend/e2e/qoder-reset-from-wizard.spec.ts`（节点 `ord0081-reset-reaches-today-without-hand-seeded-storage`），
+原始读数 `review/evidence/ui-overnight/ord0081-reset-arms.json`：
+```
+wizard（库里没有可解析行程 = 老师真实起点）  controlFound=**false**  before=wizard after=**wizard**  key=null
+stale （行程 id 存在但解析不了 = reset 自己造的态）controlFound=**false**  before=wizard after=**wizard**  key=null
+live  （已在 Today，我上一轮量的就是这个）      controlFound=true     HTTP=200  key=22222222-…  after=**today**
+```
+⇒ **①只有 live 这一臂成立，而 live 不是老师需要被救的那个状态**。原因不是落键逻辑，是**入口挂载位置**：
+`SimulationEntry` 挂在 Hub（Today）的 JSX 里，向导态/滞留态根本没有这块 DOM，所以**没有 [重置] 可点**。
+门现在**正确地红**（红字就是那句结论），我不会把它改绿。
+**给 `814b75a8` 的 3 行配方**（`V8Experience.tsx` 归你，我不动）：在 `setupOpen` 为真的那一支里也挂
+`<SimulationEntry onStageChanged={load} />`（同一组件、同一 `demo/reset` 链），这样向导态就有 [重置]；
+落键逻辑已经在 `SimulationPanel.tsx:179-186`，不需要新写。
+**另：我自己先错报过一次**——第一版臂用固定 `waitForTimeout(3500)` 读屏，把"面板落键后 1.2s 才 reload、壳还在 boot"的中间态读成了 `screenAfter="other"`，
+看起来像新缺陷。改成 `expect.poll(...).toBe("today")` 之后同一臂稳定给 `today`。
+**结论：那是量具太急，不是产品回归**；改法与两次读数都在本块，不藏。
+
+**(2) ORD-0070(b)「三条链是不是都过同一个 envelope wrapper」= 不是，而且现在有两个 envelope、第三条一个都不过。**
+逐条量到（权威树 924461e）：
+```
+V8Experience.tsx:646  searchStayOptions → `v8Request`（V8Experience.tsx:120，:126 `if (!response.ok) throw rejectionReason(...)`）
+                     ⇒ **过 envelope**；retryStaySearch 复用同一函数 ⇒ 也过
+HotelsPanel.tsx:54   `const r = await fetch(experience)`            ⇒ **不过**（无 ok 判）
+HotelsPanel.tsx:63   `await fetch(stays/offers/capture, POST)`      ⇒ **不过**
+HotelsPanel.tsx:64   `await fetch(stay-options/generate, POST)`     ⇒ **不过**（0070 点名的就是它）
+HotelsPanel.tsx:87   select 那一支 **有** `if (!r.ok)` 处理
+```
+⇒ 若 0070 的修法是"让 `HotelsPanel` 也走 `V8Experience` 那个 envelope"，那是**跨文件搬私有 helper**（`v8Request` 是 V8Experience 内的函数）；
+仓库里其实已有**共享的那一个**：`src/api/citynexus.ts:642 requestJson` + `:632 CityNexusApiError(status, body)`（已导出）。
+**建议（不催、不自己动 `8c66aa92` 的文件）**：0070 让 `HotelsPanel` 改用 `cityNexusApi`，别把 `v8Request` 复制成第三个 envelope；
+我自己的 `simulationAdapter` 已经按这个契约写（`CityNexusApiError` 保 status+body，`message_key` 优先取本地文案），可以直接复用。
+
+**(3) `4a86c1d` 我量不到（命令级）**：
+```
+git -C D:/moodle/_qoder_integration_20260919 rev-parse --short HEAD   = **924461e**
+git -C .../CityNexus cat-file -t 4a86c1d      = fatal: Not a valid object name
+git -C _qoder_sim_component_20260921 cat-file -t 4a86c1d = absent（该树 HEAD=3b06a8c，其上是 48f39fa、2449d29，三条都是 test(e2e)）
+git pull --ff-only 在本树报 "no tracking information"（分支 integration/frontend-apple-pass1 没有上游）⇒ **我没 pull 到东西，也没有强推/回退任何人的文件**
+内容核对：C 的工作树 `frontend/src/app/V8Experience.tsx` 里 `today-clock-source`=**0**、`cursorActivity|nextStopIndex`=**0**、
+`MapPanel.tsx` 里 `tripHasNoCoordinates`=**0**，且它 frontend 干净 ⇒ **C 目前落的是"门该断言什么"（2449d29/48f39fa），不是 Hero 实现**。
+⇒ 现在**盘上唯一的 ORD-0082 ①④ 实现是我未提交的工作区件**（`today-clock-source` 2 命中、`tripHasNoCoordinates` 1 命中），
+   我已把它**按 pathspec 存成 patch**：`review/ORD-0082-14-handoff-for-C.diff`，**29,521 B / sha256 `e77711fce3ef7d60…`**，
+   `git apply --check --reverse` 在当前工作区**通过**（=逐字节等于工作区，含 design-tokens 的 `.cn-clock-source` 与两个新 spec）。
+**要 Commander 裁一句**：`V8Experience.tsx` 到底谁写？你说 ②①④ 归 C，但我这棵树里 C 的实现不存在、我的实现未提交；
+要么我把 patch 交 C 后**撤掉我的脏件**（我按令才没动它，撤需要点头，因为它是当前唯一副本），要么我以 3 行挂载补齐 ①。
+```
+status: ORD-0081① **未达成（我报红）**，②③④⑤ 待你复测；ORD-0070 只回了 (b) 审计（按令不动文件）；ORD-0082 ①④ 在盘待归属裁定；全量 e2e 读数跑完追加。
+evidence: `review/evidence/ui-overnight/ord0081-reset-arms.json`、`review/kill-run-ord0066-0072-second.txt`、`review/ORD-0082-14-handoff-for-C.diff`。
+
 ### SESSION=c01d72a3 · D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
 STATUS | files | blocker | map 路径
@@ -4192,6 +4244,35 @@ POST    : 03:58:00  db mtime 03:58:00
 ⇒ **后端侧：`924461e` 通过我的放行判据第一条（全量 0 failed）。**
 **仍然不发车**，因为第二条 `preview HEAD == checkpoint HEAD` 还不成立：
 手机跑 `602addf`、HEAD 是 `924461e`、**B 的英雄区修复仍在工作区未提交**。
+
+### 🔴 commander 读码发现 @2026-09-21 04:0x —— **后端已经三动作了，但面板还停在九动作、两个新端点一个都不认识**
+
+**事实（我 grep 工作区，不是猜）**：
+- `frontend/src/features/simulation/SimulationPanel.tsx` 的 `ActionId` 仍是
+  `reset / advance / event / replan / accept / reject / book / degrade / restore` —— **9 个**；
+- `frontend/src/features/simulation/simulationAdapter.ts` 里
+  `grep "prepare-scenario\|start-scenario"` = **0 命中**；
+- 而权威树后端已经有 `demo/prepare-scenario` 与 `demo/start-scenario` 两个 handler（`924461e`）。
+
+⇒ **后果（直接烧掉演示）**：老师按面板上的 `重置到场景起点`，现在会拿到 **DRAFT + 零计划** 的台子，
+而面板**没有"开始模拟"按钮**去把它推到 PLANNED/ACTIVE ⇒ **台上没有任何可推进的一步**，
+`推进当前活动` 会 disabled 并说"服务器没给进行中的活动"。
+**换句话说：A 的三动作把 M2 从"能演一半"改成了"面板上无路可走"，直到 B 把两个新端点接上。**
+
+**这不是谁的错**：A 按 ORD-0078 改后端（正确），B 正在改英雄区（正确），
+**是我的派单没有把"接口变更要同步到消费方"写成一条明确的依赖**。现在补上。
+
+**给 `e345b9d6` 的补充（ORD-0082 之前先做，它比英雄区更靠前）**：
+面板必须补两个动作，**顺序就是老师按的顺序**：
+1. `开始模拟`（新的）→ `POST /api/v1/demo/prepare-scenario` → 台子变 PLANNED + SELECTED；
+2. `进入执行`（新的）→ `POST /api/v1/demo/start-scenario` → 台子变 ACTIVE + 游标；
+3. 原有 9 个动作保持不动（`重置` 现在只复位，这是对的）。
+两者都受 `DEMO_MODE_REQUIRED` 403 守卫，**后端没通就 disabled 并写明原因**（沿用你已有的做法）。
+**判据（我会亲测）**：手机上一路按 `重置 → 开始模拟 → 进入执行`，
+每一步之后 `推进当前活动` 从 disabled 变可用，且面板顶部"台上行程"显示的状态真的从 DRAFT → PLANNED → ACTIVE。
+
+**这条优先于 ORD-0082 的英雄区时钟**：英雄区是"显示不对"，这条是"根本走不动"。
+（两者都要做；若只能先做一个，先做这条。）
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
