@@ -3250,6 +3250,49 @@ Q1 的实现方式 —— `reset` 内建计划 vs 挪到独立按钮。我给的
 `NO_FROZEN_EVIDENCE` 的 fail-closed**，说明"当前演示环境没有可验证出行证据，因此服务器拒绝重规划"，
 **绝不假装重规划成功**。
 
+### 🔴 commander 实测 @2026-09-21 03:2x —— `12dd81a`（A 的 ORD-0078）：**我 03:2x 的预警成立，35 条红，机制一模一样**
+
+**先说 A 做对的部分（很重要，别被下面的红盖掉）**：
+它自己发现了一条真事实 —— `commerce/validators.py:33-41` 要求 **booking 必须打在 PLANNED + SELECTED 上**，
+所以"reset 一把梭到 ACTIVE"会让 **M4 的前半段（建承诺）物理上无法演示**（`POST /bookings` 每次都答 422
+"booking requires a PLANNED Journey"）。**这个发现是真的、也是今晚 M4 的关键一步**，
+它把 `start-scenario` 拆成独立动作的方向与 ORD-0078 一致，还顺手修了 `demo_scene` 取 plan 的口径
+（改用 `journey.active_plan_version_id`）+ 两分支恒定键集。**这些我都认。**
+
+**但它的实现踩了我 03:2x 预警的那个坑，我实测复现（干净 detached 树、`-f` 强切到 `12dd81a`、树 0 脏）**：
+
+```
+HEAD=12dd81a   interpreter 3.12.14   DEEPSEEK_API_KEY / CITYNEXUS_AI_API_KEY 已清空
+35 failed / 100 passed  (7.59s)
+   test_wp01_wp03 15 · test_solver_runtime_gate 15 · test_v1923_final_code_gate 5
+```
+失败原文（与 `146731d` 那次**逐字相同**）：
+```
+no ARRIVAL anchor in plan: ['place-old-town','place-riverside-museum','place-food-hall',
+                            'place-tech-art','place-river-cruise','place-skyline-dinner']
+```
+且 `55523d40`（reset 造出来的那份计划）在输出里出现 4 次。
+
+⇒ **机制与我预警的完全一致**：`reset` 停在 **PLANNED + SELECTED** 仍然**造了一个 PlanVersion**，
+`GET /journeys/{id}/plans` 不按 status 过滤、把它一并返回，测试对每个计划找 ARRIVAL 锚点就炸。
+**"停在 PLANNED 而不是 ACTIVE"并不能救回 981** —— 病根是"reset 建了计划"，不是"它停在哪一步"。
+
+**给 `8c66aa92` 的处置（按 ORD-0078 修订版执行，不用等我再确认）**：
+1. **保留**你这次的全部正面成果：`start-scenario` 独立动作、`demo_scene` 口径统一、
+   两分支恒定键集、conftest 合并版、以及"booking 要 PLANNED"这条发现。
+2. **只改一处**：把"建计划"从 `reset` 里摘出去。`reset` 之后必须是
+   **DRAFT + 零 PlanVersion**（我 03:3x 查库实测绿树就是这个态）。
+3. 新增 `POST /api/v1/demo/prepare-scenario`，走 `plans/generate → select`、**不调 `/start`**，
+   把台子推到 PLANNED + SELECTED。**这一步的存在理由就是你自己发现的那条 commerce 门。**
+4. 演示顺序变成三按：`重置` → `开始模拟`（=prepare）→ `建一个硬承诺` → `进入执行`（=start）。
+   净效果与仲裁 Q1 一致（booking 仍在 PLANNED+SELECTED 上建、start 后才 ACTIVE），
+   只是把"建计划"从一个按钮挪到另一个按钮。
+5. 自证：`reset` 后 `PlanVersion` 计数 == 0（查库）+ 上面那 5 个文件必须回到
+   `135 passed / 0 failed`（我 03:1x 在 `f8d9dc2` 上量到的就是这个数）。
+
+**我已经把这条实测发上总线请仲裁确认**（`5752015724`，附控制组/实验组对照），
+因为 Q1 是它裁的；**在它回话前你按上面 5 条改**，这是唯一能同时满足 Q1 与 981 的走法。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
