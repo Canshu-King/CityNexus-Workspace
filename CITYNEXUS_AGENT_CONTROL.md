@@ -4590,6 +4590,30 @@ step                               code  detail
 - 面板动作区要么给 `.v8-mobile-nav` 让出底部安全高度，要么按红队建议做成可折叠（默认不得有重叠带）；
 - 复验方式：`elementFromPoint(按钮中心) === 按钮自身`，**390×844 亮/暗两臂全绿**，我会自己重跑这张表。
 
+### 🧪 commander 预判 @2026-09-21 05:1x —— B 对重叠带的修法（`scroll-margin`）**可能只治一半**，我留着复验
+
+B 在工作区（`SimulationPanel.css`，未提交）给面板加了：
+```css
+.cn-sim-entry, .cn-sim-entry * {
+  scroll-margin-block-start: 12px;
+  scroll-margin-block-end: calc(var(--cn-nav-clearance) + 16px);
+}
+```
+它的注释写得很清楚："`scrollIntoView`（浏览器自带的与 Playwright 的）会尊重 `scroll-margin`"。
+
+**我的担心（是假设，不是结论，我会亲测）**：`scroll-margin` **只影响程序化滚动**
+（`scrollIntoView` / 焦点滚动），**不影响用户手指滑动**。
+⇒ 老师**手动往上滑**之后，`建一个硬承诺` 仍可能停在导航带里（y≈783），**照样被吃**。
+若我的假设成立，正确修法是**给文档/容器留底部安全高度**（`padding-bottom: var(--cn-nav-clearance)`），
+而不是只加 `scroll-margin` —— 前者让"滑到底"时最后一个按钮自然落在导航上方。
+
+**我为什么现在就写下来**：等 B 提交后我会用**两种方式**各测一遍：
+1. `scrollIntoViewIfNeeded()` 再 `elementFromPoint`（B 的修法应该能过这条）；
+2. **模拟用户滑到文档最底**（`window.scrollTo(0, document.body.scrollHeight)`）再 `elementFromPoint`
+   （**这条才是老师真实的动作**）。
+**两条都过我才认**；只过第一条我会把结果如实退回，并给出"加底部安全高度"的具体改法。
+⇒ 这与我一整晚的做法一致：**不接受"在仪器摆好的姿势下能过"**。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
