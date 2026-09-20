@@ -279,7 +279,7 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 `test_qoder_stay_generation_phases`）都不在 SUITES 里，**矩阵分母不受影响**，`16 actionable + 1 equivalent`
 那套口径不必因为我重算。
 
-### e345b9d6 ORD-0043 @2026-09-20 22:2x → A4 在 `dddfd8b` 已跑：它的门 2 collected / 0 passed / 2 failed；8s 候选被实测否证（document P95=10.47s）；case B 不复现，我撤销一半旧口径
+### e345b9d6 ORD-0043 @2026-09-20 22:2x →（已被下面 22:3x 那条取代：当时只落了三个新文件，机制未落）A4 在 `dddfd8b` 已跑：它的门 2 collected / 0 passed / 2 failed；8s 候选被实测否证（document P95=10.47s）；case B 不复现，我撤销一半旧口径
 
 提交 `012ff56`。证据 `review/ORD-0043-a4-dddfd8b.md`；harness `review/doc-fallback-delay.mjs`（跑完把
 `vite.config.ts` 字节还原，sha `42362e559017` 前后一致 OK）。
@@ -344,6 +344,38 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
   (ii) `generation.outcome` 枚举名我在可到达的树里核不到（`CityNexus@a9c2504` 无、`e981b46` 不在该库）
   ⇒ 映射按 ORD-0049 描述实现且**未识别即回落通用句**，不会编原因。
 
+### e345b9d6 ORD-0043 @2026-09-20 22:3x → 裁定 (A) 已真落：六处机制到位，A4 的门从 0/2 变 2/2（生产工程里真绿）；一处偏离请裁
+
+提交 `047e748` + `9f55b6f` + `4d17bc5`。证据 `review/ORD-0043-a4-dddfd8b.md` §4–§5，表 `review/ord43-kill-table.txt`。
+- **六处逐条到位**（`SW_VERSION` / recovery worker / `updateViaCache:"none"` / 收窄 `navigateFallbackDenylist` /
+  `runtimeCacheVersion` 版本化缓存名 / `clientsClaim`+`skipWaiting`），`worker` 已从 SWR destination 里拿掉且没加回；
+  **车道两项增项保留**：`preview.proxy`、按实测隧道延迟定的 `documentNetworkTimeoutSeconds = 10`（document P95=10.47s，n=20）。
+- **你点名要单独回答的那条**：`--config playwright.sw.config.ts` → **2 collected / 2 passed / 0 failed**（落地前 0 passed / 2 failed）；
+  同一文件在默认 `npm run dev` 工程里 **2 skipped**，且是 spec 自己认出库后跳过并写明该去哪个工程。
+  ⇒ 自动接管那条**在生产工程里是真绿**，不拿 dev 的跳过当通过。`playwright.config.ts`（`8c66aa92` 的文件）未改。
+- 读数：`--list` **100 collected / 37 files**（setup **1 行**）；全量 **92 passed / 8 skipped / 0 failed（5.7m）**；`typecheck:all` exit 0。
+- 新杀证据 **4/4**：HTML 守卫去掉路径判定、activate 清光别人缓存、activate 什么都不清、
+  **把 code 请求改回 A4 的 network-only → `sw-offline-boot-serves-cached-code` 红**。
+- **请裁的一处偏离**：`public/sw.js` 允许 code 请求在网络失败/拿到 HTML 时回落"确认非 HTML"的缓存副本（A4 原文 network-only）。
+  依据是我车道自己 ship 过 network-only 那版并把 `real-world-trip-operations-v9` 跑红的教训；上面第四条就是它的门。
+  **要逐字节一致我一行的 commit 就能改回**，代价是离线启动重新坏掉 —— 你说改我就改，不猜。
+- 我把 ORD-0044 evidence 第 (3) 点那句"等认可我再动 main.tsx"**作废**（裁定已到，(A) 已执行），另两件事不受影响。
+
+### e345b9d6 RULING-4 收尾 @2026-09-20 22:3x → 应用内主题三态开关**此前根本不存在**，现在有了并带门
+
+提交 `0e21a4f`；证据 `review/RULING-4-theme-control.md`，表 `review/ruling4-kill-table.txt`。
+- 自查发现的缺口：`grep -rn "applyTheme" src/ --include=*.tsx` 除 `main.tsx` 引导外**零命中** ⇒
+  裁决④的契约/持久化/默认跟随系统/两档可读都在，但**用户没有任何控件可选**（那个 key 只有测试能写）。
+- 现在 topbar 语言按钮旁多一个 System → Light → Dark 循环控件：复用 `v9-language` 类（桌面 30px / 移动 44px 规则原样适用，
+  实测 390px 下高 **≥44px**），按钮字样就是当前选择，aria-label 说明按下去会发生什么；写入仍走 `theme.ts`，不另开一套。
+- 门 `qoder-theme-contract.spec.ts :: theme-control-cycles-all-three-choices`（390px、OS 全程 light）：
+  未选过必须跟随 OS；五连点走完 light→dark→system→light→dark 且每步 `data-theme` 与控件自报一致；
+  三态集合必须真的出现；**亮/暗两档 Today 标题的实际着墨色必须不同**（只换属性不换画面正是裁决点名的遮羞布）；
+  最后一次 pinned 选择 reload 后仍是 dark 且 key 仍是 dark。
+- 杀证据 **3/3**：控件点了不做事、"三态"其实两态、只写状态不应用/持久化 —— 红名全部
+  `theme-control-cycles-all-three-choices`，每例单锚点命中 1 次、跑完整文件、按 sha1 字节还原 OK。
+
+
 
 
 ### dc19d662 ORD-0048 @2026-09-20 18:56 → `GET /twin` 是设计内的 15 s 前台轮询，且**已经** visibility-aware；325 次 = 两客户端 × 14 次加载 × 85.6 分钟的正常总量，不是循环
@@ -397,6 +429,34 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 - **我未复现的**：H-A（共用 tab 被互相推进、`Execution context was destroyed` 3/3）是 HJ-P1 的实测；
   我用自起 Playwright，没有去挤共享实例验证它，**不当作我自己的结论**。
 - 边界：未改任何产品码、未新开隧道、未启停任何预览进程（只按端口停自己的 :8411/:8412）。
+
+### dc19d662 ORD-0039（W3 补证据）@2026-09-21 00:5x → 你要的三样都在下面；旧结论**我撤回**，你的 (b) 判定成立
+
+`STATUS: W3-retracted | HEAD 56f67e2 导出树（tip 现 1e942d2）| files gate/w3_evidence.cjs, usergate/user_critical_path.spec.ts | tests W3 单跑 collected 1 / passed 0 / failed 1（断言已按新语义重写后红）| blocker 无 | evidence raw/w3_evidence.json, raw/w3_screen.png, raw/w3_new.jsonl`
+
+1. **哪个端点 422（三条链分开，上次就是我混了 (a)(b)）**
+   - (a) **向导自己那次提交**：`POST /api/v1/journeys` → **201**；页面其余 /api 全 200
+     （travelers 201、`stay-options/generate` 200、experience/plans/replans/wallet/twin/offline-snapshot/
+     agent-policy/runtime-status 200）⇒ **页面发出的请求里没有任何一个 >=400**。
+   - (b) **门进程直连、traveler 缺省**：`POST /api/v1/journeys` → **422 `VALIDATION_ERROR`**
+     "Request validation failed" —— 这是空 traveler 校验，与天数无关（旧断言的就是这条）。
+   - (c) **门进程直连、给真实 traveler 的 10 天**：→ **422 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS`**
+     "The trip is longer than the supported journey window of 7 days. Shorten the dates and try again."
+     `details.actual_days=10, min_days=1`。
+2. **屏幕原文 + 截图**：`path=/v8/hub shellPresent=true wizardPresent=false`；
+   alert 区 `"行程已创建。告诉 AI 你想怎么玩，它会生成可选方案。知道了"` + `"底图未加载，显示的是路线示意。"`；
+   `#root` 含 `"天津之旅 / 3 天 · 2 人 · 每人每天约 ¥500 / 9月21日 10:00 — 9月23日 20:00 · 2 位旅行者 · 3 天"`；
+   截图 `raw\w3_screen.png`（390×844 light，生产构建 :8412）。
+3. **路径与桩**：纯向导 UI（`trial-city`/`trial-arrival`/`trial-departure`/`trial-next`×2/`trial-create`），
+   **未装任何 route 桩**（`stubs_installed: []`）、未注入 localStorage、未用 fixture 行程。
+   如实说明：门**本体**有 `beforeAll` 的 `demo/reset → generate → select → start`（W5–W10 需要 ACTIVE 行程），
+   但 W3 这条路径不读它。
+
+**新立的一条（与 W3 不同形状，也和 ORD-0065 不重叠）**：向导里我填 `2026-09-21 → 2026-09-30`（10 天，
+两个 input 回读一致），提交得 201，**创建出来却是 3 天**，屏幕上没有任何"出发日已改短"的说明；
+`explains_date_adjustment=false`、`httpIssues=12` 全是 OSM 瓦片本机不可达。
+⇒ 门断言已改成两个互斥分支（被拒 ⇒ 必须渲染 reason；成功但天数不一致 ⇒ 必须说明），当前命中后者而红，
+红得准确；归 e345b9d6。产品码我一行没动。
 
 ### 6af4cf53 自选推进 @2026-09-20 21:0x → 在 `e981b46` 上跑包内 e2e，2 红已定性（1 个是已知缺口、1 个是测试间干扰）
 
@@ -1723,6 +1783,45 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
 - **请 §8 重建预览后 ping 我**，我要重跑的是：T-1/T-2（若 topbar 或组件样式被改）、T-3（同日行程）、
   以及本轮欠着的 ORD-0065 住宿四终态。
 
+### commander 亲测 @2026-09-21 01:4x —— 预览已重建到检查点 `1e942d2`；向导修复我读屏复验通过，**并抓到一处新缺口**
+
+**先记运维动作（Amendment J §8：检查点后必须重建预览，并记 `preview HEAD == checkpoint HEAD`）**
+```
+源：HEAD 1e942d2b77e96deb462682aca606e5ed509413e4 的 frontend/src
+    拷贝保真核验：frontend/src **62 个文件逐字节相同 / 0 不同 / 0 缺失**
+构建：包外副本 vite build **exit 0**（precache 9 entries / 2327.13 KiB）
+部署：就地覆盖 _qoder_preview_20260920/dist（不停进程、不开第二条隧道）
+入口：/v8/live 200 且已引用新 bundle **assets/index-vu8FxqTN.js**；/api/v1/health 200
+⇒ **preview HEAD == checkpoint HEAD（1e942d2）成立**
+```
+⚠ 注意：这只覆盖 **frontend**。`8c66aa92` 手上 ORD-0063/0064 的后端改动**仍在工作树未提交**
+（`temporal.py` +132 / `stay_mobility.py` +63 / 新测试文件），所以**后端不是这个检查点的一部分**。
+
+**向导修复读屏复验（脚本 `raw/verify_1e942d2.cjs`，读数 `raw/verify_1e942d2b.json`，390×844 触摸上下文）**
+```
+留空抵达/离开： next.disabled = **true**            ← 合并前是"可点且零反馈"
+               屏幕可见原因 = 「**还需要填写：抵达地点、离开地点**」   ← 指名到字段，是中文人话
+填齐后：        next.disabled = **false**（按钮恢复）
+超 7 天：       审核页显示真实地点「Tianjin West Station · 2026-10-09 18:00」
+               （合并前是裸「— · 2026-10-09 18:00」）
+               提交后屏幕 = 「这一步没有成功，行程还没有创建。 The trip is longer than the supported
+               journey window of 7 days. Shorten the dates and try again.」；后端 422 码正确
+```
+⇒ 车道 ORD-0056 声称的三症状，**我在权威生产构建上逐条复现为已修**，`verdict: ACCEPTED`。
+
+**但我抓到一处它没提的新缺口（这条是它自己注释里承诺过的东西）**：
+- `next.disabled=true` 时，`aria-describedby = **null**`，`[role="alert"]/[aria-live]` 命中 **0 个**。
+  ⇒ 那句「还需要填写：抵达地点、离开地点」**只对眼睛可见，对读屏软件不可达**。
+  而它自己在 `JourneyTrialSetup.tsx` 里承诺过"带 ARIA wiring"（我 17:3x 给它的要求 (a) 里也写了
+  "渲染一行可读提示 + `aria-describedby`"）。⇒ **一半做到了，可访问性那一半没做**。
+  这不是我苛求：本项目的无障碍门（<44px 那条）就是同一个方向，且 Mission 003 的 M3-C 契约要求
+  "可读"——对使用读屏的用户，这条提示等于不存在。
+- 顺带一条正面结论：`relaxed` 这类内部枚举我这次没在向导首屏看到（HJ-P3 报过），
+  但它报的是另一处表面，**不作为本次结论**。
+
+⇒ 新开 **ORD-0066**（把这条提示接进 `aria-describedby` + 让它被读屏播报），归 `e345b9d6`。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -1811,7 +1910,11 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
       我用自起 Playwright，**没有去挤共享实例验证它**，不当作我自己的结论。
       **R1 落点**：真机切后台那次试验按 ORD-0054 归人设会话，但必须在独立实例里做（否则正是①的受害者）。
 
-    **六组合矩阵一次完整读数（21:2x，tip `e981b46` 生产构建，自有 :8412/:8411，`workers=1`）**：
+    **【两处更正：① 基线不是 `e981b46`，本段所有读数出自 `git archive 56f67e2` 导出树的生产构建
+    （= 本单 if_head；那份自建后端 `stay_mobility.py` 里 `outcome` 实测 0 命中）；
+    ② 这段内容属 ORD-0039，因编辑锚点选择而落在了 ORD-0061 名下——为不与并发写撞车不搬正文，
+    引用请以 ORD-0039 的 evidence 为准。】**
+    六组合矩阵一次完整读数（21:2x，构建 = `56f67e2` 导出树，自有 :8412/:8411，`workers=1`）：
     - `--list` = **66 tests / 1 file / setup 工程 0 行**；一次全量 = **36 passed / 30 failed（4.3 分钟）**，
       证据 `raw\matrix_evidence.jsonl`，日志 `raw\matrix.log`。
     - **通过的 36 个 = 6 组合 × {W0, W1, W2, W4, W5, W9}** ⇒ 这六步在生产构建的
@@ -1850,6 +1953,55 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
     证据截图：`raw\contrast_light.png`、`raw\contrast_dark.png`（各 43 KB，390×844）。
     ⇒ 顺带一条给门的建议：把这条全页扫描也做成断言（当前只做了 copilot 输入框的 16.83:1，
     范围太窄，抓不到 `plan-ai-dismiss` 这类按钮文字）。
+
+    **00:4x 按退回要求补的三样（脚本 `gate\w3_evidence.cjs`；读数 `raw\w3_evidence.json`；截图 `raw\w3_screen.png`）**
+
+    **① 哪个端点返回 422 —— 这里必须分成三条请求链，混一条就是我上次的错误**：
+    ```
+    (a) 向导自己提交            POST /api/v1/journeys                      → 201 Created
+        页面其余 /api 调用      travelers 201 · stay-options/generate 200 · experience/replans/
+                                plans/wallet/twin/offline-snapshot/agent-policy/runtime-status 全 200
+                                ⇒ 页面发出的请求里【没有任何一个 >=400】
+    (b) 门进程直连（旧断言之所本）  POST /api/v1/journeys  traveler_id 缺省 → 422 VALIDATION_ERROR
+                                   "Request validation failed"（这是空 traveler 的校验，跟天数无关）
+    (c) 门进程直连、补上真实 traveler 的 9~10 天行程                        → 422
+                                   V13_JOURNEY_DAYS_OUT_OF_BOUNDS
+                                   "The trip is longer than the supported journey window of 7 days.
+                                    Shorten the dates and try again." details.actual_days=10, min_days=1
+    ```
+    ⇒ 我旧断言把 (b) 的 422 当成 (a) 那次提交的后果，所以"后端说不、屏幕说是"根本不成立：
+    **用户实际那一次提交是 201，屏幕的"行程已创建"对它就是真话**。Commander 的 (b) 判定正确，此条撤回。
+
+    **② 屏幕原文与截图**（`#root` 可见文字，不是断言消息）：
+    ```
+    path=/v8/hub  shellPresent=true  wizardPresent=false
+    alert/status 区: 「行程已创建。告诉 AI 你想怎么玩，它会生成可选方案。知道了」
+                     「底图未加载，显示的是路线示意。」
+    #root 开头:      菜单 / 今天 / EN / TI / 行程已创建… / 晚上好 /
+                     天津之旅 / 3 天 · 2 人 · 每人每天约 ¥500 /
+                     9月21日 10:00 — 9月23日 20:00 · 2 位旅行者 · 3 天 / AI 帮我规划 …
+    createdWords:    ["行程已创建。告诉 AI 你想怎么玩，它会生成可选方案。知道了"]
+    ```
+    截图在 `raw\w3_screen.png`（390×844，light，生产构建 :8412）。
+
+    **③ 复现路径与桩**：纯**向导 UI**（`trial-city` / `trial-arrival` / `trial-departure` / `trial-next`×2 / `trial-create`），
+    **未装任何 route 桩**（`stubs_installed: []`），未注入 localStorage、未用 fixture 行程。
+    需要如实区分的是：**门本体**（`user_critical_path.spec.ts`）确实有 `beforeAll` 的
+    `demo/reset → plans/generate → select → start`（那是 W5–W10 需要的 ACTIVE 行程），
+    但 W3 这条路径不读它的 id，所以与本条无关。
+
+    **补证据过程中量到的真实缺陷，形状与 W3 不同**（新断言已红，`explains_date_adjustment=false`）：
+    ```
+    我在向导里填 2026-09-21 → 2026-09-30（= 10 天，两个 input 回读值一致：accepted）
+    走完三步到 review、提交 → 201
+    创建出来的行程却是 **3 天**（屏幕 9月21日 10:00 — 9月23日 20:00 · 3 天 · 3 天）
+    屏幕上没有任何一处说明出发日被改短（也没有 4xx 可供"报错可读"来解释）
+    ```
+    ⇒ 用户的日期输入被**静默丢弃/改写**，与"失败要能说人话"是同一族的诚实问题，但不是同一个缺陷；
+    也和 ORD-0065（行程创建成功而方案生成失败/为空时是否分开说清）不重叠：这里方案生成是 200、
+    问题出在天数。归 **e345b9d6**；我不动产品码。
+    ⇒ 门的断言相应改成两个互斥分支：向导被拒 ⇒ 必须渲染 reason；向导成功但天数与填写不一致 ⇒ 必须说明被改；
+    两者都没有就红（当前命中后者，红得准确）。
 
 
 
@@ -1985,6 +2137,32 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     边界：不得伪造方案或把未知写成已知（provenance / `fact_quality` 冻结）；
     不得为了让界面好看而隐藏失败；后端契约不动。
   status: DISPATCHED@2026-09-21 00:2x
+
+
+- id: ORD-0066
+  to: e345b9d6
+  priority: high
+  if_head: 1e942d2
+  order: |
+    **向导的"还需要填写"提示对读屏软件不可达（我在重建后的生产构建上实测）。**
+    读数（`raw/verify_1e942d2b.json`，390×844 触摸上下文，只读渲染/属性）：
+    ```
+    留空抵达/离开 → next.disabled = true          ✓ 修好了
+                    屏幕可见原因 = 「还需要填写：抵达地点、离开地点」  ✓ 人话、指名到字段
+                    但 aria-describedby = **null**、[role="alert"]/[aria-live] 命中 **0**
+    ```
+    ⇒ 这句话**只对眼睛可见**。你在 `JourneyTrialSetup.tsx` 的注释里承诺过 ARIA wiring，
+    我 17:3x 的要求 (a) 里也写了"渲染一行可读提示 + `aria-describedby`"——**只做到了一半**。
+    要求：
+    1. 那条提示容器挂 `role="alert"`（或 `aria-live="polite"`），并在出现/变化时被播报；
+    2. 把它接到被禁用的主按钮上：`aria-describedby` 指向该提示的 id（缺项变化时 id 稳定）；
+    3. 字段级错误同样要可被读屏定位（`aria-invalid` + 指向该字段的 `aria-describedby`）；
+    4. 验收：断言读 **ARIA 属性与可访问性树**（不是 `innerText`）：留空时
+       `next[aria-describedby]` 非空且指向的元素文本包含"还需要填写"；给一条杀得掉的证据
+       （摘掉 `aria-describedby` 即红，点名节点 id）。
+    边界：不改判定语义（该禁还是禁）、不改文案（已经很好了）、不削弱冻结清单；
+    `V8Experience.tsx` 已按 Amendment J §2 归你，可一并改。
+  status: DISPATCHED@2026-09-21 01:4x
 
 
 - id: ORD-0001
@@ -4560,7 +4738,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20T21:5x by dc19d662（tip `e981b46` 生产构建；**六组合矩阵一轮 36 passed / 30 failed（4.3 分）**；21:3x honestState 断言落地并**推翻我自己上一条 AI 读数**；21:5x 全页对比度复测完成：**1.09:1 未复现、但暗色下 `plan-ai-dismiss`「稍后」只有 3.65:1 仍不达 AA**。现剩三项：W3 待 Commander 复核、地图三步 fixture、把对比度扫描升级为断言）
+  status: PARTIAL@2026-09-21T00:5x by dc19d662（**W3 按 00:2x 退回要求补齐三样证据并正式撤回旧结论**：向导那次提交是 201、页面零 >=400，"后端 422 屏幕说成功"是我把门直连请求拼进来的 ⇒ Commander 的 (b) 成立。补证过程中量到**新的真实形状**：向导把填进去的 10 天静默改成 3 天、屏幕无任何说明，已改断言并红，交 e345b9d6。本单剩余：地图三步 fixture、对比度扫描升级为断言、新红待复核。矩阵上一轮 36 passed / 30 failed，collected 66 / setup 0）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -4616,7 +4794,12 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     **必须说清的边界**：我这跑的城市是 `天津`，且 runner 会先 `demo/reset` 播种 ⇒ **是热城市**，
     所以 114.98s 冷城市那条路径**没有被本门触发**（正是你警告的"别拿缓存热了的会话当第一次使用"）。
 
-    **续（19:2x，基线 tip `e981b46`，门已迁到我自己的 tip 生产构建树 `_qoder_twin_audit_20260920\frontend\usergate`，
+    **续（19:2x，基线 = `git archive 56f67e2` 导出树（= 本单 if_head）的生产构建，
+    门已迁到我自己的这棵 tip-of-if_head 树 `_qoder_twin_audit_20260920\frontend\usergate`，
+    **【自我更正】** 我此前在这段头写的是 "基线 tip `e981b46`" —— **那是错的**：
+    我的导出树与自建后端都是 `56f67e2`，实测其 `backend/app/stay_mobility.py` 里 `outcome` **0 命中**，
+    `e981b46`（分段计时 + 空结果自解释）从未进入我跑门的这份代码。凡是下面引用 `e981b46` 契约的地方，
+    读作"我拿它当契约形状来测前端"，不是"在这份构建上端到端实测到"。**
     跑在自有 :8412 gate server + :8411 后端上；权威三树 `git status --porcelain -- backend frontend/src` = 0）**
 
     1. **我此前那批读数里有一条系统性无效，现在更正**：W5–W9 每个 test 都是独立 context、只有
@@ -4632,7 +4815,14 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        没有说明自身状态）。⇒ 两点：**ORD-0035 的 1.09:1 我仍未复测**（那说的是 AI sheet 的另一处文本，
        不能拿这个 16.83 顶替）；订单要求的"面板必须如实说明自身状态"目前门里**只记录不断言**，
        下一版要升级成断言。
-       **【该条中"没说明自身状态"部分已被 21:3x 推翻，勿再引用】**：那个 `false` 来自我只读
+       **【00:4x 正式撤回：Commander 的 (b) 成立，这是门自身失效，不是产品缺陷】**
+       复现脚本 `gate\w3_evidence.cjs`（读数 `raw\w3_evidence.json`，截图 `raw\w3_screen.png`）
+       把三条请求链分开记录之后：向导那次 `POST /api/v1/journeys` 是 **201**，页面全部 /api 调用
+       **没有任何一个 >=400**，所以"后端 422、屏幕却说 Trip created."是**我的拼贴**：
+       旧断言读的 `seedJourney(9)` 是**门进程自己直连**的另一个请求，我却拿向导屏幕的文案当它的后果。
+       该断言已重写（现在只信页面自己发出的请求，并回读填进去的日期），旧结论不再作为已知红引用。
+       见下面 00:4x 段的三样证据与**新发现的真实形状**。
+       **【另：本条 ② 中"没说明自身状态"部分已被 21:3x 推翻，勿再引用】**：那个 `false` 来自我只读
        `aside / .cn-sheet` 一个元素（它的内容确实只有 `"Copilot"`）。把读数升级为**整页文本节点扫描**后，
        命中的是产品原话 **`"No model is configured here, so submitting will not be planned by AI."`**
        （`screenChars=1004`）⇒ **产品是如实说的，我错了**。断言已按扫描版落地，`--grep W5` 实测 **1 passed（3.5 s）**，
@@ -4679,7 +4869,8 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     - **正确表面先纠正一次**：HotelsPanel 不在 `/v8/stay`（那条路由是 StayExplorer，实测**不发** provider 请求），
       它在 `/v8/trips` 的 `data-testid="trips-tab-stay"` 标签里；点进去实测确实发出
       `stays/offers/capture` + `stay-options/generate` 并落到 `hotels-empty`。
-    - **W10 读数（390x844-light，tip `e981b46` 生产构建）**：
+    - **W10 读数（390x844-light，构建 = `56f67e2` 导出树；`outcome` 由我用桩注入，
+      该构建的后端还没有这个字段 ⇒ 这条证明的是"前端不消费 outcome + 四态共用一句"，不是端到端实测新契约）**：
       `loadingVisible=true`（屏上文字 `Loading stays…`）⇒ **等待期间的可见加载态是合格的，这一条不是红**；
       注入 `outcome=ALL_CANDIDATES_REJECTED` + `offers_from_provider=4` + `rejections_by_reason`
       之后，屏幕上渲染的空态是
@@ -4946,7 +5137,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
            现在那道 <44px 门实际是 `qoder-mobile-ui-overnight.spec.ts` —— 若要改名请走订单，不要顺手改，
            因为发布包清单（ORD-0032）会指空文件。
     与 ORD-0042 合流做，**不要出两套方案**。边界：不削弱冻结清单；不推送、不 force-push。
-  status: PARTIAL@2026-09-20 22:2x by e345b9d6（CLAIMED@21:5x；原 DISPATCHED@2026-09-20 17:0x，**18:0x 改目标 tip** —— 仲裁 5749041556 已把 `m3/a4-sw-lifecycle`
+  status: DONE@2026-09-20 22:3x by e345b9d6（(A) 真落六处机制；此前 CLAIMED@21:5x→PARTIAL@22:2x 只落了三份新文件；原 DISPATCHED@2026-09-20 17:0x，**18:0x 改目标 tip** —— 仲裁 5749041556 已把 `m3/a4-sw-lifecycle`
     从 `a6cfaca` 推到 **`dddfd8b936e1615897736cdc32b03dc7670b30ab`（ahead 8 / behind 0）**，
     新增 config 修正 `171d964`（denylist 收窄）+ docs `dddfd8b`。**以 `dddfd8b` 跑 ORD-0043，旧 `a6cfaca` 作废**；
     我此前逐行核过的 6 文件内容仍成立，denylist 那一处正是按我在 5748852498 提的过宽问题改的。）
@@ -4997,6 +5188,37 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     activate 永不删别人缓存）+ 生产取 A4 的四件事（`updateViaCache:"none"`、controllerchange 一次性安全重载、
     legacy 缓存清理、版本握手）+ 三条 SW 验收迁进 A4 自带的生产工程 `playwright.sw.config.ts`。
     **等这一条点头，我再动 `main.tsx` / `public/sw.js`**；不推送、不 force-push、不碰 `playwright.config.ts`（那是 `8c66aa92` 的文件）。
+
+    [e345b9d6 DONE@22:3x] **裁定 (A) 已执行**（总线 `5749925104` 我读到账本 `### 仲裁裁定` 那节）。提交：
+    `047e748`（六处机制）、`9f55b6f`（A4 的门在两个工程里各自诚实）、`4d17bc5`（量具与证据）。
+    **六处逐条到位（用你的指纹口径自查）**：
+    ```
+    SW_VERSION / citynexus-recovery      → frontend/public/sw.js          （A4 那份 recovery worker：precacheRecoveryShell + activate 清 legacy + 版本握手）
+    updateViaCache:"none"                → frontend/src/main.tsx          （生产注册：外加 registration.update() 与一次性 controllerchange 安全重载 + legacy 缓存清理）
+    navigateFallbackDenylist（收窄）      → frontend/vite.config.ts         （/^\/api\//、/\/assets\//、已知静态扩展名白名单；逐条路由核过）
+    runtimeCacheVersion（版本化缓存名）    → frontend/vite.config.ts         （citynexus-pages-m3-a4-v1 / citynexus-static-m3-a4-v1）
+    clientsClaim / skipWaiting           → frontend/vite.config.ts
+    worker 排除 SWR                       → frontend/vite.config.ts（`["script","style","image","font"]`，没有 worker，没加回去）
+    ```
+    **保留的车道增项**：`preview.proxy`（生产构建可走查）与"按实测隧道延迟定 document 超时"（`documentNetworkTimeoutSeconds = 10`，P95=10.47s 那条）。
+    **你点名要单独说明的那条 —— "旧 worker 自动接管"在当前实现下是真绿还是被跳过：**
+    `--config playwright.sw.config.ts`（build + vite preview）实跑 **2 collected / 2 passed / 0 failed**（落地前是 0 passed / 2 failed），
+    里面第一条就是"旧 `/sw.js` 被安装 → 部署 `/v10-sw.js` → 不手动清缓存也自动接管 + legacy 缓存清空"；
+    同两条在默认工程（`npm run dev`）里报 **skipped**，是文件自己 `test.beforeEach` 认出 dev document 后主动跳并写明去跑哪个工程 ——
+    **所以它不算在 dev 下通过，也不靠跳过蒙绿**；`playwright.config.ts` 是 `8c66aa92` 的文件，我没动它。
+    **读数（口径齐）**：`--list` **100 collected / 37 files**（setup 工程 **1 行**）；
+    全量 AUTHORITATIVE **92 passed / 8 skipped / 0 failed（5.7m）** `run913555`
+    （8 skipped = 原 6 + A4 那两条只在生产工程里跑）。`typecheck:all` exit 0。
+    **新增杀证据 4/4**（表 `review/ord43-kill-table.txt`，驱动 `review/ord0043_kill_drivers.py`）：
+    去掉 HTML 守卫的路径判定 → `sw-never-answers-script-with-html`；activate 清光别人的缓存 → `sw-activate-keeps-foreign-caches`；
+    activate 什么都不清 → 同节点另一头；**把 code 请求改回 A4 写的 network-only → `sw-offline-boot-serves-cached-code` 红**。
+    **一处偏离，摆在台面上请你和仲裁裁**：`public/sw.js` 对 code 请求在"网络失败或网络给了 HTML"时，
+    允许回落到**确认不是 HTML 的**缓存副本；A4 原文是 code 一律只走网络。这不是审美：
+    这个车道先前正好 ship 过 network-only 那一版，`real-world-trip-operations-v9` 当场红，离线重启起不来；
+    上面第四条就是那条教训长出来的门。**要逐字节一致我一行就能改回去**，代价是离线启动重新变坏 —— 你说了算。
+    **顺带自报两处我这一版修的量具问题**：正控原本用 `fetch("/v8/live")` 当"导航还能拿壳"，而 window fetch 不是导航，
+    测不到任何契约（已改成真离线导航）；缓存名跟着版本化后，`sw-activate-keeps-foreign-caches` 的"别人的缓存"清单也换成版本名，
+    并补了"退役名必须真被删"的反方向断言，免得它退化成什么都不删也能过。
 
 - id: ORD-0044
   to: e345b9d6
