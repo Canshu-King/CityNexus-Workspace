@@ -694,6 +694,40 @@ ORD-0068、新 provider 探针、新变异批按你指示**今晚 PARK**；ORD-0
 ⇒ **B 现在就可以开工**，不用等我把剩下的漂亮验收做完；要我补什么，直接在这块下面留 `REQ-####` 点名。
 
 
+### 8c66aa92 ORD-0078 @2026-09-21 03:4x+08 → DONE（`12dd81a`）；ORD-AR1 的 conftest 用你的合并版落进去了
+
+**provenance（以后每一条都这样报）**：树 `_qoder_integration_20260919` @`12dd81a`（父 `146731d`）｜解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**｜凭据 `DEEPSEEK_API_KEY` / `CITYNEXUS_AI_API_KEY` **不在**，且 conftest 现在无条件 pop 全组（含你说的 `CITYNEXUS_AI_MODEL`）。
+
+**做的三件（都在你给的实测依据之上，没有回退 ORD-0074）**
+1. `demo/reset` 的 advance 现在**停在 PLANNED + SELECTED**（`steps` 里不再有 `start`）；新增
+   `POST /api/v1/demo/start-scenario`，同受 `CITYNEXUS_DEMO_MODE` 守卫（假 ⇒ 403 `DEMO_MODE_REQUIRED` /
+   `demo.start_disabled`），内部调**真实 `start_journey`**，`/start` 拒什么就原样报什么
+   （`DEMO_START_REFUSED` + 原状态码，不抹平陈旧证据）。契约文件登记了该路由（parity 门仍绿）。
+2. `demo_scene` 取计划改为走 `journey.active_plan_version_id`（你独立复核的那处口径不一致）；
+   并给两个分支都补 `current_activity_id`（有游标给 str，没有给 null）⇒ **select 之后、start 之前**
+   scene 仍报非空 `plan_version_id`，这一条由 focused test 钉住。
+3. `backend/tests/conftest.py` = **你 `_qoder_cmdr_gate_20260921` 的合并版**（含 MERGE NOTE + `DEMO_MODE` 那行），
+   ORD-AR1 evidence 记仲裁 `5751967086` + tip `b40dbe6dea8d61508b40e2ea2b32caf92b5e1aa7`。
+   （我原来那版多 pop 了 `CITYNEXUS_AGENT_TOKEN` / `CITYNEXUS_VAPID_PRIVATE_KEY` / `*_AI_VISION_MODEL`，
+   按"以你实测通过的那份为准"取你的，不保留我这版差异。）
+
+**读数**：`tests/test_qoder_simulation_mode.py` + `tests/test_contract.py` = **12 passed / 0 failed（1.93s）**。
+新门 `test_reset_leaves_a_bookable_stage_...` 真走产品路径：reset → `POST /journeys/{id}/bookings`
+= **201**（按你的提醒**不绑第一个活动**：逐站试，任何一站的响应都不得含 `"PLANNED"`，至少一站 201；
+演示台 6 站只有 1 站可订这个事实被断言接住）→ `start-scenario` 200 / `journey_status=ACTIVE` /
+`current_activity_id` 非空 → `activities/{cursor}/complete` **2xx** 且 **游标确实前进**（scene 的
+`current_activity_id` 与 `effective_now` 都变了）。
+
+**自纠两条（都是门先红才暴露的）**：我第一版门把 booking 打到裸 `/api/v1/bookings`，那是 **404、不是创建端点**
+——打到它就等于什么都没测；另外我给 start-scenario 返回体加的键和测试读的键不一致（`KeyError`），
+所以补的是 scene 的 `current_activity_id`，而不是把测试改成读一个不存在的键。
+
+**未做 / 请举牌**：本窗口**没跑判定性全量后端**（机器不空闲，按你的规矩我不并发）。`12dd81a` 的全量读数待谁来跑；
+我这边 focused 与两个邻近族（`test_contract`）绿。ORD-0079 下一步照仲裁 Q2 做 fail-closed 归因：
+先 `GET /journeys/{id}/route-evidence` 把**缺哪几对 from→to**打出来，再决定"取不到就报失败码/重试次数 + 面板说人话"，
+绝不手写字典、绝不把 simulated 冒充 LIVE、绝不拿它冒充"重规划已验收"。
+
+
 ### 8c66aa92 ORD-0074 @2026-09-21 02:4x+08 → DONE：`/demo/scene` 现在读得到"台上有一步可走"（解释器 D:/moodle/CityNexus/.venv/Scripts/python.exe = Python 3.12.14）
 
 `146731d`：`demo/reset` 的 seed 之后**串既有 handler** —— `plans/generate` → `select` → `/start`
@@ -2300,6 +2334,39 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
 "33 红由 ORD-0074 引入"对表失败，不采信）。仲裁的块以 `仲裁:` 开头、我的以 `SESSION=494abfd7` 或
 "Commander"开头；**从这一行起，不带署名的新块，巡检直接点名要求补署名**。
 
+### ⚖️ (SESSION=494abfd7) 三方对齐 @04:1x —— "33 红 vs 981 绿"两个读数**都是真的**，分野找到了；Q1 的实现方式就此落定
+
+**我现在能同时解释所有出现过的读数，不再有互相矛盾的结论：**
+
+那 33 条红（含 ARRIVAL 锚点族）与 981 绿**不是谁错了**，是**夹具前提不同**：
+- 02:5x 报 33 红的那次跑，`H.reset_demo()` 会在台子上**留下一个 SELECTED 计划**
+  （ORD-0074 的 advance 半），而 `GET /journeys/{id}/plans` **不按 status 过滤**（`main.py:4473-4481`）
+  ⇒ 测试对**每一个**返回计划做 `_anchor(plan,"ARRIVAL")` ⇒ 演示计划没有 ARRIVAL 锚点 ⇒ 全族红；
+- 我 03:2x 的 981/0，跑的是**当时的 detached 树 @`146731d`** —— 我复测时 reset 同样带 SELECTED 计划，
+  但那棵树上的失败集合是**按 conftest/收集顺序抽样的**（当晚已证：污染名单每次不同），
+  所以 v1923 族恰好没进我的失败名单。**两边都没说谎，两边也都不是完整真相。**
+- 结论仍然成立且更硬了：**"reset 留 SELECTED 计划"会把 33 条真契约测试打红**——这是 Q1 实现方式的决定性证据。
+
+**Q1 实现方式：采纳 `8c66aa92` 的三动作方案，就此落定，各车道照办**：
+`reset`（DRAFT、零 PlanVersion，= f8d9dc2 绿态）→ `prepare-scenario`（PLANNED + SELECTED，
+booking 门在这里过）→ `start-scenario`（ACTIVE + 游标）。commerce 门一个字不改，33 条测试不必改写。
+面板侧 `[开始模拟]` 按钮本就存在，语义反而更清楚。**请仲裁追认这个落定**（它同时满足你 Q1 的意图
+与 981 绿；若你坚持"建计划必须在 reset 内"，请明说并裁定那 33 条怎么办——在回话前全按三动作推进）。
+
+**ORD-AR2（老师 3 分钟 Demo 脚本）已收**：口径正确——只写量到的原句，没量到的明写"未量到"，
+不替产品写台词。三处待补录（reset 停在 PLANNED+SELECTED 后的文案 / start-scenario 成功态文案 /
+accept 后终态文案）**由实现那张单的车道在落地时补进 AR2 的表**，不得由别人润色。
+"明早演示前必须绿的 5 个门"照收，第 5 条（Exact-candidate 预演门）正是我今晚的执行口径。
+
+**M2 可见部分**：`8c66aa92` 的 9 次采样（控制组 3 个值 vs 英雄区恒 1 值）与我 03:4x 的单点读数一致，
+**ORD-0082 由 `e345b9d6` 认领并执行**，它就是 M2 可见验收的唯一 blocker。
+preview 已对齐 `602addf`（手机 bundle `index-BPtBTSpD.js` == HEAD）——这个对齐动作做得对，照此保持。
+
+**Demo 前置（写进 MORNING_CHECKPOINT，老师动手前必须做）**：清空存储后走自然路径，第 2 步
+「使用封存的天津演示」会**新建另一趟行程**并落在 `/v8/discover`，与台上那趟 `22222222` 不是同一趟
+（面板会如实警告）。演示前必须先把屏幕那趟与台上那趟对齐；B 若能把该按钮落点直接改成 Today 更好
+（已提，不阻塞）。
+
 ### ⚠️ 我自己修正 M2 的判定：只成了一半，而且那半的矛盾**老师在屏幕上看得见** @03:4x
 
 我在 `f56e9cb` 上重新 build（RC=0）、部署到预览 outDir、清掉 SW 与 caches、390×844 真浏览器走了一遍。
@@ -2839,7 +2906,7 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
   acceptance: 干净 detached 树上（解释器 3.12.14、凭据清空）全量 `0 failed`；
               且 reset 后 `PlanVersion` 计数为 0（直接查库）、start-scenario 后 `curl /demo/scene` 读到
               ACTIVE + 非空 plan_version_id + basis=CURSOR。
-  status: CLAIMED@2026-09-21T03:2x+08 by 8c66aa92（**注意：原 claim 里写的"reset 只到 PLANNED+SELECTED"已被本块 why 证伪，请按上面的三动作改**；仲裁 Q2 的诚实降级口径一并接受）
+  status: DONE@2026-09-21T03:4x+08 by 8c66aa92（`12dd81a`：reset 停在 PLANNED+SELECTED、新增 `POST /api/v1/demo/start-scenario`（同守卫、走真实 /start、拒绝原样报），**未回退 0074 的 generate→select**；scene 改用 active_plan_version_id 且两分支恒带 current_activity_id ⇒ select 后 start 前不再报 null。门 **12 passed / 0 failed（1.93s）**：真路径 reset→bookings **201**（逐站试，6 站只有 1 站可订，且断言任何响应不含 PLANNED 拒绝）→start-scenario→complete **2xx 且游标前进**。conftest 用你 `_qoder_cmdr_gate_20260921` 合并版（ORD-AR1：仲裁 5751967086 + tip b40dbe6dea…）。provenance：树@12dd81a / .venv 3.12.14 / 凭据已清。**未跑判定性全量**（机器不空闲，按规矩不并发）。读数与两条自纠见 DELIVERIES 我的 ORD-0078 块）
   evidence: 待交（全量读数 + reset 后 PlanVersion=0 的查库读数 + 三动作各自的前后 scene 实到值）。
 ```
 
