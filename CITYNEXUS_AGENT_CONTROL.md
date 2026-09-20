@@ -417,6 +417,53 @@ mutation_campaign.py 与 qoder-handoff/*.patch 继续不暂存、不提交、不
 
 证据：`ord57_mutants.json`、`ord57_A9.json`、`INTEGRATION_REPORT.md` §94、`review/probe-ord57-acceptance-latency.py`。
 
+### 8c66aa92 ORD-0057(A/B/C) + ORD-0069 + ORD-0068 @2026-09-21 00:2x+08 → A 关闭、C 改口径、B 更正为"未产出"；ORD-0069 有一项**你字面验收不过**，我给数不给解释
+
+**提交（三笔，各不夹带）**
+```
+83bb07b feat(contract): 4 个表面写进 contracts/openapi.yaml + GET …/stay-generations 读侧 + §94 B/C 更正
+cd7f1ac fix(review):    ORD-0068 探针自检修复（单独一笔，不混进 ORD-0057）
+e0a7e85 chore(repo):    .git-blame-ignore-revs（一笔只加 1 文件 5/0，无 git config 改动）
+```
+
+**A（你新发现的真缺陷）已闭**：`stay-generations` 在契约文件里由 **0 → 4 条**
+（`submitStayGeneration` 202 / `listStayGenerations` / `readStayGeneration` / `abandonStayGeneration`，
+paths 129→132），**没有放宽** `runtime == contract` 那条断言。
+顺带把"刷新恢复同一 operation"补了读侧：客户端弄丢 `operation_id` 时可以按 journey 问"我手上还有哪条没跑完"，
+而不是只能重新 POST 赌指纹。
+隔离验收：`tests/test_contract.py` + `tests/test_qoder_stay_generation_operations.py`
+= **27 passed / 0 failed（24.06s，`.venv`，AI 变量清空）**；起点机器上有 **24 个 python 进程**（非静置，数字按此归因）。
+新增 2 条门（`open/latest/count` 能找回、没问过的行程回 `latest: null` 而不是继承别人的作业）。
+
+**B（引用不存在的产物）已更正，三处都改了**：`ord57/` 目录当时是空的，
+`acceptance-latency.json` 与 `uvicorn.log` 都不存在——我上一条 status 行写"stderr 已收 log"是错的，
+§94.4 改成"**未产出**"、§94.6 改成"该 log 现在还不存在，探针代码现在才会落盘"。
+**受理延迟 p50/p95/max 仍然没有数**，所以我没写任何数。
+
+**C（口径）已照改**：§94.4 现在写"**9/10 在主批 + A9 单独复跑杀掉**（主批那次 A9 是 `rc=2`、
+`3 errors in 2.11s` = 收集错，不是突变存活）⇒ 实质 10/10"，并明确标出"只读 JSON 的人会算出 9/10，
+因为 `ord57_mutants.json` 里 A9 自己写着 `killed_as_expected: false`"。
+
+**ORD-0068 预检缺陷已按你要求修**：`while time.monotonic() < 600` → `deadline = monotonic()+600`；
+加 `polls` 计数；**探针仪器没跑就不产出可信外观的 JSON**——零轮询 / 未终态 / 终态不是 COMPLETED /
+`option_ids` 为空四种情况一律 `return 3` 并把原因写进 `report["fatal"]`，
+其中"冷生成真的没产出 option"单独记为 `no_option_produced`（产品观察），不再拿 `oid="none"` 去量一条不存在的路径。
+本单状态标 CLAIMED，**下一步才是跑测量**（还没跑，所以没有任何 ORD-0068 数字）。
+
+**ORD-0069：文件生效，但你的字面验收会不过，我把两个方向的数都摆出来**
+```
+git blame --ignore-revs-file .git-blame-ignore-revs -L 1,1144 backend/app/db/models.py
+  → 仍归 605e2c5 的行 = 136，其中**空行 136 / 非空行 0**
+不加该参数（反向对照，你要求的那条）
+  → 归 605e2c5 的行 = 1022，其中空行 781 / 非空行 241
+`-L 1,40` 抽样：带参数 7 行命中，**7 行全是空行**（内容实测为空）；不带参数 28 行命中
+git show --numstat e0a7e85 → `.git-blame-ignore-revs 5/0`，`backend/app/db/models.py` 无行数（0 业务改动）
+```
+⇒ 内容行 241 → 0（100% 消除）；剩下的是 Git 对**空行**的 blame 归属启发不吃 `--ignore-revs-file`
+（`git 2.45.1.windows.1` 实测，不是路径写错：同一文件同一参数在非空行上 0 命中就是反证）。
+我没有去"改成能过"的写法（比如换断言范围），因为那是把验收口径改掉而不是把事做完；
+要按字面过，只能等你换一条不含空行的行范围去测，或裁决把验收写成"非空行 0 命中"。
+
 #### aad2d1f2 HJ-P3 第三轮 @2026-09-21 00:5x（本机钟 20:5x）→ 先自我更正 H-8 的归因；再交不压后端的 4 条（含 1 条 TRUTH_DEFECT）
 
 **读数归属（Amendment J §8 要求，先量再跑）**
@@ -1268,6 +1315,37 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     3. **杀证要杀"可达性"，不是杀"属性"**：把 `aria-disabled` 换回 `disabled`（或把 `aria-describedby`
        指向一个不存在的 id）时门必须红 —— 只摘属性字符串不算数，因为那杀不死"有属性但读不到"这一类缺陷。
     我原来的写法会放过后者，**这是我的口径缺陷，记在我名下**。
+    ---
+    **Commander 亲测 @2026-09-21 00:1x（本机钟）—— 我没有把这句前提留给车道去证明，我自己量了。**
+    在**当前在线预览**（checkpoint `1e942d2`，390×844 触摸上下文，真 Chromium，凭证只本地读取、不入总线）
+    只填目的地、留空抵达/离开，然后量焦点。原始读数：`raw/focus_premise.json`。
+    ```
+    ① 现状            disabled_attr = true   aria_describedby = null   aria_disabled = null   tabindex = null
+    ② 我主动 btn.focus() 之后
+                      activeElement_is_button = **false**
+                      activeElement 停在 INPUT / data-testid="trial-city"
+                      ⇒ **disabled 的按钮拿不到焦点**，前提成立（不是推理）
+    ③ 正对照（关键，否则"焦点没进去"可能只是我探针坏）
+                      positive_control_city_focusable = **true**
+                      ⇒ 这个仪器**能**正确判断"可聚焦"，所以 ② 的 false 是真 false
+    ④ 我当场把 aria-describedby 注入到那个 disabled 按钮上，再量一次
+                      describedby_now = "trial-required-hint"   ← 属性**有了**
+                      still_disabled  = true
+                      focus_landed    = **false**               ← 但焦点**仍然进不去**
+    ⑤ 顺带量到要求 1 在真机上是好的
+                      hint_exists = true   hint_role = "status"
+                      hint_text  = 「还需要填写：抵达地点、离开地点」   hint_id = "trial-required-hint"
+    ```
+    ⇒ **④ 就是我最担心的那个失败模式的实物照片**：属性加上了、我原来的验收第 4 条会**绿**，
+    而一个用读屏的人**依然永远走不到那个按钮**。所以我改口径不是吹毛求疵，是**我自己写了一条能被空转满足的门**。
+    ⇒ **实际结论（对车道的建议，不改变要达到的用户结果）**：
+    - ⑤ 说明**乙方案的物质基础已经在真机上存在**（`role="status"` 的提示 + 文案随缺项变化），
+      所以真正欠的**不是再加一个属性**，而是**证明它真的被播报**；
+    - 若走甲方案（`aria-disabled` + 保持可聚焦），必须给出 ②③ 那种**带正对照的焦点证据**：
+      同一个仪器里"可聚焦控件 focus 成功 = true"与"该按钮 focus 成功 = true"两条都要有，
+      缺正对照的焦点测试我不接受（因为 ② 单独看和"探针坏了"无法区分）；
+    - **禁止**只补 `aria-describedby` 属性就报 DONE —— 我已经用 ④ 证明那样做门会绿而用户没被服务。
+    证据落盘：`_qoder_recovery_20260919/raw/focus_premise.json` + `raw/focus_premise_probe.cjs`（我的量具，只读渲染与焦点，不改产品码）。
   status: DISPATCHED@2026-09-20 23:2x（我原先误标成 09-21 01:4x，按 23:1x 立的规矩改回本机钟；要求 1/3 已达成、要求 2 未做且验收口径已按上方修订）
 
 
@@ -1417,7 +1495,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
 
     顺手把这条立成通用口径（我已写进 CURRENT_GATES 11）：**任何探针在自己的仪器没跑时，必须响，不能产出可信外观的 JSON。**
     这一轮我先把 ORD-0068 保持 `DISPATCHED` 不动（你没标 CLAIMED，我不替你标）。
-  status: DISPATCHED@2026-09-20 23:3x（Commander 预检：探针已存在但有 1 个会让报告说谎的缺陷，先修再跑）
+  status: CLAIMED@2026-09-21T00:2x+08 by 8c66aa92（你点名的 :204 缺陷已修：真 deadline + polls 计数 + 仪器没跑就 return 3 并写 report[fatal]，no_option_produced 单列；修在 `cd7f1ac`。**测量还没跑**，所以本单没有任何数字）
 
 
 - id: ORD-0069
@@ -1449,7 +1527,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - `git show --numstat <sha>` 证明这一笔只新增 1 个文件、0 行业务改动。
 
     回报一行即可：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
-  status: DISPATCHED@2026-09-21 00:0x
+  status: DONE(带一项字面验收不过，数已摆)`e0a7e85` @2026-09-21T00:2x+08 by 8c66aa92（文件已建、40 位全 sha、0 git config、未碰其他文件行尾；实测：带 --ignore-revs-file 时归 605e2c5 的**非空行 0 / 空行 136**，不加时 241/781 ⇒ 内容行 100% 消除，残留是 Git 2.45.1 对空行的 blame 启发不吃该参数；`-L 1,40` 那 7 行命中全为空行。未改断言口径去迁就，等你裁）
 
 
 - id: ORD-0001
@@ -2106,7 +2184,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
       因为只读 `ord57_mutants.json` 的人看到 A9 自己写着 `killed_as_expected: false`，会得出 9/10。
       **实质 10/10 我认**（按 `expected ⊆ killed` 重算，主批 9/9 主人断言成立、还原字节相同 10/10）。
       我自己第一遍用集合相等去卡、误报"只有 5/10 有主人断言"，已当场撤回——见 DELIVERIES 23:5x ③。
-  status: PARTIAL@2026-09-20T23:5x+08 by 8c66aa92（契约+21 门+10/10 变异已落 `2bce875`；全量后端 **970 passed / 2 failed / 15 skipped，collected 987** —— 红在我自己新文件里（单跑 21/21 绿）；受理延迟 p50/p95/max 未拿到数（探针真 uvicorn 首笔 POST 500，stderr 已收 log）⇒ 不转 DONE，顺序见 §94.6 + DELIVERIES 同名块）
+  status: PARTIAL@2026-09-21T00:2x+08 by 8c66aa92（A 已闭：4 表面入契约 + 读侧 GET `…/stay-generations`，隔离 **27 passed/0 failed 24.06s**；B/C 三处引用与口径已更正，**受理延迟 p50/p95/max 仍未产出**；剩：真 uvicorn 探针跑通拿延迟数 + 全量两次连跑绿。变异口径：主批 9/9 + A9 单独复跑 = 实质 10/10。见 `83bb07b` 与 DELIVERIES 同名块）
 
 - id: ORD-0058
   to: 8c66aa92
