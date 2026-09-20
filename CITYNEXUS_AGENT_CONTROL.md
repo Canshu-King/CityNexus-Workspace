@@ -4674,6 +4674,25 @@ centred at **y=783** on 390×844, under the nav" —— 它读了我的账本，
 用我那张 20 点扫描复验（判据：**全部 0 个被吃**，不是"我摆好的那个位置能过"）。
 **在那之前我不认这条已修**。
 
+### 🩺 commander 体检 @2026-09-21 05:5x —— B 的工作区**能编译**（`tsc --noEmit -p tsconfig.check.json` RC=0，0 行输出）
+
+B 这一轮已跑 ~70 分钟（文件在动：`V8Experience.tsx` 05:48、`SimulationPanel.css` 05:42、
+transcript 05:50），所以**不是卡死**。我做了一次便宜的体检，排除"卡在编译错误上反复试"这个可能：
+
+```
+cd frontend && npx tsc --noEmit -p tsconfig.check.json   →  RC=0，输出 0 行
+```
+（注意：本仓**没有** `tsconfig.json`，只有 `tsconfig.check.json` 与 `tsconfig.typecheck.json`；
+用默认 `tsc --noEmit` 会报 TS5058 —— 记一笔，免得下次有人以为"编译挂了"。）
+
+⇒ **B 的当前工作区是类型干净的**，它还在继续改（大概率在跑 e2e 与调那 4 件套：
+英雄区时钟 / 三动作 / 重规划字段 / 面板与导航的重叠）。**我不打断它**。
+
+**我这边继续等，并且准备好列车脚本**：B 一提交，我按顺序做
+① `git log` 取 sha ② 重建 production build ③ 确认 `preview HEAD == checkpoint HEAD`
+④ 跑我的 20 点重叠扫描（判据：全部 0 个被吃）⑤ 手机复测 M2（点推进 → 英雄区文字真的变）
+⑥ 发第一次集成列车 + 截图。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
