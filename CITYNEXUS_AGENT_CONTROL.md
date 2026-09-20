@@ -25,6 +25,23 @@
 **消息例外（只此一条，用完即止）**：机制变更本身需要让车道知道，因此允许**一次性**通知，内容只准是一行
 "以后只看账本，别再等我消息"。**不得**再携带任何任务正文。Commander 于 20:2x 已发出该一次通知，此后一律账本。
 
+### 21:4x 机制更新：用户把"运行中发送方式"从 排队 改成 插话（实测有效，但不改变账本地位）
+
+用户自己改了 Qoder 设置并告知我。我当场实测（向正在 running 的 `e345b9d6` 发一条）：
+- 它的会话历史里出现了 **`assistant:steer-carryover:<messageId>`** 条目 ⇒ **消息确实被注入它当前这一轮**，
+  不再必须等整轮跑完才被看到（此前 `queuedTurnCount=2` 那种"整轮白跑"的失效模式已缓解）；
+- 但**仍在工具调用边界落地**（新发的那条当场读到的还是 `queuedTurnCount=1`），且
+  **对 `ready` / `cold` 的会话完全无效**（它们没有"正在运行的轮"可插）。
+
+⇒ 协议相应放宽/收紧如下，**其余不变**：
+1. **消息现在可以用于催办、预警、唤醒**（例如"停下你正在做的 X，账本里有更高优先的单"），
+   因为它能在同一轮内被看到；
+2. **账本仍然是唯一权威记录面**：任务正文、交付数字、`verdict:` 一律写在 `ORDERS` / `DELIVERIES`，
+   **不得**只在消息里说一遍——消息不留痕、不可审计、换轮即失；
+3. `ready` / `cold` 会话仍需唤醒 ping（插话救不了它们）；
+4. 判"某条消息是否真被看到"的方法：读对方会话里有没有对应的 `steer-carryover` 条目，
+   **不要**凭 `messageSent` 的返回就当送达。
+
 **Commander 自我约束（同一条毛病，我这边也要治）**：我此前多次"发完汇报就结束回合"，导致车道交差我看不见。
 今后：**在回合内持续巡检（读总线、读账本 DELIVERIES、复核数字），只有遇到真正需要用户裁决的不可逆动作才停。**
 
@@ -301,6 +318,50 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 **verifier 与卫生未受影响**（重跑前后一致）：`required 22 / missing 3 / forbidden 0`；
 包 714 文件、与 HEAD 相同 710 / 有意不同 2 / 仅包内 2；真实 key 0 命中。
 
+### 6af4cf53 自选推进 2 @2026-09-20 21:4x → 包已跟上 `576fbf6`，并**独立复验** ORD-0034 那条由红转绿
+
+读账本时发现 tip 已到 **`576fbf624abba32feed19c9771c4efa63ff0a740`**（`8c66aa92` 的
+`fix(frontend): pass the shell's message into the onboarding wizard`，只改
+`V8Experience.tsx` + `INTEGRATION_REPORT.md`），而我的包停在 `e981b46`。已整树重出。
+
+**三数（对齐 `576fbf6`）**：
+- 包 **714 文件**；与 HEAD 相同 **710** / 有意不同 **2** / 仅包内 **2**；清单 714 = 实文件 714
+- `V8Experience.tsx` 包内 = HEAD 版（`50c4bafbcf1d`，含 ORD-0034 的 prop 修复）
+- verifier：`required 22 / missing 3 / forbidden 0 / pass false / exit 1`（3 条仍有主）
+- build（包外副本）：**EXIT=0**，1920 modules，5.80s，**产物 10 条**；日志 `ord32_logs/build_v6.log`
+- 卫生：forbidden 0；node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok* /
+  *.sqlite* / dist / __pycache__ 全 0；真实 key 命中 0（扫 675 文件）
+
+**独立复验 ORD-0034 那条红（不是转述 `8c66aa92` 的自测）**：
+包外副本、权威模式（`:4275→:8275`、一次性 `_ord32i`、ai=disabled）跑
+`qoder-onboarding-failure.spec.ts` → **3 passed / 0 failed（24.9s）**，
+其中 `the named backend reason reaches the onboarding screen` **由红转绿**（2.7s）。
+⇒ 我 21:0x 报的那条"稳定复现的红"**在 `576fbf6` 上已消失**，与当时"归 `8c66aa92` 的 prop 接线、
+待其收口"的判断一致。日志 `ord32_logs/e2e_ord34_verify.log`。
+
+**仍留一条**：`qoder-ack-rendered.spec.ts:292` 的测试间干扰（见上一块）；二分实验 1 已排除
+`product-v8`/`product-hardening`，候选剩 `golden`、`live-autopilot-v5`、`predictive-real-city-v6`，
+新包全 suite 尚未重跑。
+
+**21:5x 收口 —— 两条红都已消失，全 suite 转绿**：
+
+```
+--list      : 87 tests in 34 files
+全 suite    : 81 passed / 6 skipped / 0 failed (4.8m)   [81 含 1 条 real-seed setup 行 ⇒ 净 spec 80]
+```
+对比 21:0x 在 `e981b46` 上的 `79 passed / 6 skipped / 2 failed` ⇒ **+2 passed / −2 failed**。
+两条红的去向：
+1. `qoder-onboarding-failure.spec.ts:109` —— 被 `576fbf6` 的 prop 修复**真正修好**（已单独复验 3 passed）。
+2. `qoder-ack-rendered.spec.ts:292` —— **负载型**，非产品缺陷、也非任何单份 spec 造成：
+   二分实验 1（`product-hardening`+`product-v8`+`ack-rendered`）→ 10 passed；
+   二分实验 2（`golden`+`live-autopilot-v5`+`predictive-real-city-v6`+`ack-rendered`）→ 10 passed
+   （`:292` 566ms 绿）。两次都排除了候选，说明失败来自**全 suite 累计负载下的超时**，
+   机器空闲时不再复现。⇒ 与 `8c66aa92` 的 `ord34-full2`（81/0）互相印证。
+   日志：`ord32_logs/e2e_full_v6.log`、`e2e_prefix2_v5.log`。
+
+**发布包当前状态**（对齐 `576fbf6`）：714 文件 / 与 HEAD 相同 710 / 有意不同 2 / 仅包内 2；
+verifier `required 22 / missing 3 / forbidden 0`；build EXIT=0 产物 10；卫生与真实 key 全 0 命中。
+
 ### 8c66aa92 ORD-0034 的最后一行（我自己挑的活，不抢单）@2026-09-20 21:2x → 具名后端拒绝现在能到创建界面；全套第二次跑 81/0 unexpected
 
 合并进来的 `qoder-onboarding-failure.spec.ts` 有一条自陈故意红的断言，注释点名缺口是
@@ -352,6 +413,44 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 **不要**为了追这一条红把发布包主线 ORD-0032 拖住——它现在只剩"我复算三数"这一步。
 
 
+### commander 亲测 @2026-09-20 21:5x —— 我把预览重建到 `576fbf6`，然后**只读屏幕上的字**验"具名原因"
+
+**先说运维动作**（仲裁在 ORD-0045 里明确我是"本机执行手"，不是记 URL 的人）：
+用包外副本 `_cnx_buildcheck_20260920/frontend`（其 `V8Experience.tsx` blob = `26b3f807…` **与 HEAD 逐字节相同**）
+`vite build` **exit 0 / 5.94s**，产物就地覆盖进 `_qoder_preview_20260920/dist`
+（`mv` 被拒是因为 :4781 正持有该目录 ⇒ 改用就地覆盖，**没有停任何进程、没有开第二条隧道**）。
+公网入口复核：`/v8/live` 200 且已引用新 bundle `assets/index-Ch_N-3sz.js`；`/api/v1/health` 200。
+⇒ **此前人设会话打的是 16:29 的旧构建**，这条我马上通知它们重来。
+
+**验证方法**：真实浏览器（390×844、触摸、`httpCredentials` 走 Basic，**不用 URL 内嵌凭据**），
+断言全部读 `innerText` 渲染文字，不读 data 属性、不读 state。脚本 `raw/verify_named_reason_on_screen.cjs`，
+读数 `raw/verify_named.json`，截图 `raw/verify_576fbf6_*.png`。
+
+**两个 422，屏幕上说的是两句完全不同的话**：
+
+| 场景 | 后端实到 | 屏幕上渲染的文字（原文照抄） |
+|---|---|---|
+| 8 天行程（锚点填齐） | `422 code=V13_JOURNEY_DAYS_OUT_OF_BOUNDS` + `message` | 「这一步没有成功，行程还没有创建。 **The trip is longer than the supported journey window of 7 days. Shorten the dates and try again.**」 |
+| 3 天合法行程，抵达/离开留空 | `422 code=VALIDATION_ERROR` + `details.errors[]` | 「这一步没有成功，行程还没有创建。 **Request validation failed**」 |
+
+⇒ **结论一（好消息，且是我亲见的）**：`576fbf6` 那一行 prop 真的把后端具名原因送到了创建界面 —— 窗口拒绝这一例**用户看得见原因了**。
+⇒ **结论二（仍未闭合）**：锚点留空那一例只显示**通用**文案。根因在前端取值层级：
+`v8Request` 抛的是 `body?.error?.message`（= `"Request validation failed"`），
+而后端把"哪个字段、为什么"放在 `error.details.errors[].loc/msg` —— **一个字都没被读出来**。
+这正是仲裁 A4-1 明令要做的"把 `loc/msg` 映射回对应字段并上屏"，**归 ORD-0044，尚未进权威树**
+（`e345b9d6` 的 `missingStep1` 与字段映射还在它自己树上：权威树实测第 1 步"下一步"在锚点留空时**仍然可点**，
+`nextStillEnabled = true`，且审核页仍显示裸 `— · 2026-10-09 18:00`）。
+⇒ **我把 ORD-0034 的验收范围收窄**：它自己那一条（窗口拒绝的具名原因上屏）**达成**；
+"任意 422 都要指名到字段"**不是它的范围**，仍记在 ORD-0044 名下，**不许因为 0034 绿了就当成 0044 也绿了**。
+
+**结论三（新缺陷，此前没人报）**：**中文界面里显示英文错误文案。**
+应用默认中文（步骤条、按钮、字段名全中文），但两例 422 的 `message` 都是后端硬编码英文。
+用户如果在手机上撞到"The trip is longer than the supported journey window of 7 days…"，
+这属于 M3-C 契约里"可读"的破口 —— 文案该按界面语言给（或走 message key 由前端本地化）。
+⇒ 立 **ORD-0055**：错误文案本地化（后端保持权威、可加 `message_key`，前端按当前 locale 渲染；
+**不得**把翻译写死成第二套真值来源）。
+
+
 **顺手做了一件没立案但该做的事：自证我这三笔后端提交没削弱冻结清单。**
 锚点逐个复核：`HARD_FEASIBLE_QUALITIES` 仍在 `app/replanning/provider_snapshots.py`（2 处命中）、
 `compare_physical_venue()` 仍在 `mock_replan_engine.py:293`（**行号未漂**）、
@@ -362,6 +461,205 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 `test_v1925_c4_interior_truth` + `test_rx4_c4_protection_surface_gate` + `test_e2e_provenance` +
 我新加的两份 = **57 passed / 0 failed（3.73s）**；campaign 的 11 条 SUITES 子集 **ran=139 / 139 passed**；
 全量 **928 / 15 / 0，collected 943**。⇒ 冻结项与矩阵分母都未被我移动，无需为此重跑 campaign。
+
+### aad2d1f2 ORD-0053 HJ-P3 @2026-09-20 19:29 → 急单先报：向导按"三步完成"承诺走到底，创建被 422 打死且**不点名缺哪个字段**（HUMAN_BLOCKER）
+
+**人设+场景**：HJ-P3 赶时间的手机用户，第一次用 CityNexus，想在 1 分钟内看到能用的天津行程。
+**权威 HEAD**：`e981b46`（预览入口 `unexpected-somerset-seekers-neural`，实测 401→200 可用；本机 `tunnel_url.txt` 里是 08:42 的旧地址，已失效，别照抄）。
+**视口+主题**：390×844，亮色（`prefers-color-scheme` 覆写为 light）。
+**动作序列（自然语言）**：打开首页 → 在"目的地"输入"天津" → 抵达/离开地点**故意留空** → 点"下一步"（顺利到第 2 步）→ 默认人数/预算不动，勾"美食" → "下一步"到第 3 步确认页（两栏显示"— · 2026-09-21 10:00"）→ 点"确认创建"。
+**证据**：
+- `D:\moodle\HJ-P3_evidence\07_back_to_step1_after_422.png` —— 第 1 步现场：两个地点框空白、无红边、无"必填"字样，底部只有"这一步没有成功，行程还没有创建。"
+- `D:\moodle\HJ-P3_evidence\06_after_create_t0.png` —— 点完"确认创建"的同一屏，页面不跳、不转圈，只多出同一句无原因的红条。
+- console：`Failed to load resource: the server responded with a status of 422 () @ /api/v1/journeys`
+- 响应体（读自 network 面板，非绕过 UI 调用）：`VALIDATION_ERROR`，
+  `body.arrival_anchor.location` 与 `body.departure_anchor.location` 各一条 `String should have at least 1 character`。
+- DOM 实测：`[data-testid=trial-arrival]` / `trial-departure` 的 `required=false`、无 `aria-required`、无 `aria-invalid`；第 1 步的"下一步"只要目的地非空就 enable。
+**期望的用户可见行为**：要么在第 1 步就把这两格标成必填、不填不让走并说明为什么；要么允许真空并在失败时告诉我"缺抵达地点/缺离开地点"并跳到那一格。
+**实际行为**：前端把我放行 → 后端拒绝 → 界面只说"没有成功"，**既不说是哪一步、也不说是哪一格**。点"返回"回到第 1 步后，红条跟着回来了，但那两格外观与填对时完全一样，没有任何指向。
+**相关 API 序列**：`POST /api/v1/journeys` → 422（两次点击 = 两次 422，请求 #8 / #10；**未落库**，与 ORD-0033 的"被拒不写"一致，这点是对的）。
+**复现率**：**4/4**（每次留空这两格都会撞上；重复点按钮不改变结果）。
+**分类**：`HUMAN_BLOCKER`（附带 `HUMAN_RECOVERY_GAP`：失败后无字段级指路）。
+**疑归（证据之后才写）**：前端向导第 1 步的必填口径。按 `data-testid` 命名（`trial-arrival` / `trial-departure` / `trial-next` / `trial-create`）应在 trial 向导组件内；契约另一侧是 `POST /api/v1/journeys` 的 `arrival_anchor.location` / `departure_anchor.location` schema。具体文件我这条只读车道没去权威树里定位，留给归属车道 grep `trial-arrival` 一步到位。
+**最小回归点建议**：一条手机视口 E2E —— 只填目的地、两格地点留空、点到底，断言**第 1 步就被拦住且屏幕上有指向这两格的文案**；反向断言：若产品决定允许留空，则同一操作必须创建成功。两种口径任选其一，但不能像现在这样"前端说可选、后端说必填"。
+
+**同一条路径上另外两条已确证的（细节随后补全）**：
+1. 目的地输入"天津"后，下面两格标签**仍写"抵达厦门 / 离开厦门"**、placeholder 仍是厦门机场/厦门北站（`01_step1_tianjin_labels_say_xiamen.png`、`07_...png` 两次截图均为厦门）⇒ 标签是硬编码示例，不跟随目的地。
+2. 第 3 步确认页把用户选的中文选项回显成内部英文枚举：**节奏 = relaxed、兴趣 = food**（`05_step3_light.png`，读的是渲染文字）⇒ 中文界面里泄漏枚举键。
+
+**一条我不算缺陷的异常，如实记下**：某次逐字快速输入"天津"后，目的地框曾显示"阿斯图尔沙巴克"（`03_dest_selfrewritten.png`）。我复跑 3 次**未再出现**（1/4），且该词在主 bundle `index-D4-WDMKj.js`（1.1 MB，含"天津""厦门"）里**不存在** ⇒ 它不是产品字典里的值。**19:30 复查时已证实是串扰**：同一个 Playwright 实例里多出了第二个标签页（`(current)` 之外还有一个 CityNexus 页，由 `1a986a24` 打开），说明人设车道共用同一个浏览器与同一个 `page` 句柄，对方的输入会落在当时"当前"的那个页面上。**因此这条不作为产品缺陷上报。**
+⇒ 由此得两条机制性提醒：
+1. **人设车道不能并发共用同一个 Playwright 实例**，否则"输入框自己变了""值被清空"这类观察一律无效（我一度把它记成状态丢失，靠复跑才推翻）。
+2. 那个新增标签页把 **Basic 账号密码明文写进了 URL**（凭据本身不复述 here）。这会进浏览器历史与任何 `Open tabs` 输出 ⇒ 请预览运维车道确认是否有意为之；我这条车道全程用不带凭据的地址。
+
+**已污染范围自查**：本块上报的三条确证缺陷都不依赖"值随时间变化"的观察 —— 422 的成因是 schema 契约（`required=false` 的输入框 vs `min_length=1`），厦门标签与 relaxed/food 回显是页面的静态渲染，重复点击产生的 #8/#10 两个 422 是我在本标签页亲自点出来的。⇒ 这三条不受串扰影响。
+
+### d291c9dc ORD-0051 / HARNESS-RECOVERY-001 @2026-09-20 19:3x（本机钟）→ Harness/EAC 是一条已于 2026-09-15 停止的隔离实验室线，**现在没有任何东西在运行**；其语义修复多已被主树吸收，但无障碍证据的 API/UI 与 6 条合同路由至今为零 ⇒ 推荐 `PORT_TO_QODER_HUMAN_LAB`（实验室原地归档，不删）
+
+报告：`D:\moodle\_qoder_recovery_20260919\reports\HARNESS_RECOVERY_MAP.md`。**全程只读，未执行旧文档里的任何命令。**
+
+**它是什么**：EAC = DeepSeek Harness 桌面客户端自带代理角色，不是我们造的车道。6 轮实验室全在
+**2026-09-15 同一天**（V18 01:23 → V18.2 → V18.3 ValidationLab → V18.3 ExpEng → V19 12:10 → **V19.1 12:55**）。
+
+**最后已知产物**：`D:\moodle\CityNexus-Tools\DSH-EAC-V19.1-AutonomousProductLab-20260915\`
+（报告 12:50 / manifest 12:55）+ zip `CityNexus-DSH-EAC-V19.1-…zip` 1,835,523 B；
+磁盘上最后被触碰的 EAC 东西 = 评审子集 `D:\moodle\_v191_eac_reference_20260915\` **13:11**。
+**此后本地零 EAC 产物**。**子集不是全树**：reference 的 `lab/runtime/backend` 实测 **2 文件**，原工作区 **279**（frontend 22 vs 92）。
+
+**实际完成（我亲读原始输出，不是读它的报告）**：`33 passed in 6.57s`、Playwright **`7 passed (8.7s)` 逐条具名含 axe**、
+`tsc_exit=0` + `vite 46 modules build_exit=0` + PWA `precache 5 entries`、bundle 8 文件 **330,337 / gzip 96,842**、
+8 条 shadow flows **36,850 B 且仅 1 条 PASS（无伪造通过）**、6 个真 png、5 个 patch **302,029 B**。
+**三条分母必须挂上**：① 5×`APPLY_OK` 是在**自带 `.git` 的 `patchtest\` 一次性副本**上跑的，从未对主线验证；
+② `7/7` 打在 **46 模块 shadow reference app** 上，按双轴口径**不是产品证据**；③ `33` 是聚焦集不是回归。
+**我排除的假证据**：runtime 里 `CURRENT_STATUS/BLOCKERS/TEST_RESULTS`（写着"429 passed"）mtime **09:29/09:46，早于 12:20 快照**，
+是**继承的 V18.3 主树文档**；原工作区 `reports\` **实测为空**。
+
+**还能不能用（不粉饰）**：客户端**在且可启动**（`C:\DSH-EAC\dsh-eac-shell.exe` 10,323,968 B + 两处 `.lnk` →
+同一路径，`guard/state.json lastGood 2026-09-18T06:12Z`，`.dshw-usage.json` 余额 **1.77 CNY**），
+但**没有任何进程**（`tasklist` 匹配 `dsh|deepseek|hermes` = 空）、**影子端口 8052/4202 无监听**
+（8788 retry_proxy 与 8000 在听，与 EAC 无关）。**复跑不成立**：5 个锚点里 **4 个 sha1 已变**
+（`main.py 8dd4a10b 363,366 → 6676e638 404,876 B`；`capabilities.py 15,283 → 41,113`；`schemas.py`；
+`feasibility.py 31,773 → 40,032`；仅 `citynexus.ts 4917f781 30,604 B` 未变），
+且 `lab` 的 `node_modules` **实测是指向主树的 symlink** ⇒ 它读的是今天的依赖树，与自己的快照不同源。
+
+**已被取代/吸收（逐条到文件:行）**：P0 导入修复 → `main.py:154-158` 已从 `app.execution.traveler_twin` 导入
+（定义 `traveler_twin.py:160`）；HARD 不可降级 → `capabilities.py:859-862`；重复合并 → `canonicalize_capabilities:832-844`；
+四态语义 → `capabilities.py:47-50`；provider tag bridge → `feasibility.py:284-296`（保留 `route_step_free*`）；
+来源模式纪律 → 已上升为产品契约（"**静默替换本身就是要修的对象**"那条）；viewport/axe/防伪造 → 产品树 **12** 份 e2e +
+突变矩阵 `16 killed / 0 survived`。`git log` 匹配 `eac|v19.1|accessibility` = **0 笔** ⇒ 5 个 patch 一个都没进。
+
+**至今仍然成立（⇒ 请据此立单，`KNOWN_FAILURES / OPEN` 六条里没有它们）**：
+1. **A11Y 有语义无界面**：`backend/app/integrations/accessibility/` **不存在**，`frontend/src` 对
+   `NEEDS_LIVE_EVIDENCE` / `ACCESSIBILITY_VERIFIED` / `accessibility-evidence` / `capability-plan-impact` **0 文件命中**
+   ⇒ 今天没有任何用户能在屏幕上看见无障碍证据。
+2. **合同缺口 6 条**：`main.py` 静态 **138** 装饰器（**131** 带 `/api/v1`）vs spec **129** paths；
+   EAC 报的 10 条里 **4 条主树自 9-15 后自行补上（124→129）**，**6 条至今不在**
+   （catalog / audit / extract / places·journeys 的 accessibility-evidence / journeys capability-plan-impact），
+   而 `frontend/src/generated/api.ts` **由该 spec 派生** ⇒ 漂移直接进前端类型。
+3. **我否证了 EAC 自己的一条量具错误**（也被交接文档当事实复述）："checked-in spec 缺 `/api/v1` 前缀"**不成立** ——
+   快照版与当前版都写着 `servers: - url: …/api/v1`，前缀由 `servers` 承载。但同一份 `contract_drift.json` 的
+   **缺失路由是真的**：我用**它自己快照里那份 spec** 前缀归一复查，`0/10 present`。⇒ "134 vs 124" 须读作
+   **10 条内容缺口**，不是"前缀 + 10 条"。本轮**未启动后端**，故无今日运行时 path 数，静态装饰数不等价于运行时数。
+4. **junction 风险此刻仍在磁盘上**：`CityNexus-Tools\DSH-EAC-V19.1-…\node_modules` → symlink 进主树，
+   同目录还有自带 `.git` 的 `lab\runtime` 与 `patchtest` ⇒ **任何清旧目录动作都会顺 symlink 吃掉 `CityNexus\frontend\node_modules`（D-7 现场复现条件未消除）**。
+
+**推荐：`PORT_TO_QODER_HUMAN_LAB`**（不 `REACTIVATE`、不纯 `ARCHIVE`）。理由：语义贡献已吸收，重跑等于重新测完成的活，
+且基线不可信 + 靠 symlink 寄生主树 + 证据只打在 shadow app 上；而额度 1.77 CNY、泄露 key 仍待吊销
+（`HUMAN_ATTENTION_REQUIRED #1`）⇒ 不该把新一轮花费压在未吊销凭据上。纯归档会丢掉上面 4 条未决。
+移植 4 步（都不需要跑 harness）：P-1 三条证据纪律进 HJ-P 协议（`UNKNOWN≠满足` / 三来源模式可见标签且 live 失败不回填 fixture /
+名字必须等于真值来源）；P-2 立 `A11Y-EVIDENCE-UI-MISSING`（先裁归属，这是产品能力不是量具）；
+P-3 合同门重生成时以 `evidence\api_contract.json`（134 paths 全带前缀）作历史对照并**同时报两侧分母**；
+P-4 三份副本一份不删，原目录内落 `ARCHIVED_REFERENCE_README.md` 写明 symlink 禁令与"子集非全树"。
+
+**我没做**：未改任何产品文件、未建/切分支、未 push、未 `git apply`（含 `--check`）、未启动后端（避免新建 DB/WAL）、
+未启动 DSH/EAC 客户端、未跑旧 artifact 里的任何命令、未删任何东西、未新建 junction/symlink、未读凭据值。
+
+### 848847ed ORD-0050 · simulation-scout SIMULATION_REUSE_MAP @本机钟 2026-09-20 19:4x
+
+一句话结论：**执行侧的写能力 100% 已存在（新增写端点 0 个）**；真正缺的只有两样——
+场景时刻只有一个**读侧**缝（`GET /twin?now=`）而 Today 屏在自己用 `Date.now()`，以及场景重置只有一把删 52 张表的 global 锤。
+调研面 = `D:\moodle\_qoder_integration_20260919` @ HEAD `e981b46`。
+⚠ 引用纪律：所有行号取自 **live 文件**；`review/**/backend/app/main.py` 等归档副本会给出别的行号，勿引用。
+
+#### 问 1：可直接复用的端点/函数（逐项 文件:行）
+
+| 动作 | 现成入口 | 关键守卫/语义 |
+|---|---|---|
+| 完成一个活动 | `POST /api/v1/journeys/{id}/activities/{aid}/complete` → `complete_activity` `main.py:5483-5487` | 游标身份 409 `main.py:5494`；`IN_PROGRESS` 前驱 + pre-V12 兼容边界 `5497-5506`；末活动 → journey `COMPLETED` + `learn_from_journey` `5530-5535`、`5556-5557` |
+| 推进到下一个 | **无独立端点，也不需要**：complete/skip 各自推进游标 | `main.py:5536-5538` / `5619-5620`（取 `sequence_no` 之后首个非终态）并补记 `ACTIVITY_STARTED`(SYSTEM) |
+| 跳过 | `…/{aid}/skip` → `skip_activity` `main.py:5563-5567` | C3/C4 保护 `5581-5592` → `PROTECTED_COMMITMENT_CANNOT_BE_SKIPPED`；authoritative locked 同处 |
+| 中间态 depart/arrive/begin | `main.py:5468 / 5473 / 5478`，共用 `_transition_activity_state` `main.py:5393` | 前驱图 `5400-5404`；三重 409 `5406-5412` |
+| 触发事件 | `POST /api/v1/journeys/{id}/events` → `create_journey_event` `main.py:5682` | `provenance` 默认 **`SIMULATED`**（`schemas.py:452-454`）；服务端拒绝客户端伪信任 `5687-5688`；`provider_key` 服务器指派 `demo-simulator` `5689-5691`；`occurred_at` 客户端可给 `5709` ⇒ **"模拟输入且如实标"这条原则已有现成端点** |
+| 生成 replan 提案 | `POST /api/v1/journeys/{id}/replans` → `generate_replan` `main.py:6579-6587` | 必须有 actionable trigger event `6592-6600`；已被 ACCEPT 的事件拒收 `6601-6608`；幂等 `6610-6633`；C4 锚装配 `6638-6648`。等价 agent 工具 `request_replan`：`agent/gateway.py:292`（注册）/ `:471` |
+| 接受 replan | `POST /api/v1/replans/{id}/accept` → `accept_replan` `main.py:8713` → `_accept_replan_impl` `main.py:8825` | 单 ACTIVE 原子换 `_switch_active_plan_atomically` `main.py:8722-8760`；C4 重映射 fail-closed `main.py:9087-9100`；base 计划陈旧 409 `main.py:8989-8995` |
+| 拒绝 replan | `POST /api/v1/replans/{id}/reject` → `reject_replan` `main.py:9185-9186` | 幂等（已 REJECTED 直接返回）`9188-9189`；非 PRESENTED 拒 `9190` |
+| 硬承诺（booking） | `POST /api/v1/journeys/{id}/bookings` `main.py:10053` → `create_booking` `commerce/service_impl.py:223` | CONFIRMED 才写 Commitment `service_impl.py:296-313`，level 由 source-strength rank 决定；provider 仅 `mock-booking`（`main.py:4887-4890`） |
+| 硬承诺（payment） | `POST /api/v1/journeys/{id}/transactions` `main.py:10157` → `create_transaction` `service_impl.py:488` | 幂等唯一约束 `models.py:631,641`；`_mock_payment_provider` `main.py:4893-4896` |
+| 硬承诺（confirmation，C4） | `POST /api/v1/journeys/{id}/inbox/{draft}/confirm` `main.py:3424` → `confirm_reservation_draft` `operations/v9.py:986` | 写 Booking + **`level="C4_Anchored"`** `v9.py:1071-1076`；重复 confirmation_ref 拒 `main.py:3435-3436` |
+| 取消承诺 | `POST /api/v1/bookings/{id}/cancel` `main.py:10093` → `cancel_booking` `service_impl.py:734` | 同步把 commitment 置 CANCELLED `service_impl.py:773-779` |
+| 读回闭环 | `GET /twin` `main.py:5643`、`GET /wallet` `main.py:3499`、`GET /replans` `main.py:8693`、`GET /events` `main.py:5755`、`GET /history` `main.py:5804`、`GET /agent-feed` `main.py:5910` | — |
+| 重置场景 | **只有** `POST /api/v1/demo/reset` `main.py:1663` → `stop_autorun()` + `seed_demo` `services.py:167` → `reset_all` `services.py:104-160` | 见问 4；**无任何守卫** |
+
+**整链已有两套现成驱动（本图最重要的一条）**：
+- `frontend/src/demo/goldenScenario.ts:32-71` `bootstrapGoldenScenario()`：reset→generate→select→**book→capture**→`startJourney`→循环 `completeActivity` 把游标推到 Tech Art；`:91-115` `injectClosureAndLoadCandidates()`：closure event(带 `occurred_at`)→`request_replan`→`listReplans`；`:73-90` `reconnectGoldenScenario()` 场景续用。
+  ⇒ **Simulation Mode 的骨架已经在产品仓库里，只是只挂在 `/legacy`**（`main.tsx:1659-1664`：`path.startsWith("/legacy")` 才进 LegacyApp，否则 `V8Experience`）。
+- `_autopilot_flow.py:30-105`（根目录脚本）纯公共 HTTP：demo/reset→generate→select→bookings→transactions→start→agent-policy→mission→autopilot/start→**`guardian/provider-fixture {"state":"DISRUPTED"}`**→轮询 status。⇒ 事件/信号也可由 per-Journey 的装置注入（`agent/signal_pipeline.py:122-147` `set_fixture_state`，持久表 + 审计），不必新写端点。
+
+#### 问 2：现在**只**被测试/dev 脚本用（调用方证据；`NO src caller` = 我 grep 过 `frontend/src` 无果）
+
+- 只在 `/legacy` 才被"真实 UI"用到 ⇒ 产品入口(V8)下等同测试专用：
+  `?now=` 投影时刻（`citynexus.ts:761-764` ← 仅 `main.tsx:836`）；`createClosureEvent`（← `goldenScenario.ts:96`）；
+  `resetDemo`（← `goldenScenario.ts:33`，而它在 `main.tsx:202,205` 被 boot 调用）；**`rejectReplan`**（`citynexus.ts:1070` ← 仅 `main.tsx:936`；V8 只有 accept：`LiveRecovery.tsx:225`、`V14RecoveryTruthPanel.tsx:69`）。
+- `POST …/{aid}/skip`：**NO src caller**。TS 联合类型里有 `"skip"`（`v12Authoritative.ts:86`）但零调用点；打它的只有 `test_v13_integrity.py:348,805`、`test_v7_traveler_twin.py:76,89`、`tests/stateful/test_journey_truth_state_machine.py:316`。
+- `POST …/replans`（直连 generate）：包装器 `citynexus.ts:1045-1055` **全仓 0 调用**；UI 与 e2e 一律走 agent 工具（`goldenScenario.ts:101`、`e2e/golden.spec.ts:115-119`）。后端 31 个测试文件直连。
+- `GET /api/v1/replans/{proposal_id}` `main.py:8706`：除 `contracts/openapi.yaml:1092` 外 **无测试、无 src 调用**（是否有意保留，我不裁定）。
+- `POST …/orders` `main.py:10120`：仅 `test_wp04_endpoints.py:162,191`。
+- `POST /api/v1/bookings/{id}/cancel` `main.py:10093`：仅 `test_wp04_endpoints.py:338`。
+- `GET /api/v1/commitments/{id}` `main.py:10213`：仅 `test_wp04_endpoints.py:58,88,125,146,195,207,340`。
+- `POST …/guardian/signal-fixture` `main.py:1283`：与 `provider-fixture` 叠在**同一个 handler**（`1278-1290` 两个装饰器一个函数），全仓**无任何调用方、无测试**。
+- `GET …/wallet` `main.py:3499`：src 有（`V8Experience.tsx:367`），但 **e2e 全是 `page.route` 桩**（`qoder-live-structure.spec.ts:155,334`、`qoder-budget-rendered.spec.ts:162`、`qoder-ack-rendered.spec.ts:174`），**后端测试 0 命中**。⇒ 线索：Wallet 从未被真后端跑通过，模拟闭环要拿它当验收面而不是当已知量。
+- 产品内**确有**入口（勿重复造）：depart/arrive/begin/complete 走 `V12AuthoritativeJourneyPanel.tsx:82`（挂在 V8 路由 `authoritative`/label "Recovery"，`v8Routes.ts:10`、`V8Experience.tsx:2013`）；trip-studio preview/accept 走 `V12TripStudioPanel.tsx:24-49`。
+- 复用坑（供派单参考）：`backend/tests/v191_harness.py`（`reset_demo:75`/`post_event:190`/`request_replan:196`/`seed_c4_commitment:245`）**全仓无人 import**；`backend/` 下**没有 conftest.py**，"ACTIVE journey + 走完执行"是各测试文件复制粘贴（最干净：`test_backend_connected_golden_contract.py:13-56`）。
+
+#### 问 3：建议最小写集 + 与车道归属的冲突
+
+backend（4 个，全部 `8c66aa92` 所有）：
+1. `backend/app/core/config.py` —— `CITYNEXUS_DEMO_MODE` **全仓 0 命中**（连 `.env.example` 都没有），确认是全新开关。
+2. `backend/app/main.py` —— `demo/reset` 加守卫（+ 若走问 4 的方案才加 scene 端点）。
+3. `backend/app/services.py` —— 场景日期/TTL 对齐（见问 5 硬墙①）。
+4. `backend/app/execution/clock.py`（+ 一个按 Journey 派生的解析）—— **仅当**选"服务端场景钟"。
+
+frontend（2 + 1 新）：
+5. `frontend/src/app/V8Experience.tsx` —— 常驻"模拟体验"横幅 + 把 Today 的 `Date.now()` 换成服务端场景时刻（`1484/1490/1505/1516`）。**该文件当前工作树已脏**（`git status --porcelain` = `M`，ORD-0034 的 `message={message}` prop 在 `:798-804`），是全树唯一脏的前端文件。
+6. `frontend/src/features/setup/JourneyTrialSetup.tsx` —— `:86-92 futureLocalAt()` + `:186-187` 默认 `T+1 10:00 → T+3 20:00`，**这就是"只能建未来日期"的那道门口**。
+7. 新文件：一个 scene 面板 + `frontend/src/lib/sceneClock.ts` —— 无主，零冲突。
+
+**不需要改（已验证只渲染 API）**：`MapPanel.tsx`、`lib/executionWindow.ts`、`V10LiveExecutionPanel.tsx`、`V12AuthoritativeJourneyPanel.tsx`、`LiveRecovery.tsx`、`V14RecoveryTruthPanel.tsx`、`TripItinerary.tsx`、`ActivityDetail.tsx`、`api/{citynexus,v10Execution,v12Authoritative}.ts`、`generated/api.ts`。
+
+冲突（**任务书的一处前提与账本现状不一致，先纠正**）：
+- 任务书写"`MapPanel.tsx` 与向导相关文件归 `e345b9d6`"。账本 ACTIVE 的 `ORD-REASSIGN-003`（**账本 2821-2837**）把 **ORD-0037 的 `MapPanel.tsx` 从 `e345b9d6` 改派给 `8c66aa92`**，`e345b9d6` 自己也登记"改派后一个字没动"（账本 2975/2977）。⇒ 好消息：本图判定 **`MapPanel.tsx` 无需写**，这个冲突自动消解；`JourneyTrialSetup.tsx` 确在 `e345b9d6` write-set（账本 516、1339）。
+- `main.tsx` / `vite.config.ts` / `public/sw.js` 现归 **`e345b9d6`**（同一条改派第一行）。⇒ **横幅若挂全局入口，落点是 e345b9d6 的地盘，别顺手改 `main.tsx`**；建议把横幅做成 V8 壳层内的组件（`V8Experience.tsx`，`8c66aa92`）。
+- 后端 + 权威树 = `8c66aa92`；红队/证据 = `dc19d662`（新增门/规格只写测试侧）；发布包 = `6af4cf53`（不得改生产码，账本 FILE_OWNERSHIP）。
+- **本会话期间 `8c66aa92` 已自行开 `ORD-0054`**（在 `e981b46` 新分支实现最小写集，附 8 条硬条件）。⇒ 归属已有人占，**我不写码，本图交给它当输入**，避免双写。
+
+#### 问 4：真正必要的新 API 面（宁少勿多）
+
+- **新增写端点：0 个。** 事件/replan/accept/reject/完成/跳过/承诺全部现成（问 1）。
+- 必要 ①（读侧，1 个）：`GET /api/v1/demo/scene` 返回 `{demo_mode, scene_start_at, effective_now, evidence_expires_at}`。
+  理由：**今天没有任何端点告诉客户端"场景是哪一天"**（`execution-clock` `main.py:3382-3392` 只回设备/冻结钟 + `current_activity_id`），所以横幅与 `todayKey` 只能自己 `new Date()` —— 这是唯一真正的读侧缺口。
+- 必要 ②（不是新端点，是加门）：`demo/reset` 在 `CITYNEXUS_DEMO_MODE` 为假时 403。现状是**无 env/flag/auth 任何守卫**地 `DELETE` 全表（`services.py:106-157`，52 张表，含 audit/idempotency/所有 traveler）。这本身是既有缺陷，同一处顺手收。
+- 可选（**我建议先不做**）：`POST /journeys/{id}/scene/reset`（单 Journey 退回未执行）。`demo/reset` 太重（全库）、`PATCH /journeys/{id}`（`main.py:3793`）只能改 title/日期/预算、无 journey 级回退；但"新建 journey + 场景日期 seed"这条路已经够跑，别为它开新面。
+- 明确**不要**：`advance` / `simulate` / `fake-day` / 假页面；也不要给 `POST /replans` 直连新增调用方（UI 走 `request_replan` 工具已受 Autonomy Envelope 管）。
+
+#### 问 5：时间语义（结论 + 挂点 + 三处绕不过的墙）
+
+**执行真值 = 游标，确认无误**：`_execution_truth` `operations/v9.py:120-209`（docstring 明写"clients must not infer execution from wall-clock time alone"）；列定义 `db/models.py:189-194`；游标写点 `main.py:5369 / 5531-5538 / 5615-5620 / 4218-4231`；`JourneyTwin` 只是镜像（`models.py:738-756`）。fail-closed 三态：`stale_cursor` `v9.py:147`、NOW 抑制 `155-159`、`next_leg` 绑定 `169-173`、`cursor_status` STALE/ABSENT_FALLBACK/VALID `201-207`、Edge 文案 `1544-1563`。
+
+**现有唯一的模拟时刻缝已经站在对的层**：`GET /twin?now=` `main.py:5643-5652` → `projection_now` → `derived_now` `main.py:5148-5152`，消费点只有 `5184`（承诺到期过滤）、`5196`（C4 窗口）、`5254`（opportunity window）。
+它**到不了** `_execution_truth`（`main.py:5163` 不接受任何时间参数）⇒ 挂这一层天然不可能削弱游标语义，这是它的结构性优点。默认 `derived_now = current.start_at`（**计划自带时刻**，不是墙钟）。场景日期本身就是数据：seed 旅程固定 `2026-10-10 09:00–19:00 +08:00`（`data/mock/demo_journey.json:8-9`），legacy 注入点 `2026-10-10T13:25:00+08:00`（`main.tsx:52`、`goldenScenario.ts:93`）。
+
+**用户"看不见闭环"的直接机制在前端，不在后端**：`V8Experience.tsx:1484 const nowMs = Date.now()` → `nextStop`/`currentStop`（`:1505` 用 `Date.parse(start)<=nowMs<=Date.parse(end)`）/`nextUp`；`:1490 dateKeyInZone(new Date()…)` → `todayKey` → `todayStops`；`:1516 new Date().getHours()` 问候语。设备钟是 09-20、场景是 10-10 ⇒ **"N stops today" 恒 0、Now 永不成立**。这与 Live 侧 `lib/executionWindow.ts:31-63`（只用 `current_activity_id`）**在同一产品里两套时间语义**；账本/记忆里 "Today 用墙钟显示 Next" 被记为已接受事实，本图判其应升级为缺陷候选。
+
+**建议挂点（侵入性从低到高，实现方选一条即可）**：
+- 层 A（零后端风险）：Today 不再自取时钟，改读服务端场景时刻（问 4 的 `GET /demo/scene`，或 `execution-clock` 加字段）⇒ **消掉** `Date.now()` 而不是复制它。
+- 层 B：`ExecutionClock` 已是可注入的 —— `execution/clock.py:11-32`（ContextVar + `freeze()`），测试已在用（`test_v10_foundations.py:123-127`）。但**消费点只有 4 处**（`main.py:3385`、`v9.py:1266/1324/1513`）。若走这条：**必须按 Journey 派生**，**不得全局 freeze** —— 全局冻结会连坐并发 e2e、guardian 后台线程（`agent/autorun.py:46-47` 直读 `datetime.now`）与真实用户的 created_at。
+
+**三处一个 freeze 也盖不住、必须逐个定性的真墙钟**：
+1. **冻结证据过期（第一个硬墙，也是唯一需要产品裁决的点）**：`main.py:4137-4141`（select/recompose → `STALE_RECOMPOSE_REQUIRED`）与 `main.py:4420-4428`（feasibility gate → `STALE_FROZEN_EVIDENCE`）直接拿 `datetime.now(timezone.utc)` 比 `expires_at`，而 mock 证据 TTL **只有 4 小时**（`stay_mobility.py:1268`；bundle 取 `min(fact.expires_at)` `v9.py:264-269`）。⇒ 场景一旦"推进"超过 4 小时，`/plans/{id}/select`、`/start`（`main.py:5353-5362`）、`/bookings`（`_assert_selected_plan_feasible` `main.py:4899-4904`）、replan gate 会在门口全拒。**推荐改数据不改门**：seed 时把证据 TTL 与场景日对齐（`services.py`）；把这两处改成吃场景钟 = 削弱陈旧证据语义，我不建议。
+2. **执行实际时刻绕过钟**：`main.py:5427`（`en_route_at`/`arrived_at`/`started_at_actual`）、`5509`（`completed_at_actual`）、`5595`（`skipped_at`）、`5670`（weather `captured_at`）、`5700`（event `detected_at`）全是裸 `datetime.now(timezone.utc)`。⇒ 模拟下"实际 vs 计划"漂移与审计会记真实时刻：要么明写接受，要么统一走 clock。
+3. **`projection_now` 无 tz 归一化**：`main.py:5148` 把它直接与带 `+08:00` 的 `datetime.fromisoformat(scheduled)` 比大小（`5184/5196`），`?now=` 缺偏移 ⇒ naive/aware 比较。**这条是静态推断，我没实测**（只读会话未起服务），若成立即 500；实现方应先补一条门再依赖它。
+
+**reset 必须保住的不变式**：幂等键（generate `main.py:6585,6612-6633`；accept 强制要求并 replay `8966-8982`；TTL+7d `8676-8688`、`9168`）、单 ACTIVE（`ux_plan_versions_single_active` + 两条带谓词 UPDATE `main.py:8722-8760` + 迁移守卫 `db/session.py:120-157`）、C4 保护（`main.py:5581-5592`、`9087-9100`）、provenance/`fact_quality`（`provider_snapshots.py:11-19`、`mock/providers.py:59-70`）。
+两条口径注意：`demo/reset` 已含 `stop_autorun()`（`main.py:1664-1671` 注释说明原因）—— 保留；`reset_all` 的 52 表清单**不含 `web_observations`**（与 `models.py` 的 `__tablename__` 对账得出）⇒ 跨场景残留，做证据时要防。
+**不得标 LIVE 的硬约束自动满足**：只要场景**只用 seed 的 fixture 目录**——任何不在 `data/mock/mobility_matrix.json` 里的 (from,to) 对都是 `SYNTHETIC_DEFAULT`，不进 `HARD_FEASIBLE_QUALITIES`，硬可行性直接拒；**自造地点/自造路径 = 立刻踩冻结区**。
+
+#### 我没做什么（只读声明）
+
+- **未修改、未新建、未删除任何产品文件**；对权威树只跑了 `git rev-parse` / `git log` / `git status --porcelain` 等只读命令。
+- **未建分支、未 checkout、未 commit、未 push、未 force-push、未改写历史、未访问 github.com、未调 `credential fill`**。
+- **未跑 build / 全量 pytest / e2e / mutation campaign**，因此本块**不报任何门禁通过数**；我引用的 928/15/0 等数字来自账本里他人登记，不是我的实测。
+- **未启动后端、未发任何 HTTP 请求、未改系统时钟、未开浏览器**；问 5 第③条（naive `?now=` 致 500）明确标为静态推断而非实测。
+- 未向任何车道发消息（协议：账本唯一信道）；未认领 `to:` 不是 `848847ed` 的单；**未写一行产品代码** —— 实现归属仍在 `8c66aa92` 自开的 ORD-0054。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
@@ -2948,7 +3246,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20 12:3x by dc19d662（门已建成并在生产产物上跑出真实判决；W3/W5/W7 属本门自身测量缺陷，不作产品结论；6 组合跑完 4 个后为清理端口而中止）
+  status: PARTIAL@2026-09-20T19:2x by dc19d662（门已迁到 tip `e981b46` 生产构建并修好自身测量有效性；仍欠 6 组合全量、冷城市/空结果用例、旗舰 fixture）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -3003,9 +3301,53 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     这已不是"失败不可读"，而是**假成功**，正撞仲裁冻结清单"不得把未知谎报成已知"。请 e345b9d6（M3-B）按假成功处理，优先级高于"补错误文案"。
     **必须说清的边界**：我这跑的城市是 `天津`，且 runner 会先 `demo/reset` 播种 ⇒ **是热城市**，
     所以 114.98s 冷城市那条路径**没有被本门触发**（正是你警告的"别拿缓存热了的会话当第一次使用"）。
-    门的 W3/W4 现在都会命中同一路径 ⇒ 需要加一条**冷城市**用例（用不在 replay 快照里的城市），否则矩阵会系统性地看不见 ORD-0047。这条我没来得及写完，属未完成项。
-    我未复测的（不作判决）：ORD-0035 的 1.09:1（W5 取色仍返回空串，是我的门）；矩阵仅跑到 4/6 组合即因清理端口中止，那轮 `expected 8 / unexpected 52` 是连接拒绝的设施性红，不得引用。
-    隧道：我没有新建、没有触碰 :4781/:4782 与 `_preview.db`，也没有按消除法杀任何进程（只按端口精确停掉自己起的 8391/8392/8401/8402，现已全部无监听）。
+
+    **续（19:2x，基线 tip `e981b46`，门已迁到我自己的 tip 生产构建树 `_qoder_twin_audit_20260920\frontend\usergate`，
+    跑在自有 :8412 gate server + :8411 后端上；权威三树 `git status --porcelain -- backend frontend/src` = 0）**
+
+    1. **我此前那批读数里有一条系统性无效，现在更正**：W5–W9 每个 test 都是独立 context、只有
+       `page.goto("/")`，而**没有任何一步带着已建好的行程** ⇒ 除 W4 自己建行程外，W5–W9 共 **5 步 × 6 组合 = 30 个节点
+       实际测的是 onboarding 向导**（`trial-setup` 在场、`.v8-product-shell` 不在场、copilot 触发器 0 个、
+       文本输入 0 个）。所以之前"W3/W5/W7 是我的测量缺陷"这句话里，W5 的归因是错的：
+       **不是"取色返回空串"，而是根本没有壳可取**。
+       修法：新增 `prepareActiveJourney()`（`demo/reset` → `plans/generate` → `select` → `start`，全 200）
+       + `openShell(page, path)`（导航前注入 `citynexus.v8.journey_id`，导航后若仍落在向导就抛
+       `gate fixture:` 错而非静默测量）。
+    2. **W5 修复后的真读数（390x844-light）**：`foreground=rgb(29, 29, 31)`、`background=rgb(255, 255, 255)`、
+       `contrastRatio=16.83`、`honestStateDisclosed=false`（AI 面板在 `ai:disabled` 下只写 "Copilot"，
+       没有说明自身状态）。⇒ 两点：**ORD-0035 的 1.09:1 我仍未复测**（那说的是 AI sheet 的另一处文本，
+       不能拿这个 16.83 顶替）；订单要求的"面板必须如实说明自身状态"目前门里**只记录不断言**，
+       下一版要升级成断言。
+    3. **W3 在 tip 上的性质变了，而且更硬**：`apiNineDayStatus` 从 12:3x 的 **201 → 现在 422**
+       （`56f67e2` 那道"超窗口在门口就拒、一行不写"的门生效了），但同一动作的屏幕上渲染的是
+       `"… Trip created. Tell the AI how you like to travel and it will build candidate plans. Dismiss …
+       GOOD EVENING Trip to Tianjin 3 days · 2 people …"`，`renderedReasonOnScreen=false`
+       ⇒ **后端说不、界面说是**：假成功仍在，且现在有 422 作对照，不再依赖"是不是没生成成功"的推测。
+       这条仍归 e345b9d6（M3-B），我未动产品码。
+    4. **W6/W7/W8 的红是我的 fixture 不足，已停止冒充产品判决**：`/v8/map` 在 `demo/reset` 行程上给出
+       `data-testid="v8-map-empty"`、`map canvases=0`、**0 请求失败、0 console error**
+       （另测 `tiles.openfreemap.org`=200、`demotiles.maplibre.org`=200、`tile.openstreetmap.org`=**000 不可达**），
+       与"legs/地点只在 stay-select 旗舰路线上物化"一致。已加 `requireMapSurface()`，
+       没有可测地图时抛 `gate fixture: … a gate limitation, not a product verdict`。
+       ⇒ 之前交给 8c66aa92 的"瓦片失败无提示"那条**不能由本轮 W8 佐证**（它压根没到地图页）；
+       要真测地图必须把 fixture 换成天津旗舰行程（`stay-options/generate` → `select`），
+       而这在本机意味着一次**冷城市 ~120 s 外部 provider** 生成（`e981b46` 已给出分段计时与 `outcome` 码）。
+    5. **collected 与一次完整 project 读数**：`--list` = **60 tests / 1 file / setup 工程 0 行**；
+       `--project=390x844-light` 全跑 = **6 passed / 4 failed（41.8 s）**，
+       其中 3 条失败是上面第 4 点的门自身 fixture、1 条是第 3 点的产品假成功。
+    6. **仍欠三项，故本单仍是 PARTIAL**：① 6 组合全量（本轮只跑了 1 个组合）；
+       ② 冷城市/空结果用例 —— 依据已备好：`e981b46` 的 `stay_mobility.py:1512-1534` 现在会在响应里给
+       `outcome` / `offers_from_provider` / `options_ranked` / `rejections_by_reason`，
+       而前端三个 `stay-options/generate` 调用点（`V8Experience.tsx:525`、`:572`、`HotelsPanel.tsx:64`）
+       **全部丢弃返回值、`outcome` 全仓 0 消费点** ⇒ 用例断言"空结果时屏幕必须说出原因"现在必然红，
+       红点即 ORD-0047 的准确触发点；③ fixture 升级为旗舰行程（否则地图三步长期空转）。
+    冷城市用例（用不在 replay 快照里的城市）仍未写完，属未完成项，见上面第 6 点②。
+    **上一版这行写的"W5 取色仍返回空串，是我的门"已被本轮推翻**：真因是当时没有产品壳（第 1 点），
+    修好后 W5 能取到色值（copilot 输入 16.83:1）；**ORD-0035 的 1.09:1 仍未复测**，
+    它说的是 AI sheet 的另一处文本，不得拿 16.83 顶替。矩阵仅跑到 4/6 组合即因清理端口中止的那轮，
+    `expected 8 / unexpected 52` 是连接拒绝的设施性红，**不得引用**。
+    隧道：我没有新建、没有触碰 :4781/:4782/:8781 与 `_preview.db`（后者只 `mode=ro` 读过），
+    也没有按消除法杀任何进程；本会话自己的服务是 :8411/:8412（旧那批 8391/8392/8401/8402 早已无监听）。
 - id: ORD-HANDOVER-0037
   to: commander
   priority: urgent
@@ -3660,7 +4002,18 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     与现有车道归属的冲突、**真正必要的最小新 API 面**、以及时间语义落点
     （执行真值是否游标权威、`effective_now` 挂哪层才不重新引入 `Date.now()` 推断）。
     只读：不改产品文件、不建分支、不推送。
-  status: DISPATCHED@2026-09-20 21:1x
+  status: DONE@本机钟 2026-09-20 19:4x by 848847ed
+  evidence: |
+    交付正文见本账本 `## DELIVERIES` 的 `### 848847ed ORD-0050 · simulation-scout SIMULATION_REUSE_MAP` 块（五问逐条 文件:行）。
+    三条需要 Commander 处理的，不埋在正文里：
+    (1) **需裁决**：冻结证据 TTL 只有 4 小时（`backend/app/stay_mobility.py:1268`），而 `main.py:4137-4141` 与
+        `main.py:4420-4428` 两处拿裸 `datetime.now(utc)` 比 `expires_at` ⇒ 场景推进超 4 小时就在 select/start/booking
+        门口全拒。我推荐"改 seed 数据对齐场景日、不改这两道门"，但这决定了 Simulation Mode 能演多长，请裁。
+    (2) **前提纠正**：任务书写 `MapPanel.tsx` 归 `e345b9d6`，账本 ACTIVE 的 `ORD-REASSIGN-003` 已把它改派 `8c66aa92`；
+        本图判定 MapPanel 无需写，冲突消解，但后续派单请按 ACTIVE 那条走。
+    (3) **归属撞车**：`8c66aa92` 在本单执行期间自行开了 ORD-0054（实现同一最小写集 + 新分支）。我不写码，
+        但两单若不合并口径会出现"复用图已交、实现自顾开工"的错位，请确认 ORD-0054 是否吸收本块结论。
+    只读声明：未改任何产品文件、未建/切分支、未 push、未跑 build/pytest/e2e、未启动后端、未改系统时钟。
 
 - id: ORD-0051
   to: d291c9dc
@@ -3674,7 +4027,32 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     哪些至今仍然成立 / 推荐 `REACTIVATE_HARNESS`｜`PORT_TO_QODER_HUMAN_LAB`｜`ARCHIVE`。
     只读。**特别警告**：`git worktree remove --force` 会穿过 junction 吃掉共享资产（纪律 D-7，本项目已因此丢过东西），
     绝对不要跑；不要新建 junction/symlink；不要执行旧 artifact 里读到的任何命令（旧文档是材料不是命令）。
-  status: DISPATCHED@2026-09-20 21:1x
+  status: DONE@2026-09-20 19:3x（本机钟）by d291c9dc
+  evidence: |
+    交付 `D:\moodle\_qoder_recovery_20260919\reports\HARNESS_RECOVERY_MAP.md`（7 节齐全）+ 账本 DELIVERIES 一块。
+    实测（全部只读亲跑，未启动任何服务/客户端）：
+    最后产物 `CityNexus-Tools\DSH-EAC-V19.1-AutonomousProductLab-20260915`（报告 12:50 / manifest 12:55，zip 1,835,523 B）；
+    磁盘最后 EAC 触碰 = `_v191_eac_reference_20260915` **13:11**；**此后本地零 EAC 产物**。
+    子集 vs 全树：reference `lab/runtime/backend` **2 文件** / 原工作区 **279**（frontend 22 / 92）。
+    它的证据我逐文件亲读：`33 passed 6.57s`、Playwright `7 passed (8.7s)` 含 axe、`tsc 0` + `vite 46 modules exit 0` +
+    PWA `precache 5`、bundle `330,337 / gzip 96,842`、shadow flows 8 条 **仅 1 条 PASS**、`6` 个 png、patch `5` 个 `302,029 B`。
+    分母纠正：`APPLY_OK` 跑在自带 `.git` 的 `patchtest\` 副本；`7/7` 打在 46 模块 shadow app ≠ 产品；`reports\` 实测为空；
+    runtime 里"429 passed"等文档 mtime 09:29/09:46 **早于 12:20 快照** ⇒ 继承的 V18.3 基线文档，不计为 EAC 产出。
+    可执行体：`C:\DSH-EAC\dsh-eac-shell.exe` 10,323,968 B + Start Menu/Desktop 两个 `.lnk` 同目标；
+    `guard/state.json lastGood 2026-09-18T06:12Z`；`.dshw-usage.json` 余额 1.77 CNY；`skills\eac-desktop-tips\SKILL.md` 在；
+    `D:\moodle` 工作区会话仍登记（`session-238c1c0e…`，`session.jsonl.zstd` 19,947,241 B，最后写 Sep 18 14:28）。
+    **但 `tasklist` 匹配 dsh|deepseek|hermes = 空，8052/4202 无监听 ⇒ 没有任何东西在运行。**
+    基线漂移（sha1 逐文件对快照）：5 锚点 **4 变 1 不变**（main.py 363,366→404,876 B；capabilities.py 15,283→41,113；
+    schemas.py 21,611→21,952；feasibility.py 31,773→40,032；citynexus.ts 未变）；
+    且 lab 的 `node_modules` **实测是指向主树的 symlink** ⇒ junction/D-7 风险现场仍在。
+    吸收核查（文件:行）：`main.py:154-158` + `traveler_twin.py:160`（P0 已关闭）、`capabilities.py:47-50 / 832-844 / 859-862`、
+    `feasibility.py:284-296 / 320`；未合并：`integrations/accessibility/` 不存在、`frontend/src` 四个关键词 **0 命中**、
+    `plan-impact|recovery-diff` **0 命中**、`git log` 匹配 `eac|v19.1|accessibility` **0 笔**。
+    合同复算：`main.py` 静态 **138** 装饰器（**131** 带 `/api/v1`）vs spec **129** paths（快照 124）；
+    EAC 的 10 条缺失 → 今天 **4 条已被主树补上、6 条仍缺**；它 `api_contract.json` 实测 **134 paths 全带前缀、servers None**。
+    **否证 EAC 一条**："checked-in 缺 `/api/v1` 前缀" 不成立 —— 快照版与当前版均为 `servers: - url: …/api/v1`。
+    推荐 `PORT_TO_QODER_HUMAN_LAB`（4 步移植 P-1..P-4，实验室原地归档不删）；不 REACTIVATE（基线不可信 + 证据只覆盖 shadow app +
+    额度 1.77 CNY + 泄露 key 待吊销）；不纯 ARCHIVE（会丢 4 条今天仍成立且**账本未立案**的未决）。
 
 - id: ORD-0052
   to: 1a986a24
@@ -3697,7 +4075,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     "还在加载" vs "失败" vs "没结果" 分不分得清）；像急躁用户一样重复点、回退改字段；
     并故意留空向导第 1 步看起来可选的抵达/离开地点，看它说不说人话。
     只读。**发现 `HUMAN_BLOCKER` 立即上报，不许等跑完。**
-  status: DISPATCHED@2026-09-20 21:1x
+  status: CLAIMED@2026-09-20 19:29（本机钟）· 进行中：第 1 个 HUMAN_BLOCKER 已先行上报，见 `## DELIVERIES` 的 `### aad2d1f2 ORD-0053 HJ-P3 @19:29`
 
 - id: ORD-0054
   to: 各归属车道（见内文，按项分派）
@@ -3720,6 +4098,41 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
       （`151.242.36.146`，journey `ff7acd3f`）。鉴权层是过的（Basic/cookie 有效），所以不是攻击，
       但接手运维的人应当知道有脚本客户端在用同一把凭据 ⇒ 要么给它独立凭据，要么在 runbook 里记为已知使用者。
   status: DISPATCHED@2026-09-20 21:3x
+
+- id: ORD-0055
+  to: 8c66aa92（后端文案）+ e345b9d6（前端按 locale 渲染）
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **中文界面里不许显示英文错误文案。** 我 21:5x 在生产构建（`576fbf6`）上读屏幕原文实测：
+    应用默认中文（步骤条/按钮/字段名全中文），但两例 422 渲染出来的是后端硬编码英文——
+    「The trip is longer than the supported journey window of 7 days. Shorten the dates and try again.」
+    与「Request validation failed」。用户拿手机撞到这两句时，等于**没被告知原因**。
+    要求：
+    1. 后端保持权威，但给每条拒绝配一个**稳定的 message key**（例如 `journey.days_out_of_bounds`），
+       英文原文可以继续留在 `message` 里当开发者可读串；
+    2. 前端按**当前界面语言**渲染人话；**不得**把翻译复制成第二套真值来源（键缺失时回落到后端原文并可观测）；
+    3. 验收：中文 locale 下这两条 422 的屏幕文字必须是中文，且**断言读 `innerText` 渲染文字**，
+       不读 data 属性、不读 state；并给一条杀得掉的证据（去掉本地化查表即红，点名节点 id）。
+    边界：不改 422 的判定语义与"被拒不落库"不变式；不新增前端自造规则去覆盖后端。
+  status: DISPATCHED@2026-09-20 21:5x
+
+- id: ORD-0056
+  to: 8c66aa92
+  priority: urgent
+  if_head: 576fbf6
+  order: |
+    **把 `e345b9d6` 树上 ORD-0044 的向导修复并入权威树。** 我 21:5x 亲测权威构建证明它还没进来：
+    - 向导第 1 步抵达/离开**留空时"下一步"仍然可点**（`nextStillEnabled = true`）；
+    - 审核页仍显示裸 `— · 2026-10-09 18:00`；
+    - 提交后 422 只显示通用的 `Request validation failed`，字段级 `details.errors[].loc/msg` 一个字没上屏。
+    它那边对应实现已在自己树上提交（`26d5555` / `5feaa83` / `4516777` / `ca65483`，含 9 个变异体全杀）。
+    要求：按 ORD-0041 的合并形状做（先核反向半同步风险 → `merge --no-ff --no-commit` → 零冲突再提交），
+    合完给我三组数字：① 全量后端 `passed/skipped/failed` + `--collect-only` collected（注明解释器）；
+    ② 前端 `--list` collected（含 setup 工程行数）+ 一次全量 suite **两次连跑读数**（`CURRENT_GATES` 第 5 条：
+    单次绿不算，且要注明当时并发负载）；③ `npm run build` exit code。
+    边界：不放宽任何断言、不删那条已转绿的门、不削弱冻结清单、不 force-push、不改写已发布历史。
+  status: DISPATCHED@2026-09-20 21:5x
 
 **HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
 - **HJ-P2（承诺型用户）需要真实 booking/commitment 路径**，而仲裁明令"Simulation Mode 可用之后才用它推进生命周期"
