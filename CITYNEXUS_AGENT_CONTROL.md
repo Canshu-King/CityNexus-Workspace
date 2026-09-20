@@ -777,6 +777,9 @@ rebase/reset/clean 收尾 —— 那等于自己造一个死锁。
   但那只是缺 :832 那一行的旧树，不构成当前缺陷。
 - 一条自我提醒留给门：同一行记录里旧字段 `renderedReasonOnScreen=false` 与 `alertNamedReason=true` 并存，
   说明我那个宽屏正则 `reason` 偏窄；它已不参与判决，但下次要么改它要么删掉，别留一个会说谎的字段。
+  **→ 已处理（同轮）**：删掉该字段与只服务它的 `const reason` 正则后复确认 ——
+  `--list` 仍 **collected 66 / 1 file**，W3 重跑仍 **1 passed（1.1m）**，
+  ⇒ 闭合结论不依赖那个被删的字段。门码今后以 `_qoder_tip_recheck_20260921\frontend\usergate\` 为准（与产物同树）。
 
 
 
@@ -899,6 +902,54 @@ A9（把 wait_for_operation 塞回 202 门口 = 换名字的旧请求，**这条
 **待办（我已排，等机器 quiescent）**：完整输出落盘重跑全量两次连跑（**不许再 `| tail`，我上一轮就是这么把
 traceback 弄丢的**），按 7⑤ 保留红的轮次。`main.py` 现在又被 `8c66aa92` 改脏（mtime 23:50:01），
 ⇒ 按 CURRENT_GATES 10，**在它提交干净之前我不跑任何变异批、也不跑要 import `app.main` 的判定性复跑**。
+
+
+
+### commander 亲测 @2026-09-21 00:1x（本机钟）—— **ORD-0060 三条我逐条读源码复核通过 → 判定 `ACCEPTED`（源码级）**；车道还没标 DONE，我不代它标
+
+`_qoder_ui_overnight_20260920`（分支 `agent/ui-overnight-20260920`）三笔：
+`427600d` 产品改动 + `0b2f6ab`"先断言再读文案，让杀可归因" + `39cccfd` 杀表。
+我 23:1x 刚给它刷新过漂移的行号，这次**按新行号逐条读**（`frontend/src/features/setup/JourneyTrialSetup.tsx`）：
+```
+第 1 项 硬编码"厦门" ⇒ **已修**
+  :361  const identifiedCity = facts ? draft.cityName.trim() : "";
+  :488  {zh ? (identifiedCity ? `抵达${identifiedCity}` : "抵达地点")}
+  :517  {zh ? (identifiedCity ? `离开${identifiedCity}` : "离开地点")}
+  :495 / :524  占位符 `例如：${identifiedCity || "某地"}站 / 机场`
+  ⇒ 比我要求的多做对了一点：**认不出城市时它不编城市名**，退回中性"抵达地点"、占位符退回"某地"；
+    而且 `identifiedCity` 每次渲染从 `draft.cityName` 现算并以 `facts` 为门 ⇒ **无上一次识别的残留示例**
+    （这正是我原单第 1 项后半句要的）。
+第 2 项 只看非空、不看是否被识别 ⇒ **已修**
+  :362  const unrecognizedCity = draft.cityName.trim().length > 0 && !facts;
+  :468  「没认出「X」：仍按 CN / 人民币（CNY）/ Asia/Shanghai 规划。换个写法，或在"看支持的目的地"里挑一个。」
+  :734  审核页再带一句「未识别 · 按 … 规划」⇒ 提示不只在第 1 步，走到确认页还在
+  ⇒ 这就是仲裁那句 "disabled button without an inline explanation is still a silent blocker" 的合格答案：
+    它把**原本被静默沿用的口径原文说出来**了，不是只把按钮变灰。
+第 3 项 城市清单不可见 ⇒ **已修，并且守住了我给的那条边界**
+  :472-478  `<details data-testid="trial-supported-cities">` + 「看支持的目的地」
+  ⇒ 门的名字是 `supported-destinations-are-reachable-**without-an-invented-count**`：
+    **列名字、不自己算"共支持 N 个城市"** —— 正是我原单第 3 项"权威城市数由 Commander 钉死、
+    前端不得另算一套"的要求。它没有为了好看去发明分母。
+```
+**它的杀证我按我自己的标准核过（`review/ord60-kill-table.txt`）**，三笔同一个形状：
+```
+kill60-a / -b / -c：anchor hits=1、applied=True、exit=1、点名节点 **NAMED IN A RED**、
+                   restored 269384f5…2656 **OK**（还原后 sha256 逐字节相同）
+红消息是人话、且指向**渲染出来的文字**：
+  "the arrival field for a Tokyo trip is labelled 抵达地点"
+  "an unknown city is accepted with no word about what will be assumed"
+  "天津 is recognised by the wizard but never listed for the traveller"
+```
+⇒ **三条突变三条由点名节点杀掉 + 还原自证 + 断言读渲染文字而非 data 属性**，全部合格。
+特别记一笔 `0b2f6ab`：它**主动**把门改成"先断言、再读文案"，解决的正是我今天在全 fleet 反复敲的那件事
+——**红了却说不出是谁杀的，等于没有证据**。它没等我下命令就自己补了，这是我要的走向。
+
+**两点保留（我不假装已经做完）**：
+1. 这是**源码级 + 门级**验收。**读屏级**（真机生产构建上看到"抵达东京"）我还没做，
+   要等集成列车合并后、在由合并后 HEAD 构建的预览上我亲自走一遍才算；
+2. 账本里本单状态仍是 `DISPATCHED@2026-09-20 22:2x`——**车道还没写自己的 DONE/证据，我不代它写状态行**
+   （代写会把"它自述已交付"和"它落了证据"混成一件事）。它标 DONE 后本单即关闭；
+   我的 `ACCEPTED（源码级）` 判定以本块为准。
 
 
 
