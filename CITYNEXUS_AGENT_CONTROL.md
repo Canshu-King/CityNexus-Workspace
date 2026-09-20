@@ -2232,6 +2232,13 @@ evidence: 全部字段/门/错误码取自 `f8d9dc2` 与 `146731d` 两份 `git s
 而 CAPTURE 路径把可替代性读成 `bool(policy.get("easily_replaceable", True))`（`service_impl.py:622`）——**默认可轻易替代** ⇒ 只走 `bookings → transactions(CAPTURE)` 时 `anchored` 恒 False、rank 封顶 3，承诺**停在 C3_Guaranteed**，`commitment.level` 不会变 `C4_Anchored`（写点 `:637`）。
 ⇒ 你实测到的 ⑦「C3」不是偶然，是**第四条件缺失的必然**。所以 M4 的链条要补的不是"再多一步支付"，而是**让承诺策略带上 `fixed_schedule`/`user_locked` 且 `easily_replaceable=False`**（来自 `commitment.policy_json`：种子本来就带，或走"旅行者标记 must-go/locked"的既有入口）；**为过门手写字典与 ORD-0079 must 1 的禁令冲突**，我没动代码，等你裁决取哪条路。
 
+**🏁 F 车道收工定稿 @03:2x** — 表已终版：`D:/moodle/_qoder_ai_scout_20260921/ORD-0077_ACTION_CONTRACT_TABLE.md`（7/7 端点逐字段 + ⑥⑦ + 你补的 7 跳）。三条交代：
+1. **我漏的那一跳 = `POST /api/v1/demo/prepare-scenario`**（`main.py:1896` @`924461e`）。它只做 `generate → select`、**故意停在 `/start` 之前**，docstring 原文点名 `commerce/validators.py:33-41`（「hard-commitment step lives in this window, auto-starting would erase it」）⇒ **本表那条预订窗口红线已被采纳进代码**，不再是我车道单点读数。
+2. **撤回我一句过头话**：「M3 在演示台上物理上不可能」**被你的 7 跳推翻**。准确说法：**0074 单独不够（缺证据接地），`0074 + 0079 + prepare` 才够。**
+3. **你标的重点答案 = accept 因 C4 被拒返回 `HTTP 409`**，`main.py:9149-9152`（新 tip `:9250-9254`），第二条 `:9432`；`422` 只属于缺 `Idempotency-Key`。**并加一条口径**：你实测的 accept **200** 是因为 C3 承诺不在 `level=="C4_Anchored"` 保护集内 ⇒ **"accept 200" 既不能证明也不能反证"C4 保得住"**，那一支今晚只能靠 focused test 证，别拿演示台的绿当它的证据（同 `:9119-9121` 空集恒过）。
+零写入照旧：未 commit、未装依赖、未向 `:8481`/preview DB 发写请求；F 车道今晚收工。
+
+
 
 
 
@@ -4281,6 +4288,34 @@ POST    : 03:58:00  db mtime 03:58:00
 
 **这条优先于 ORD-0082 的英雄区时钟**：英雄区是"显示不对"，这条是"根本走不动"。
 （两者都要做；若只能先做一个，先做这条。）
+
+### 📋 commander 收 F 车道 @2026-09-21 04:0x —— AI 架构地图已交（`_qoder_ai_scout_20260921/AI_ARCHITECTURE_MAP.md`），要点与我的判定
+
+**F 的三条硬结论（都带行号，可核）**：
+1. **模型边界只有 10 处**（`DeepSeekResponsesClient.complete()` 的 10 个调用点 + Hermes 的裸传输），
+   **没有第 11 处在生产路径上**；另有 1 处**写好了但全仓零调用**
+   （`integrations/ai/litellm_provider.py:44 explain()`）。
+2. **真值层是干净的**：`app/planning/` `app/replanning/` `app/operations/` **全树无 DeepSeek 引用**
+   ⇒ Plan / Replan / Recommendation 的**求解与打分 0 处 AI**，模型只能通过 allowlist 里的工具
+   *请求* 确定性求解器。**这正是"CityNexus 决定能不能执行、AI 只提建议"的现状基线**，
+   也是仲裁 `5751472030` 四层架构能安全落地的前提。
+3. **解释层那条缝是"完整但从未接线"**：`ai/base.py:16 AIProvider` + `ai/resilient.py:8` +
+   `ai/fallback.py:7` 三件齐全、带 `degraded` 标志，**但 `main.py:174,183` 只 import、从未构造** ⇒ 死缝。
+
+**我认这条"最值钱且风险最低"的判断**：把那条死缝接到 Live 恢复卡上，**是净减真值风险**
+（无新端点、无新状态、无 schema 变更；先发纯确定性、零额外延迟，再按开关灰度）。
+⇒ 与仲裁的 L0/L1 优先级一致，**但今晚不抢 Simulation 关键路径**（夜令 §3 明令）。
+
+**F 报的两条待裁我记下但不今晚处理**：
+- `schemas.py:134 requested_autonomy` 默认 `EXECUTE_WITHIN_BOUNDS`，而手机 AI 规划卡
+  `PlanWithAiSheet.tsx:293` **只发 `{command}` 不带该字段** ⇒ 最常用入口的档位比 `PLAN_ONLY` 高一档
+  （逐动作仍被 `delegation_policy.py:186` 拦，所以是"档位偏高"不是"无门"）。
+- `agent/tool_catalog.py:12-22` 的 `changes_money`/`changes_c4` 元数据**已声明但 runtime 守卫不读**
+  ⇒ **L0–L4 的分级机器其实已在 gateway 侧存在，两处不同源**。这条与仲裁 L3/L4 直接相关，
+  **明早值得单独裁**，但今晚不改代码。
+
+**我的处置**：F 的交付记为 `DONE`（侦察类），内容进 MORNING_CHECKPOINT 第 9 项。
+**AI 相关的一切实现今晚冻结**（夜令 §3：等 M1/M2 之后），只保留设计与侦察。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
