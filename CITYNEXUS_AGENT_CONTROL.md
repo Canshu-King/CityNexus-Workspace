@@ -1678,6 +1678,60 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
 顺带：第 3 条读到的那句英文出现在中文界面上，就是 **ORD-0055 的"改之前"证据**。
 细节 `INTEGRATION_REPORT.md` §92。
 
+### 8c66aa92 ORD-0063 + ORD-0064(a) + ORD-0055 后端 @2026-09-20T22:1x+08（本机钟）→ 后端真值已落 `3f1b44c`；三条的**屏幕半**卡在写集归属，请裁
+
+**做了什么（全部 `backend/`，没碰 `V8Experience.tsx`/`MapPanel.tsx`/`main.tsx`/`vite.config.ts`/`public/sw.js`）**
+
+1. **ORD-0063**：`core/temporal.py` 拆成"日历计数"(`calendar_day_night_shape`) + "窗口判定"
+   (`derive_journey_temporal_shape`，写路径行为逐字未变)；新增 `derive_budget_reference()`
+   把 `总预算 ÷ 权威天数 ÷ 人数` 收回后端，**整数 half-up**（`round()` 是 half-to-even，`round(2.5)==2`）。
+   `GET /experience` 新增 `journey.temporal_shape{day_count,night_count,semantics:"CALENDAR_DAYS_INCLUSIVE",
+   window_status,min_days:1,max_days:7}` 与 `trip.budget_reference{available,…,currency,per_day_minor,
+   per_person_per_day_minor,floor_minor:15000,floor_currency:"CNY",floor_comparable,reason}`；
+   `start_at/end_at/budget` 一字未改（纯增量）。同日 08:00→20:00 实测投影 = **1 天 / 0 夜**。
+   读路径不再可能 500：`journey_projection_window()` 把判定降级成字段
+   `IN_WINDOW / OUT_OF_SUPPORTED_WINDOW / INVALID_ANCHOR_ORDER / ANCHORS_NOT_DIRECTLY_COMPARABLE`；
+   后两个 **`day_count: null`**，不回填"1 天"。
+2. **ORD-0064(a)**：金额带 ISO 币种码走（`¥` 同时是 CNY 与 JPY 的符号，换符号不是解）；
+   非 CNY 预算 `floor_comparable=false` ⇒ 前端不得再下"预算紧张"的判断。
+3. **ORD-0055**：`error()` 恒带 `message_key`（显式键优先，否则 `error.<code 小写>`，**永不**从 message 派生）；
+   字段级 422 每条 `details.errors[]` 的键按 pydantic **`type`** 查表（未登记的 type 也生成键）；
+   `loc` 仍只决定字段；英文 `message` 保留为日志与未知键 fallback。两句靶子文案的键 =
+   `journey.days_out_of_bounds` / `request.invalid`。
+
+**顺手查出（同族真值缺陷，都写进门了）**
+
+- `journeys` 有 SQL `CHECK (end_at > start_at)`、`journey_trip_contexts` 有 `CHECK (party_size >= 1)`
+  ⇒ "倒挂窗口 / 0 人"在库里不可达；能倒挂的只有 anchor JSON（定价用的就是 anchor 时刻）。
+  门按真实可达路径写，并把两条 CHECK 也钉住。
+- 旧的 `tight` 判断拿 CNY 价位去量 JPY/SGD 预算（东京 1500 JPY ÷100 当 ¥15 ⇒ 永远"紧张"）。
+
+**数字（解释器 `D:\moodle\CityNexus\.venv`，`DEEPSEEK_API_KEY`/`CITYNEXUS_AI_API_KEY` 清空）**
+
+| 门 | 读数 |
+| --- | --- |
+| 新增 `tests/test_qoder_trip_shape_and_budget_reference.py` | **13 passed**（同日/跨午夜/多日/半格四舍五入/JPY/无预算/9 天旧行/naive-aware/倒挂 anchor/投影=定价同一对象…） |
+| 新增 `tests/test_qoder_rejection_message_keys.py` | **10 passed** |
+| 三套同跑（含 ORD-0033 旧门） | **31 passed / 0 failed** |
+| 全量后端（T3 口径） | **951 passed / 15 skipped / 0 failed（102.09s）**；同树改动前 928/15/0 ⇒ **+23，0 红** |
+| ORD-0063/0064a 变异 | **7/7 由点名节点杀掉**，每次 SHA-256 逐字节还原：M1 去首尾日 +1、**M7 把屏幕上那套 `round(hours/24)+1` 搬进权威算式**（订单点名的缺陷形状）、M2 读路径改抛错、M3 能算的天数装成未知、M4 CNY 地板说成可比、M5 换回 half-to-even、M6 倒挂回退成"1 天" |
+| ORD-0055 变异 | **6/6 由点名节点杀掉**：K1 删默认键、**K2 改读 `msg`**（仲裁禁止的脆弱匹配）、K3 去掉天数拒绝键、K4 去掉 HTTP 键、K5 前缀匹配把任意 `V13_*` 洗成 422、K6 未登记 type 塌成 `validation.invalid` |
+| 证据 | `D:\moodle\_qoder_scratch_20260920\ord63_mutants.json`、`ord55_mutants.json`；跑法 `scripts\ord63_mutate.py`、`scripts\ord55_mutate.py`；细节 `INTEGRATION_REPORT.md` §93 |
+
+**卡点，需要裁决（不是我没做，是文件不归我）**：Amendment J §2 判 `V8Experience.tsx` 归 `e345b9d6`、我转只读，
+而 ORD-0063 第 2 条与 ORD-0064(a) 的验收都要求读屏 innerText（"前端改成消费后端给的天数"、"非 CNY 标题行不得出现 `¥`"）。
+⇒ 我把这两处的**可评审补丁**做出来了：`review/ORD-0063-0064a-frontend.diff`（`V8Experience.tsx` +70/−36、`v8Types.ts` +25/−2；
+删 `Math.round(...)+1` 与硬编码 `¥`，改消费新契约；`null` 只能渲染"天数未知"）。
+`git apply --check --directory=frontend` = **CLEAN**（v8Types.ts 库里是 CRLF，补丁按目标文件各自行尾生成，不需要 `--ignore-space-change`）。
+**未做**：在真树上跑 `typecheck` 与屏幕断言——那必须写他们的文件。
+⇒ 请二选一：(α) 一次性把这两处授权给我落（我补 `typecheck` + 屏幕门 + 变异证据后转 DONE）；
+(β) 把 diff 并进 `e345b9d6`（ORD-0059/0065 同一文件，按他们的顺序落）。
+**ORD-0055 单独说明**：订单的 `to:` 已写明前端半（按 locale 查 `message_key` 渲染）归 `e345b9d6`，
+我这边**只交后端契约**，没有为它起草补丁——键表怎么组织、缺键怎么可观测地回落是他们的形状，我不代做也不预设。
+在裁定之前 ORD-0063 / ORD-0064 自记 **PARTIAL**（后端半完成 + 补丁已交），ORD-0055 自记 **后端半 DONE、整单待前端**。
+另注：`tools/verification/mutation_campaign.py` 与 `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`
+在我这一笔提交里**保持未暂存**（前者归 Commander，后者是 `6af4cf53` 的 sanitize 件）。
+
 #### aad2d1f2 HJ-P3 第三轮 @2026-09-21 00:5x（本机钟 20:5x）→ 先自我更正 H-8 的归因；再交不压后端的 4 条（含 1 条 TRUTH_DEFECT）
 
 **读数归属（Amendment J §8 要求，先量再跑）**
@@ -2084,7 +2138,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
        跨午夜与多日各一条；断言读 `innerText`；给杀得掉的证据（点名节点 id）。
     边界：不得改动 `MIN_JOURNEY_DAYS` / `MAX_JOURNEY_DAYS` 的 7 日窗口语义（ORD-0033 已验收）；
     不得为了凑数把"夜"和"天"混用；冻结清单一律不动。
-  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
+  status: PARTIAL@2026-09-20T22:2x+08 by 8c66aa92（后端半 DONE：提交 `3f1b44c`，temporal_shape/budget_reference + 13 门 + 7/7 变异；第 2 条与屏幕验收要写 e345b9d6 的 V8Experience.tsx ⇒ 补丁已交 review/ORD-0063-0064a-frontend.diff，等 (α)/(β) 裁决，见 DELIVERIES 同名块）
 
 - id: ORD-0064
   to: 8c66aa92（符号与算术）+ e345b9d6（住宿页承诺与失败文案）
@@ -2109,7 +2163,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
         这条与 ORD-0062 成对：**先有原因码，文案才谈得上说实话**。
     边界：**不得**为了让符号好看而伪造汇率换算；**不得**把未知价格印成 0 或"免费"；
     不得削弱 provenance / `fact_quality`。断言一律读 `innerText`。
-  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
+  status: PARTIAL@2026-09-20T22:2x+08 by 8c66aa92（(a) 后端半 DONE@`3f1b44c`：币种随行程 + CNY 地板不可比标记，13 门里含 JPY/无预算两例，7/7 变异；(a) 显示层与 (b)(c) 归 e345b9d6，前端补丁同上）
 
 
 - id: ORD-0065
@@ -5901,7 +5955,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     `details.errors[].loc` 决定归属字段；`message_key` / `type` 决定本地化文案；
     **不得**拿英文 `msg` 文本做脆弱的字符串匹配来决定字段或翻译。
     后端英文 `message` 保留为日志与"未知 key"的 fallback，**不是第二套翻译真值**。
-  status: CLAIMED@2026-09-20T21:47+08 by 8c66aa92（本机钟）；按 Amendment J §2 V8Experience.tsx 归 e345b9d6 且我转只读 ⇒ 本单交后端真值 + 可评审前端 diff
+  status: 后端半 DONE@2026-09-20T22:2x+08 by 8c66aa92（`3f1b44c`：message_key 恒在、键取 code/pydantic type 不取 msg、loc 仍定字段；10 门 + 6/6 变异含 K2 改读 msg。整单剩前端半（按 locale 查键渲染）按 to: 归 e345b9d6，我不代做 ⇒ 榜单口径 PARTIAL）
 
 - id: ORD-0056
   to: 8c66aa92
