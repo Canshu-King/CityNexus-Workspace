@@ -1943,7 +1943,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 18:0x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749041556（**六条裁定全回**：422 采用已落地通用信封且它撤销自己的五字段提案、`<44px` 门**不改名**用真实文件 `e2e/qoder-mobile-ui-overnight.spec.ts`、denylist 已收窄并把分支推到 **`dddfd8b`（ahead 8）**、8s 维持候选但禁止用加大数字掩盖 bug、**驳回我"/twin 325 次是设计内"**、冷启动 115s **两边都发且后端为根因 owner**；并明令不开 Mission 004）· LAST_OWN_COMMENT_ID = 5749040587（ORD-0045 预览运维移交 + ORD-0046 清单基建外包 + 请裁 115s 归属）；**5748912218 与 5749040587 两条均已 `browser-use` 敲门并得到回应**（方法与判据记在 REQ-0011 status）；链：5748912218（ORD-0044 主断言自纠 + 两项新事实 + 催 A4 四问）→ 5748852498（A4 验收回贴 `ACCEPT-WITH-CONDITIONS`）→ 5748608817（自纠：URL 内嵌凭据害得页面内 fetch 全禁）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+Refreshed: 2026-09-20 18:2x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749059794（**两条 GitHub 侧基建分支已交付**：`m3/preview-ops-fixed-entry` @ `8cc8448` ahead 5、`m3/release-package-manifest` @ `24649bb` ahead 3；我 REST 双查 tip/ahead/文件清单**全部与自述一致**，并把它的 verifier 实跑：`required 22 / missing 3 / forbidden 0 / exit 1`）· LAST_OWN_COMMENT_ID = 5749088441（分支核收 + verifier 实跑读数 + ORD-0045 交互式登录卡点标 `HUMAN_ATTENTION_REQUIRED` + 两个待确认问题）；**三次敲门均成功**（`5748912218`、`5749040587`、`5749088441` 都得到回帖，方法与判据记在 REQ-0011 status）；链：5749041556（六裁 + A4 分支推到 `dddfd8b`）→ 5748912218（ORD-0044 主断言自纠）→ 5748852498（A4 验收 `ACCEPT-WITH-CONDITIONS`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
 **格式约定（别再来一次）**：上面两个水位线字段后面必须紧跟**裸数字**，说明放括号里。`patrol.py` 用正则 `LAST_ARBITER_COMMENT_ID = (\d+)` 读它，被 Markdown 粗体 `**` 包住就解析失败、会把历史帖重新当新帖报（12:5x 实测踩过）。
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
@@ -3011,6 +3011,47 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
   就改成 `202 + operation_id/status` 异步作业，而不是继续假装一个两分钟的同步 POST 是交互式的。
 - **收尾指令**：**不开 Mission 004**；A4、A5、A2/M3-C、USER_GATES 必须在**权威生产构建**上真绿才算完。
 
+### 18:2x 仲裁第二批交付（两条分支）+ 我把它的发布包验真器实跑了一遍
+
+它回 5749040587（总线 `5749059794`）时又推了两条分支。**我按 REST 逐个核过，不是听它说**：
+
+```
+m3/preview-ops-fixed-entry      tip 8cc8448ba28b503f92206f4f5ff43fcaa66db9ba  ahead 5 / behind 0
+  files: preview-ops/{README.md, check-preview.ps1, cloudflared.named-tunnel.example.yml,
+                     start-named-tunnel.ps1, stop-named-tunnel.ps1}
+m3/release-package-manifest     tip 24649bb39e7bb6b979fb3e91f8fd57e8c063aa47  ahead 3 / behind 0
+  files: release-contracts/{README.md, mission-003.acceptance.json, verify-release-package.mjs}
+m3/a4-sw-lifecycle              tip dddfd8b936e1615897736cdc32b03dc7670b30ab  ahead 8 / behind 0
+  files: 6 个（含 playwright.sw.config.ts + qoder-sw-lifecycle.spec.ts + SW_LIFECYCLE_ACCEPTANCE.md）
+```
+三个 tip、三组 ahead/behind、三份文件清单**与自述逐字一致**（`git/ref` + `compare` 双查）。
+
+**实跑验真器**（取到 `raw/rc/` 后本地执行，只读遍历包目录，不改任何东西）：
+```
+node raw/rc/verify-release-package.mjs D:/moodle/_cnx_auth_stage raw/rc/mission-003.acceptance.json
+→ required_count 22 | missing_count 3 | forbidden_count 0 | pass false | exit 1
+   missing: frontend/playwright.sw.config.ts
+            frontend/e2e/qoder-sw-lifecycle.spec.ts
+            frontend/e2e/qoder-user-critical-path.spec.ts
+```
+读数解释（**三条红都该红**）：前两条只存在于 `m3/a4-sw-lifecycle`，要等 ORD-0043 落地才进包；
+第三条是 ORD-0039 还没交付的用户门本体——仲裁明令**在它落地前发布包验证必须保持红，不许把门从清单里删掉**。
+⇒ **ORD-0032 的回收口径从此有了可执行工具**：以后按 `exit code + missing 列表` 报，不再靠我逐文件 sha 手工比。
+
+**`<44px` 归属争议正式终结**：`gate_map` 写死
+`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts`，notes 里明写 Mission 003 不改名。
+⇒ ORD-0046 作废成立；ORD-0032 的清单要按这份 `gate_map` 对齐。
+
+**ORD-0045 卡点（`HUMAN_ATTENTION_REQUIRED`，我不代做）**：它给的 runbook 第一步是
+```
+cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloudflared tunnel route dns …
+```
+`tunnel login` 是**交互式账号登录**（会走浏览器授权，可能带二次验证）——这类动作只有用户本人能做，
+我不代登录、不代过 MFA；而且**命名隧道要求该 Cloudflare 账号下挂着一个域名**才能 `route dns`，
+用户是否有域名未确认。⇒ 在 bootstrap 完成前，**继续用现有 quick tunnel 作为唯一入口**（17:5x 实测可用），
+不因这套脚本没跑起来就把预览停掉。脚本本身我已核：`start` 记 PID+endpoint、拒绝起第二个、
+`stop` 只杀记录在案的 PID —— 正是我 17:5x 闯祸那个失效模式的对症解。
+
 - id: ORD-0048
   to: dc19d662
   priority: high
@@ -3050,7 +3091,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策**一律不得削弱**；
     **不得**通过关掉真实 provider 调用、或把超时调大来"解决"等待；**不得**把未知数据写成已知数据。
     另：document 导航延迟与 API 操作延迟**分开测**（仲裁明令，115s 不能当 HTML 超时的依据）。
-  status: DISPATCHED@2026-09-20 18:0x
+  status: CLAIMED@20260920-181000 by 8c66aa92
 
 - id: ORD-0046
   to: GPT（外部仲裁）
