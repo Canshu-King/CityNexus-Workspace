@@ -1035,6 +1035,8 @@ URL /v8/hub   stored=null   wizard_present=true   shell_present=false   整屏�
 （那会向共享预览库写新行程）；未对 `_preview.db` 或 :8781 发写请求；未改任何文件、未 commit；
 隧道上的 tab 0/1 是别的车道在用，我没有触碰。凭据未读取、未记录。
 
+### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
+
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
 
 - 环境按我自己 ORD-0061 的 runbook 走：**独立导出树 + 独立库** `_lane_dc19d662_tip2_db.sqlite3` + lane 槽位
@@ -1939,6 +1941,51 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
 3. `severity` 不是自由文本：我发 `HIGH` 得到 422。要带 severity 请先读枚举，别猜。
 4. `event_type` 的合法值我实测为：`TRAFFIC_DELAY · CLOSURE · WEATHER · SCHEDULE_DELAY · SERVICE_UNAVAILABLE · USER_CHANGE · OTHER`。
 
+### 🔒 M4 也量到一道真冲突：reset 一路 start 之后，Booking 就**永远**不可用 @03:0x（Commander 亲测）
+
+我在同一台自有后端上继续往 M4 走，实测：
+`POST /bookings {"activity_id":"61e3096d…"}` → **422 `booking requires a PLANNED Journey`**
+（门在 `app/commerce/validators.py:33-41`：要求 `journey_status=="PLANNED"`
+**且** `selected_plan_status=="SELECTED"`，且活动不属于别的计划、且活动未 terminal）。
+
+⇒ **这是我 ORD-0074 那张单造成的结构性冲突**：我让 reset 把演示行程一路推到 `ACTIVE`（为了 M2 能推进活动），
+但 `start` 之后 journey 再也不是 `PLANNED` ⇒ **夜令 M4 要求的"建一个真实 Booking / Commitment → Wallet 看得到"
+在演示台上被封死了**。M2 与 M4 的前半段现在互斥。
+
+**我不打算靠放宽这道门解决**（那是产品语义，已发总线请仲裁裁，见下）。方案是把状态变成**可见的两步**：
+
+```
+- id: ORD-0080
+  to: 8c66aa92
+  priority: critical
+  if_head: 146731d
+  depends_on: ORD-0074
+  subject: 把 start 从 reset 里拆出来——reset 只到 PLANNED+SELECTED，[开始执行] 成为一个显式动作
+  why: reset 现在一路 generate→select→start，所以台子永远是 ACTIVE，booking 门（validators.py:33-41）
+       永远拒。而 Demo 顺序本来就该是"先建承诺，再开始走"。
+  must:
+    1. `POST /demo/reset` 做到 **`plans/generate → select` 为止**（PLANNED + SELECTED），
+       **不再自动 `start`**；响应里把当前状态与"下一步可以做什么"如实报出来。
+    2. 面板侧新增一个真实动作 **[开始执行]**，映射到既有 `POST …/start`（`main.py:5577`）——
+       不新增写端点、不改状态字段、不绕过任何门。
+    3. 实测并给读数：reset 之后 `POST /bookings` 必须 **2xx**（这条是本次改动的验收核心）；
+       再 `[开始执行]` 之后 `POST …/activities/{aid}/complete` 必须 2xx 且游标前进。
+    4. `GET /demo/scene` 请如实反映新状态（`journey_status` 会是 PLANNED；
+       前端要能显示"还没开始执行"而不是把 PLANNED 画成 ACTIVE）。
+  acceptance: 我在自己的 detached 副本上重跑 reset→bookings→start→complete 四跳，
+              看到 2xx/2xx/2xx/游标前进 才算过。数字带 树/sha/解释器/key 在否。
+  status: DISPATCHED@2026-09-21T03:0x+08
+  evidence: 待交。
+```
+
+**给 `e345b9d6`（并入 ORD-0078，别新开单）**：面板要按状态分段，**不要**把两件事混在一个"重置"里 ——
+`PLANNED` 时 [建一个硬承诺] 可用、[推进一个活动] 应 disabled 且原因句写"还没开始执行，先按 [开始执行]"；
+`ACTIVE` 时反过来。这条纪律的意义是：老师不需要懂状态机，但屏幕必须告诉他现在能做什么。
+
+**已请仲裁裁决的一件事**（不阻塞我，按上面方案先做）：
+`booking 只接受 PLANNED` 是不是产品应有的语义？如果仲裁认为 ACTIVE 期间也该能预订，
+那是**门要改**，不是 Demo 要绕；今晚我按"门不动、流程分两步"实现，因为它可逆且不削弱任何真值约束。
+
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
 **三件我亲手量出来的事实，先看完再动手：**
@@ -2313,6 +2360,69 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
 **列车放行判据（更新）**：`146731d`（或 ORD-0078 之后的新 sha）在全量上回到
 **`0 failed`**（凭据清空、解释器 3.12.14、detached 树），且 `curl /demo/scene` 仍能拿到 ACTIVE。
 两条都满足我才发车。**在那之前不发车**——不是我不肯，是发出去的车仪表盘在跳。
+
+### 🟢 commander 亲测 @2026-09-21 02:5x —— **M1 成立；M2 后端成立、但"屏幕上文字真的变了"未成立**（我亲手点的）
+
+**先说怎么测的**（免得又是转述）：真浏览器 390×844、打的是**手机那条链**
+`tunnel → :4782 auth → :4781 vite preview(production build) → :8681 backend`。
+我核过 `:4781` 代理到的是 `:8681` 而不是我的探针 `:8481`：同一时刻两边的 `/demo/scene` 载荷 md5 不同，
+而 `:4781` 与 `:8681` **逐字节相同**（`9ab729b8d79e0bf0164c42da39eebcbd`）。preview 的 dist 重建于 **02:40:42**。
+
+**M1「看得见」= 成立。** 面板在手机上真的出现了，原文：
+> 模拟舞台（场景时间由服务器给）
+> 模拟舞台进行中 · 这台部署由服务器声明为模拟（demo_mode=true）· 服务器说的"现在"是 **2026-10-10 12:00 +08:00**
+> 台上行程 **22222222 · ACTIVE** ｜ 场景窗口 2026-10-10 09:00 → 19:00 ｜ 依据 **执行游标** ｜ 证据 这趟没有冻结证据
+
+截图：`C:/Users/仓鼠王/.playwright-mcp/cnx_M1_390_light.png`（390×844、Light、production build、HEAD `146731d`、demo_mode=true）。
+九个动作的 disabled 状态我也逐条读了：`请求重规划`/`接受方案`/`拒绝方案` 三个 `aria-disabled="true"` 且**旁边同屏写了原因**
+（"重规划要由一个中断触发（服务器要求 trigger_event_id）。先按上面「触发一次中断」。"）——
+**"灰块必须自己解释为什么灰"这条做到了**，是这版面板最值钱的地方。
+
+**M2 后端链路 = 成立（我亲手点的，不是看报告）。** 我点了面板上的 `推进一个活动`，前后实测：
+
+| | 场景"现在" | 行程游标 |
+|---|---|---|
+| 点之前 | 2026-10-10 **12:00** +08:00 | `61e3096d` |
+| 点之后 | 2026-10-10 **13:20** +08:00 | `98af0be5` |
+| 我再点一次 | 2026-10-10 **15:30** +08:00 | `74f10240` |
+
+计划活动随之推进：`Old Town Gate / Riverside Museum / Central Food Hall / Tech Art Center` 四个 **COMPLETED**，
+`Nexus River Cruise Pier` **ACTIVE**，`Skyline Dinner House` **PLANNED**。
+⇒ **后端是真链路**：没有前端自增索引、没有写死 Now/Next、游标与场景时间都由服务器给出。这条是今晚最硬的进展。
+
+**但 M2 的验收句是"Now/Next 屏幕文字真正变化"，这一条我实测 = 未达成，机制已定位到一行：**
+
+`frontend/src/app/V8Experience.tsx:1748` 仍然是 **`const nowMs = Date.now();`**
+—— Today 英雄区算 Now/Next 用的是**设备墙钟**（本机 2026-09-21），而场景的"现在"是 **2026-10-10 15:30**。
+于是所有活动相对设备钟都在未来 ⇒ `currentStop = null`、`nextUp = activities[0]`，
+英雄区一直显示 **"接下来 / 09:00 Old Town Gate"**，无论我在面板上推进多少次都不动。
+
+这正是 ORD-0059-a 该收口而没收到的地方：`frontend/src/lib/sceneClock.ts` **已经写好了**（我读过全文，
+零 `Date.now()`、只读 `/demo/scene`、严格校验信封），**但 Today 英雄区没有消费它**。
+⇒ **这不是新缺陷，是 ORD-0059-a 的尾巴**，只是它卡在"看得见但不动"这个最尴尬的位置上。
+
+**顺带记一个真实的演示风险（不是 bug，但会烧掉老师的 3 分钟）**：
+面板自己弹了一行诚实的警告 ——
+> 注意：台上是行程 22222222，而你现在这屏看的是 **73765ad6**。下面的动作打在台上那一趟。
+
+成因是这台后端上有**两趟行程**：`22222222`（CNX-DEMO，ACTIVE，带计划，台上那趟）与 `73765ad6`
+（CN-TIANJIN，DRAFT，屏幕当时在看的那趟）。**面板很诚实地报了这个不一致**（设计是对的），
+但对老师来说，"我按的按钮动的不是我看的那趟"本身就是演示事故。
+⇒ 演示前必须保证**屏幕上那趟 = 台上那趟**；这条进 MORNING_CHECKPOINT 的 Demo 脚本前置检查。
+
+### 派单（即刻，不等我确认）
+- **`e345b9d6`（ORD-0059-a 收口，priority: critical）**：把 Today 英雄区的时钟从 `Date.now()` 换成
+  服务器场景钟（`sceneClock.ts` 已有的 `useDemoScene`/`sceneInstant`），**并且保留无场景时的诚实回退**
+  （`NO_SCENARIO` 时不要假装成"今天"，要么用既有墙钟逻辑但**明说这是设备时间**，要么显示"服务器没给场景时间"）。
+  验收句只有一条：**我在手机上点 `推进一个活动`，英雄区的 Now/Next 文字必须跟着变**。
+  跑法用 production build（`playwright.sw.config.ts` 那条链），dev server 不算。
+- **`8c66aa92`**：ORD-0078（reset 只播种 + 显式 start-scenario）仍是你当前的最高优先级，先做它。
+- **`5ea3bedc`**：ORD-0077 那张表里请**加上一行**：`GET /demo/scene` 与 `/journeys/{id}/twin` 的
+  "Now/Next" 分别由谁算、前端该信哪个（我实测两者在推进后是一致的，但英雄区用的是第三个来源）。
+
+**M2 判定口径（写清楚，免得下次又吵）**：
+> M2 = 「后端真链路」+「屏幕文字跟着变」，**两条都要**。
+> 现在只满足第一条。我按"**M1 已达成 / M2 后端已达成、可见未达成**"记账，不写成 M2 完成。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
