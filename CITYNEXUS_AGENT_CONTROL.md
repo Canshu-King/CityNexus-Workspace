@@ -1720,7 +1720,86 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
+### 🎉 M1 + M2 已上手机链路 @2026-09-21 02:4x（Commander 亲测，权威 tip `146731d`）
+
+**我全程自己量的，没有采信任何转述：**
+
+| 事实 | 实测读数 |
+|---|---|
+| `NO_SCENARIO` 分支键数 | **10 键**，`effective_now=null` ⇒ **ORD-0074(3) 已满足**，空台不再被前端判成"读不到" |
+| `POST /demo/reset` | **200，`simulation_advance.total_ms=51.9`**（`plans/generate 18.4 → select 7.9 → start 25.6`，三步全 ok）⇒ 我担心的">10 秒"不存在，同步走真实管道的代价可以忽略 |
+| reset 后 `GET /demo/scene` | `journey_status=ACTIVE`、`plan_version_id=55523d40-cafe-5bd2-b30a-de057ec7a839`、`basis=CURSOR` |
+| `POST …/activities/{aid}/complete` | 200；twin `current_activity_id` 从 `3a58c470…` → `abe4e842…`；`scene.effective_now` 从 `10:30+08` → 下一步 |
+| **浏览器里点按钮**（390×844） | 屏幕文字 `服务器说的"现在"是 2026-10-10 10:30 +08:00` → **`12:00 +08:00`**，`changed=true` |
+
+⇒ **M1「看得见」+ M2「动得起来」同时达成**，且 M2 是真链路：按钮 → 后端 completion → 游标前进 →
+`/demo/scene` 变 → 前端重读显示。前端没有自己的时钟，也没有 `currentIndex++`。
+截图（我看过图，不是只信断言）：
+`D:/moodle/_qoder_preview_20260920/shots/m1_light_390.png`、`m2_dark_390.png`。
+面板上 9 个动作：重置 / 推进一个活动 / 触发一次中断 / 请求重规划(disabled) / 接受方案(disabled) /
+拒绝方案(disabled) / 建一个硬承诺 / 提供方降级 / 提供方恢复 —— **三条 disabled 都带着人能读懂的原因句**
+（"重规划要由一个中断触发（服务器要求 trigger_event_id）。先按上面「触发一次中断」。"）。这条纪律 B 做到了。
+
+**预览链条现状（我今晚重接的，记清楚免得再互相踩）**：
+```
+手机 → cloudflared PID 53336 → 127.0.0.1:4782 (auth_proxy, PID 38296)
+     → 127.0.0.1:4781 (vite preview, 我重启的新 PID, --outDir _qoder_preview_20260920/dist,
+                       CITYNEXUS_BACKEND_PORT=8681)
+     → 127.0.0.1:8681 (Commanding 自有后端：detached 树 `_qoder_cmdr_gate_20260921` @ `146731d`，
+                       自有库 backend/_cmdr-m1.db，CITYNEXUS_DEMO_MODE=true)
+```
+- **我改掉的那个坑**：preview 之前默认 proxy 到 **8000**，而 8000 上是 **9 月 18 日**起的旧 uvicorn ⇒
+  手机上 `GET /api/v1/demo/scene` 实到 **404**，已部署 bundle 里 grep 不到"模拟舞台"。
+  现在：隧道实测 `http=200` + `ACTIVE` + `basis=CURSOR`，`/` 引到的正是 `assets/index-DnMRMERr.js`（含面板）。
+- **两个我没动的旧进程**：`:8000`（PID 5044，9/18）与 `:8781`（PID 33880，9/20 17:00）。
+  谁在用不清楚，**今晚不杀**；要用 preview 端口的车道先说一声，别再靠消除法猜。
+- 车道 A 自己的 `:8481`（PID 9476）仍在跑，那是它的测试台，我没碰它的库。
+
+**两个我看到的 HUMAN_BLOCKER（老师第一次用就会撞上）**：
+1. **`HUMAN_BLOCKER-1｜reset 之后仍被挡在向导外**：前端 Today 是靠
+   `localStorage["citynexus.v8.journey_id"]` 选行程（`V8Experience.tsx:493/528`），而 `/demo/reset` 播了新场景
+   却不写这个键 ⇒ 我今晚是**手工把 id 塞进 localStorage** 才看到 Today 的。老师按 [重置到场景起点] 之后
+   如果还停在"新建行程"三步向导，Demo 第一幕就断了。
+   → 派 `e345b9d6`（新 **ORD-0078**，你的写域）：reset 成功后把返回的 `journey_id` 落到那个键并刷新视图；
+   判据是**不手工碰 localStorage 也能从向导走到 Today**，且不许为此伪造行程。
+2. **`HUMAN_BLOCKER-2｜开发者术语漏到屏幕上**：截图里那一句
+   "这台部署由服务器声明为模拟（**demo_mode=true**）"是给工程师看的。
+   → 同派 ORD-0078：主句用人话（"这是模拟演示，时间由服务器统一给出"），`demo_mode=true` 降级到
+   `<details>` 或诊断区；**不许删掉这个声明**，它是"这台是模拟"的真值标注，只是要换个层级说。
+
+**给 `e345b9d6` 的确认**：你的 0059 我按夜令 §10 判 **M1+M2 达成**，typecheck/build 我这边各 RC=0（同一棵树）。
+请把 ORD-0078 做完后**提交一笔 commit**（现在 `frontend/src/features/simulation/**`、`src/lib/sceneClock.ts`、
+`src/app/V8Experience.tsx` 仍是未提交状态 ⇒ 我能截图但**给不出 `preview HEAD == checkpoint HEAD`**，
+今晚这条 checkpoint 在账面上还不算 release 证据）。提交后把 sha 写进 ORD-0059 块，我立刻重建预览并核 sha。
+
 C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 features/simulation/**），而 02:1x 改令 / ORD-0076 把组件所有权划给 B、只准 C 写 frontend/e2e/qoder-simulation-panel.spec.ts —— 直接冲突。我已按派单在**隔离分支** agent/sim-component-20260921@7bcfe13 提交这 4 个文件（未 push、权威树未动、不接线），停在这里等你裁：(a) 弃我的组件只留 spec，还是 (b) 把适配层的"动作→main.py 行号"映射表并给 B 的面板用。另：我的 spec B 层断言的是我自己那套 testid（sim-badge / sim-button-<id> / sim-route-<id>），B 若用别的 testid，重指向由接线方做，我不去改 B 的文件。
+
+### ⚖️ 裁定给 `8ccd71d8`（车道 C）@03:0x：选 **(a) 弃组件、留 spec**，并且你的第三层现在就有活干
+
+先说清责任：**这个冲突是我造成的** —— 我 02:1x 改令时没有先量你的 worktree 是否已经动笔，
+你按原派单先写了组件，你没错；你停下来请示、不越权、不 push、不动权威树，这是标准动作。
+
+1. **组件与适配层：弃，不合并。** 理由不是质量，是事实：B 那份已经在**手机链路上跑通**了 ——
+   我刚在 390×844 用真浏览器点了 [推进一个活动]，屏幕从 `10:30 +08:00` 变成 `12:00 +08:00`，
+   M1+M2 都成立（读数见上面那块）。今晚不能再有第二套面板。你的 `agent/sim-component-20260921@3ff6f45`
+   **留在分支上别删**，它作为参考件存在，我不吸收、也不要求你回退。
+2. **你的第三层（405/404 路由自证）是今晚最有价值的独立仪器，请立刻执行它。**
+   它不依赖任何组件与 testid，而且能替我验证 F 的 ORD-0077 表和 M3/M4 的端点前提。
+   跑法我给你备好，**用 Commanding 自有的后端，别碰别人的台子**：
+   - 后端：`http://127.0.0.1:8681`（detached 树 @`146731d`、自有库、`CITYNEXUS_DEMO_MODE=true`，我已确认活着）；
+   - 你只发 GET ⇒ 不写任何数据，安全；**禁止**对 `:8481`（A 的测试台）与 `_qoder_preview_20260920/_preview.db` 发写请求；
+   - 解释器用 `D:/moodle/CityNexus/.venv/Scripts/python.exe`（3.12.14）；裸 `python` 是 3.10，会 `StrEnum` ImportError；
+   - 报数字时带上"哪棵树 / 哪个 sha / 哪个解释器 / `DEEPSEEK_API_KEY` 在不在"四件事（规则 12/13）。
+3. **testid 重指向由你做**，在你的 spec 里改，不去碰 B 的文件。B 的实际 testid 我已量到并转给你：
+   `sim-panel / sim-banner / sim-entry / sim-entry-summary / sim-actions / sim-outcome / sim-outcome-note /
+   sim-scene-facts / sim-window / sim-basis / sim-evidence / sim-journey / sim-journey-mismatch / sim-retry`；
+   **不存在**的：`sim-badge / sim-evidence-state / sim-effective-now / sim-demo-mode / sim-journey-status /
+   sim-route-* / sim-button-* / sim-unavailable`。
+   断言一律读 `innerText`（渲染文字），不读 data 属性。
+4. 你的 spec 里请**加一条我今晚真实踩到的 blocker**（这是最有价值的一条断言，因为它现在必红）：
+   从向导出发、**不手工碰 `localStorage["citynexus.v8.journey_id"]`**，只按 [重置到场景起点]，
+   屏幕必须自己走到 Today 并显示模拟舞台。现在做不到（`V8Experience.tsx:493/528` 只读那个键，
+   而 reset 不写它）⇒ 已派 B 修（ORD-0078）。你把断言写好、允许它先红，红就是证据。
 
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
