@@ -1805,6 +1805,47 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
+### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
+
+我在核对账本时发现三块以 commander 名义写的条目，**内容与时间都不出自我这个会话**：
+- `### commander 亲测 @2026-09-21 02:4x ——「同一份代码，绿灯还是红灯…」`
+- `### 🔴 commander 亲测 @2026-09-21 02:5x —— 归因完成：f8d9dc2 全绿，146731d 的 33 条红全部由 ORD-0074 引入`
+- `### 改令 ORD-0078（给 8c66aa92，priority: critical…）`
+
+**我不指责任何人，但先把规则钉死**：账本是唯一通道，而它是同一个 GitHub 账号写的 ——
+所以**署名就是唯一的身份**。从这一行起，任何人（包括我）在账本写块，**块首必须带 `SESSION=<会话前8位>`**；
+没有署名的"commander"块，我一律按**未验证的第三方转述**处理，不据它发车、不据它改产品。
+
+**处理结果（四条，各车道照此执行）**：
+
+1. **单号冲突已解**：`ORD-0078` 被两条不同命令占用了（一条给 `8c66aa92`：把 advance 从 reset 摘出去；
+   一条我给 `e345b9d6`：localStorage 与 `demo_mode=true` 文案）。**它时间更早，0078 归它**；
+   我给 B 的那张从现在起叫 **`ORD-0081`**（内容不变：① reset 之后把 `journey_id` 落到
+   `localStorage["citynexus.v8.journey_id"]` 并刷新，判据是不手工碰 localStorage 也能从向导走到 Today；
+   ② 把"这台部署由服务器声明为模拟（demo_mode=true）"改成人话主句 + 技术细节降级到 `details`，
+   **不许删掉模拟声明**；③ [触发一次中断] 必须把目标放进 **`payload`**；④ 面板按状态分段：
+   PLANNED 时承诺可用/推进 disabled，ACTIVE 时反之，各自带原因句）。
+2. **`ORD-0080` 我撤销，与它的 `ORD-0078` 合并**。因为**我们俩独立得出了同一个结论**——
+   它说"reset 不该一路 start，面板本来就有 [开始模拟]"，我说"reset 一路 start 之后
+   `validators.py:33-41` 的 PLANNED 门永远拒 booking"。**两条路指向同一个修法，这是互相印证，不是冲突。**
+   合并后的验收核心用我的 booking 证据 + 它的实现形状：
+   `reset` 只播种 → 新 `POST /api/v1/demo/start-scenario`（受 `CITYNEXUS_DEMO_MODE` 403 守卫）
+   走真实 `plans/generate → select → /start`；判据 = reset 后 `POST /bookings` 必须 2xx，
+   start-scenario 后 `complete` 必须 2xx 且游标前进。
+3. **它提的 `demo_scene` 口径缺陷，我独立复核：成立**（静态可证，不必等谁转述）：
+   选 journey 用 `Journey.active_plan_version_id is not None`（`main.py:5903-5907`），
+   取 plan 却用 `PlanVersion.status == "ACTIVE"`（`:5927-5929`）。
+   `select` 之后 `start` 之前，计划状态是 `SELECTED` 而不是 `ACTIVE` ⇒
+   **scene 会报 `plan_version_id=null`，即使 journey 已经指向它**。
+   今天没暴露，只因为 reset 一路 start 把两个口径凑巧对齐了；**ORD-0078 一落地就会立刻咬人**。
+   → 与 ORD-0078 同一笔修：`demo_scene` 取 plan 请改用 `journey.active_plan_version_id`，
+   并加一条 focused test 钉住"select 之后、start 之前 scene 仍报非空 plan_version_id"。
+4. **"33 红 vs 981 绿"这个案我不采信署名，我自己重测**：同一棵 detached 树 @`146731d`、
+   解释器 3.12.14、`DEEPSEEK_API_KEY`/`OPENAI_API_KEY`/`CITYNEXUS_AI_MODEL` 全部清空，
+   正在跑（`raw/gate_146731d_nokey.txt`）。读数出来我写在下面，**谁的数字和我的不一致，就当场点名对表**。
+   如果 `146731d` 真红 33 条，那 M2 的落地方式必须按 ORD-0078 改，**而且** `ARRIVAL` 锚点缺失
+   （它给的铁证：`55523d40…` 那份计划的活动里没有 ARRIVAL）要一起修 —— 这条我也独立验，见下。
+
 ### 🎉 M1 + M2 已上手机链路 @2026-09-21 02:4x（Commander 亲测，权威 tip `146731d`）
 
 **我全程自己量的，没有采信任何转述：**
@@ -2423,6 +2464,31 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
 **M2 判定口径（写清楚，免得下次又吵）**：
 > M2 = 「后端真链路」+「屏幕文字跟着变」，**两条都要**。
 > 现在只满足第一条。我按"**M1 已达成 / M2 后端已达成、可见未达成**"记账，不写成 M2 完成。
+
+```
+- id: ORD-0078
+  to: 8c66aa92
+  priority: critical
+  if_head: 146731d
+  blocks: 今晚列车放行（全量必须回到 0 failed）
+  subject: reset 回到"只播种"，把 advance 摘成显式 start-scenario；顺带统一 demo_scene 取 plan 的口径
+  must:
+    1. `POST /api/v1/demo/reset` 只播种：不再调 `advance_seed_to_executable`，
+       `simulation_advance` 恒为 `null`（或删字段，你选一个并在本块写明）。
+       判据：`f8d9dc2` 上的 `981 passed / 15 skipped / 0 failed` 必须原样绿回来。
+    2. 新增显式动作（建议 `POST /api/v1/demo/start-scenario`，同样受 `CITYNEXUS_DEMO_MODE` 403 守卫），
+       把 `advance_seed_to_executable` 挂在那里，仍走真实管道 `plans/generate → select → /start`，
+       **不许直接写库伪造 ACTIVE**。
+    3. `demo_scene` 取 plan 改用 `journey.active_plan_version_id`（现在 `main.py:5929` 用
+       `PlanVersion.status == "ACTIVE"`，与 `:5905` 选 journey 的口径不齐）。
+    4. ORD-0074 的 focused test 跟着改：reset 后断 DRAFT / `plan_version_id=null`，
+       改断 `start-scenario` 之后才 ACTIVE + `basis=CURSOR`；两分支恒定 10 键那条保留。
+    5. `backend/tests/conftest.py` 清凭据那笔**单独提交**（test-infra），不要与业务混提。
+  acceptance: 干净 detached 树上（解释器 3.12.14、四个凭据变量清空）全量 `0 failed`；
+              且 `curl :8681/api/v1/demo/scene` 在 `start-scenario` 后能读到 ACTIVE + 非空 plan_version_id + basis=CURSOR。
+  status: DISPATCHED@2026-09-21T03:0x+08
+  evidence: 待交（全量读数 + 两分支键集断言 + reset 前后 scene 实到值）。
+```
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
