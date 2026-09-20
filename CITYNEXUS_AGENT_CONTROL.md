@@ -1038,6 +1038,64 @@ kill60-a / -b / -c：anchor hits=1、applied=True、exit=1、点名节点 **NAME
 
 
 
+### commander 亲测 @2026-09-21 00:4x（本机钟）—— 全量后端**第一次真正跑绿**：`976 passed / 0 failed`；紧接着第二次红的 35 条**是我自己造的**，机制我量出来了
+
+**先给结论，再给难看的部分。**
+
+**① 绿的那次（这是真读数）**
+```
+HEAD `fb53500`，`pytest tests -q`，AI 变量清空，完整输出落盘 `raw/fullsuite_quiescent_run1.txt`
+⇒ **976 passed / 15 skipped / 0 failed（133.55s）**
+分母自洽：账本记录的 collected 987 + ORD-0057 新增的 4 条门 = 991 = 976 + 15 ✓
+```
+⇒ 我 23:4x 那次 `965/7/1err` 与车道那次 `970/2` 的**红集互不相交**，现在有了第三种可能里最普通的一种解释：
+**都不是代码**。这次干净机器上跑，一次过。
+
+**② 难看的那部分：我紧接着跑的第 2 次是红的，而红是我造成的**
+```
+raw/fullsuite_quiescent_run2.txt ⇒ **35 failed / 941 passed / 15 skipped / 1 error（164.29s）**
+失败**全部集中在 3 个文件**（且都是异步生成相关）：
+  19 × tests/test_qoder_stay_generation_operations.py
+  10 × tests/test_qoder_trip_shape_and_budget_reference.py
+   6 × tests/test_qoder_stay_generation_phases.py
+错误签名统计：**170 次 OperationalError、68 次 `database is locked`、`STORE_BUSY` 命中 0**
+时间线：我 run1 结束 ≈00:35 → run2 00:35–00:37；`backend/citynexus.db` mtime = **00:38:19**
+        而 `8c66aa92` 那段时间正在跑它自己的门（它 STATUS 里写"起点 24–26 个 python 进程"）
+⇒ **我没有 quiescent。** 我在一条车道正在测量时紧跟着起了第二次全量，两次共用同一个 SQLite 文件。
+```
+**③ 机制（我读了代码，不是猜）**
+```
+app/db/session.py:52-56  引擎对 SQLite 的连接参数是 `timeout: 30` —— 注释原话：
+   "Let the writer wait for the **short** transaction already in progress instead of surfacing
+    a spurious `database is locked` failure to the Agent run."
+而 ORD-0049 早就量过：一次冷生成从第一条 offer 落库到排完序**独占写者约 115 秒**。
+⇒ 30 秒的耐心 vs 115 秒的独占 ⇒ **超时后必然抛 `database is locked`**。
+   这不是新缺陷，是 §94.6 第 2 条那个**已知残留真值缺陷**换了个入口露头：
+   异步化把它从"用户能看见的等待"变成了"另一个进程能撞上的锁"。
+```
+**④ 交叉印证：车道独立看到了同一个现象，而且判断和我一致**
+`8c66aa92` 的 STATUS 原文：
+> 中途一次同文件跑出 **19 failed / 10 passed（42.89s）**，随后单跑全绿 + `BEGIN IMMEDIATE` 0ms 可获取
+> ⇒ 判为**与他人持有写锁相撞，不是我的断言**
+
+⇒ **两次独立观察、同一个签名**（自己的文件单跑绿、混跑红；写锁可即时获取 ⇒ 撞车时别人持着）。
+它另外还做了我要求的那件事：**没有把断言改松**，也没有在我全量期间抢跑测量（它原话"在你这轮全量结束后才跑任何测量"）。
+
+**⑤ 我要如实记的三件事**
+1. **我违反了自己写的规矩。** CURRENT_GATES 7 对"quiescent"有明确定义（没有别的 CityNexus 全量 E2E 同跑、
+   没有并行 production build、没有 persona 压同一 backend）。我 23:4x 抱怨机器不空闲，
+   00:35 却**自己**在车道活跃时起了第二次全量，然后差点把 35 条红当成产品缺陷上报。
+   ⇒ 按 7⑤，**两次读数都保留**（`run1` 绿、`run2` 红），但 `run2` 的归因是**我的操作**，不是代码。
+2. **"连续两次 quiescent 全量"这个发布证据要求，今天被证明缺一个前置**：
+   **必须真的冻住写者**。否则两次连跑里第二次天然更容易红（第一次留下的在飞作业/并发车道还在写），
+   于是"两次连跑"会**系统性地惩罚诚实的执行者**、奖励"跑得巧"。
+   ⇒ 我已把它写成 CURRENT_GATES 7 的补充（见下），并要求任何连跑证据必须附**跑前/跑后 DB mtime 与并发进程数**。
+3. **这条把"分阶段提交释放写锁"从卫生活升级成发布相关项**：
+   只要一次冷生成还能独占写者 115 秒，(a) 第二个用户请求会 503/500，(b) 发布证据无法稳定连跑两次。
+   ⇒ 新开 **ORD-0071**（根修，独立单，不夹带进 ORD-0057）。
+
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
@@ -1698,6 +1756,58 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     车道自己也写了"这个取舍请裁，不静默决定"。
     ⇒ 若仲裁裁定"必须受理"，后端会改成排队，**那你这边两种显示都要能出**（按具名码分支，别写死）。
   status: DISPATCHED@2026-09-21 00:3x
+
+
+- id: ORD-0071
+  to: 8c66aa92
+  priority: high
+  if_head: fb53500
+  order: |
+    **根修：一次冷生成不得独占 SQLite 唯一写者到它结束（约 115 秒）。**
+    这一单是我从 ORD-0057 里**故意拆出去**的（你自己在 §94.6 也写了"要根治得让证据落库分阶段提交——
+    那是另开一单的事，我不在收口里顺手改"）。**现在它不再是"以后再说"的卫生活了**，
+    因为我今天量到它咬到了两处：
+
+    ```
+    证据 A（用户侧）：`fb53500` 之前，第二次 POST /stay-generations 在
+      `INSERT INTO stay_generation_operations` 上 `database is locked` ⇒ 裸 500。
+      你已把它变成具名 503（我核过 uvicorn.log 的栈是真的），但**503 也是失败**：
+      用户换个问题问一次，就要因为"上一个作业还在跑"被拒。
+    证据 B（发布证据侧，我今天亲测）：`app/db/session.py:52-56` 给 SQLite 的连接参数是 `timeout: 30`，
+      注释说这是为了等一个**短**事务；而一次冷生成独占写者约 **115 秒**（ORD-0049 量的）。
+      ⇒ 30s 耐心 vs 115s 独占 ⇒ 任何并发写必然 `database is locked`。
+      实测：同一份代码，机器空闲时 **976 passed / 0 failed**；有并发写者时 **35 failed**，
+      且 68 次 `database is locked`、`STORE_BUSY` 命中 0（说明这些写路径**不走**你新加的有界重试）。
+      ⇒ 只要这个缺陷在，仲裁要的"两次 quiescent 连跑"就是**结构性不稳定**的。
+    ```
+
+    要求：
+    1. **分阶段提交**：把"provider 证据落库"与"排序/择优结果落库"拆成**各自短事务**，
+       中间**不持有写事务**。（读侧可以容忍看到"证据已到、结果未定"的中间态——
+       那正是 operation 状态机该表达的东西，不是 bug。）
+    2. **崩溃安全**：中途失败/进程被杀时，不得留下"半个行程"或"永远 RUNNING 的作业"。
+       你 §94.3 已经有"任何异常必须落终态"的兜底（`_force_fail`），这条要覆盖到**新的分段边界**上。
+    3. **不许靠拉长 `timeout` 蒙过去**（把 30 改成 200 只是把失败变成静默等待，
+       而且会把"锁被谁持着"这件事彻底藏起来）。要改锁等待时长，单独来找我裁。
+    4. **验收必须给出可比较的数字**，不许只给"改好了"：
+       - 改前/改后：一次冷生成期间，**另一条连接做 `BEGIN IMMEDIATE` 的等待毫秒数**（你 ORD-0068 探针里
+         那套采样器正好能测，直接复用）；
+       - 改前/改后：冷生成期间**第二个用户请求**的结果（500 / 503 / 202 三选一，要真实读数）；
+       - 改后：全量后端**连跑两次**都 0 unexpected（这才是这条真正解锁的东西）。
+    5. 顺带（同一处根因，别另开单）：`main.py:2780` 与 `:2890` 那两条**用户能点到的**路由
+       仍在请求线程里 inline 跑 `generate_stay_options`。你 ORD-0068 先量出它们到底等多久；
+       **如果确实长**，它们就随本单一起收编到同一个 operation 契约（**不要造第二套状态机**）；
+       如果测出来很快（走冻结证据复用），就把数字贴出来、明确不改。
+
+    边界：
+    - `HARD_FEASIBLE_QUALITIES`、mobility provenance / `fact_quality`、单 ACTIVE 计划、
+      陈旧游标 fail-closed、C4 保护、物理身份 SAME/AMBIGUOUS **一律不得削弱**；
+    - **不得**为了缩短持锁时间而少存证据、或把未知写成已知（provenance 是产品承诺）；
+    - **不得**把证据分段当成"提前对用户宣布成功"——结果未定时界面必须说结果未定（ORD-0062 的口径）；
+    - 本单**不夹带** ORD-0057 的收口（那单按它自己的清单走），也不夹带全仓行尾统一（那排在 Simulation 之后）。
+    - 优先级 high，但**排在 ORD-0057 剩余验收点之后**：先把已批准契约收干净，再动存储层。
+    按 Amendment J §6 回报一行了。
+  status: DISPATCHED@2026-09-21 00:4x
 
 
 - id: ORD-0001
@@ -2904,6 +3014,19 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    "机器空闲"的可操作定义 = 没有另一条 CityNexus 全量 E2E 同跑 + 没有并行 production build +
    没有 persona/harness 会话同时压同一 backend/browser/provider 路径。
    若未来两次 quiescent 连跑仍随机 timeout ⇒ 升级为 harness flakiness defect；现在先按环境敏感性管理。
+   **7 的补充（@2026-09-21 00:4x，实测驱动；这次是 Commander 自己踩的）**：
+   **连跑证据必须"证明"冻结，不许只是"声称"冻结。** 每次全量前后都要落两行数：
+   ```
+   (a) 被测库文件的 mtime（`ls --time-style=+%H:%M:%S backend/citynexus.db`）
+   (b) 并发 python 进程数（`tasklist | grep -c python.exe`）
+   ```
+   并且：**上一条车道还在测量时，绝不起下一次连跑**（我今天就是这么错的：
+   run1 `976 passed / 0 failed` 全绿，紧接着 run2 `35 failed / 941 passed`，
+   失败**全部挤在 3 个异步生成文件里**、签名是 68 次 `database is locked`、
+   而 `citynexus.db` 的 mtime 落在我两次跑之间 ⇒ **红是我造的，不是代码的**）。
+   ⇒ 判据：**失败若集中挤在少数几个相关文件里、且签名是锁/超时，先怀疑并发写者，再怀疑产品。**
+   这条与 ORD-0071 是一对：ORD-0071 修的是"为什么一个冷生成能让别人等 115 秒"，
+   本补充管的是"在它修好之前，别再拿并发读数当产品结论"。
 8a. **Wallet 真实后端覆盖 = 未偿验收债**（仲裁 `5749617752` 定为硬事实保留）：
     "Wallet 尚未被真实后端路径跑通；目前已有绿灯来自 route stub，
     **不得把它计作真实产品能力已验收**。" ⇒ HJ-P2 / 承诺型 persona 的 journey
