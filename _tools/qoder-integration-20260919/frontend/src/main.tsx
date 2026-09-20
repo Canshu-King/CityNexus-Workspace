@@ -1670,13 +1670,73 @@ createRoot(document.getElementById("root")!).render(
   </QueryClientProvider>,
 );
 
+const serviceWorkerReloadMarkerKey = "citynexus.sw.controller-transition";
+
+async function removeLegacyServiceWorkerCaches() {
+  if (!("caches" in window)) return;
+  const legacyCacheNames = new Set([
+    "citynexus-trip-operations-v1",
+    "citynexus-pages",
+    "citynexus-static",
+  ]);
+  const cacheNames = await caches.keys();
+  await Promise.all(
+    cacheNames
+      .filter(
+        (name) =>
+          legacyCacheNames.has(name) ||
+          name.startsWith("citynexus-trip-operations-v"),
+      )
+      .map((name) => caches.delete(name)),
+  );
+}
+
+async function unregisterDevelopmentServiceWorkers() {
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations.map((registration) => registration.unregister()));
+}
+
+async function registerProductionServiceWorker() {
+  const controllerBefore = navigator.serviceWorker.controller?.scriptURL ?? null;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    const controllerAfter = navigator.serviceWorker.controller?.scriptURL ?? null;
+    if (!controllerBefore || !controllerAfter || controllerBefore === controllerAfter) return;
+
+    const transition = `${controllerBefore}->${controllerAfter}`;
+    if (sessionStorage.getItem(serviceWorkerReloadMarkerKey) === transition) return;
+
+    // Reload exactly once when an already-controlled page moves to a new worker.
+    // This prevents an old HTML shell from continuing to execute against a new
+    // asset graph after an auto-update takes control.
+    sessionStorage.setItem(serviceWorkerReloadMarkerKey, transition);
+    window.location.reload();
+  });
+
+  const registration = await navigator.serviceWorker.register("/v10-sw.js", {
+    scope: "/",
+    updateViaCache: "none",
+  });
+  await registration.update();
+  await navigator.serviceWorker.ready;
+  await removeLegacyServiceWorkerCaches();
+}
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    // The PWA plugin emits the versioned worker in production.  Vite's dev
-    // server serves the checked-in worker instead; registering the production
-    // path during development returns the SPA HTML with a JavaScript MIME
-    // type and creates a noisy console error in the quality gate.
-    const serviceWorkerPath = import.meta.env.DEV ? "/sw.js" : "/v10-sw.js";
-    void navigator.serviceWorker.register(serviceWorkerPath);
+    if (import.meta.env.DEV) {
+      // Development is intentionally SW-free. Removing leftovers here also
+      // prevents a production worker from a previous same-origin preview from
+      // hijacking Vite/HMR module requests.
+      void unregisterDevelopmentServiceWorkers().catch((error) => {
+        console.warn("CityNexus could not remove a development service worker", error);
+      });
+      return;
+    }
+
+    void registerProductionServiceWorker().catch((error) => {
+      // SW failure must not make the application itself fail to boot.
+      console.warn("CityNexus service worker registration failed", error);
+    });
   });
 }
