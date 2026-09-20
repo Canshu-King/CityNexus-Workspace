@@ -2013,6 +2013,12 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     c. 一条断言"7 天窗口仍然通过"（防我把上限改小蒙过去）；
     d. 全量后端跑一遍并报 `N passed / M skipped / K failed`，与账本权威读数 913/15/0 对表；差值要逐条点名。
     **不要顺手扩大范围**：不要改 7 天这个数值本身，不要动 `/twin` 的 `projection_status`，不要碰前端（另单 ORD-0034）。
+  commander_evidence_095x: |
+    我按只读方式查了预览库（`file:_preview.db?mode=ro`）给这条订单补硬证据：库里 **8 个 journey**，
+    其中 **5 个是 9 天窗口**（用户点了 4 次 + 我按同载荷复现 1 次），而 **`plan_versions` 总数 = 0**；
+    整份预览日志里 `plans/generate` 被调用 **0 次**。⇒ 也就是"建得出来、走不下去、还不报错"的
+    **永久不可用行已经堆了 5 条**，每条都占着一个 journey 身份。这就是我在 (2) 里倾向**方案 (A) 入口即拒**的实测依据；
+    你若选 (B) 必须在响应里把这个事实带出来，不能让它继续只是库里的静默垃圾。
   status: DISPATCHED@2026-09-20 09:2x
 
 - id: ORD-0034
@@ -2041,7 +2047,57 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     （把 `message` 属性去掉 → 该节点必须红，点名节点 id）；附 `npx playwright test --list` 的 collected 与其中 setup 工程行数，
     以及一次全量 suite 的 `N passed / M skipped / K failed`。
     **不要顺手扩大范围**：不动后端、不改导航拓扑、不动 `V8Experience.tsx` 的壳层结构。
-  status: DISPATCHED@2026-09-20 09:2x
+  status: PARTIAL@20260920-081500 by e345b9d6
+  evidence: |
+    [e345b9d6 交付] 分支 `agent/ui-overnight-20260920`，commit `252ab0e`（基 `c0367c1`；
+    接单前先把我的分支 fast-forward 到 if_head —— `19d842a` 是 `c0367c1` 的祖先，纯 FF 不改写历史）。
+
+    三条锚点我自己逐行复核过，全部成立：
+      - `V8Experience.tsx:796-801` 只传 4 个属性，无 `message`；
+      - `JourneyTrialSetup.tsx` 里 `message` 全文件 **0 命中**；
+      - `createJourney` 的 catch 确实 `setMessage(error instanceof Error ? error.message : …)`，
+        且**不 rethrow**；成功路径在 `:577` `setSetupOpen(false)` 关掉向导。
+      另确认 `v8Request`（`:88-101`）把 `body.detail` 抛成 `Error.message`，
+      所以具名 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9` 本来能一路走到显示 —— 只断在没传。
+
+    已落地（只动我自己的两个文件 + 一个新 e2e）：
+      - 向导自己判定"这一步没成功"：`await onCreate()` 正常返回不代表行程存在；
+        await 之后仍然挂载 = 壳层没关向导 = 确定失败。提示直接放在确认按钮上方，
+        `role="alert"`，明写"这一步没有成功，行程还没有创建"。改任一字段即清除（它说的是上一次尝试）。
+      - 新增可选 `message` 属性，具名原因一到就自动多渲染一行；提示只在本地失败标志为真时出现，
+        避免壳层那条共享 message 把无关文案显示进 onboarding。
+      - 对比度用墨色压在分层底色上（亮 #1d1d1f/#f2f2f7、暗 #f5f5f7/#2c2c2e），
+        危险色只走左侧装饰条 —— 沿用 ORD-0023 记下的教训（语义色当 13px 正文会挂 AA）。
+      - 遵守 Amendment F：没把向导搬进 `.v8-product-shell`、没引入底部主导航；
+        触屏 ≥44 / 桌面 30 的分层未受影响。
+
+    杀证（`review/mutation-kill-onboarding-failure.log`）：删掉失败渲染 →
+      `e2e/qoder-onboarding-failure.spec.ts:47` 转红，`MUTANT_PW_EXIT=1`，点名
+      `getByTestId('trial-create-error')`；源文件按 sha1 校验**逐字节还原**，还原后 2 passed。
+
+    ⚠ 未落地的一半，以及我为什么停在这里：具名原因要真到用户眼前，只差
+      `V8Experience.tsx:801` 加一行 `message={message}`。那是 `8c66aa92` 的文件。
+      ORD-0023 笼统禁止我改它，ORD-0034 的禁令只写"不动壳层结构"，两条读法不一致；
+      我按你的口径问了一次归属，未获答复，于是取保守解：**没改那个文件**。
+      补丁已产出并用 `git apply --check` 验证可干净应用（**未应用**）：
+      `review/patches/ORD-0034-relay-message-prop.patch`（+1 行）。
+      请转交 `8c66aa92`，或明确授权我自己落这一行。
+
+    全量 suite（提交态、工作区干净，run id `uiord3402`，backend :8178 / frontend :4278，
+    `CityNexus\.venv`，独立 `_uiord3402.db`，AI 关闭）：
+      **59 passed / 5 skipped / 1 failed**，`SUITE_EXIT=1`，2.7m。
+      唯一那条红是 `qoder-onboarding-failure.spec.ts:109`
+      "the named backend reason reaches the onboarding screen" —— 它就是上面那一行缺口的活证据，
+      我**故意留着红而不是 skip**：skip 会把"用户还看不见原因"变成账面上没有的事。
+      两条测试刻意拆开，否则"向导不再静默"这个已完成的修复会和待转交项共用一个红绿状态。
+    `npx playwright test --list`：**Total 65 tests in 29 files**，其中 `[real-seed]` setup 工程
+      **1 行**、`[chromium]` **64 行**（我的新 spec 贡献 2 行）。
+    `npm run build` exit 0。
+
+    边界：`git diff --stat c0367c1..HEAD -- frontend/src/app/V8Experience.tsx backend/` 为空；
+    未动 `max_day_count`、未放宽向导输入、未改导航拓扑；
+    预览实例 `127.0.0.1:4781` / `:8781` 仍在监听、`_qoder_preview_20260920\` 未动、AI 未关。
+    ⚠ 另：本车道 `typecheck` 报 0 错误仍不可当证据，起因见 ORD-0016 我补的【后续发现】。
 
 - id: ORD-0035
   to: e345b9d6
@@ -2089,7 +2145,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     d. 报告里写清：这批 off-path 面板**还有哪几块**是同样"styles.css 亮色唯一 + 无暗色绑定"的形状
        （给我类名与行号，不用修，我要据此决定是否立一张总单）。
     **不要顺手扩大范围**：不改产品语义、不动后端、不加主题开关。
-  status: DISPATCHED@2026-09-20 09:3x
+  status: CLAIMED@20260920-082500 by e345b9d6
 
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
