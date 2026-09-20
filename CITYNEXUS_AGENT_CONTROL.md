@@ -2025,7 +2025,51 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     整份预览日志里 `plans/generate` 被调用 **0 次**。⇒ 也就是"建得出来、走不下去、还不报错"的
     **永久不可用行已经堆了 5 条**，每条都占着一个 journey 身份。这就是我在 (2) 里倾向**方案 (A) 入口即拒**的实测依据；
     你若选 (B) 必须在响应里把这个事实带出来，不能让它继续只是库里的静默垃圾。
-  status: CLAIMED@20260920-130600 by 8c66aa92（M3-A；按裁定 ① 选 A：入口即 422 且不落库）
+  status: DONE@20260920-134500 by 8c66aa92（实现 `56f67e2`，文档 §89；两处判断需要你点头，见 evidence 末段）
+
+  evidence: |
+    **实现完成**：三处改动 + 一份新门，全在 `backend/`（前端一行未动）。
+    (1) `app/core/temporal.py`：`MIN_JOURNEY_DAYS=1` / `MAX_JOURNEY_DAYS=7` 具名，默认值引用它们；
+        **7 这个数值没动**（订单禁止），动的是"入口要能说出上限"，不能让每个入口各抄一份 7。
+    (2) `app/main.py` 新增 `temporal_rejection`（ValueError → 422 的唯一转换点）：只对
+        `V13_JOURNEY_DAYS_OUT_OF_BOUNDS` / `V13_INVALID_ANCHOR_WINDOW` 生效，**其余 `raise exc` 保留 500**；
+        用仓库已有信封 `error()`：`{"error":{"code","message","trace_id","details"}}`，
+        `details = {reason, actual_days, min_days, max_days}`，消息里带"7 days"。
+        实测响应（9 天）：422 / code=V13_JOURNEY_DAYS_OUT_OF_BOUNDS / actual_days=9 / max_days=7。
+    (3) `create_journey`：改为**先构造 `Journey` 与 `JourneyTripContext`、再校验、后才 `session.add`**
+        （原顺序是先 add(journey) 再构造 context，那个顺序本身就是"建得出来"的成因）；
+        校验走 `stay_mobility.journey_temporal_shape`，即住宿定价同一个"锚点时刻优先于行程窗口"的解析。
+        为此把该规则抽成公开的 `journey_boundaries(context, arrival_fallback, departure_fallback)`，
+        `_nights` 委托它 ⇒ 门与定价不可能对同一个行程量出两个窗口。
+        `test_the_door_measures_the_window_the_pricer_measures…` 在真行上把 `journey_boundaries`
+        与 `_anchor` 逐值对齐，专门防这层镜像漂移。
+    验收数字（解释器 `D:\moodle\CityNexus\.venv`，`DEEPSEEK_API_KEY=` / `CITYNEXUS_AI_API_KEY=` /
+    `CITYNEXUS_AI_ENABLED=false`）：新门 `tests/test_qoder_journey_window_boundary.py`
+    **collected 8 / 8 passed（1.25s）**；全量 **921 passed / 15 skipped / 0 failed（100.42s）**、
+    collected **936**。与你给的权威读数 `913/15/0 / 928` 对表：差值 **+8 / 0 / 0 / +8**，
+    8 条全来自这个新文件；**没有任何既有测试被这次改动波及**（若哪个测试此前依赖"9 天能建"，它会红；
+    没有 ⇒ 这条路径此前完全没被覆盖）。
+    杀得掉的证据（一次性、唯一 anchor、`py_compile` 自检、还原后与 HEAD 逐字节同 `a5d3277565413cf5`）：
+      MUT-A 删 `create_journey` 那一行校验 → **4 failed / 4 passed**：
+        `test_a_trip_over_the_window_is_refused_at_creation_by_name_and_with_numbers`、
+        `test_a_refused_creation_leaves_no_journey_row`、`test_the_supported_ceiling_is_named_and_seven_days`、
+        `test_the_door_measures_the_window_the_pricer_measures_not_the_one_the_form_showed`；
+      MUT-B（你点名的形状：422 改回一律 `raise ValueError`）→ **6 failed / 2 passed**：上面 4 条，另加
+        `test_generating_stays_over_the_window_answers_a_named_422_instead_of_a_bare_500`、
+        `test_patching_a_saved_trip_past_the_window_is_refused_without_writing`。
+    分工说清以免高估：MUT-A 杀不到深处那条（它走另一个守卫），MUT-B 才证明转换点是唯一的。
+    另有 `test_an_unexpected_value_error_stays_a_server_error` 含近似前缀 `"V13_…_BOUNDSX:9"`，
+    防"startswith 式"实现把未知错误也洗成 4xx。
+    前端同口径复跑：`typecheck` / `typecheck:all` / `build` 均 exit 0；全套权威 E2E
+    （run `ord33-e2e`，:3473→:8473、`_ord33-e2e.db`、ai=disabled）**80 expected / 6 skipped /
+    1 unexpected / 0 flaky（282.2s）**，与 §88 合并后那次逐数相同——唯一红仍是 ORD-0034 那扇
+    UI 车道自陈的待办门。**但它现在与真契约错位了**：等的是伪造 500 + 裸串 `V13_…:9`，
+    真实后端已是 422 + `error.code` + `details.actual_days`；补 prop 时要一并改断言，别留旧串。
+    库里那 5 条 9 天孤儿行程按令**不写破坏性迁移**，只保证新的进不来。
+    **两处需要你点头的判断**：① 人话文案我放英文、中文留给 `LocaleContext`/`humanReplanReason`
+    （本仓所有 HTTP 消息都是英文；后端再存一份中文=一句两个真相）。若裁定①要求后端直出中文，
+    改的只是 `message` 字面量，说一声就改。② `PATCH /api/v1/journeys/{id}` 也加了同一条规则
+    （超出订单字面，但没有它裁定 A 只是半条规则）；这处独立成一段，你要我撤就撤。
 
 - id: ORD-0034
   to: e345b9d6
@@ -2325,12 +2369,23 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     suite **80 passed / 6 skipped / 1 failed**，4.9m。上一次 83/76/6/1 → collected **+4**（主题门 4 条）、
     passed **+4**、skipped 不变、failed 仍是 ORD-0034 named-reason。**未新增红。**
 
+    **(d) 关键界面状态 —— 本车道可做的一半已交付**（提交 `baf8c69`）：写进账本的决定是 **localStorage，不是 URL** —— 填了一半的行程不是值得分享的
+    链接，且 `startAt/endAt` 是本地墙上时钟字符串、含义依赖时区。恢复时**逐字段按类型校验**（手改过的或
+    改名前的条目只会退回默认值，不会把表单弄坏）；创建真的成功时才清草稿（复用失败态那套"还挂着就是没成"
+    的确定性信号）。新门 `trial-state-survives-reload` 两个方向都可杀：去掉写入 → 红；忽略恢复 → 红
+    （第一次跑这两个变异体时报的"失败"其实是我端口拼错、配置拒绝启动，不算杀，重跑才算）。
+    全量读数（run `uifinal001`）：`--list` **Total 88 tests in 35 files**，setup **1 行**；
+    **81 passed / 6 skipped / 1 failed**，4.6m。上一条 87/80/6/1 → collected **+1**、passed **+1**
+    正是这条新门；skipped 不变；failed 仍是 ORD-0034 named-reason。**未新增红，也没有把别的门带红**
+    （向导现在会存状态，专门确认过 mobile 那条"Journey creation, first entry"没被串味）。
+
     剩下未做（不含上面已交付项）：
-    - **(d) 向导状态**：步与草稿在我文件里（`JourneyTrialSetup.tsx:168/182`），不需要批准，我接着做。
     - **(d) 弹层状态** 在 `V8Experience.tsx:274`、**主题开关按钮** 要落在顶栏
       （`V8Experience.tsx:892-900` 语言按钮旁，同形状 `data-testid` + `data-contrast-role="control"`）。
       ⇒ **请释放 `V8Experience.tsx` 给 M3-B**；三处我都已定位：`:274` 弹层状态、`:801` `message={message}`、
       `:892` 旁加开关。裁决前我不碰它；契约本身已经能用（控制台写 `citynexus.theme` 即刻生效）。
+      弹层这一项我的**建议是不持久化并明写理由**（已写进 `JourneyTrialSetup.tsx` 顶部注释）：刷新现在会真的
+      中止在途请求，恢复一个"打开的面板"等于谎称还有一次运行在跑。要按订单字面做也行，等你定。
 
 - id: ORD-0037
   to: e345b9d6
@@ -2646,7 +2701,62 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     **归属更正**：我 11:0x 把地图（ORD-0037）改派给你，是过早的决定 —— UI 线 11:2x 已经交付了实现与门。
     现在**撤销该改派**：地图归 `e345b9d6`（M3-C），你回到 M3-A（ORD-0033 超 7 天入口即 422，那条还没人交）。
   status: DONE@20260920-132000 by 8c66aa92（合并提交 `a453121`，文档 `3b68801`；合并树有 1 条**故意红**的门，见 evidence 末段）
+
+- id: ORD-0042
+  to: e345b9d6
+  priority: urgent
+  if_head: a453121
+  order: |
+    **A4 服务工作者生命周期：先行修复令，不等仲裁的补丁。** 我原本把这块委托给仲裁（它需要直接改代码），
+    但仲裁侧现在卡在 OpenAI 二次验证（`auth.openai.com/mfa-challenge`，只有用户本人能过），
+    所以这块**不能悬着**，先按下面方向做；仲裁回来后做外部评审，届时若有更优方案我再改令。
+
+    **新根因（红队发现、我复核，它改变了修法方向）**：
+
+    ```
+    vite.config.ts:13  registerType: "autoUpdate"
+    vite.config.ts:18  injectRegister: false      ⇒ 注册由 src/main.tsx:1679 手写
+    grep -rn "onNeedRefresh|needRefresh|updateReady" src  ⇒ 全仓 0 命中
+    ```
+
+    ⇒ 新版本会在**用户脚下静默替换并触发页面重载**，界面上没有任何提示。
+    这才是"挂后台回来自动刷新、点不回刚才的界面"的产品级根因 —— 我此前只归因给 dev 的 HMR，**归因不完整**，
+    生产构建同样会发生。
+
+    四件事：
+    1. **dev 不注册生产 SW 的正规做法**（不是注释掉；`import.meta.env.DEV` 那条分支要变成"开发期根本不注册"，
+       并说明为什么这样不会把 PWA 离线能力测漏）；
+    2. **`public/sw.js` 兜底按 `request.destination` 分流**：`script` / `style` / `worker` 失败时
+       **必须返回原始失败**，绝不允许拿 `/v8/live` 的 HTML 顶替；导航兜底只允许 document；
+    3. **workbox 策略**：`cacheableResponse.statuses` 去掉 `0`；静态资源改 `StaleWhileRevalidate` 或加版本失效；
+       `/v8/*` document 的 `networkTimeoutSeconds: 3` 换成**有实测依据的值**，方法写进报告；
+    4. **升级必须可见可操作**：要么 `registerType: "prompt"` + 界面"有新版本，点击更新"，
+       要么保留 autoUpdate 但在替换前给出可感知提示；**"静默替换"本身就是缺陷对象**。
+
+    **验收（USER_GATES 口径，生产构建上跑，dev 结果不算）**：
+    - 实测：**存在旧 SW 的情况下部署新版本，用户不手动清缓存也能恢复**（给出恢复前后的资源指纹或版本标记）；
+    - 实测：`script` 请求失败时页面**没有**拿到 HTML（断言 `content-type` 或抛错路径），
+      并给出**杀得掉的证据**（去掉 destination 分流时该节点必须红，点名节点 id）；
+    - 实测：升级发生时屏幕上有可见提示（或明确处于"不自动换版"状态），不得静默；
+    - 一次全量前端 suite：`--list` 的 collected **与其中 setup 工程行数** + `N passed / M skipped / K failed`；
+    - 顺手把失败请求计数记进报告（红队在 W4 采到 24 条未捕获致命/失败请求）——"控制台干净"现在是真断言。
+
+    边界：不削弱冻结清单；`MapPanel.tsx` 归你（改派已撤销）；不要为了走查通过而关掉真值门；
+    不新建发布分支、不推送、不 force-push；回报里不要复现那把 key 的前缀。
+  status: DISPATCHED@2026-09-20 13:2x
   evidence: |
+    **[Commander 13:4x 标注] 本块内容实际是 ORD-0041 的合并回执（并发写入撞位），归属以 ORD-0041 为准。**
+    我对其中两个请求的裁决：
+    (a) **那一行 prop 归 `e345b9d6`，不给后端。** `V8Experience.tsx` 是 M3-B 的文件，而 ORD-0034（向导失败可见）
+        本来就是它手上 PARTIAL 的单；让后端越界写前端，正是今天反复出现的"多写者挤同一批文件"的坏形状。
+    (b) **期望串必须跟着 ORD-0033 的新契约一起换**：入口改成 422 + `JOURNEY_DAYS_OUT_OF_BOUNDS` +
+        `actual_days`/`max_days` 之后，那条门不能再把 `V13_…:9` 硬编码在测试里。
+        我把这一条同时写进 ORD-0033 与 ORD-0034 的验收，避免两边各改一半。
+    (c) **"故意留红"这个行为我明确背书并记入验收口径**：产品做不到时留一条红门 + 写清缺口，
+        比把门改成能过的样子有价值。**任何人不得为了 suite 变绿而删除或放宽这条门**——
+        它现在是 Mission 003 的进度真值之一（当前权威 E2E：80 expected / 6 skipped / **1 unexpected**，
+        那 1 条就是它）。
+
     **合并已做**：`git merge --no-ff --no-commit a512244` → "Automatic merge went well"、
     `git diff --name-only --diff-filter=U` **0 文件** → 合并提交 `a453121`（20 笔 / 37 文件 / +6980 / −203，
     其中 `backend/app/**` 零改动）。合之前先核了反向半同步风险：`c0367c1` **是** `a512244` 的祖先
@@ -2716,6 +2826,38 @@ grep -rn "onNeedRefresh|needRefresh|updateReady" src   ⇒ 全仓 0 命中
 用户醒后需要做的两件事：① 完成 OpenAI 二次验证（否则仲裁链断）；② 轮换那把 key。
 
 
+
+### Commander 16:5x 合并后复测（生产构建 + 真实浏览器，Playwright 深色模拟）
+
+前提更正：我第一次复测时**预览后端进程还是合并前的旧代码**（9 天仍 201→500），强制重启 8781 后才测到新行为。
+凡是"重启前"的读数一律作废。
+
+| 项 | 实测结果 | 判定 |
+|---|---|---|
+| AI 面板深色对比度 | sheet `rgb(28,28,30)` / 文字 `rgb(245,245,247)` = **15.63**；textarea 同 **15.63**（此前 1.05 / 1.09） | **ORD-0035 达成** |
+| 主题根契约 | `document.documentElement.data-theme = "dark"`（此前 `(none)`） | 已落地 |
+| 超 7 天屏幕反馈 | 出现 `.trial-create-error`：「**这一步没有成功，行程还没有创建。**」 | 失败**可见**了，但**仍未说出原因** ⇒ 那条故意留红的门依旧红，符合车道自陈 |
+| 后端 422 边界 | 我精确构造日历日：**7 日 → 201**（落库 1 行）；**8 日 → 422**（0 行）；**9 日 → 422**（0 行），`details` 含 `actual_days/min_days/max_days` | **ORD-0033 语义达成、不落库达成** |
+| 422 契约形状 | 实交 `{error:{code:"V13_JOURNEY_DAYS_OUT_OF_BOUNDS", message:<英文>, trace_id, details:{reason, actual_days, min_days, max_days}}}`；仲裁裁的是 `{error:{code:"JOURNEY_DAYS_OUT_OF_BOUNDS", actual_days, max_days, message_key, message:<中文>}}` **平铺** | **四点偏差**：① `V13_` 前缀（本仓惯例是 `C4_ANCHOR_UNRESOLVED` 这类无版本前缀）② 字段嵌在 `details` 而非平铺 ③ **没有 `message_key`** ⇒ 前端无法做 i18n 映射 ④ message 是英文而界面是中文 |
+
+**新发现的最高优先缺陷（ORD-0044）：合法路径也会静默卡死。**
+我用 4 天行程（远小于 7 天上限）走完整向导：
+
+```
+POST /api/v1/travelers   201
+POST /api/v1/journeys    201
+（之后该 journey 再无任何请求 —— 连 stay-options/generate 都没发出）
+localStorage.citynexus.v8.journey_id = ff7acd3f…   ⇒ 行程已建、已写本地
+界面：.cn-onboarding 仍在、停在第 3 步，连续 24 秒不变，且没有 .trial-create-error
+```
+
+⇒ 断点在 `V8Experience.tsx` 的 `createJourney` 里 `localStorage.setItem(...)` 之后、
+`await v8Request('/stay-options/generate')` 之前/之中：**成功路径自己吞掉了，用户看到的就是"点了没反应"**。
+这比超 7 天那条更严重，因为它发生在**合法输入**上，也正是用户说的"要重试好几次才进得去"。
+
+**同时记我一笔防误报**：我第一遍把这条判成"我的选择器错"（用 `.cn-onboarding` 是否存在当"仍在向导"的判据），
+第二遍改用多判据（`trial-city` / `trial-next` / `journey_id` / 后端请求序列 / 24 秒轮询）才定住。
+**结论：任何"卡住"类报告必须有后端请求序列做旁证，光看 DOM 会误判。**
 
 ### Commander 12:5x 验收判决（生产构建 + 真实浏览器实测，不看提交信息）
 
@@ -3079,9 +3221,16 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    c0367c1  2026-09-20 08:4x  docs: state the guard spec's denominator, since 'collected 4' and '3+2=5'
-prior   bfe8d7e  08:2x test(e2e): a regression for the refusal path, and the measurement that keeps ORD-0025 void
-        （权威 E2E 自 `bfe8d7e` 起 **58 expected / 5 skipped**；5 条 skip 仍是 shot 采集器无标签时的设计性拒绝）
+HEAD    56f67e2  2026-09-20 13:4x  fix(backend): refuse an over-window trip at the door, by name, and write nothing
+prior   3b68801  13:2x docs: section 88 - the M3 merge, the three number sets, and the one gate red on purpose
+        a453121  13:1x Merge branch 'agent/ui-overnight-20260920' (tip a512244; 20 笔 / 37 文件 / +6980 -203)
+        bfe8d7e  08:2x test(e2e): the refusal-path regression that keeps ORD-0025 void
+        c0367c1  08:4x docs: the guard spec's denominator
+        （现口径：后端 **921 passed / 15 skipped / 0 failed，collected 936**；
+         权威 E2E **80 expected / 6 skipped / 1 unexpected**，唯一那条 unexpected 是
+         `qoder-onboarding-failure.spec.ts :: the named backend reason…**故意红的待办门**（ORD-0034，归 e345b9d6）；
+         `--list` = **87 tests in 34 files**（chromium 86 + real-seed setup 1）；build 与两道 typecheck exit 0。
+         6 条 skip 是 shot 采集器无 `CITYNEXUS_SHOT_LABEL` 时的设计性拒绝）
         ee6a93e  08:01 docs: section 86 - the empty-plan case now has a mutant that kills it
         8579cbb  07:52 docs: close the F-row denominator question as ruled, re-locate the wall-clock hero
         14afb84  07:42 docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
