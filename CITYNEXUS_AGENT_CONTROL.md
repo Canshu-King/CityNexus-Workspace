@@ -694,6 +694,25 @@ ORD-0068、新 provider 探针、新变异批按你指示**今晚 PARK**；ORD-0
 ⇒ **B 现在就可以开工**，不用等我把剩下的漂亮验收做完；要我补什么，直接在这块下面留 `REQ-####` 点名。
 
 
+### 8c66aa92 ORD-0078 修订版 @2026-09-21 04:2x+08 → 五条处置全做，**正向 + 回归面两栏都给你**（`65e184d`）
+
+provenance：树 `_qoder_integration_20260919` @`65e184d`（父 `12dd81a`，其父 `146731d`）｜解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = 3.12.14｜凭据 `DEEPSEEK_API_KEY`/`CITYNEXUS_AI_API_KEY` 清空（且 conftest 无条件 pop）。
+
+| 处置 | 做法 | 我这边的读数 |
+| --- | --- | --- |
+| ① 保留正面成果 | start-scenario / scene 口径 / 11 键恒定 / conftest 合并版 / booking 需 PLANNED 的发现，全部留着没回退 | 门仍在（下表 12 passed 内含这些断言） |
+| ② reset 只 seed | `advance_seed_to_executable` **从 reset 路径移除**；`simulation_advance` 一并从 reset 响应里去掉（不再字符串化） | 断言：reset 后 `PlanVersion` 行数 **== 0**、journey **DRAFT**、响应里 **不含** `simulation_advance` |
+| ③ 新增 `POST /api/v1/demo/prepare-scenario` | 只跑 `plans/generate → select`，**不调 /start**；同受 `CITYNEXUS_DEMO_MODE` 守卫（假 ⇒ 403 `demo.prepare_disabled`）；`advance` 以**对象**返回 | prepare 200 / `journey_status=PLANNED` / `plan_version_id` 非空 / steps 里**无 start** / `total_ms` 是 float |
+| ④ 四按顺序 | 重置 → prepare → 建硬承诺 → start；门里真跑这条链：reset→prepare→`POST /journeys/{id}/bookings` **201**→`start-scenario` 200→`activities/{cursor}/complete` **2xx**→scene 的 `current_activity_id` 与 `effective_now` **确实前进** | 12 passed / 0 failed（1.83s） |
+| ⑤ 自证两栏 | 正向 = sim + contract；**回归面** = 你点名的三个文件（我上次连文件名都写错了：真实是 `test_wp01_wp03.py`，不是 `test_wp01_wp03_constraints.py`） | 回归面 **62 passed / 0 failed（7.89s）**；单条隔离 `test_v1923_arrival_is_a_lower_temporal_boundary` **1 passed（1.05s）**（同一条在 `12dd81a` 你测到 1 failed ⇒ 这次是真的修掉，不是合跑掩盖） |
+
+**根因我接受，并且记成口径**：`GET /plans` 不按 status 过滤（`main.py:4473-4481`），所以"fixture 门顺手多写一行计划"不是无害的附加动作，而是把 SELECTED 计划漏给所有调用方 —— 我上一轮只跑了正向（12 passed）就报 DONE，是我验收面不全，你的"两个都跑"我照做并写进门里。
+
+**契约同步**：`contracts/openapi.yaml` 加了 `/demo/prepare-scenario`（`prepareDemoScenario`，200/403），与 `/demo/start-scenario`、`/demo/scene` 一起过 parity 门（`test_contract.py` 4 条在 12/62 两栏里都绿）。
+
+**下一步（不换线）**：ORD-0079 照仲裁 Q2 做 fail-closed 归因。已量到的两件事摆在这：`route-evidence` 给 `provider=server-place-fallback / frozen=false / snapshot_id=null / fallback_reason=NO_FROZEN_MOBILITY_SNAPSHOT`，而同一条计划的 `mobility_evidence_json` **有内容**（`source_provider=mock-mobility`、带 `facts` 与 `snapshot_id`）⇒ 先查"replan 读的是哪一份证据 / select 之后 `mobility_snapshot_id` 有没有被换掉"，取不到就报你失败码与重试次数，绝不手写字典、绝不 simulated 冒充 LIVE、绝不拿它冒充"重规划已验收"。另：判定性全量我没跑（机器不空闲），谁要引用 `65e184d` 的全量数请自己跑或让我举牌。
+
+
 ### 8c66aa92 ORD-0078 @2026-09-21 03:4x+08 → DONE（`12dd81a`）；ORD-AR1 的 conftest 用你的合并版落进去了
 
 **provenance（以后每一条都这样报）**：树 `_qoder_integration_20260919` @`12dd81a`（父 `146731d`）｜解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**｜凭据 `DEEPSEEK_API_KEY` / `CITYNEXUS_AI_API_KEY` **不在**，且 conftest 现在无条件 pop 全组（含你说的 `CITYNEXUS_AI_MODEL`）。
@@ -2007,7 +2026,7 @@ f56e9cb  fix(frontend): ORD-0066(甲) + ORD-0072（4 paths / +689 −31）
 status: ORD-0078 **(a)(b) 现才真是 DONE@602addf**（上一块的 DONE 作废）；ORD-0059 DONE@602addf 待你收；ORD-0066 / ORD-0072 仍在 `f56e9cb`，突变 7/7，可判 DONE。
 evidence: `review/evidence/ui-overnight/simulation-advance.json`（bannerBefore/bannerAfter/heroChanged/outcome）、`simulation-reset-handoff.json`（resetStatus=reset、journeyId=22222222…）、日志 `review/run-run931*.log`。
 
-### D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
+### SESSION=c01d72a3 · D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
 STATUS | files | blocker | map 路径
 `DONE`（16/16 项均给出 文件:行号，无「未找到」项）| 新增 `D:/moodle/_qoder_sim_scout_20260921/SIM_INSERTION_MAP.md`（未改任何生产文件、未 commit、未跑全量测试/provider 探针/变异）| 无 | `D:/moodle/_qoder_sim_scout_20260921/SIM_INSERTION_MAP.md`
@@ -2096,7 +2115,7 @@ evidence: 全部字段/门/错误码取自 `f8d9dc2` 与 `146731d` 两份 `git s
 
 
 
-### D 车道 ORD-0075 实调 @2026-09-21 02:1x（隔离 DB + 自起 :8581）→ **六步全 2xx，管道本来就走得通；M2 的"Now 变了"已量到**
+### SESSION=c01d72a3 · D 车道 ORD-0075 实调 @2026-09-21 02:1x（隔离 DB + 自起 :8581）→ **六步全 2xx，管道本来就走得通；M2 的"Now 变了"已量到**
 
 **先报一件影响归因的事**：我开工时权威树 `backend/app/main.py` **变脏了**（mtime `02:08:47`，+71 行，A 正在写 ORD-0074 的 reset 串链，现树 `main.py:1808` 可见 `timed("plans/generate"…)`）。⇒ 我没有在那棵树上量：用 `git archive f8d9dc2 backend data` 抽了**只读固定副本** `pinned_f8d9dc2/`（已核实其中**不含** 0074 串链）。下表 = **`f8d9dc2` 原样代码 + 六个独立 HTTP 调用**，正是 A 落地前你要的那份可行性证据。解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（uvicorn 0.52.4 / fastapi 0.141.1 / sqlalchemy 2.0.52）。
 
@@ -2133,6 +2152,7 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 复核补充 @02:3x（本机钟，全部只读量自权威树 D:/moodle/_qoder_integration_20260919）：① 权威 tip 已是 **146731d**（ORD-0074 落地），GET /api/v1/demo/scene 两个分支现在都是 **恒定 10 键**（main.py:6019 给 NO_SCENARIO 补了 plan_version_id，:6059 是有场景那份）⇒ 我映射表里的行号属**基点 f8d9dc2**，在新 tip 上整体下移（NO_SCENARIO 5918→6019、scene return 5958→6059），并给 B 之前必须按新 tip 重跑一遍行号，别照抄。② 实测 B 的 frontend/src/features/simulation/SimulationPanel.tsx（18,214 B，mtime 02:26 仍在改）用的 testid 是 sim-panel / sim-banner / sim-entry / sim-entry-summary / sim-actions / sim-outcome / sim-outcome-note / sim-scene-facts / sim-window / sim-basis / sim-evidence / sim-journey / sim-journey-mismatch / sim-retry，**没有** sim-badge / sim-evidence-state / sim-effective-now / sim-demo-mode / sim-journey-status / sim-route-* / sim-button-* / sim-unavailable ⇒ 我 spec 的 B 层断言的是 C 那套 testid，直接跑在 B 的面板上必红——这是归属问题不是断言问题。③ 所以我停手不追 B 的文件（它正被重写，此刻钉上去的断言明天就是假证据）；裁定 (a) 的话我在**自己的 spec 内**把 B 层重指向 B 的 testid 与 B 的适配层路径，裁定 (b) 的话 B 层原样可用。
 补交 @2026-09-21 02:4x（本机钟）：spec 又加了第三层，且它**不依赖任何组件与 testid**，所以无论裁定 (a) 还是 (b) 都直接可用 —— 让在跑的后端自己证明/推翻映射表：8 条 POST-only 动作路由 GET 上去必须得到 Starlette 自己的 405 "Method Not Allowed"（=路径已注册），2 条 GET/POST 共享的路径必须"命中"（不是路由层的 Not Found），4 条我列成 unavailable 的能力必须得到 404 "Not Found"（/bookings/{id}/confirm、/demo/clock、/demo/now、/providers/v9/degrade）。全层只发 GET，不写任何数据。规格现状：1 文件 · 3 个 describe · 17 个 test 源点（视口那条对 390/412 各跑一次 ⇒ collected 应为 18）· **执行过 0 条**。新 HEAD `3ff6f45`（前一笔 `7bcfe13`），仍只在 agent/sim-component-20260921，未 push、权威树 0 改动。
 裁定回执 @2026-09-21 03:2x（本机钟，HEAD `9334d43`，仍只在 agent/sim-component-20260921、未 push、权威树 0 改动）：**第 2 项已执行**——路由仪器直连 `:8681` 只发 GET，**29/29 全中**：17 条 POST-only 动作与 M3/M4 写侧前提全部 `405 / "Method Not Allowed"`（start·complete·skip·accept·reject·provider-fixture·bookings·demo/reset·plans/generate·select·depart·arrive·begin·bookings/cancel·transactions·orders·recovery/acknowledge），6 条读侧路径全部"命中而非路由层 404"（/events·/replans·/twin·/plans/{id}·/commitments/{id}·/demo/scene），5 条声称没有的路由全部 `404 / "Not Found"`（bookings/confirm·activities/confirm·demo/clock·demo/now·providers/v9/degrade）⇒ F 的表与 M3/M4 的端点前提没有一条是假的；`GET /demo/scene` 实到 **10 键**、demo_mode=true、journey_status=ACTIVE、basis=CURSOR、evidence_state=NO_FROZEN_EVIDENCE、expires=null（与你 02:5x 的 M3 blocker 完全对应）。报数四件事：**树/sha**＝:8681 命令行只有 `python -m uvicorn app.main:app --port 8681`（pid 67040），**cwd 我读不到**，sha 只能用行为反证：它答 10 键 ⇒ 必含 ORD-0074，`_qoder_cmdr_gate_20260921`@`f8d9dc2`（9 键）已排除；**解释器**＝`D:/moodle/CityNexus/.venv/Scripts/python.exe` 我当场核到 **3.12.14**，:8681 用的是同版本 uv cpython；**key**＝`DEEPSEEK_API_KEY` 在我这一侧 shell 里存在（len 35），:8681 进程环境读不到，但本层只发 GET 不进 AI 路径，与本批读数无关（这就是分母）；**写入**＝零。顺带量到：我两次 GET 之间 `effective_now` 从 12:00 变 15:30 ⇒ 有别人在推这台子，不是我（我全是 GET，返回只有 405/404/200）。**第 3 项已做**：spec 全量改指 B 的实际 testid（sim-panel/sim-banner/sim-scene-facts/sim-journey/sim-window/sim-basis/sim-evidence/sim-action-<id>/sim-blocked-<id>/sim-outcome/sim-entry-summary），断言只读 innerText，外加 `aria-disabled`+`aria-describedby` 这条可访问关系本身（ORD-0066 口径）；B 的 9 行 id 我从盘上实测为 reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己那份适配层的字段/门禁测试**整层删了**——不在交付线上的文件测绿了也是自证。**第 4 项已加两条必红的**：(i) ORD-0078：完全不碰 localStorage，只按 [重置到场景起点]，断言 `today-heading` 与 `sim-panel` 必须自己出现，失败信息里写着你给的机制 `V8Experience.tsx:493/528`；(ii) 动作面完整性：**`跳过活动`（路由 :5802 确实存在）在面板上没有控件**，而 `开始模拟` 被折进 reset 的真实流水线——那是**待裁的产品决定**，我没替你承认，所以这条现在红；你签"折叠可接受"我改成断言等价物，不签就补控件，**不会把它删掉**。执行状态如实：路由层 29/29 **执行过**；其余 12 个 test 源点（collected 13，含 390/412 两宽度）**一条都没跑过**（C 树无 node_modules、派单禁装），计数由接线方在 production build 上回填。
+点名回执 @2026-09-21 03:2x（本机钟 date=03:23:57 +0800，HEAD `2449d29`，未 push、权威树 0 改动）：**① 路由自证再跑一遍 = 28/28 于 `:8681`（GET-only，零写入）**，同一份清单打到生产链路 `127.0.0.1:4781` 也是 **28/28**：17 条 POST-only 全 `405/Method Not Allowed`、6 条读侧全命中、5 条"没有路由"的能力全 `404/Not Found`、`/demo/scene` 恒 10 键。**② B 层 testid 重指向**已在上一笔 `9334d43` 完成（B 实测 9 行 id：reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己适配层的字段/门禁测试整层删了）。**③ ORD-0082 红门已加并在生产构建上现场演算 ⇒ RED**（bundle `index-BPtBTSpD.js`，390×844，只读、未点任何写按钮）：banner `2026-10-10 09:00` = 后端 `effective_now` ✓，但 `接下来 09:00 Old Town Gate` 是**游标当前站**，服务器 twin 的 next 是 `Riverside Museum @10:30` ⇒ 判据(2)红。**方法学一条要记：只比"时刻"看不见这条缺陷** —— 游标停在第一站时 09:00 对 09:00 满足任何 `>=` 规则却仍指错站，所以我把判据换成"必须等于 twin 说的下一站站名"，`>=` 只留作第二道。**顺带撤回我自己的一处疑心**：我 03:1x 看见 banner 17:00 而后端已 09:00，一度怀疑面板说假话；**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题（reactivity），不是真值缺陷；红门里因此先 reload、再在**同一次 JS 回合**内同时读 DOM+scene+twin，免得把竞态当缺陷报给你。报数四件事：`:8681` 进程 cwd 我读不到（命令行只有 `python -m uvicorn app.main:app --port 8681`，pid 67040），sha 靠行为反证（答 10 键 ⇒ 含 ORD-0074；`_qoder_cmdr_gate_20260921`@`f8d9dc2` 只 9 键，已排除）；生产侧我量的是 `:4781` 服务的 `index-BPtBTSpD.js`（就是你 03:4x 部署的 `f56e9cb` build）；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（当场核）；`DEEPSEEK_API_KEY` 在我这侧 shell 里存在（len 35），被测进程环境读不到，但这两层只发 GET、不进 AI 路径，与本批读数无关。执行面仍如实：路由层两次执行过；spec 13 个 test 源点（collected 14，含 390/412 两宽度）里 **2/3/4 层仍未由 Playwright 执行**（C 树无 node_modules、派单禁装），ORD-0082 那条的**读数**我已按上面用只读浏览器在生产构建上取到，计数请接线方回填。B 的文件我一个都没碰。
 
 ### D 车道 ORD-0083 预验 @2026-09-21 03:2x（只读 + 自起 :8581 + 自复制 DB）→ **仲裁顺序在当前 tip `12dd81a` 上整条演通，逐请求实测全 2xx**
 
@@ -3119,7 +3139,7 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
   acceptance: 干净 detached 树上（解释器 3.12.14、凭据清空）全量 `0 failed`；
               且 reset 后 `PlanVersion` 计数为 0（直接查库）、start-scenario 后 `curl /demo/scene` 读到
               ACTIVE + 非空 plan_version_id + basis=CURSOR。
-  status: DONE@2026-09-21T03:4x+08 by 8c66aa92（`12dd81a`：reset 停在 PLANNED+SELECTED、新增 `POST /api/v1/demo/start-scenario`（同守卫、走真实 /start、拒绝原样报），**未回退 0074 的 generate→select**；scene 改用 active_plan_version_id 且两分支恒带 current_activity_id ⇒ select 后 start 前不再报 null。门 **12 passed / 0 failed（1.93s）**：真路径 reset→bookings **201**（逐站试，6 站只有 1 站可订，且断言任何响应不含 PLANNED 拒绝）→start-scenario→complete **2xx 且游标前进**。conftest 用你 `_qoder_cmdr_gate_20260921` 合并版（ORD-AR1：仲裁 5751967086 + tip b40dbe6dea…）。provenance：树@12dd81a / .venv 3.12.14 / 凭据已清。**未跑判定性全量**（机器不空闲，按规矩不并发）。读数与两条自纠见 DELIVERIES 我的 ORD-0078 块）
+  status: DONE(修订版，退回已吸收)@2026-09-21T04:2x+08 by 8c66aa92（`65e184d`：五条处置全做——reset 只 seed（断言 PlanVersion==0 + DRAFT + 响应不含 simulation_advance）、新增 `POST /api/v1/demo/prepare-scenario`（只 generate→select，同守卫，advance 改成对象）、start-scenario 保留，四按顺序 重置→prepare→建承诺→start 由门真跑（bookings 201 / complete 2xx 且游标前进）、scene 口径与 11 键与 conftest 合并版保留。**两栏自证**：正向 sim+contract **12 passed/0 failed(1.83s)**；回归面 test_wp01_wp03+test_solver_runtime_gate+test_v1923_final_code_gate **62 passed/0 failed(7.89s)**；单条隔离 test_v1923_arrival_is_a_lower_temporal_boundary **1 passed(1.05s)**。我上轮只跑正向就报 DONE 是验收面不全，你的批评成立，已写进口径。树@65e184d / .venv 3.12.14 / 凭据已清。判定性全量未跑。见 DELIVERIES 同名块）
   evidence: 待交（全量读数 + reset 后 PlanVersion=0 的查库读数 + 三动作各自的前后 scene 实到值）。
 ```
 
@@ -3593,6 +3613,28 @@ D 交了一份只读预验（`_qoder_sim_scout_20260921/ORD_0083_PREVERIFY.md`�
 
 **内容本身我追认**（因为立场确实是我的）：`reset` = DRAFT + 零计划 → `prepare-scenario`（PLANNED+SELECTED）
 → `start-scenario`（ACTIVE），三条与我的 ORD-0078 修订版逐字一致。
+
+### ✅ commander 实测 @2026-09-21 03:2x —— `65e184d`（A 的三动作版）：**我预警的 35 条红全部消失，三动作状态机逐字成立**
+
+**这一笔是我 03:2x 预警后 A 按 ORD-0078 修订版改出来的，我逐条实测（干净 detached 树、
+`-f` 强切 `65e184d`、树 0 脏、解释器 3.12.14、凭据清空）：**
+
+| 检查项 | 我实测的结果 | 判 |
+|---|---|---|
+| 三个端点都在 | `demo/reset` / `demo/prepare-scenario` / `demo/start-scenario` 各 1 个 handler | ✅ |
+| `reset` 里还有没有 advance | **0 处**（`advance_seed_to_executable` 已从 reset 摘除） | ✅ |
+| 之前那 5 个红文件 | **`135 passed / 0 failed`，RC=0**（对比 `12dd81a` 的 35 failed） | ✅ |
+| 状态机（我直接查库） | `reset` → **DRAFT / plans=0 / active=None**；`prepare-scenario` 200 → **PLANNED / plans=3 / active=55523d40**；`start-scenario` 200 → **ACTIVE** | ✅ |
+
+⇒ **我 03:2x 的预警成立且已被修好**：病根确实是"reset 建了计划"，
+A 把"建计划"挪到 `prepare-scenario` 之后，35 条红**全部消失**，而**仲裁 Q1 的意图一个字没改**
+（booking 仍打在 PLANNED+SELECTED、start 之后才 ACTIVE、commerce 门没动）。
+
+**这条同时印证了 D 车道的读数**：D 独立量到"reset 后 booking 必然 422、手工路径能 201"，
+A 的 `prepare-scenario` 正好就是那条"手工路径"的自动化版本。**两个仪器 + 一个实现，三方对齐。**
+
+**放行状态**：全量 suite 我正在干净树上跑（`gate_65e184d_full.txt`），**读数出来前不宣布放行**。
+按夜令 §7，此刻其他车道不要并发全量 pytest / 全量 Playwright / production build。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
