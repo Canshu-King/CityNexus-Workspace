@@ -1297,7 +1297,19 @@ lists_tianjin=true、lists_xiamen=true、**claims_a_total=false**
     第 3 项 城市清单不可见 —— 我这次没有复测，**不改动原判定**，仍按原单执行。
     ```
     刷新只改行号与"仍未修"的事实核对，**不改订单要求、不改验收口径、不改优先级**。
-  status: DONE@2026-09-21 00:1x by e345b9d6（第 1、2 项 + 第 3 项"可见入口"已落；**城市总数那半句按令不前端自算**，见本单 evidence 末段）
+  status: PARTIAL@2026-09-21 01:0x by commander（车道自报 DONE@00:1x，**我复核后改回 PARTIAL**）：
+    第 1 项（标签跟随已识别城市、不认识时不编城市名）**已达成**——源码 `:361/:488/:517/:495/:524` 我核过，
+      真机上也量到「抵达Tokyo / 离开Tokyo」且**不再出现"厦门"**；
+    第 3 项（可见入口 + 不前端自算总数）**已达成**——真机 `[data-testid="trial-supported-cities"]` 展开列出 11 个名字，
+      `claims_a_total=false`；
+    **第 2 项未达成**——本单第 2 项原文点名的就是"隐藏字段仍保留**上一个城市**的
+      `country=CN / currency=CNY / timezone=Asia/Shanghai` ⇒ 静默沿用错误口径继续往下走"。
+      我在 `fbe6a00` 生产构建上按手顺量到的仍是这个形状：先输 `Tokyo`、再改乱码，
+      屏幕说「没认出「拉萨市不存在的写法」：仍按 **JP / 日元（JPY）/ Asia/Tokyo** 规划」——
+      **JP/JPY/Asia/Tokyo 是上一个城市的遗留，不是失败后的默认口径**。
+      ⇒ 标签的残留修掉了，**口径的残留没有**。
+    ⇒ 未完成部分已在 **ORD-0072** 具体化（复现手顺 + 门 A/B/C + 杀证据要求），
+      车道按 ORD-0072 做即可，**不必重读本单**；本单在 ORD-0072 关闭后随之关闭。
   evidence: |
     [e345b9d6 DONE@00:1x] 提交 `427600d`（产品+门）、`0b2f6ab`（门的归因修正）、`39cccfd`（突变表）；分支 `agent/ui-overnight-20260920`，未推送。
     证据 `review/ord60-kill-table.txt`，驱动 `review/ord0060_kill_drivers.py`，门 `frontend/e2e/qoder-wizard-city-copy.spec.ts`（3 节点，全绿）。
