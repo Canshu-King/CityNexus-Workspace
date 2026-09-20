@@ -596,6 +596,55 @@ ORD-0068 保持 CLAIMED：探针缺陷按你要求修完（真 deadline + polls 
 - **请 §8 重建预览后 ping 我**，我要重跑的是：T-1/T-2（若 topbar 或组件样式被改）、T-3（同日行程）、
   以及本轮欠着的 ORD-0065 住宿四终态。
 
+
+
+### 8c66aa92 ORD-0058 slice 1 @2026-09-21 01:5x+08（本机钟）→ 已落 `722e2c8` + 补强 `deletes nothing` 断言；**第 4 项（seed TTL）我明确留着没做**
+
+**先说关键路径解锁**：`GET /api/v1/demo/scene` 已落地并登记进契约（`contracts/openapi.yaml` +1 path，
+`/demo/reset` 早已有条目），**ORD-0059 的阻塞前提解除**（它 `if_head 576fbf6`，我这边契约形状就是它等的四字段）。
+
+**做了什么（`722e2c8`）**
+1. `core/config.py`：`CITYNEXUS_DEMO_MODE`（**默认 off**）；门口统一走 `main.demo_mode_enabled()` 这个可注入缝，
+   这样同一个进程里能把"开/关"两种状态都钉住（`Settings` 是 frozen，不能 monkeypatch 字段）。
+2. `POST /api/v1/demo/reset` 守卫：flag 假 ⇒ **403 `DEMO_MODE_REQUIRED` / `demo.reset_disabled`**，
+   且**在 `stop_autorun()` 之前**返回（否则一次被拒的请求还会顺手杀掉进程级 guardian，那就是有副作用的拒绝）。
+3. `GET /api/v1/demo/scene` → `{demo_mode, journey_id, journey_status, scene_start_at, scene_end_at,
+   effective_now, basis, evidence_expires_at, evidence_state, plan_version_id}`。
+   窗口用 `journey_boundaries`（**与定价同一条算式**，ORD-0063 的教训不重来）；`effective_now` **按行程**取
+   cursor→否则行程窗口起点，`basis ∈ {CURSOR, JOURNEY_START}`；无场景时全部 `null` + `NO_SCENARIO`，
+   **不回落到墙钟**；没有全局 freeze 时钟（guardian 与真实 `created_at` 不受影响）。
+4. ⚠ 那条静态推断**已用门证实并修掉**：`GET /twin?now=` 缺偏移 → 原本会撞 naive/aware 比较 ⇒ 500；
+   现在具名 **422 `TWIN_NOW_OFFSET_REQUIRED` / `twin.now_offset_required`**，且带偏移形式仍 200（同一条门里的反向对照）。
+5. 车闸后果与配套（**这条要你注意**）：约 30 个后端测试模块拿 `/api/v1/demo/reset` 当 fixture 门，
+   所以我新增 `backend/tests/conftest.py` 让**测试进程**一次性声明自己是舞台（`setdefault` 在 `app.main` 读配置之前），
+   并给权威 E2E 的 webServer 注入 `CITYNEXUS_DEMO_MODE=true`（`frontend/playwrightEnv.ts:190` 附近）。
+   **产品默认仍是 off**，且拒绝态本身有门 ⇒ 这两处注入不会把"守卫失踪"洗白。
+   ⇒ **预览/运行时实例下一次重建必须以 `CITYNEXUS_DEMO_MODE=true` 启动**，否则它上面的 demo/reset 会 403。
+   这一条我没法替你改（重建是你的动作），写在这里请进 `CURRENT_HEAD`/重建口径。
+
+**数字（`.venv`，AI 变量清空；起点机器有并发车道，非静置）**
+```
+tests/test_qoder_simulation_mode.py + tests/test_contract.py        9 passed / 0 failed（1.44s）
+重灾区回归（agent_runtime_gate + v8_stay_mobility + trip_shape +
+rejection_message_keys + stay_generation_operations）               73 passed / 0 failed（18.21s）
+变异 5/5 由点名节点杀掉（ord58_mutants.json + ord58_T2_rerun.json），main.py 还原字节相同
+```
+**其中一条要如实报，因为它抓出我自己写废的断言**：第一批 T2（"先 seed 再回 403"）**存活**——
+`seed_demo` 是冻结种子，删库重播后**行数完全一样**，所以我那句"计数不变 ⇒ 没删东西"是**空断言**。
+已改成必须存活一行"种子造不出来的行"（测试自己 POST 出来的 marker journey），T2 才真的被杀：
+pristine 9 passed / T2 1 failed。**"flag 假时不得删库"这条验收现在是按身份验证，不是按计数验证。**
+
+**明确没做（不是漏了）**：订单第 4 项 **seed 冻结证据 TTL 与场景日对齐** + 它的两组回归
+（>4h 仍能走完 select/start/booking/replan；普通非模拟证据超 TTL 仍按**原错误码**拒绝）。
+理由是它直接压在冻结清单的 `STALE_RECOMPOSE_REQUIRED` / `STALE_FROZEN_EVIDENCE` 上，
+六条护栏里"不得晋升为 live truth / 不得写永不过期"任何一条走样都是静默削弱 fail-closed，
+我不想在一个已经跑了 5 道门 + 一次返工的回合里顺手做它 ⇒ **ORD-0058 记 PARTIAL（1/2/3/⚠ 完成，4 待下一片）**。
+
+**顺带两件**：ORD-0068 你点名的第二个缺陷（`:169 oid or "none"` + 两路都发空 body）我**还没改**，
+下回第一件事就是它（把请求形状改成两条路各自合法的 body + 真 uuid，并加"是否到达 handler"的自证）；
+ORD-0057 的受理延迟数仍未产出，503 按你的要求保持不动、等总线回话。
+
+
 ### commander 亲测 @2026-09-21 01:4x —— 预览已重建到检查点 `1e942d2`；向导修复我读屏复验通过，**并抓到一处新缺口**
 
 **先记运维动作（Amendment J §8：检查点后必须重建预览，并记 `preview HEAD == checkpoint HEAD`）**
@@ -1257,6 +1306,239 @@ lists_tianjin=true、lists_xiamen=true、**claims_a_total=false**
 - 只读不变：不改产品文件、不建分支、不推送、不开新隧道、不绕过 UI 调 API。
 
 
+#### aad2d1f2 HJ-P3 第四轮 @2026-09-21 01:3x（本机钟）→ 新包已占位核指纹；先报一个"永久空屏"的 HUMAN_BLOCKER；点名的①复现到了且比预期更伤；②那句"没有符合条件的住宿"我没复现到
+
+**读数归属（按硬规矩先量）**
+- 我这条标签页**用指纹占位**：`window.name = HJP3-aad2d1f2-fbe6a00-mua2pq7f`，占位时枚举到 3 个标签页，
+  其中 `HJP1-MINE`（`1a986a24`）与一个未命名页，我的指纹**唯一**（`mine=2`）。全程只在自己的 tab 上操作。
+- 实际加载：`index-CEpKoGJA.js` + `index-DRmaR46I.css`；本地 `dist/index.html` 引用的也是它，构建时间 01:00:20；
+  权威树 HEAD `fbe6a00`（00:46:38）⇒ **`preview HEAD == checkpoint HEAD == fbe6a00`**，本轮读数可整体归到 `fbe6a00`。
+- ⚠ 占位后发现我的视口是 **1046×720**（被共享窗口带偏），我重新按了 390×844 才开始量。
+  ⇒ **`window.name` 只能证明"页是我的"，证明不了"视口是我的"**；建议 ORD-0061 的 runbook 把"每次读数前重报 `innerWidth`"写成硬性一条。
+
+##### B-1 `HUMAN_BLOCKER`：入口包下载失败后，屏幕**永久**全白，没有兜底也没有重试提示
+
+- 现象：`/v8/stay` 文档拿到了（`title` 正常、URL 正确），但 `#root` 的子节点数 **0**、`document.body.innerText` 长度 **0**，
+  屏幕上什么都没有，也不会自己恢复。
+- console 直接给出成因：`Failed to load resource: net::ERR_CONNECTION_CLOSED @ .../assets/index-CEpKoGJA.js`
+  —— **入口模块没下完**，React 从未挂载。
+- **产品侧的缺口不是"网络抖"，而是抖了之后什么都不说**：没有错误边界、没有"加载失败，点这里重试"、没有骨架屏，
+  连 `<noscript>` 类兜底都没有。用户只能自己猜"要刷新"。
+- 复现率 **2/2**（本轮两次：`/` 一次、`/v8/stay` 一次），都是同一枚 `ERR_CONNECTION_CLOSED` 打在 JS 上。
+- **量化这条链路有多脆**：入口包本地 **1 155 253 B**，公网实测 **23.9 s** 才下完（`speed_download ≈ 48 KB/s`），
+  同一次抓取里还出现过 30 s 只拿到 786 432 B 就断；CSS 5.0 s、manifest 4.0 s、HTML 本身 2.0–8.0 s。
+  ⇒ 从导航到看见第一屏内容实测 **≈46 s**（我等到 `#root>0` 为止）。
+  **归因分清**：48 KB/s 是 cloudflared quick tunnel 的锅（环境），**永久空屏 + 无提示是产品的锅**。
+- 期望的用户可见行为：入口脚本失败时屏幕要说"应用没加载出来，点这里重试"，而不是空白。
+- 分类 `HUMAN_BLOCKER`（对我这条人设车道是**阻断级**：本轮我两次进不去应用）。
+- 疑归：入口 `index.html` / `main.tsx` 的挂载失败路径（我没读这两个文件，定位交归属车道）。
+- 最小回归点：一条 E2E 用 `route.abort()` 打掉 `index-*.js`，断言 `body.innerText` **非空**且含"重试"字样。
+  现在这条门是零覆盖——所以它才能在预览上静悄悄存在。
+- 附带（**环境项，不算产品缺陷**）：`manifest.webmanifest` 在浏览器里 **401**（`Manifest fetch … failed, code 401`），
+  而我用带凭据的 curl 拿同一个 URL 是 **200 / 314 B** ⇒ 浏览器取 manifest 时不带 Basic 凭据，
+  所以 PWA 元数据在鉴权预览上**永远加载不了**（"添加到主屏幕"会缺图标/名称）。归预览运维（ORD-0045 那条线）。
+
+##### B-2 `HUMAN_BLOCKER`（点名①复现，且比"提示不显眼"更伤）：未识别城市会**沿用上一个城市的国家和货币**，把用户已经填好的预算静默换算掉
+
+- 动作序列（就一个急躁用户会做的事）：目的地输"东京" → 认出来了，改成"东京湾酒店"（一个很自然的输法）。
+- 认出来时：`country=JP / tz=Asia/Tokyo / cur=JPY`，屏幕说"已自动设置：日本 · 日元 · 日本标准时间"。
+- 改成乱码后：屏幕说
+  > 目的地没认出「东京湾酒店」：仍按 **JP / 日元（JPY）/ Asia/Tokyo** 规划。换个写法，或在"看支持的目的地"里挑一个。
+  三个隐藏输入仍是 `JP / Asia/Tokyo / JPY`，**"下一步"仍然可点**（`disabled=false`）。
+- **伤在哪**：一路点到第 3 步，确认页写着
+  > 目的地 东京湾酒店 ｜ 未识别 · 按 JP / 日元 / Asia/Tokyo 规划
+  > **总预算 / 住宿　JPY 3000 / 1000**
+  而那个 `3000` 是**应用自己预填的默认值**，用户在第 2 步看到的框里**只有"3000"、没有任何单位**
+  （我实测 `trial-budget` 的 `unitShown=false`，标签只有"总预算 / 住宿预算"）。
+  ⇒ 用户心里的 ¥3000 人民币，被静默变成 **3000 日元 ≈ 150 人民币**（约 1/20），而且"确认创建"照样按得下去。
+  证据 `25_fbe6a00_unrecognized_city_jpy_budget.png`（屏幕原文我逐字读过）。
+- 对照组（证明这不是"没提示"）：把城市换成"天津zzz乱码"，遗留就变成 `CN / CNY / Asia/Shanghai`，同样放行。
+  ⇒ **提示文案本身是好的**（点名了输入、说了兜底、给了出路），**缺的是"钱被换单位了"这件事本身没有被拦下来或换算给用户看**。
+- 复现率 **2/2**（JP 与 CN 两种遗留各一次）。分类 `HUMAN_BLOCKER`。
+- 疑归：向导里"识别失败 ⇒ 保留上一次 country/cur/tz"这条兜底策略，与第 2 步预算框缺单位（`trial-budget` / `trial-stay-budget`）。
+  与 `1a986a24` 独立量到的"预算框无单位""非 CNY 行程在 hub 被写成 ¥"是**同一族**，建议并到一处修。
+- 最小回归点：手机视口 E2E——"东京 → 东京湾酒店"走到第 3 步，断言屏幕要么**拦住不让创建**，
+  要么把金额**带着单位并换算给用户看**（例如"JPY 3000 ≈ ¥150"）；并断言第 2 步预算框文字里含币种符号。
+
+##### S-1 `HUMAN_MISLEADING`（点名②相关）：住宿页自己承诺"每个费率都明确标注币种…"，然后 4/4 张卡都写"价格未知"
+
+- 我量的是**别的车道建的 TOKYO 行程**（`citynexus.v8.journey_id = ab6fd95c-…`，不是我的 `56eb15a9-…`），
+  所以这条只说明"该界面对已有数据的呈现"，**不**归因到 B-2 的货币链。
+- 屏幕顶部承诺原文：**"每个费率都明确标注币种、房型、入住人数、退改政策、新鲜度和它所塑造的行程。"**
+  下面 4 张 `stay-offer-card`（01 相鉄フレッサイン / 02 Hotel Sumisho / 03 The AGNES / 04 アネックス勝太郎旅館）
+  **4/4 全是"价格未知（供应商未提供房价）"**，"费率证据"面板的"总计 / 币种"一格也是"价格未知（供应商未提供房价）"
+  （`stay-price-unknown` 命中 5 处）。⇒ **承诺要标的"币种"恰好就是没给的那一项**，同一屏自相矛盾。
+  证据 `26_fbe6a00_stay_all_prices_unknown.png`。
+- 期望：选住宿的用户至少能看到价格，或者页面不要先承诺"明确标注币种"。
+- 分类 `HUMAN_MISLEADING`。复现率 4/4 卡、1/1 页。
+- **⚠ 点名②我要如实报"没复现到"**：Commander 说服务器拒答时住宿面板会直接显示"没有符合条件的住宿"。
+  我这一屏 `/没有符合条件/` 匹配 **false**（因为这趟行程有 4 个候选）。
+  ⇒ 我**没有**构造出拒答场景（那需要新建一趟同日/零晚或冷城市行程并打 `stay-options/generate`），
+  所以 ② 仍是**未验**，不要当成已确认，也不要因为我这条就把它关掉。
+  ORD-0065 要的四种 `outcome` 终态可区分，我这边同样**零读数**。
+
+##### S-2 `TRUTH_DEFECT`（待归属车道判）：四家不同酒店的"行程影响"数字一模一样
+
+4 张卡的"行程影响"全部是 **"216 分钟步行 / 233 分钟余量"**，逐字相同。
+四家位置不同的东京酒店给出完全相同的步行分钟，对一个用来**比较并选一家**的界面来说等于没给信息。
+我不能证明它算错了（也许同一区域确实同量级），所以只报"4/4 完全相同 ⇒ 无法区分"这一可观测事实。
+附带 `POLISH`：**"216 分钟"** 这种写法本身就不该给赶时间的人看——3.6 小时写成 216 分钟，认知负担大且不像人话。
+
+##### 本轮的两条正面结论（修好了，值得钉住别回退）
+
+1. **第 1 轮我报的"目的地输天津、标签还写抵达厦门"已经修了**：现在输"东京"标签变"抵达东京/离开东京"，
+   未识别时变"抵达地点/离开地点"。⇒ 该条从我的清单里**关闭**。
+2. **未识别城市现在会说人话并给出路**：`目的地没认出「X」：仍按 … 规划。换个写法，或在"看支持的目的地"里挑一个。`
+   而且界面上有可点的**支持城市清单：厦门 北京 上海 天津 福州 广州 深圳 成都 杭州 东京 新加坡（11 个）**。
+   ⇒ 这条比我前几轮的"这一步没有成功"是实质进步（B-2 剩下的只是钱的单位问题）。
+
+##### 仍然命中的旧条目
+
+- **H-5 `底图未加载`**：住宿页同一屏里地图明明渲染出 練馬区/文京区/江戸川区 与路线线，提示仍在（`v8-map-tile-notice`）。
+  ⇒ 累计 **4/4 次加载命中**，跨 `576fbf6` 与 `fbe6a00` 两个包。
+- **`节奏 = relaxed` 枚举泄漏**：第 3 步确认页仍是英文（`25_`）。
+- **H-6 城市不相关的 AI 建议**：本轮未重测（没进 AI 面板）。
+- **maplibre 自带英文提示**：这次 DOM 里同时存在 `maplibregl-desktop-message` = "Use Ctrl + scroll to zoom the map"
+  与应用自己的中文"两指拖动或缩放地图 · 单指仍然滚动页面"，两者位置重叠；
+  我用 `elementFromPoint` 探了英文那条的中心点，**顶层是 `maplibregl-canvas`**，截图里也只看到中文那条。
+  ⇒ 维持上轮结论：**静止时用户看不到，不算已证实缺陷**；但它是靠 z-order 运气盖住的，
+  而且桌面态的字符串不该出现在 390 px 移动布局里。记 `POLISH`。
+
+##### 收尾
+
+- 证据累计 **26 张**在 `D:\moodle\HJ-P3_evidence\`（`25_`/`26_` 是本轮）。
+- 全程只读：未改产品文件、未建分支、未推送、未新建隧道、未绕过 UI 调 API、未清共享 localStorage；账本内无凭据。
+- **B-1 是本轮最该先处理的**：它现在会让任何人设车道随机进不去应用（我 2/2 撞上），
+  而且它和"预览公网链路只有 ~48 KB/s"叠在一起 ⇒ 建议 §8 重建后考虑给预览挂一个本地 `127.0.0.1` 入口给人设车道用
+  （ORD-0061 的 runbook 里已经有 per-lane 槽位，走 127.0.0.1 不违反"公网入口恰好 1 条"）。
+
+### 1a986a24 HJ-P1 第二轮收口 @2026-09-21 01:5x → **新口径把"说错数"换成了"不说数"：3 天行程也显示"天数未知"，预算参考与"预算过紧"警告一起消失**；另抓到"重试"其实是**再建一趟行程**
+
+**人设**：HJ-P1 穷游背包客。**包名归属**：`assets/index-CEpKoGJA.js`（检查点 `fbe6a00`）；指纹 tab `window.name === "HJP1-MINE"`；412×915 / dpr 2 / 浅色。
+**本轮我在预览库里新增**（未删）：东京 3 天 `bc424a92…`、因点"重试"又建出来的东京 3 天 `ab6fd95c…` + 新 traveler `25fb8458…`。
+
+#### ① 预算/天数新口径
+
+- **好的部分**：「我的」页写「1 位旅行者 · **JP¥9,000**」。我输 9000 日元 → 后端存 `amount_minor: 9000`（**日元 0 位小数，指数用对了**：同一棵树里 CNY 1200 存 120000），前端按币种渲染 ⇒ 我上轮报的 **P1-4（¥ 硬编码 / 标度错）在这一屏已经不见**。
+- **坏的部分（本轮最该看的一条）**：一条 **9/28 09:00 → 9/30 19:00（3 天 2 晚）**的行程，「今天」页写
+  「东京之旅 / 9月28日 09:00 — 9月30日 19:00 · 1 位旅行者 · **天数未知**」；另一条 9/26 08:00 → 20:00 的当天往返也是「**天数未知**」。
+  ⇒ 新口径**不是只在真未知时说未知**，我 2/2 行程全落未知。
+- 用户后果：① "每人每天约 …"整行消失；② 上一轮我判为**做得对**的那条预算过紧警告（「按这个预算，住宿、交通和吃饭很可能超出计划…」+「调整预算 / 我知道了，继续」）**也不再出现**，因为它吃的就是每人每天这个派生量。
+  我拿 JPY 9000 住 3 天东京（明显不够）却**零提示** ⇒ **修法是取消派生量，不是补真值，顺带把安全网摘了**。
+- 证据：主包里 `temporal_shape`、`budget_reference` 各 **1 次命中**（我 curl 包体数过）⇒ 新代码在包里，界面取到的却是"未知"。**取不到的原因我没查**（要看后端有没有下发这两个字段，那不是只读走查能定的），所以我只报用户可见结果。
+- 分类：`TRUTH_DEFECT` + `HUMAN_RECOVERY_GAP`。复现率：**天数未知 2/2、预算警告消失 2/2**。
+- 最小回归点：断言"09-28 09:00 → 09-30 19:00 的行程屏幕必须出现 3 天（或明确 2 晚）且不得出现'天数未知'"；再断言"预算 < 每日地板 × 天数 时警告条必须仍在"。
+
+#### ② 空结果 vs 失败：量到的与**没量到的**分开写
+
+- **量到（进步）**：住宿搜索失败时向导页写「**这一步没有成功——行程已创建，但住宿搜索没有完成。** Failed to fetch」——第一次把"行程建成"和"住宿没搜到"分开了。
+- **量到（新缺陷，`HUMAN_BLOCKER` 候选）**：这句之后屏幕上唯一可点的动作仍是「确认创建」，**而它不是重试，是再建一趟**：
+  我按用户最自然的反应点下去 → `POST /travelers` **201**（`25fb8458…`）+ `POST /api/v1/journeys` **201**（`ab6fd95c…`），原来那趟 `bc424a92…` 仍在库里。
+  ⇒ **一次"重试" = 一趟重复行程 + 一个重复旅行者**，而界面无任何列表能看到它们（顶部 chip 现在在 412 宽下 `offsetParent !== null` 已经可见了，点开 **0 个可选项**，仍然切不了）。复现率 1/1。
+  最小回归点：该状态的按钮必须区分"重试搜索"与"重新创建"，或断言第二次点击不再新增 journey 行。
+- **没量到（不糊弄）**：ORD-0070 那句「**没有符合条件的住宿**」我一次都没在屏幕上看到，**主包里 grep 也是 0 命中**（`1,155,253 B`，`grep -c = 0`）
+  ⇒ 要么措辞换了、要么它在懒加载分片里（我没枚举分片）。503 那条通路我**造不出来**：它需要写锁被另一次生成占住，我单方点击做不到（要造就得借别的车道的写操作，我不擅自去搅别人）。
+  建议 `e345b9d6` 自证时附一个"人设车道可复现"的构造条件（例如同一旅程连点两次「开始规划」），否则这条永远只能靠读代码断言。
+- **与 HJ-P3 相互印证**：他们本轮也撞上"随机进不去应用（2/2）"，与我下面 ③ 的白屏同一族。
+- 顺带（上轮未修的两条依旧在）：东京 4 张住宿卡仍全为「价格未知（供应商未提供房价）」（累计 **12/12 候选零价格**），
+  而同一屏页头仍是「每个费率都明确标注币种…」；该屏 `¥/JPY/CNY/円` 字样正则数出 **0 条**。四张卡的"行程影响"仍完全相同（216 分钟步行 / 233 分钟余量 ×4）。
+
+#### ③ 冷城市等待 + 刷新恢复
+
+- **冷城市我没测成**：原计划建一条从没生成过的 深圳 3 天，但那次进入 `/` 撞上整屏白屏（下一条），向导始终没出来；**我不拿别的路径凑数**。
+  上一轮"东京创建 11 s / AI 21.7 s"里**没有出现 ORD-0049 的百秒级住宿发现等待** ⇒ 那 115 s 我两轮都既没复现也没否证，交计时线自己收口。
+- **白屏一次（本轮最严重的可看性故障）**：`goto('/')` 后我轮询 **45 秒**，`body.innerText.length` 恒为 0、`#root.children === 0`；
+  同时 `readyState = complete`、`index-CEpKoGJA.js` **200 / 1.87 s**、CSS **200 / 1.73 s** ⇒ **代码早到齐，界面就是不画**（不是隧道慢）。
+  curl 复核同一资源 `1,155,253 B / 3.8–4.0 s` 200、首页 `1.16 s` ⇒ 传输正常。
+- **不自愈**：再等 25 s 读数一字不变。**手动刷新 2/2 恢复正常**（root 1 子节点、500+ 字、API 全 200、我注入的 `onerror/unhandledrejection` 采集器 0 条记录）。
+  期间屏幕上**没有任何**"加载中 / 出错了 / 点这里重试"的文字 ⇒ `HUMAN_BLOCKER`。
+  **我没能抓到那次白屏的成因**：错误采集器是白屏之后才装的，装好之后两次都没复现 ⇒ 请红队用"进入前就注入 onerror"的方式抓一次现场。
+- **归因更正（我自己上一轮的话要说清）**：我本轮早先那次"bundle 24.9 s 才渲染"和这次"bundle 1.9 s 仍白屏"是**两件事**，不该混成"冷启动就是慢"。请分别立案。
+
+#### 上轮发现的逐条回收（背包客亲测）
+
+| 我上轮报的 | 这一轮屏幕原文/状态 | 判定 |
+|---|---|---|
+| F-1 抵达/离开标签永远"厦门" | 输入东京 → 「抵达东京 / 离开东京」，占位符「例如：东京站 / 机场」 | **已修** |
+| F-2 认不出的城市零提示、下一步仍可点 | 输入拉萨 → 「没认出「拉萨」：仍按 JP / 日元（JPY）/ Asia/Tokyo 规划。换个写法，或在"看支持的目的地"里挑一个。」且 `trial-next` `disabled` | **已修，且比我建议的更好**（连"会沿用哪个遗留值"都念出来） |
+| F-3 支持城市清单不可见 | 第 1 步出现「看支持的目的地」入口 | **已修**（清单内容以 `aad2d1f2` 车道读数为权威，我不重复判） |
+| P1-9 锚点留空只说 "Request validation failed" | 「还需要填写：抵达地点、离开地点」，且**一次请求都没发**（我采集到 POST 0 条）⇒ 上轮那条"失败前先写了 traveler"顺带消失 | **已修** |
+| P1-4 币种符号/标度 | 「我的」`JP¥9,000` 对；「今天」因"天数未知"整行不显示金额 | **部分修**（错没了是因为不说了） |
+| P1-1 零价格 + 页头承诺 | 12/12 候选「价格未知」，页头照旧 | **未修** |
+| P1-8 中文界面里的英文 | 多了一处：`Failed to fetch` 直接拼在中文提示后 | **未修，面变大** |
+
+#### 收尾与只读声明
+
+- 两件请裁：① 若"天数未知"来自后端没下发 `temporal_shape`，它比"算错"更该被真值线先看，因为同时摘掉预算安全网；
+  ② 预览库里现在至少 **5 趟行程 + 5 个 traveler**（我 2 趟东京 + 1 趟新加坡 + 上轮厦门/广州，加别的车道），界面无列表 ⇒ **人设车道越多，这个失真越大**。
+- 只读：未修改/新建/删除产品文件；未建分支/checkout/commit/push/force-push；未新建隧道；未绕过 UI 调产品 API
+  （我为取证 curl 的是**静态资源与包体本身**，已在正文标明）。账本内无凭据、无 key 前缀。
+
+### e345b9d6 ORD-0066（甲）+ ORD-0072 @2026-09-21 01:4x（本机钟 `date`=01:45:42 +0800）→ 一次构建改完两条，13 节点权威 harness 全绿；按 Commanding 令**不 commit**，整份交 `814b75a8` 落；**突变未跑 ⇒ 两条都是 PARTIAL**
+
+**先回执**：02:3x 令收到并执行——我没 `add`/`commit`/`restore`/`checkout`，共享索引一次都没动过（所以不存在"我替别人暂存了什么"）。
+交接件三样，Commanding 要的六项齐（文件全路径 / 行为 vs 门 / 跑法 / 突变表 / 残留 / 复跑命令）：
+```
+_qoder_integration_20260919/review/ORD-0066-0072-handoff.md      交接正文（含逐条 file:line）
+_qoder_integration_20260919/review/ORD-0066-0072-frontend.diff   825 行 / 4 个文件
+_qoder_ui_overnight_20260920/review/ORD-0066-0072-handoff/       树外安全副本：同一 diff + 两个新 spec 全文
+                                                                  + JourneyTrialSetup.tsx / styles.css 全文快照
+                                                                  （防共享树 clean/restore 吃掉唯一副本）
+```
+`git apply --check --reverse` 在当前工作区**通过** ⇒ 这份 diff 与工作区逐字节一致，不是"我记得我改了哪些"。
+
+**行为改动 2 个文件、门 2 个新文件、工具 1 个**（`review/run_spec.py` 只是把 `ROOT` 指到本树、默认端口 4470→**4510**，
+因为 4470/8470 那一带别的车道在用；这条不是产品码，落不落随你）。
+
+**选的路 = 甲**，并且我先在自己的量具上复现了你 01:4x 的前提才动手（`review/aria_disabled_probe.cjs`，真 Chromium）：
+`disabled landed=false` / `aria-disabled landed=true`。焦点证据每语言一份、三条齐（正对照 + 负对照 + 被测），
+另有 Tab 行走序列——**因为你说缺正对照的焦点测试不算数**。
+
+**三条会影响你复测口径的量具事实**（写在这里免得下一轮被当成"车道没改"）：
+① **Playwright 1.63 把 `aria-disabled` 当 disabled**：`toBeEnabled()` 对 `aria-disabled` 返回 **false**、`click()` 会等到超时。
+⇒ 你旧门里 `trial-next` 的 `toBeDisabled()` **一个字不用改也继续绿**，所以**它证明不了可达性**；
+   能证明的只有焦点与 Tab 两条，我在这两条上都放了对照。
+   同理"被拒的点击"只能用 `focus()` + `keyboard.press("Enter")`（真实键盘路径）测，别用 `click()`。
+② `getByRole(...,{disabled:true})` 对 `aria-disabled` 与 `disabled` **都命中** ⇒ 它区分不了甲与原状，我只拿它断言"语义没被悄悄放开"。
+③ `.v8-sr-only` 元素 `innerText`/`textContent` 都读得到（clip 不是 display:none）⇒ 播报 region 的断言不是空转。
+
+**ORD-0073 冲突我认（你补得对）**：`V8Experience.tsx:660-667` 的 `validateDates` 硬拒非未来日期，
+`frontend/e2e/real-journey-flow-v5.spec.ts:174` 钉着"向导默认日期必须在未来"，而 `aad2d1f2` 的 ORD-0061 走查**正在用这棵树**。
+⇒ 我原来的 0059-c（放开"今天开始"）**从我的范围里摘出来**，只做 0059-a（`lib/sceneClock.ts` 只消费 `effective_now`）
+   + 0059-b（`SimulationPanel` 新文件），**0059-c 增量仍以 diff 交给你串 0073**，我不自己并、不碰 `V8Experience.tsx` 的日期门口。
+   另外你 01:2x 更正后，`JourneyTrialSetup.tsx` 的**日期门口那半我不再需要改**（后端 `seed_demo` 承担），
+   横幅与入口走既有产品外壳 ⇒ 我 0059 的写集缩到：`frontend/src/lib/sceneClock.ts`、`frontend/src/features/simulation/**`（新文件）+ 必要的挂载点。
+   **挂载点要写 `V8Experience.tsx`**（它归我，Amendment J §2），如果你希望 0059 也零冲突，就同样以 diff 落——说一句就行，我照办。
+
+**一处契约差异先报，别到门上才发现**：`GET /api/v1/demo/scene` 实到信封是 **10 个键**，比你 01:4x 正文列的 9 个多 `plan_version_id`
+（`backend/app/main.py:5958`）；无场景分支确实 9 键全 null/`NO_SCENARIO`。我按**实到信封**写消费层与类型，不猜、不自己补一个字段。
+
+**sha 读数（不采信任何转述，包括我自己的记忆）**：我量到权威树 tip = **`f8d9dc2`**（`fbe6a00` 之后 8c66aa92 落了 `722e2c8`+`f8d9dc2`，全在 `backend/**`，与我零重叠）。
+`:5f7f5b9a` 转述的 `f015d21` / `814b75a8` 两个 sha，在**本仓和 `origin`（`D:/moodle/CityNexus`）里 `git cat-file -t` 都报 `Not a valid object name`**；
+它同时说"树已干净"，而我 `git status --porcelain` 量到 4 脏 + 5 未跟踪。**不指责任何人，只报读数**：
+如果那两位 sha 来自 GitHub 上另一条线，请按 sha 序列给我，我按序列交接；在那之前我按 `f8d9dc2` 干活。
+
+**残留（不当已修）**：M1–M6 **未跑**（跑完在本块补读数，不新开块）；全量 suite 读数未取；
+"读屏真的念出来了"这句话 **DOM 门证明不了**，我不报成已实测——门证明的是可达 + 无障碍树拿得到描述 + 被拒激活把同一句话写进常驻 polite region。
+
+status: ORD-0066 PARTIAL / ORD-0072 PARTIAL / ORD-0059 CLAIMED@2026-09-21T01:5x+08（0059-a+b 开工，0059-c 摘出交 Commanding 串 ORD-0073）
+evidence: 见上方 ORD-0066 / ORD-0072 两块单内 status+evidence（13 collected / 13 passed 复跑 / typecheck exit 0 / 交接件 md5 两份一致 `65ec75e8…`）。
+
+### D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
+
+STATUS | files | blocker | map 路径
+`DONE`（16/16 项均给出 文件:行号，无「未找到」项）| 新增 `D:/moodle/_qoder_sim_scout_20260921/SIM_INSERTION_MAP.md`（未改任何生产文件、未 commit、未跑全量测试/provider 探针/变异）| 无 | `D:/moodle/_qoder_sim_scout_20260921/SIM_INSERTION_MAP.md`
+
+**车道 A 可直接拿用的 top 3 事实**
+1. **`execution_clock.freeze()` 早就存在，但生产调用数 = 0**（`backend/app/execution/clock.py:26-32`，全仓只有 `backend/tests/test_v10_foundations.py:125` 用过一次）。4 个证据过期判定点全部硬写 `datetime.now(timezone.utc)`：`services.py:467`、`services.py:1158`、`main.py:4376`、`main.py:4663`。**改这 4 行为 `execution_clock.now()` 就是 TTL 的最小改动面**，不动 `stay_mobility.py:1306` 的 4h 常量。
+2. **5–12 项真实路由名（车道 C 在等的）**：complete `POST /api/v1/journeys/{jid}/activities/{aid}/complete`（`main.py:5722`）· skip `…/activities/{aid}/skip`（`:5802`）· 触发事件 `POST /api/v1/journeys/{jid}/events`（`:6013`，`provenance=SIMULATED` 强制 `provider_key="demo-simulator"`）· replan 请求 `POST /api/v1/journeys/{jid}/replans`（`:6910`）· accept `POST /api/v1/replans/{pid}/accept`（`:9044`）/ reject `…/reject`（`:9516`）· booking `POST /api/v1/journeys/{jid}/bookings`（`:10384`）· transaction `POST /api/v1/journeys/{jid}/transactions`（`:10488`，**缺 `Idempotency-Key` 直接 422**）· confirm `POST /api/v1/journeys/{jid}/inbox/{draft_id}/confirm`（`:3663`；另有两条 `capabilities/confirm` `:2075`/`:2126`，语义不同别误接）。
+3. **seed 现状决定 Simulation 走不动**：`seed_demo()`（`services.py:167`）只造 1 个 DRAFT journey、**零 PlanVersion**（`:265-282`），而上面 complete/skip/events/replan 四道门都要 `ACTIVE + active_plan_version_id` ⇒ 上线要在 seed 后串既有 `plans/generate`(`:4234`)→`select`(`:4321`)→`/start`(`:5577`)，**不需要新写端点**。另：`demo/reset` 已有 `DEMO_MODE_REQUIRED` 403 守卫（`main.py:1788`），且被 **140 个 backend test 文件 + 10 个 e2e spec + `citynexus.ts:671 resetDemo()`** 调用，改签名前先想清楚半径。
+
+**给 `e345b9d6` 的回话（其 01:5x 块第 1513 行那条契约差异）**：你的读数我独立复核**成立**——有场景分支 10 键、无场景分支 9 键、缺的正是 `plan_version_id`（`main.py:5958` 只在有场景时出现）。你按实到信封写消费层是对的；这条我已在 map 第 1 项标为 shape 不稳定风险，供 Commander 决定是否补成恒定 10 键。
+
+status: DONE（侦察交付）
+evidence: 全部行号取自 `f8d9dc2` 当前树本体（`grep`/读文件核对，非转述）；`datetime.now(` 在 `backend/app/` 96 次、`fromisoformat` 156 次为本次实测量。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
@@ -1604,7 +1886,18 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
       缺正对照的焦点测试我不接受（因为 ② 单独看和"探针坏了"无法区分）；
     - **禁止**只补 `aria-describedby` 属性就报 DONE —— 我已经用 ④ 证明那样做门会绿而用户没被服务。
     证据落盘：`_qoder_recovery_20260919/raw/focus_premise.json` + `raw/focus_premise_probe.cjs`（我的量具，只读渲染与焦点，不改产品码）。
-  status: DISPATCHED@2026-09-20 23:2x（我原先误标成 09-21 01:4x，按 23:1x 立的规矩改回本机钟；要求 1/3 已达成、要求 2 未做且验收口径已按上方修订）
+  status: PARTIAL@2026-09-21T01:4x+08 by e345b9d6（走**甲**：`aria-disabled` + 保持可聚焦 + 被拒激活播报；要求 1/2/3 全落，焦点证据带正负对照；代码与门**未提交**，已按 Commanding 02:3x 令交 `814b75a8` 按路径落；**突变 M1–M4 未跑，所以不写 DONE**）
+  evidence: 权威树 HEAD 我实测 `f8d9dc2`；`--list` 收集 **13 tests in 3 files**（12 个 [chromium] 节点 + 1 行 [real-seed] setup），
+    `run925968` 首轮 **11 passed / 2 failed**（红在我自己的门：先读 textContent 再断言，早于 60ms 重写），
+    改写法后 `run926022` 复跑 **3 passed**；`npx tsc -p tsconfig.typecheck.json --noEmit` **exit 0**。
+    焦点三读数（每语言各一份，`reports/ui-overnight/wizard-next-focus-{zh-CN,en}.json`）：
+    正对照 `trial-city landed=true` / 负对照 `#trial-required-hint landed=false` / 被测 `trial-next landed=true`，
+    且 Tab 行走序列含 `trial-next`（行走仪器对照 = 同一次行走里 `trial-departure` 也出现）。
+    量具自检 `review/aria_disabled_probe.cjs`（真 Chromium）：`disabled landed=false`、`aria-disabled landed=true`；
+    **Playwright 1.63 把 `aria-disabled` 当 disabled**（`toBeEnabled()` 返回 false）⇒ 旧门 `toBeDisabled()` 不改也绿，
+    所以"门绿"证明不了可达性，可达性只由焦点/Tab 两条证明。
+    交接件：`review/ORD-0066-0072-handoff.md` ＋ `review/ORD-0066-0072-frontend.diff`（`git apply --check --reverse` 通过）
+    ＋树外安全副本 `_qoder_ui_overnight_20260920/review/ORD-0066-0072-handoff/`。
 
 
 - id: ORD-0067
@@ -2029,7 +2322,18 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     与 ORD-0060 同一文件同一族，**一起改一次过**，别分两轮构建。
     本单**排在 ORD-0066 之后**（可达性那条是用户能不能听到；这条是用户听到的是不是真的——两条都要，先 0066）。
     按 Amendment J §6 回报一行。
-  status: DISPATCHED@2026-09-21 01:0x
+  status: PARTIAL@2026-09-21T01:4x+08 by e345b9d6（与 ORD-0060/0066 **同一文件同一族、一次构建**已做到；要求 1 取**落回真实默认**那一支，要求 2 由"同一次渲染算一个 `basis` 对象、三处共读"+ payload 比对满足，要求 3 未回退；门 A/C + 真值线门全绿且**按手顺测**；代码与门**未提交**，交 `814b75a8` 按路径落；**M5/M6 未跑，不写 DONE**）
+  evidence: 复现手顺就是你量到的那条：冷 `乱码`（读出口径基准）→ `东京`/`Tokyo`（断言真的识别到）→ 再 `乱码`。
+    冷输入确实测不出来，所以门里第一步先取冷启动基准句子、第三步要求**与基准逐字段相等**。
+    读数（`reports/ui-overnight/city-basis-{zh-CN,en}.json`）：失败分支屏幕句子
+    「已退回中立口径 CN / 人民币（CNY）/ Asia/Shanghai 规划，不沿用上一次识别到的城市」，
+    禁词 JP / 日元 / JPY / Asia/Tokyo / 东京 在句子与整块第 1 步正文里 **命中 0**；`trial-inferred` 节点数 **0**。
+    真值线（`city-basis-wire.json`）：读 `POST /api/v1/journeys` 真实 body 的
+    `city_code` 前缀 / `budget.currency` / `timezone`，与屏幕那句话**同值**才绿
+    ⇒ 这一条专门杀"只改文案不改状态"，杀不掉它我就没有资格说修了因。
+    修因位置：`applyCity` 失败分支（`:394-410`）走新 `withNeutralBasis`（`:141`），
+    默认口径只有一份（`defaultBasis` `:317`，`defaultDraft` 展开它），并且**旧 localStorage draft 在初始化时就归一**（`:379`），
+    否则"第一次渲染就说假话"这条路还在。
 
 
 - id: ORD-0001
@@ -2517,6 +2821,10 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     全文见 `## DELIVERIES` 的 `### 1a986a24 ORD-0052 HJ-P1 收口`（含我撤回的 3 条自测失误）。
     **两处诚实缺口**：① 厦门那条"创建→界面"我只知 ≥60 s、没精确计时；② 冷城市这条实际只等 11 s（创建）+21.7 s（AI），
     **没有出现 ORD-0049 记的百秒级住宿发现等待** ⇒ 那 115 s 我这一轮既没复现也没否证。暗色主题未测（本单未要求，但记为未验）。
+    **第二轮 @2026-09-21 01:5x（检查点 `fbe6a00` / 包 `index-CEpKoGJA.js`，按 Commander 点名续跑）**：
+    一句话结论——新口径把"说错数"换成了"不说数"：3 天行程也显示"天数未知"，每人每天与"预算过紧"警告一并消失（2/2）；
+    "重试"按钮实际再建一趟行程 + 一个 traveler（1/1）；上轮 F-1/F-2/F-3/P1-9 **已修**、P1-1/P1-8 **未修**、P1-4 **部分修**；
+    另记录一次"代码已到齐却白屏 45 s、不自愈、刷新 2/2 恢复"。全文见 `## DELIVERIES` 的 `### 1a986a24 HJ-P1 第二轮收口`。
 
 - id: ORD-0053
   to: aad2d1f2
@@ -2564,6 +2872,14 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     T-4 AI 需求 39 字刷新即丢、无草稿键。H-6 累计 **3/3** 城市。累计证据 **24 张**。
     **本轮读数全部归 `576fbf6`**；权威树已到 `1e942d2`，§8 重建后需再跑。
     主动放弃：未开 `/v8/stay`（当前 ACTIVE 是新加坡冷城市，会打 ~115 s provider，§7 禁止）、未清共享 localStorage。
+    **第四轮（见 `#### aad2d1f2 HJ-P3 第四轮 @01:3x`，读数归 `fbe6a00` / `index-CEpKoGJA.js`，tab 已按指纹占位）**：
+    新报 2 条 `HUMAN_BLOCKER` —— B-1 入口包 `ERR_CONNECTION_CLOSED` 后 `#root` 永久空、无兑底无重试（2/2，
+    实测包 1 155 253 B @ ~48 KB/s = 23.9 s，首屏 ≈46 s）；B-2 未识别城市沿用上一城市的国家/货币，
+    把预填的 3000 静默变成 "JPY 3000"（≈1/20 的钱）且第 2 步预算框无单位、"确认创建"仍可下（2/2）。
+    另交 S-1 住宿页承诺"明确标注币种"却 4/4 卡"价格未知"（读的是别的车道的 TOKYO 行程）。
+    **点名②"没有符合条件的住宿"我未复现到**（该屏 4 个候选），ORD-0065 四种 `outcome` 终态仍零读数。
+    正面：第 1 轮的"抵达厦门"硬编码标签**已修**；未识别城市现在会说人话并给出 11 城清单。
+    H-5 累计 4/4 命中。证据 **26 张**。
 
 - id: ORD-0054
   to: 各归属车道（见内文，按项分派）
@@ -2772,7 +3088,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     全量后端 `passed/skipped/failed` + collected，注明解释器。
     ⚠ 侦察留了一条**静态推断、未实测**：`projection_now` 无 tz 归一化（`main.py:5148` 直接与带 `+08:00` 的
     `datetime.fromisoformat` 比较，`?now=` 缺偏移 ⇒ naive/aware 比较可能 500）。**先补一条门证实/证伪再依赖它。**
-  status: CLAIMED@2026-09-21T01:2x+08 by 8c66aa92（if_head 576fbf6 早于 tip fbe6a00 ⇒ 先复核三条前提仍成立再动手）
+  status: PARTIAL@2026-09-21T01:5x+08 by 8c66aa92（1/2/3/⚠ 已落 `722e2c8` + `f8d9dc2`：flag 假 ⇒ 403 且按**行身份**证明没删；`GET /demo/scene` 四字段落地并登记契约 ⇒ **ORD-0059 解除阻塞**；naive `?now=` 从 500 改具名 422（带偏移为反向对照）。门 **9 passed**、重灾区回归 **73 passed**、变异 **5/5**（T2 第一遍存活 ⇒ 我自己那条计数断言是空的，已按身份重写）。**第 4 项 seed TTL + 两组回归未做**（压在冻结的 stale-evidence 语义上，单独一片）。⚠ 预览实例下次重建必须带 `CITYNEXUS_DEMO_MODE=true`，否则它的 demo/reset 会 403）
 
 - id: ORD-0059
   to: e345b9d6
@@ -2796,7 +3112,12 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     不得削弱冻结清单；不 force-push、不改写历史。
     **验收**：390px 亮/暗下横幅持续可见且可读；推进一个活动后屏幕上 Now/Next 的文字**确实变化**
     （断言读 `innerText`，不读 data 属性）；给一条杀得掉的证据。
-  status: BLOCKED@2026-09-20 22:0x —— 等 ORD-0058 的 `GET /api/v1/demo/scene` 契约先落地（避免两边各发明一套场景时间）
+  status: CLAIMED@2026-09-21T01:5x+08 by e345b9d6 —— 阻塞理由已消失（`GET /api/v1/demo/scene` 在 `f8d9dc2` 的树里，我实读了 handler）。
+    **本单拆两半做**：0059-a `frontend/src/lib/sceneClock.ts`（只消费服务端 `effective_now`，零 `Date.now()`）
+    \+ 0059-b `SimulationPanel`（新文件、390 亮/暗、loading/unavailable/disabled 三态显式、动作只映射已存在端点）现在开工；
+    **0059-c（向导"今天开始"门口）按 Commanding 02:5x 补充摘出**——它撞 `V8Experience.tsx:660-667` 的 `validateDates`
+    与 `real-journey-flow-v5.spec.ts:174`，且 `aad2d1f2` 正在用这棵树跑 ORD-0061 ⇒ 该增量我以 **diff** 交 Commanding 串 ORD-0073，我不自己并。
+    另报一处契约差异：实到信封 **10 键**（多 `plan_version_id`，`main.py:5958`），我按实到形状写类型。
 
 **HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
 - **HJ-P2（承诺型用户）需要真实 booking/commitment 路径**，而仲裁明令"Simulation Mode 可用之后才用它推进生命周期"
@@ -3171,6 +3492,61 @@ remotes    origin -> D:\moodle\CityNexus (本地);  GitHub 不是这棵树的 re
 
 `Canshu-King/CityNexus-Workspace`：仲裁窗口看到时为空，**01:51 发布线已推上 `master`（42129 文件）**，
 因此本控制文件走独立分支 `commander/control`，避免与其 master 推送争用。
+
+## 🗺 PARALLEL_EXECUTION_MAP @2026-09-21 01:5x（本机钟）—— 夜间无人值守连续施工，六条线
+
+依据：用户夜间总指令 + 仲裁 `5751423990`（多 Agent 并行）+ `5751472030`（DeepSeek 受约束决策层）。
+**唯一衡量标准：距离"用户拿手机站在老师面前完整演示一次 CityNexus"还差几个真实步骤。**
+不是 token、不是 commit 数、不是测试数、不是报告页数。
+
+```
+当前权威 HEAD：f8d9dc2  (01:27 test(backend): prove the reset guard by row identity, not by row counts)
+                ← 已比本文件上一条记录 `fbe6a00` 更新，旧数字作废
+```
+
+| | A 后端 Owner | B 前端集成 Owner | C Simulation 组件 Writer | D 后端侦察 Scout | E 老师视角红队 | F AI 架构 Scout |
+|---|---|---|---|---|---|---|
+| **session** | `8c66aa92` | `e345b9d6` | **`8ccd71d8`（新建）** | **`c01d72a3`（新建）** | `dc19d662` | **`5ea3bedc（新建）** |
+| **branch/worktree** | 权威树 `integration/frontend-apple-pass1` | 权威树（原 `agent/ui-overnight-20260920` 已入树，**别再往它堆提交**） | **`agent/sim-component-20260921` @ `_qoder_sim_component_20260921`（新建，基点 f8d9dc2）** | 只读权威树 | 只读预览 | 只读权威树 |
+| **WRITE_SET** | `backend/app/core/config.py`、`backend/app/main.py`、`backend/app/services.py`、ORD-0058 新测试 | `V8Experience.tsx`、`JourneyTrialSetup.tsx`、其余需接线的现有前端文件 | **只准 4 个新文件**：`frontend/src/features/simulation/{SimulationPanel.tsx,simulationAdapter.ts,SimulationPanel.css}` + `frontend/e2e/qoder-simulation-panel.spec.ts` | 无（只写自己的 `D:/moodle/_qoder_sim_scout_20260921/`） | 无（只读） | 无（只写自己的 `D:/moodle/_qoder_ai_scout_20260921/`） |
+| **当前任务** | ORD-0058（已 PARTIAL：demo 开关 + reset 守卫 + 按行身份证守卫） | **ORD-0059（已 CLAIMED@01:5x，阻塞理由消失）** | Simulation 面板 + 10 个动作映射到真实路由 | 16 项插入点地图 | 等新 checkpoint 落地即走 3 分钟流程 | AI 调用点盘点 + provider 抽象现状 |
+| **30 分钟目标** | 交出**最小可用后端契约**并广播"可接" | 面板接上现有页面，**M1 出现在手机上** | 面板成型，未接通的动作是**真 disabled** | 第 5–12 项真实路由名（**C 在等**） | 触发条件未到（到了就 8 问） | 第 1/2/3 项完成 |
+
+**C 的 worktree 没有 node_modules，也不许用 junction 借别人的（D-7 事故）** ⇒ C 只交源码，
+编译 / build / 截图由 B 在权威树做。**C 不要 `npm install`。**
+
+### 手机 preview 与 tunnel 登记（§11 要求，别再靠猜 PID）
+```
+唯一 tunnel URL : https://unexpected-somerset-seekers-neural.trycloudflare.com
+cloudflared PID : 53336          tunnel.log 最后写入 01:34:17
+预览链路 PID    : :4781=57856（鉴权反代）  :4782=38296  :8781=33880（uvicorn）
+preview HEAD    : fbe6a00 构建（bundle index-CEpKoGJA.js，index.html mtime 01:00）
+                  ⇒ **落后于权威 HEAD f8d9dc2**，下一次集成列车重建
+凭据一律不进 GitHub Issue / 代码仓 / 报告 / 截图
+```
+**已修**：`run/tunnel_url.txt` 原先写的是**一个已死主机**（`intake-matt-white-wearing`，curl=000）。
+已改成现值，旧值留档为 `tunnel_url.txt.dead`。**今后 tunnel 掉线只重启这个 PID↔URL 对应的实例，不许用消除法杀未知 cloudflared。**
+
+### 时间与节奏
+```
+下一次 Integration Train      ：02:25 前后（A 的最小契约 + C 的组件 + B 的接线，任一齐了就发一列）
+下一次向 ChatGPT 汇报         ：02:30（45~60 分钟节奏；出现"要改产品契约/削弱真值/高风险 git"则立即报）
+第一次 M1 截图目标            ：02:30 前，390 Light + 390 Dark，标 HEAD / build / demo_mode / 哪些按钮 disabled
+车道状态汇报节奏              ：25~30 分钟一行 `状态 | HEAD/branch | 已完成 | blocker | 下一步`
+```
+
+### 当前唯一 blocker
+**没有硬 blocker。** 三条线并行中，A/B/C 各自有活，D/F 只读铺路，E 等 checkpoint。
+风险登记两条（都不是停线理由）：
+① C 依赖 D 给真实路由名 ⇒ 已要求 D 在 30 分钟内先交第 5–12 项；
+② SQLite 长写锁（115s）仍在，但你已裁定**今晚保持 1 秒内具名 503，ORD-0071 不插队**。
+
+### 今晚 PARK（不得扩 scope）
+`ORD-0068`、新的 provider 探针、新的 mutation campaign、EOL 全仓整理、blame 整理、
+release package（`6af4cf53` 继续 parked）、Mission 004、大型重构、无关性能研究。
+`ORD-0066 / 0070 / 0072` 三条真缺陷**仍在 B 名下、要求一字未改**，排在 Simulation 之后；
+**"排队"不是"遗忘"**，我会盯着别丢。
+
 
 ## CURRENT_PHASE
 
