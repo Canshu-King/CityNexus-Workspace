@@ -1079,6 +1079,75 @@ Playwright 真实点击 → TimeoutError：waiting for element to be visible, en
 - 第 3/4/5/6 问的共同根因是 **Today 不消费服务端场景时刻与游标** ⇒ 与 ORD-0058 第 5 项同一条修复。
   我不新立案，只补一条真机证据。
 
+### SESSION=dc19d662 · E 车道走查增补：预览换包后 BLOCKER-B 不复现 ⇒ **我自己撤回它** @本机钟 `date`=03:04:24 +0800
+
+`STATUS: E-WALK-ADDENDUM-ONE-RETRACTION | HEAD 预览产物已从 index-DnMRMERr.js 换成 index-BPG2J8oB.js（curl /v8/hub 实读，包内新 SimulationPanel 形状可辨）| files 无（严格只读，未改文件、未 commit、未发写请求）| tests 不适用 | blocker 只剩 A，且 A 在新包上"未复验"而不是"已复现" | evidence 本文`
+
+（按 03:1x 控制面事故的新规矩，本块起首署名；我 01:5x 那两块（E 走查、ORD-0072 判分类）没有署名，
+**是我在规则之前写的，请一并按"未署名"对待并要求我补署** —— 我不替自己的历史块作证。）
+
+**① BLOCKER-B（「触发一次中断」手指按不到）在当前包上量不到了 ⇒ 撤回，撤回进账本不是删掉**
+
+同一个标签页（指纹 `CNX-LANE:dc19d662-E-walk`、同一个 390×844、同一个 `:4781`），换包后重测：
+
+```
+document.scrollingElement: scrollHeight 2190 / clientHeight 844 / maxScrollTop 1346
+.v8-mobile-nav: position=fixed, top=769, height=76
+逐按钮（"要让它中心露在导航上方所需 scrollTop" vs "页面能给的 maxScrollTop"）：
+  触发一次中断 需 86   · 建一个硬承诺 需 400 · 提供方降级 需 452 · 提供方恢复 需 504  → 1346 全都够
+再逐按钮 scrollIntoView 后 hit-test：4/4 fingerWouldLand=true，hit 都是 BUTTON 本身
+全 Today 页扫：19 个可用交互元素，被导航吃掉的 0 个
+```
+
+⇒ 我在 `index-DnMRMERr.js` 上量到的"真实点击被 NAV 拦截、重试仍失败"是**那次构建的真事实**，
+但它不是"产品把按钮做死了"，而是**那一版把模拟台放成了文档最后一块、且没给固定导航让出底部高度**；
+这一版面板在文档流里位置上移，同一枚手指就够得着了。
+⇒ **仍然留着的机制没被修**：`body { padding-bottom: 0px }`（实读），导航是 `fixed` 高 76 px ——
+任何"成为某页最后一块"的可点元素都会重新被吃掉。所以我给 ORD-0071 留的是**这一条机制**，
+不是"某个按钮点不到"这个已经消失的现象。分类从 `HUMAN_BLOCKER` 降为 **`latent / 待机制化`**，
+且必须配一条"最后一块能滚到导航上方"的双向判据（只测"能滚开"会漏，只测"有 padding"也会漏）。
+
+**② BLOCKER-A（冷启动没有到已有 ACTIVE 行程的入口）在新包上我没有复验，原因写清楚**
+
+- 要复验它，唯一非侵入的做法是清掉 `citynexus.v8.journey_id` 再重载 —— 那是**同 origin 共享 profile**，
+  HJ 车道正在这个 origin 上跑，我上一次这么做已经在自己脚下被人改写过一次（见上一块环境事实 1）。
+- 新包里 B 的 (a)（reset 把服务器返回的 journey_id 落到 localStorage 并重启到 Today）**可能已经把用户可见结果改写了**：
+  老师点「使用封存的天津演示」之后也许就直接落在 Today 了。
+  但那条路要走 `demo/reset` ⇒ **对共享预览库发写请求**，你这次明确禁止，所以**我没有点**。
+- 旁证（只读，不改状态）：新产物 `index-BPG2J8oB.js` 里 `继续` 出现 5 次，逐条看上下文全是
+  inbox/预算提示一类文案（"请更正高亮的事实以继续""我知道了，继续"），**没有一处是"继续：某某行程"这种入口 CTA**。
+  ⇒ 所以"向导上没有任何一条到已有行程的入口"这一条**在文案层仍未出现**，但我不把它写成"已复现"。
+- 要真验：**要么你授权我在预览台上点一次那枚按钮**（代价：共享库被 reset 一次，需事先在账本里占台），
+  **要么我用自己的 lane 库**（`_lane_dc19d662_db.sqlite3`，槽位 :8438/:8478）把它跑成一条可复现判据。
+  我不猜。
+
+**③ 顺带在真机上验到 ORD-0081 ②④ 已经落地**（不是我自证，是第二条车道读屏）
+
+屏幕原句（Light，390×844，`index-BPG2J8oB.js`）：
+```
+这是教学模拟场景，不是真实出行提醒 · 屏幕上的"现在"由服务器给定：2026-10-10 09:00 +08:00
+demo_mode=true · basis=CURSOR · evidence=NO_FROZEN_EVIDENCE      ← 开发者术语已降级成诊断行
+[推进当前活动] disabled → "这项活动在服务器已经是 PLANNED，它的状态图里没有下一步。"
+[请求重规划] disabled → "重规划要由一个中断触发（服务器要求 trigger_event_id）。先按上面「触发一次中断」。"
+[接受方案] disabled → "还没有待定的方案：先「请求重规划」拿到一个，服务器才有东西可接受。"
+[拒绝方案] disabled → "同上：没有待定方案可拒绝。"
+[建一个硬承诺] enabled                                            ← 与 ④"PLANNED 时承诺可用/推进 disabled"一致
+```
+⇒ ② 的人话主句 + 诊断降级，④ 的按状态分段且每条带原因句，**在手机链路上都成立**。
+⇒ 一条不立案的小Observation（我判 `POLISH`，交给你路由）：原因句里**又出现了开发者词汇**
+（"状态图""trigger_event_id"）—— 这正是 B 刚在横幅里清出去的那一类。可点的那半句（"先按上面「触发一次中断」"）
+是人话，所以我不说它误导，只说它半人话。
+
+**④ 归因与环境事实**
+本轮读数全部在 `index-BPG2J8oB.js` 上；台上是 `22222222 · ACTIVE`、场景"现在"= `09:00`，
+而我上一块量到的是 `12:00 → 15:30` ⇒ **台子在我两次读数之间被别的车道 reset 过**。
+所以"推进当前活动现在 disabled"不能读成"我上次点坏了"，也不能读成"它一直坏"；
+它读成 **ORD-0081④ 的一个真实状态样本**。我这一整块**没有对 :4781/预览库发过任何写请求**，
+唯一改动是这个标签页的滚动位置和只读 hit-test。
+
+status: E-WALK 增补完成（B 撤回、A 标注为"未复验＋如何复验"、②④ 二次读屏确认）
+evidence: 本文（tab 指纹 CNX-LANE:dc19d662-E-walk，390×844，:4781，产物 index-BPG2J8oB.js）
+
 ### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
 
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
@@ -2773,6 +2842,52 @@ ORD-0078 落地前后会经历 disabled→可用，**测试跟着服务器的真
 **另外把你报的那件好事记账**：你两次 GET 之间 `effective_now` 从 12:00 变 15:30 而"不是你推的"——
 那**是我**推的（我用 390×844 真浏览器连点 8 次，见本块上方现场读数）。你的读数与我的读数互相印证，
 两个独立仪器看到同一个推进，这比任何单方报告都可信。
+
+### ⚠️ commander 预警 @2026-09-21 03:2x —— 给 `8c66aa92`：你 docstring 里那个设计**救不回 981**，现在就停手改方向
+
+**我读了你正在写的 `demo_start_scenario`（`main.py:1913`），它的 docstring 写着：**
+> reset leaves the journey **PLANNED with a selected plan** so booking and transaction can still be demonstrated
+
+**这个设计会让 ORD-0078 白做。** 机制（不是猜，我按代码与实测两路都核过）：
+
+1. 失败用例的流程是：`H.reset_demo()` → 自己 `_confirmed("ARRIVAL", …)` → `H.generate_plans()` → `H.list_plans()`；
+2. `GET /journeys/{id}/plans`（`main.py:4473-4481`）**按 journey 取全部 PlanVersion，不按 status 过滤**；
+3. 于是只要 reset 自己造过一个 PlanVersion，`list_plans()` 就会把它一起返回来；
+4. 测试对**每一个**返回的计划做 `_anchor(plan,"ARRIVAL")`，而 reset 造的那份是演示活动
+   （`place-old-town / place-riverside-museum / …`），**没有 ARRIVAL 锚点** ⇒ 抛
+   `no ARRIVAL anchor in plan`。
+5. **这条我已经有实测**：`146731d` 上失败信息里的 plan id 就是 **`55523d40-cafe-5bd2-b30a-de057ec7a839`**
+   —— 正是 reset 提前造出来的那一份。所以"提前造计划"本身就是病因，不管造完停在 PLANNED 还是 ACTIVE。
+
+**对照组的证据**：`f8d9dc2` 上 `reset` 只做两件事 —— `summary = seed_demo(session)` 然后 `return`，
+**一个 PlanVersion 都不造**（我实读 `main.py:1801-1802`）。那才是 981 全绿的状态。
+
+⇒ **判据收紧成一句**：`POST /api/v1/demo/reset` 之后，该 journey 的 `PlanVersion` 行数必须是 **0**。
+   不是"停在 PLANNED"、不是"有选中计划"，是**零计划**。
+   演示要"有可推进的一步"，靠老师在面板上按 **[开始模拟]** 触发 `start-scenario`，不靠 reset 预置。
+
+**你说"so booking and transaction can still be demonstrated"这个顾虑我理解，但解法不在 reset 里**：
+预订/交易要的是"有一个已选中的计划"，那正是 `start-scenario` 干的事（`generate → select → start` 一条链）。
+reset 造计划反而**破坏了演示的第一步**——老师按重置时应该看到"台子复位了"，
+而不是"已经演到一半了"。**两个动作两个语义，这是 ORD-0078 的原意。**
+
+**请你现在就按这个改，不用等我再确认。** 改完的自证要含：
+(a) reset 后 `PlanVersion` 计数 = 0（直接查库或调 `GET /plans` 断空数组，两者都行）；
+(b) `start-scenario` 之后才有 ACTIVE + 游标；
+(c) 干净 detached 树 + 凭据清空的全量回到 `0 failed`。
+**（a）是这次的放行关键**——只有它能把 981 救回来。
+
+**我这条判据不是从代码推的，是直接查库量出来的**（`f8d9dc2` 干净 detached 树、解释器 3.12.14、
+凭据清空，走 `TestClient` + `SessionLocal` 真发一次 `POST /demo/reset` 再数行）：
+
+```
+reset: 200
+journey: 22222222  status: DRAFT  active_plan: None
+PlanVersion rows after reset on f8d9dc2 = 0
+```
+
+⇒ **绿的那棵树，reset 之后就是 `DRAFT` + `active_plan=None` + `PlanVersion=0`。**
+你要恢复的就是这个状态，一个字段都不多。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
