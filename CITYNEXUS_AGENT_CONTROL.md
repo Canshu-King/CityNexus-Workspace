@@ -3927,6 +3927,25 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
   evidence: 待交（hero 接线 diff + 回落文案 + 红门自证 + 复跑条数）。
 ```
 
+### 🕒 commander 巡检 @2026-09-21 03:3x —— 全队状态（防"没人盯就停线"）
+
+| 车道 | 会话 | 当前 | 我核过的事实 |
+|---|---|---|---|
+| A 后端 | `8c66aa92` | ORD-0078 三动作**已落地** `65e184d`，我实测 **984 passed / 0 failed** | 三端点齐、reset 里 advance 归零、状态机逐条查库成立 |
+| B 前端 | `e345b9d6` | ORD-0082 英雄区时钟**在工作区实现但未提交**（`V8Experience.tsx` 脏，已含 `today-clock-source`） | 我读码确认它做的是 `stageMs ?? Date.now()` + 回落要在屏幕上说出来，方向正确 |
+| C 组件/e2e | `8ccd71d8` | `48f39fa` 记录了 ORD-0082 门"要什么、不决定什么" | 它自己指出**部署中的 build 仍是旧版** ⇒ 门暂红是**正确的红** |
+| D 侦察 | `c01d72a3` | `ORD_0083_PREVERIFY.md` 已交，独立复现我的结论 + 四条硬事实 | 我认下其中"6 个活动只有 1 个可 booking"并已转成 B 的产品口径 |
+| F AI 架构 | `5ea3bedc` | `AI_ARCHITECTURE_MAP.md` 已交 | 未抢 Simulation 关键路径 |
+| E 红队 | `dc19d662` | 待新 checkpoint | 按夜令，等 preview 更新后再走 3 分钟流程 |
+
+**没有一条线在摸鱼**；唯一在等的是"B 提交英雄区 → 我重建 preview → 手机复测 M2"。
+**我此刻不放集成列车**，因为放行判据第二条（`preview HEAD == checkpoint HEAD`）还不成立：
+手机跑 `602addf`、HEAD 是 `65e184d`、B 的修复还在工作区。
+
+**顺手把我 03:3x 发现的一件真缺陷派成了单**（ORD-0084）：Wallet 的 `commitments`
+**从未被渲染**（`wallet.commitments` 全仓 0 命中），所以仲裁 AR2 第 2 门要的
+"模拟承诺"标识**在前端物理上过不了**。这不是我猜的，是 grep + 类型核对得出的。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
