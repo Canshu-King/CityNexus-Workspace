@@ -1003,7 +1003,37 @@ rebase/reset/clean 收尾 —— 那等于自己造一个死锁。
   `--list` 仍 **collected 66 / 1 file**，W3 重跑仍 **1 passed（1.1m）**，
   ⇒ 闭合结论不依赖那个被删的字段。门码今后以 `_qoder_tip_recheck_20260921\frontend\usergate\` 为准（与产物同树）。
 
-### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
+### dc19d662 E 车道走查 · HUMAN_BLOCKER 即时上报 @2026-09-21 01:5x（不等整轮）
+
+`STATUS: HUMAN_BLOCKER-1-CONFIRMED-ON-CELL-ENTRY | HEAD 预览服务产物 index-DnMRMERr.js（比你 01:4x 说的 index-CEpKoGJA.js 又新了一版，M1+M2 之后）| files 无（严格只读，未改任何文件）| tests 不适用（人工走查）| blocker 是 | evidence 本文（Playwright MCP tab 指纹 CNX-LANE:dc19d662-E-walk，390×844，:4781 本机无鉴权路径）`
+
+**冷启动 = 老师点开发时的第一眼**（我先把 127.0.0.1 这个 origin 的 `citynexus.v8.journey_id` 清空再重载，
+以还原"没有别人替他设过"的真实状态；该 origin 与隧道两个标签页不同源，未波及他人）：
+
+```
+URL /v8/hub   stored=null   wizard_present=true   shell_present=false   整屏渲染文字 168 字符
+标题: 新建行程
+正文: 用你自己的城市试用 CITYNEXUS / 三步完成。选择目的地、告诉我们怎么玩，剩下的交给 CityNexus。
+      ①目的地与时间 ②人数与偏好 ③确认创建
+      还需要填写：目的地、抵达地点、离开地点
+可用按钮只有 4 个: EN · 下一步(disabled) · 使用封存的天津演示 · 高级设置
+```
+
+⇒ **屏幕上没有任何一处提到那趟已存在的 ACTIVE 行程**，也没有"继续我的行程/返回今天"这类入口；
+底部导航（今天/行程/地图/Copilot/我的）在向导里不存在，所以用户也无法绕过去。
+⇒ 两条出口都是**新建**：`使用封存的天津演示` 走的是 `createTianjinDemo`（`POST /travelers` +
+`POST /journeys`，V8Experience.tsx:492-525 一路），不是"打开已有行程"。
+⇒ 后果：一个已经有进行中行程的人（老师演示时正是这种状态），手机点开 app 看到的是
+"请三步新建一趟行程"，**他会照做并造出第二趟行程**，而不是看到今天的安排。
+⇒ 这不是 ORD-0078 那句"Today 靠 localStorage 选行程"的同义重复，而是它面向用户的**表现**：
+问题不只是"选不到"，而是**没有任何一条界面路径能到达那一趟**。
+⇒ 分类：`HUMAN_BLOCKER`（P0 级演示阻塞）。修复归属沿用 ORD-0078（B / `e345b9d6`）。
+最小可判的验收形状建议给 B 参考：向导里当存在 ACTIVE 行程时必须出现"继续：Demo之旅 · 今天"这一项，
+且它不新建任何行程；同时"三步向导"不得成为 ACTIVE 行程存在时的默认落地页。
+
+**我的操作边界（自证）**：只读屏与点面板合法动作；**未**点向导的"下一步/使用封存演示/确认创建"
+（那会向共享预览库写新行程）；未对 `_preview.db` 或 :8781 发写请求；未改任何文件、未 commit；
+隧道上的 tab 0/1 是别的车道在用，我没有触碰。凭据未读取、未记录。
 
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
 
