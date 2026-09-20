@@ -2221,6 +2221,7 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 补交 @2026-09-21 02:4x（本机钟）：spec 又加了第三层，且它**不依赖任何组件与 testid**，所以无论裁定 (a) 还是 (b) 都直接可用 —— 让在跑的后端自己证明/推翻映射表：8 条 POST-only 动作路由 GET 上去必须得到 Starlette 自己的 405 "Method Not Allowed"（=路径已注册），2 条 GET/POST 共享的路径必须"命中"（不是路由层的 Not Found），4 条我列成 unavailable 的能力必须得到 404 "Not Found"（/bookings/{id}/confirm、/demo/clock、/demo/now、/providers/v9/degrade）。全层只发 GET，不写任何数据。规格现状：1 文件 · 3 个 describe · 17 个 test 源点（视口那条对 390/412 各跑一次 ⇒ collected 应为 18）· **执行过 0 条**。新 HEAD `3ff6f45`（前一笔 `7bcfe13`），仍只在 agent/sim-component-20260921，未 push、权威树 0 改动。
 裁定回执 @2026-09-21 03:2x（本机钟，HEAD `9334d43`，仍只在 agent/sim-component-20260921、未 push、权威树 0 改动）：**第 2 项已执行**——路由仪器直连 `:8681` 只发 GET，**29/29 全中**：17 条 POST-only 动作与 M3/M4 写侧前提全部 `405 / "Method Not Allowed"`（start·complete·skip·accept·reject·provider-fixture·bookings·demo/reset·plans/generate·select·depart·arrive·begin·bookings/cancel·transactions·orders·recovery/acknowledge），6 条读侧路径全部"命中而非路由层 404"（/events·/replans·/twin·/plans/{id}·/commitments/{id}·/demo/scene），5 条声称没有的路由全部 `404 / "Not Found"`（bookings/confirm·activities/confirm·demo/clock·demo/now·providers/v9/degrade）⇒ F 的表与 M3/M4 的端点前提没有一条是假的；`GET /demo/scene` 实到 **10 键**、demo_mode=true、journey_status=ACTIVE、basis=CURSOR、evidence_state=NO_FROZEN_EVIDENCE、expires=null（与你 02:5x 的 M3 blocker 完全对应）。报数四件事：**树/sha**＝:8681 命令行只有 `python -m uvicorn app.main:app --port 8681`（pid 67040），**cwd 我读不到**，sha 只能用行为反证：它答 10 键 ⇒ 必含 ORD-0074，`_qoder_cmdr_gate_20260921`@`f8d9dc2`（9 键）已排除；**解释器**＝`D:/moodle/CityNexus/.venv/Scripts/python.exe` 我当场核到 **3.12.14**，:8681 用的是同版本 uv cpython；**key**＝`DEEPSEEK_API_KEY` 在我这一侧 shell 里存在（len 35），:8681 进程环境读不到，但本层只发 GET 不进 AI 路径，与本批读数无关（这就是分母）；**写入**＝零。顺带量到：我两次 GET 之间 `effective_now` 从 12:00 变 15:30 ⇒ 有别人在推这台子，不是我（我全是 GET，返回只有 405/404/200）。**第 3 项已做**：spec 全量改指 B 的实际 testid（sim-panel/sim-banner/sim-scene-facts/sim-journey/sim-window/sim-basis/sim-evidence/sim-action-<id>/sim-blocked-<id>/sim-outcome/sim-entry-summary），断言只读 innerText，外加 `aria-disabled`+`aria-describedby` 这条可访问关系本身（ORD-0066 口径）；B 的 9 行 id 我从盘上实测为 reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己那份适配层的字段/门禁测试**整层删了**——不在交付线上的文件测绿了也是自证。**第 4 项已加两条必红的**：(i) ORD-0078：完全不碰 localStorage，只按 [重置到场景起点]，断言 `today-heading` 与 `sim-panel` 必须自己出现，失败信息里写着你给的机制 `V8Experience.tsx:493/528`；(ii) 动作面完整性：**`跳过活动`（路由 :5802 确实存在）在面板上没有控件**，而 `开始模拟` 被折进 reset 的真实流水线——那是**待裁的产品决定**，我没替你承认，所以这条现在红；你签"折叠可接受"我改成断言等价物，不签就补控件，**不会把它删掉**。执行状态如实：路由层 29/29 **执行过**；其余 12 个 test 源点（collected 13，含 390/412 两宽度）**一条都没跑过**（C 树无 node_modules、派单禁装），计数由接线方在 production build 上回填。
 点名回执 @2026-09-21 03:2x（本机钟 date=03:23:57 +0800，HEAD `2449d29`，未 push、权威树 0 改动）：**① 路由自证再跑一遍 = 28/28 于 `:8681`（GET-only，零写入）**，同一份清单打到生产链路 `127.0.0.1:4781` 也是 **28/28**：17 条 POST-only 全 `405/Method Not Allowed`、6 条读侧全命中、5 条"没有路由"的能力全 `404/Not Found`、`/demo/scene` 恒 10 键。**② B 层 testid 重指向**已在上一笔 `9334d43` 完成（B 实测 9 行 id：reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己适配层的字段/门禁测试整层删了）。**③ ORD-0082 红门已加并在生产构建上现场演算 ⇒ RED**（bundle `index-BPtBTSpD.js`，390×844，只读、未点任何写按钮）：banner `2026-10-10 09:00` = 后端 `effective_now` ✓，但 `接下来 09:00 Old Town Gate` 是**游标当前站**，服务器 twin 的 next 是 `Riverside Museum @10:30` ⇒ 判据(2)红。**方法学一条要记：只比"时刻"看不见这条缺陷** —— 游标停在第一站时 09:00 对 09:00 满足任何 `>=` 规则却仍指错站，所以我把判据换成"必须等于 twin 说的下一站站名"，`>=` 只留作第二道。**顺带撤回我自己的一处疑心**：我 03:1x 看见 banner 17:00 而后端已 09:00，一度怀疑面板说假话；**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题（reactivity），不是真值缺陷；红门里因此先 reload、再在**同一次 JS 回合**内同时读 DOM+scene+twin，免得把竞态当缺陷报给你。报数四件事：`:8681` 进程 cwd 我读不到（命令行只有 `python -m uvicorn app.main:app --port 8681`，pid 67040），sha 靠行为反证（答 10 键 ⇒ 含 ORD-0074；`_qoder_cmdr_gate_20260921`@`f8d9dc2` 只 9 键，已排除）；生产侧我量的是 `:4781` 服务的 `index-BPtBTSpD.js`（就是你 03:4x 部署的 `f56e9cb` build）；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（当场核）；`DEEPSEEK_API_KEY` 在我这侧 shell 里存在（len 35），被测进程环境读不到，但这两层只发 GET、不进 AI 路径，与本批读数无关。执行面仍如实：路由层两次执行过；spec 13 个 test 源点（collected 14，含 390/412 两宽度）里 **2/3/4 层仍未由 Playwright 执行**（C 树无 node_modules、派单禁装），ORD-0082 那条的**读数**我已按上面用只读浏览器在生产构建上取到，计数请接线方回填。B 的文件我一个都没碰。
+点名回执续 @2026-09-21 03:3x（本机钟，最终 HEAD `48f39fa`，仍只有我这一个 spec 文件变化、未 push、权威树 0 改动、B 的文件一个字没碰）：① 路由层再跑一遍 **28/28**，同一份清单在 `:8681`（你自有的台）与生产链路 `127.0.0.1:4781` 上都是 28/28（17 条 POST-only→405、6 条读侧→命中、5 条无路由→404），全程 GET。② 静态复核当前 tip **`65e184d`**（一小时内又动了：`602addf`→`12dd81a`→`65e184d`）：17 条 POST-only 路由**一条不少**、5 条"没有路由"的能力仍 0 命中 ⇒ 映射表内容成立；但**行号全漂**（start 5577→5780、complete 5722→5926、skip 5802→6006、accept 9044→9260、reject 9516→9732、bookings 10384→10600、demo/reset 1779→1870）⇒ 任何按行号引用这张表的人，都必须连 sha 一起报，单报行号就是过期证据。③ ORD-0082 我这条红门在生产构建上**现场演算=RED**，并且我把判据从"时刻大小"换成"**必须等于 twin 的 next 站名**"，理由要记下来：**游标停在第一站时，hero 09:00 对场景现在 09:00 满足任何 `>=` 判据却依然指错站** —— 这就是这条缺陷藏了两小时的机制；时刻比较只留作第二道。④ 撤回我自己一处疑心：我一度以为面板 banner 说假话（17:00 vs 后端 09:00），**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题，不是真值缺陷；红门因此先 reload、再在同一次 JS 回合内同时读 DOM+scene+twin，避免把竞态报成缺陷。⑤ 一条**留给你的边界，不我自己拍板**：`65e184d:1762` 已改成 `nowMs = stageMs ?? Date.now()`（并把设备回落写在 `today-clock-source` 上，这点按 ORD-0082 must 1 是合格的），但选站判据是 `end_at >= nowMs`，于是**正在进行的那一站会被冠名为"接下来"**（实测：游标 Old Town Gate 09:00–10:15，twin.next=Riverside Museum 10:30，hero 接下来=Old Town Gate）。若你与仲裁认这个语义，我把判据改指 `execution.now` 并要求改标签；不认，则这条断言保持红 ⇒ 等部署新 build 后重跑才算。⑥ 计数如实：spec 13 个 test 源点（collected 14）；执行过的只有第 1 层（两次，含生产链路那一次）与 (ii) 那条红门的**读数演算**（只读浏览器，未点任何写按钮、未写 localStorage），其余由接线方在 production build 上跑 `playwright.sw.config.ts` 那条真链路回填。
 
 ### SESSION=c01d72a3 · D 车道 ORD-0083 预验 @2026-09-21 03:2x（只读 + 自起 :8581 + 自复制 DB）→ **仲裁顺序在当前 tip `12dd81a` 上整条演通，逐请求实测全 2xx**
 
@@ -2551,6 +2552,38 @@ Windows GBK 控制台打印中文/箭头不再崩 —— 仪器在报警途中�
 是我当前最优先等待的交付；E/B 的新增都不碰 `backend/**`，你的写域仍然独占，放心改。
 D 车道已用独立复现验证"仲裁顺序在 `12dd81a` 上可演通"——它与 35 红不矛盾（正向链路 vs 回归面），
 但**修订版仍是必须的**，因为 33 条真契约测试不能为 Demo 改写。
+
+### ✅ (SESSION=494abfd7) `65e184d`（ORD-0078 修订版）最终验收：**通过** @04:6x —— 正向五跳亲测全过，回归面隔离全绿
+
+**正向（我在自有台 `:8692`、detached 树 @`65e184d`、自有库 `_probe84.db`、解释器 3.12.14 全部亲跑）**：
+
+| 按 | 请求 | 实到 |
+|---|---|---|
+| 1 重置 | `POST /demo/reset` | 200，响应**只有 4 键**（`simulation_advance` 已摘除）；scene：`DRAFT / plan_version_id=null` ⇒ ⑤"零计划"成立 |
+| 2 开始模拟 | `POST /demo/prepare-scenario` | 200，`steps=[('plans/generate',True),('select',True)]`（**无 start**）、`total_ms=29.4`；scene：`PLANNED / 55523d40…` ⇒ 口径修正生效 |
+| 3 建硬承诺 | `POST /journeys/{id}/bookings`（巡游 `74f10240…`） | **201 CONFIRMED** ⇒ commerce 门在 PLANNED+SELECTED 上过了 |
+| 4 进入执行 | `POST /demo/start-scenario` | 200，`{"status":"started","journey_status":"ACTIVE","current_activity_id":"3a58c470…","twin_present":true}` |
+| 5 推进 | `POST …/activities/{cursor}/complete` | 200；scene `effective_now 09:00→10:30`、`basis=CURSOR` ⇒ M2 链路在新生命周期下依旧真 |
+
+**回归面（同一棵树、同解释器、凭据全清）**：
+- 五文件合跑（`test_wp01_wp03 + test_solver_runtime_gate + test_v1923_final_code_gate +
+  test_qoder_simulation_mode + test_contract`）→ **15 failed / 59 passed** ——第一眼像回归又回来了；
+- **逐文件进程隔离**：`solver_runtime_gate 20 passed`、`wp01_wp03 29 passed`、
+  `v1923_final_code_gate 13 passed`（含 `test_v1923_arrival_is_a_lower_temporal_boundary`——
+  它在 `12dd81a` 单条也红，现在单条绿）；
+- 单条再隔离 `test_v1923_feasible_replacement_resolves_recovery` → 1 passed。
+⇒ **15 红全部是合跑时的套件耦合，不是代码回归**（与规则 14 的归因动作一致：隔离仍红才是缺陷）。
+`8c66aa92` 报的"62 passed / 0 failed"与我的逐文件读数一致；合跑 15 红这个现象双方各自独立量到，
+**已按规则 14 记为"套件耦合，不许写进产品结论，今晚不修"**（明早决定是否单开 setup 隔离的单）。
+
+**判定**：ORD-0078 修订版 **验收通过**。仲裁 Q1 的意图（门不动、booking 在 PLANNED+SELECTED、
+start 后才 ACTIVE）以四按顺序完整落地；33 条真契约测试不再被夹具打红。
+**给 `e345b9d6`**：现在可以接端点了——`[开始模拟] → POST /api/v1/demo/prepare-scenario`、
+`[进入执行] → POST /api/v1/demo/start-scenario`（两路由已在 `contracts/openapi.yaml` 登记，
+parity 门绿）；面板顺序画成 `重置 → 开始模拟 → 建一个硬承诺 → 进入执行 → 推进/中断/重规划`。
+**给 `8c66aa92`**：ORD-0079（mobility evidence fail-closed）继续，你量的
+`route-evidence fallback_reason=NO_FROZEN_MOBILITY_SNAPSHOT` 与 `mobility_evidence_json 有内容`的矛盾
+正是该单的核心，取不到就报失败码，不要硬凑。
 
 ### ✅ M4 的 Booking→Wallet 我实测走通了（走的是产品正常路径，不是 demo 后门）@03:3x
 
