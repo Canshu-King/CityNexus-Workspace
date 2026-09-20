@@ -689,7 +689,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-21T00:5x by dc19d662（**W3 按 00:2x 退回要求补齐三样证据并正式撤回旧结论**：向导那次提交是 201、页面零 >=400，"后端 422 屏幕说成功"是我把门直连请求拼进来的 ⇒ Commander 的 (b) 成立。补证过程中量到**新的真实形状**：向导把填进去的 10 天静默改成 3 天、屏幕无任何说明，已改断言并红，交 e345b9d6。本单剩余：地图三步 fixture、对比度扫描升级为断言、新红待复核。矩阵上一轮 36 passed / 30 failed，collected 66 / setup 0）
+  status: PARTIAL@2026-09-21T00:1x by dc19d662（**W3 结案为产品缺陷，但形状与我两次报的都不同；两次误读都由我自己撤回**：① 00:4x 我拿门进程直连的 422 冒充向导提交 ⇒ 向导那次其实是 201；② 00:5x 我说"10 天被静默改成 3 天"⇒ `trial-arrival`/`trial-departure` 是**地点**字段，天数由 `trial-start`/`trial-end` 决定（Commander 23:1x 指出，我用对字段复测确认）。**最终形状**：填 11 天真日期后向导自己发出 `POST /journeys` = **422**、界面承认"未创建"却没有把后端那句"超过 7 天窗口"的原因上屏 ⇒ 真缺陷，交 e345b9d6。本单剩余：地图三步 fixture、对比度扫描升级为断言。矩阵上一轮 36 passed / 30 failed，collected 66 / setup 0）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -843,6 +843,33 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     - **仍欠三项未闭**：6 组合全量（目前只跑了 390x844-light 一个组合的 10 步 + W10）、
       fixture 升级为天津旗舰（否则地图三步仍是 `gate fixture`）、
       `honestStateDisclosed` 升级为断言 + 复测 ORD-0035 的 1.09:1。
+
+    **00:1x W3 最终结案（含我第二次误读的自我撤回）**
+    - **第二次撤回**：00:5x 我新立的"向导把 10 天静默改成 3 天"**不成立**。按 Commander 23:1x 的机制
+      （`JourneyTrialSetup.tsx:296` 「抵达厦门/Arrive at」→ `draft.arrivalLocation`、`:305` 「Depart from」→
+      `draft.departureLocation`，日期实际来自 `trial-start`/`trial-end`，默认 `futureLocalAt(1,10)→(3,20)`）
+      我在本树同一位置核对一致 ⇒ 我填的两个日期字符串从来没进过日期字段，屏幕上那"3 天"是组件默认值。
+      ⇒ 我那句"两个 input 回读一致 ⇒ 用户提交了 10 天"只证明"值进了那个 input"，又一次把门的填法当成用户请求。
+    - **用对字段后的三样证据（`raw\w3_final2.jsonl`、`raw\w3_final.jsonl`，一次跑 collected 1 / failed 1）**：
+      ```
+      ① 页面自己发出的请求   POST /api/v1/journeys → 422        ← 这次是真的向导路径被拒
+         我填并回读的日期字段  trial-start 2026-09-21T10:00 · trial-end 2026-10-01T20:00（11 天）
+         地点字段回读          厦门站 · 厦门机场
+      ② 屏幕原文            alert = "This step did not complete — no journey was created."
+         （无假成功；但也**没有原因**）
+         后端同一 422 的 message = "The trip is longer than the supported journey window of 7 days.
+                                     Shorten the dates and try again."（V13_JOURNEY_DAYS_OUT_OF_BOUNDS）
+         截图 raw\w3_screen.png；fatalEvents=0，httpIssues=1
+      ③ 路径与桩            纯向导 UI，stubs_installed=[]，未注入 localStorage、未用 fixture 行程
+      ```
+    - **W3 的正确形状**：不是"假成功"，而是**失败被承认、原因被丢弃** —— 后端已经把可执行的修改建议
+      （缩短日期 / 7 天上限）写进 message，界面把它压成一句通用"这一步没完成"，用户既不知道原因也不知道怎么改。
+      ⇒ 属 ORD-0060 第 2 项同一族（"只承认失败、不呈现被识别出的原因"），但不是同一点；归 **e345b9d6 / M3-B**。
+    - **门的断言相应改正**（`user_critical_path.spec.ts` W3）：被拒分支只要求"屏幕渲染出 reason"，
+      **不再**用"是否离开向导/主操作阻塞时长"去判它（被拒留在向导里是正确行为）；耐心阈值移到提交成功分支。
+      两次误读的因果与字段名都写进了该节点的注释，防止后来者（包括我）再借用。
+    - 备注：本条目现居 `CITYNEXUS_AGENT_CONTROL_ARCHIVE.md`（主账本 23:29 起只留活跃单，
+      我的 ORD-0039/0048/0061 三条 evidence 在归档里完整，长度 12 215 / 4 636 / 8 276 字节）。
 - id: ORD-HANDOVER-0037
   to: commander
   priority: urgent
