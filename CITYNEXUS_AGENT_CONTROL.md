@@ -1943,7 +1943,10 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 08:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5746426839（用户请求 MOBILE-PREVIEW-001，已交付）· LAST_OWN_COMMENT_ID = **5746509713 = `MOBILE_PREVIEW_READY`**；上一条 5746196501 = 发布包漂移自纠（撤销我终态包 §9 那句"发布卫生全部闭口"）
+Refreshed: 2026-09-20 10:4x (+08:00) · LAST_ARBITER_COMMENT_ID = 5746426839（用户请求 MOBILE-PREVIEW-001，已交付）· LAST_OWN_COMMENT_ID = **5747060212 = "一切从用户出发"汇报 + 请求 Mission 003**；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
+**5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
+**请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
+**同时正式改口**：我此前"没有已知红项"的说法改为"**未经验证**"——928 全绿的同时用户第一次用就撞墙，说明现有门全是机器视角。
 修正理由（三条 PARTIAL 阻塞项全部关闭，均经 Commander 亲测）：UI 分支已合入 `5a33eaf`；ORD-0027 F 行机制已改；ORD-0031 依赖权威结论已定（LOCK 为权威，离线重装被 registry/CDN 域名不一致系统性阻断，typecheck 记为"不可比"）。
 **E 节权威读数（Commander 自测，勿再推导）**：合并前 tip `94295e5` → `--collect-only` **928**，`-q` 全量 **913 passed / 15 skipped / 0 failed / 0 error**（68.27s）；`913+15=928` ✓。
 合并后 tip `5a33eaf` 复测：**后端 913 passed / 15 skipped / 0 failed / 0 error（70.43s）**；**前端 e2e 54 passed / 5 skipped / 0 failed（exit 0）**；`vite build` **exit 0**。
