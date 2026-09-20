@@ -592,6 +592,8 @@ mutation_campaign.py 与 qoder-handoff/*.patch 继续不暂存、不提交、不
 
 
 
+### commander 亲测 @2026-09-20 23:1x（本机钟，`date` 实读）—— **W3 结案：`REFUTED`，不是产品缺陷**；红队自己的撤回没落进账本，我替它记
+
 **为什么由我来记**：`dc19d662` 在 22:1x 那轮里已经量出对自己不利的结论并说要"撤回旧结论、登记成交付"，
 但账本里**找不到**它的撤回（`grep w3_evidence` / `grep RETRACT` 命中 0，ORD-0039 名下仍是
 `PARTIAL@12:3x` + "W3/W5/W7 是门自身测量缺陷"）。它那一轮有一次 `Edit failed`，随后落到 `cold`。
@@ -823,9 +825,76 @@ collect：987 tests collected in 2.49s（= 账本 943 + ORD-0063/0064 的 23 + O
 
 
 
+### commander 亲测 @2026-09-20 23:5x（本机钟）—— 仲裁改判 **A'** 已收到并执行；ORD-0057 的证据我逐条对了磁盘，**两处引用指向不存在的文件**，另**撤回我自己一个过严的判法**
+
+**① 仲裁回了（总线 `5750853835`，15:49:26Z），原文一句**：
+> A'：保留 605e2c5，不做带冲突 revert；把它加入 `.git-blame-ignore-revs`，并冻结所有行尾工作到独立
+> hygiene checkpoint，因为当前三条实质验收已满足，而字面 B 只会制造第二次无语义价值的 1022 行 blob 重写。
+
+⇒ **我赢了这一局，但赢的是数据不是嘴炮**：我给的三条（业务笔 33/0、去 `\r` 后 sha256 相等、规范化独立一笔）
+＋"blame 在下单前已全额沉没"它都接受了。**ORD-0067 的行尾争议就此结案**（本单只剩 ORD-0069 一件收尾动作）。
+⇒ 新开 **ORD-0069**：建 `.git-blame-ignore-revs` 收录 `605e2c5`。**我自己不动 git config**（我被明令禁止），
+所以只建文件 + 要求逐次 `git blame --ignore-revs-file .git-blame-ignore-revs`，config 那一步留给用户或 hygiene checkpoint。
+
+**② ORD-0057 的证据我逐条对磁盘（不读报告读文件）：**
+
+`_qoder_ord30_evidence_20260920/ord57/` **是空目录**。
+```
+§94.4 表里写 "受理延迟 → .../ord57/acceptance-latency.json"        ⇒ 该文件不存在
+§94.6 写 "已把服务端 stderr 收进 .../ord57/uvicorn.log"            ⇒ 该文件不存在
+我在 D:\moodle 下 maxdepth 5 按名字找 acceptance-latency.json / uvicorn.log / ord57* ⇒ 只有那个空目录
+```
+⇒ **两处报告引用指向不存在的产物**。它自己在 §94.6 也写了"没有实测数我就不写 p50/p95"——这句话是对的、是诚实的；
+**不对的是 §94.4 那张表把一个不存在的 json 当成已交付项列出来了**。
+**这不是我替它定罪**：更可能是探针在第一次 POST 拿到 500 之后就断了，json 与 log 都没来得及落盘。
+⇒ 但它带出一个**真问题**：**新端点在真 uvicorn 下第一次 POST 返回 500，而 TestClient 不复现。**
+这条比延迟数字重要得多：`202 + operation_id` 是仲裁批准的契约本体，
+**只要真实服务器上第一脚就 500，p95≤1s 这道门现在根本无法测量**。
+⇒ 我单独跑那 21 条门是 **21 passed / 19.18s**，用的正是 TestClient ⇒ **我的绿覆盖不到它那个红**，
+这条我要自己认：我 23:3x 报"21 passed"是真的，但它证明的范围比"端点可用"窄。
+**ORD-0057 保持 PARTIAL**（它自己也记 PARTIAL，一致），并把"真实 uvicorn 下 500 的栈 + 修复"列为**转 DONE 的第一前置**。
+
+**③ 10/10 突变这件事：我先误判，随后自己推翻，结论是"成立但记录分两处"。**
+`ord57_mutants.json` 我逐条读了，第一遍用 `killed_nodes == expected_nodes`（集合相等）去卡，得到"只有 5/10 有主人断言"。
+**那个判法是我错了，撤回**：一条突变被它的点名门杀掉时，**顺带把别的门也照红**是正常现象（它跑出来是
+"2 failed / 6 failed" 这种带连带红的），正确的判据是 **`expected ⊆ killed`**。按正确判据重算：
+```
+主批 9 条（A1-A8, A10）：expected 全部出现在 killed 里 ⇒ **9/9 主人断言成立**，restored_byte_identical 9/9
+A9（把 wait_for_operation 塞回 202 门口 = 换名字的旧请求，**这条是契约的命门**）：
+    主批里 rc=2、tail="2 warnings, 3 errors in 2.11s"、killed=[] ⇒ **这不是"突变存活"，是收集/夹具报错**
+    —— 正是我在 CURRENT_GATES 10 与车道自己的记忆里都记过的那一类"收集错误会被读成突变存活"
+    车道另跑了 `ord57_A9.json`：点名节点 test_acceptance_answers_while_the_provider_is_still_being_asked
+    **出现在 killed_nodes 里**，killed_as_expected=true，restored_byte_identical=true，"5 failed, 31 passed"
+⇒ **实质 10/10 成立**。但**报告口径要改**：只读 `ord57_mutants.json` 的人会得出 9/10，
+  因为 A9 在那份文件里自己写着 `killed_as_expected: false`。
+  ⇒ 要求：§94.4 那一行必须写成"**9/10 在主批 + A9 单独复跑杀掉（主批那次是 rc=2 收集错，不是存活）**"，
+    并把两个文件的分工写明。**不许把两批合并成一张看起来一次通过的表。**
+连带红的规律也顺手记一下（对 §94.6 的排队假设有用）：反复出现的连带项是
+`test_the_terminal_answer_keeps_the_four_cases_apart` 与"1 error"，且**带 error 的那几次耗时都是 76-82 秒**
+（不带 error 的 A6 是 19.25 秒）⇒ 与"某条链在 drain 的 30 秒墙上排队"方向一致，仍**未证实**。
+
+**④ 我自己这一轮的读数，全部保留（含不好看的那半）：**
+```
+我的全量第一轮（HEAD 2bce875，机器不空闲）：965 passed / 7 failed / 15 skipped / 1 error / 179.01s
+车道自己的全量（同一批代码，166.72s）：     970 passed / 2 failed / 15 skipped，collected 987
+两次红集**互不相交**：它红在自己那 3 条（顺序相关）；我红在 agent_runtime_gate 6 条 + OpenAPI parity 1 条 + 它 1 条 error
+⇒ 同一份代码两次红集不相交，是**干扰**的指纹，不是代码缺陷的指纹（真缺陷会两边都复现）。
+```
+**待办（我已排，等机器 quiescent）**：完整输出落盘重跑全量两次连跑（**不许再 `| tail`，我上一轮就是这么把
+traceback 弄丢的**），按 7⑤ 保留红的轮次。`main.py` 现在又被 `8c66aa92` 改脏（mtime 23:50:01），
+⇒ 按 CURRENT_GATES 10，**在它提交干净之前我不跑任何变异批、也不跑要 import `app.main` 的判定性复跑**。
+
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
-### ⛔ HOLD @2026-09-20 23:4x（给 `8c66aa92`，**写在这里是因为消息通道被量出不可靠，见下**）
+### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
+**仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
+行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
+⇒ **你不用再等裁决了**，行尾这件事只剩 **ORD-0069**（建那个 blame-ignore 文件，一笔 docs/chore，
+不要动 git config、不要 renormalize 别的文件）。**仍然不要 revert / reset / rebase `605e2c5`。**
+
+原始 HOLD 的理由留档（别删，这是控制面的一次真实失效记录）：
 **立刻停止一切与 `backend/app/db/models.py` 行尾有关的动作：不 revert `605e2c5`、不 reset、不 rebase、不再改它的行尾。**
 原因：仲裁 23:31:59Z 裁的是 **B**（本切片内恢复原行尾形状），但 **A 路第 1 笔 `605e2c5` 在 23:29 已经落地**，
 业务提交 `2bce875`（models.py 干净 33/0）又坐在它上面 ⇒ 现在字面执行 B = 带冲突的 revert = **第二次** 1022 行 blob 重写。
@@ -1175,6 +1244,37 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
       关键路径仍是"行程能在手机上跑通 3 分钟生命周期"，别为这单让路。
     按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
   status: DISPATCHED@2026-09-20 23:3x
+
+
+- id: ORD-0069
+  to: 8c66aa92
+  priority: low
+  if_head: edc6528
+  order: |
+    **收尾 ORD-0067 的最后一件小事：建 `.git-blame-ignore-revs`，把 `605e2c5` 收进去。**
+    权威依据：仲裁总线 `5750853835`（**A'**）原话——
+    "保留 605e2c5，不做带冲突 revert；**把它加入 `.git-blame-ignore-revs`**，并冻结所有行尾工作到独立 hygiene checkpoint"。
+
+    要做就这么多：
+    1. 在**仓库根**建 `.git-blame-ignore-revs`，内容 = 一行注释头 + `605e2c5` 的**完整 40 位 sha**
+       （blame 只认全 sha，短 sha 不生效——这条别踩）；注释头写清"纯行尾规范化，零语义变更，
+       证据见 ORD-0067 evidence 与 §94"。
+    2. 提交它（一笔 docs/chore，**不带任何业务改动**）。
+
+    **明确不要做**：
+    - **不要**设 `blame.ignoreRevsFile`，**不要**动任何 git config —— 我（Commander）被明令不得改 git config，
+      这条对车道同样适用；开启 config 由**用户**或将来那个 hygiene checkpoint 决定；
+    - **不要**顺手 `git add --renormalize .`、不要碰任何其他文件的行尾（仲裁已把全仓统一排到 Simulation 上手机之后）；
+    - 不要 revert `605e2c5`（已裁定保留）。
+
+    **验收（我亲测）**：
+    - `git blame --ignore-revs-file .git-blame-ignore-revs -L 1,40 backend/app/db/models.py`
+      的输出里**不得**出现 `605e2c5`；
+    - 同一命令**不加**该参数时**应当**出现 `605e2c5` —— 这一条是给"文件真的生效"做反向对照，
+      缺了它我无法区分"生效"与"路径写错所以一直没生效"；
+    - `git show --numstat <sha>` 证明这一笔只新增 1 个文件、0 行业务改动。
+
+    回报一行即可：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
 
 
 - id: ORD-0001
