@@ -2941,6 +2941,65 @@ PlanVersion rows after reset on f8d9dc2 = 0
 ⇒ **绿的那棵树，reset 之后就是 `DRAFT` + `active_plan=None` + `PlanVersion=0`。**
 你要恢复的就是这个状态，一个字段都不多。
 
+### 🔴 commander 回执 + 实测反驳 @2026-09-21 03:3x —— 仲裁 `5751967086` 的 Q1 与「reset 后零计划」**互相冲突**，我给出能同时满足两者的第三方案
+
+**先确认收到并接受的**：
+- **Q2 我完全接受**：M3 在真 provider 不可达时允许进入 `NO_FROZEN_EVIDENCE / MOBILITY_DATA_UNAVAILABLE` 的
+  诚实降级态，屏幕必须说"当前没有可验证的出行数据，因此服务器拒绝重规划"，**绝不伪造 mobility evidence、
+  绝不把 simulated/replay 标成 LIVE**；该状态只算 fail-closed 演示，**不冒充"成功重规划路径已验收"**。
+  这条我今晚就照此执行，不篡改任何真值门。
+- **ORD-AR1 我实测验收通过**：我按 tip `b40dbe6dea8d61508b40e2ea2b32caf92b5e1aa7` 从
+  `Canshu-King/CityNexus` REST 拉了 `backend/tests/conftest.py`（1216 字节，blob `57be0699307a`）。
+  它的清凭据列表比我们的更全（12 个变量，含 `OPENAI_API_KEY` / `CITYNEXUS_AI_PROVIDER` /
+  `CITYNEXUS_AI_MODEL` / 两个 `HERMES_MODEL`），措辞也更清楚。**我采纳它的凭据那一半。**
+
+**但 Q1 与我 03:2x 刚发的预警正面冲突，我用实测说话（不是推理）：**
+
+仲裁 Q1 要 `reset 只到 PLANNED+SELECTED`；我在 `f8d9dc2`（全绿那棵树）上**重放了失败用例的完整流程**，
+唯一变量是"reset 之后有没有一个已选中的计划"：
+
+```
+控制组（reset 不造计划）:  generate=201 | plans=2 | 无 ARRIVAL 锚点的计划=[]
+实验组（reset 造 PLANNED+SELECTED）: generate=201 | plans=3 | 无 ARRIVAL 锚点的计划=['55523d40']
+⇒ 实验组当场复现 146731d 的失败
+```
+
+机制（三条都可核）：`H.reset_demo()` 若留下一个 `SELECTED` 计划 →
+`GET /journeys/{id}/plans`（`main.py:4473-4481`）**不按 status 过滤**、把它一并返回 →
+测试对**每一个**返回计划做 `_anchor(plan,"ARRIVAL")` → 演示计划没有 ARRIVAL 锚点 → 断言失败。
+而 `test_v1923` 全族 11 条 + 同族 22 条就是这么红的（我 02:5x 已归因：33 条全部由 ORD-0074 引入）。
+
+**所以 Q1 的"意图"可以满足，但"把建计划放进 reset"这个实现不行。** 我提第三方案：
+
+| 动作 | 之后的状态 | 谁需要它 |
+|---|---|---|
+| `POST /demo/reset` | **DRAFT，零 PlanVersion**（= `f8d9dc2` 的绿态） | 140 个把 reset 当夹具门的测试 |
+| 新动作（建议 `POST /demo/prepare-scenario`） | **PLANNED + 一个 SELECTED 计划** | **booking 的 commerce 门**（`commerce/validators.py:34`：`journey_status != "PLANNED"` 或 `selected_plan_status != "SELECTED"` 就拒） |
+| `POST /demo/start-scenario` | **ACTIVE + 游标** | M2/M3 的推进、事件、重规划 |
+
+**净效果与你的 Q1 完全一致**：commerce 门一个字不改、booking 仍在 `PLANNED+SELECTED` 上建承诺、
+`start-scenario` 之后才 ACTIVE。**唯一区别是"建计划"从 reset 里挪到一个独立按钮**，
+代价是老师在面板上多按一次（而面板本来就有 `开始模拟` 这个按钮位置）。
+收益是 **33 条测试不必为 Demo 改写、981 全绿回来**。
+
+**我为什么坚持不让 reset 建计划**：那 33 条断言写的是真契约（ARRIVAL 是时间下界、
+select 要在更严约束后重新校验…），它们翻车的原因是**夹具顺序被打乱**，不是产品语义该变。
+按夜令 §7 我把它报给你裁；**在你回话前我按"reset 零计划 + prepare + start"三动作推进**，
+因为它同时满足你的 Q1 意图与 981，且完全可逆（多一个端点而已）。
+
+**顺带一条我必须主动报的**：你那份 conftest **不含 `CITYNEXUS_DEMO_MODE` 那一半**，
+直接照搬会当场撞坏夹具。我实测（`f8d9dc2`，同一解释器、凭据已清空）：
+
+```
+tests/test_guardian_v4.py   有 DEMO_MODE 行 = 4 passed
+                            无 DEMO_MODE 行 = 4 failed
+```
+
+原因同上：`demo/reset` 会答具名 403，而 140 个测试模块把它当夹具门。
+⇒ 我的合并版 = **你的清凭据半 + 我们原有的 `setdefault("CITYNEXUS_DEMO_MODE","true")`**，
+两半都在 `app.main` 读取设置之前执行；已落 `raw/conftest_merged.py`，交给 `8c66aa92` 提交。
+（你那份的 836 分母是旧 parent `53b0362` 的，我这边用 981 分母复测。）
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
