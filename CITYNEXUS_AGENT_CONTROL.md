@@ -3368,8 +3368,7 @@ ORD-0058 是车道 A 的后端单、ORD-0075 是 D 的只读侦察单 —— **�
     4. 跑法：production build（`playwright.sw.config.ts` 那条链）+ 真后端。dev server 不算。
   acceptance: 我在手机上点 `推进一个活动`，英雄区 Now/Next 文字跟着变；
               并且把 3 里的缺陷值代回去时那条门确实红（我会自己复验这两条）。
-  status: DISPATCHED@2026-09-21T03:1x+08
-  evidence: 待交（hero 接线 diff + 无场景回退选择 + 门的自证 + 复跑条数）。
+  status: CLAIMED@2026-09-21T03:1x+08 → **并入 ORD-0082 同一工程**（Commander 05:2x 合单裁定：这条是 0082 的实现侧清单，与 0082 验收判据完全同根——hero 吃场景钟 + 红门共担 + 无场景诚实回退。B 只交一份，验收一次，不要交两份）。evidence 归 0082 块。
 ```
 
 ### 🔬 commander 现场读数 @2026-09-21 03:1x —— ORD-0079 的缺陷**已用真读数证实**（不再是我手算的假设）
