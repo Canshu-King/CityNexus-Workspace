@@ -1,5 +1,101 @@
 # CITYNEXUS AGENT CONTROL
 
+## LANE_PROTOCOL（车道通信协议 · 2026-09-20 20:2x 起生效 · 用户裁定）
+
+**唯一信道 = 本账本。禁止再用会话消息（`send_message_to_chat_session`）传任务、催活、验收。**
+
+**Why（用户原话）**：*"你跟其他会话沟通不要发信息。你发信息的话，他们得把那一轮任务做完才能看到你发的信息，这个消息严重滞后。"*
+实测证据：我给 `e345b9d6` 连发两条后，它的会话里 `queuedTurnCount = 2` —— 消息全排在队里，
+它当时那一轮根本看不见，我还在以为自己"已经派出去了"。
+
+**车道节拍（每条车道必须自己执行，不依赖被唤醒）**：
+1. **每完成一个动作、每开始下一个动作之前，重读本账本**（至少读 `## ORDERS` 里自己那几单 + `## DELIVERIES` 里给自己的 verdict）。
+2. 正在跑长任务（build / 全量 suite / 计时实测）时，**每 10 分钟插一次重读**；不要等任务全完才看。
+3. **收尾到自洽后不得结束回合干等**：若读到自己没有新单，就自选一件账本里已立案但未收尾的事推进一段
+   （跑回归、补证据、核数字），然后再读账本。**"我没收到指令"不是停下来的理由。**
+4. 只认领 `to` 等于自己会话 id 前缀的单；`CLAIMED@时间戳` → 做完 `DONE@时间戳` + `evidence` 写实测数字。
+
+**交付登记**：完成后在 `## DELIVERIES` **追加**一行块（不要改别人的块），格式：
+`### <会话id前8> <单号> @<时间> → 一句话结论 + 实测数字（collected / passed / failed / 计时 / 对比度等）`
+数字必须是**自己跑出来的**，不写"应该能过"。
+
+**Commander 验收**：我读 `## DELIVERIES`，在同一块下面补 `verdict:` 行（`ACCEPTED` / `REJECTED-原因` / `PARTIAL-缺什么`），
+并同步更新 `## ORDERS` 里该单的 status。**车道不需要等我发消息，重读账本就能看到 verdict。**
+
+**消息例外（只此一条，用完即止）**：机制变更本身需要让车道知道，因此允许**一次性**通知，内容只准是一行
+"以后只看账本，别再等我消息"。**不得**再携带任何任务正文。Commander 于 20:2x 已发出该一次通知，此后一律账本。
+
+**Commander 自我约束（同一条毛病，我这边也要治）**：我此前多次"发完汇报就结束回合"，导致车道交差我看不见。
+今后：**在回合内持续巡检（读总线、读账本 DELIVERIES、复核数字），只有遇到真正需要用户裁决的不可逆动作才停。**
+
+## DELIVERIES（车道交付登记处 · 追加，不改别人的块）
+
+### 6af4cf53 ORD-0032 @2026-09-20 18:35 → 发布包按 M3 verifier 口径重出并对齐新 tip
+
+verifier（`_qoder_recovery_20260919/raw/rc/verify-release-package.mjs`，只读复用）：
+`required_count 22 / missing_count 3 / forbidden_count 0 / pass false / exit 1`
+missing = `frontend/playwright.sw.config.ts`、`frontend/e2e/qoder-sw-lifecycle.spec.ts`（ORD-0043）、
+`frontend/e2e/qoder-user-critical-path.spec.ts`（ORD-0039）—— **3 条有主，未修绿、未删门**。
+
+包：**712 文件**；与 HEAD `56f67e2fb94ac31809b471f2523dbb2e4dd1127d` 相同 **708** /
+有意不同 **2**（patch sanitize 版 + 硬化版量具）/ 仅包内 **2**（两份交接文档）。
+整树导出（`git archive` 16 目录 + 23 根文件），非逐文件同步；路径以**产品根**为准。
+包内 e2e spec **33** 份；`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts` 已写入包内交接。
+
+build（包外副本）：**EXIT=0**，1920 modules，5.50s，**产物 10 条**。
+日志：`_qoder_publish_manifest_20260920/ord32_logs/build_v3.log`
+
+卫生：forbidden 0；node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok* /
+*.sqlite* / dist / __pycache__ / test-results 全 0；真实 key 命中 0（扫 673 文件）。
+并行车道隔离已验证：包内 `stay_osm.py` = HEAD 版 `f4632ede`，非 `8c66aa92` 未提交版 `193a0833`。
+
+`verdict: PARTIAL — 数字我认可，但分母已过期`。你比对的 `56f67e2` 刚被 `e981b46`（ORD-0049 冷路径计时）超过，
+且**该提交动了 `backend/app/integrations/stay_osm.py`**——正是你上面用来证明并行车道隔离的那个文件。
+⇒ 请**按 `e981b46` 重导一次**并报新的"相同/有意不同/仅包内"三数；其余（整树导出、产品根路径、
+`MOBILE_TAP_TARGET_GATE` 映射、build exit 0、卫生 0 命中、3 条红有主且未删门）我复核认可，**不必重做**。
+另：你那句"包内 `stay_osm.py` = HEAD 版"现在按 `e981b46` 重算，别停留在 `f4632ede`。
+
+### commander 独立复核 @2026-09-20 20:4x —— ORD-0049（`8c66aa92`，commit `e981b46`）
+
+车道已提交但尚未自标 DONE，所以我直接按数字验收。**以下全是我本机亲跑，不是转述**：
+
+```
+git log -1 → e981b46  perf(backend): time the cold stay path by phase, and make an empty answer explain itself
+             6 files / +750 / −89（INTEGRATION_REPORT.md, core/phase_timing.py, integrations/stay_osm.py,
+             main.py, stay_mobility.py, tests/test_qoder_stay_generation_phases.py）
+工作树       backend/app dirty = 0（自洽，无半改文件）
+全量后端     928 passed / 15 skipped / 0 failed  in 86.49s
+             解释器 D:\moodle\CityNexus\.venv，DEEPSEEK_API_KEY= / CITYNEXUS_AI_API_KEY= / CITYNEXUS_AI_ENABLED=false
+新门         tests/test_qoder_stay_generation_phases.py --collect-only -q → 7 tests collected
+```
+
+**collected 差值逐条点名**（我此前记的权威基线是 928，现在 943，差 15，不是"一次 +7"）：
+`928 @a453121` → `+8`（`56f67e2` ORD-0033 的 `test_qoder_journey_window_boundary.py`，实测 8 个 `def test_`）
+= `936` → `+7`（`e981b46` 新相位门）= **`943`**。
+⇒ 车道那句 "exactly +7 over this session's 921/936" 成立，但它的分母是**它会话内**的 936；
+**对外口径必须用 928→943 这条链**，否则看起来像一次凭空多了 15 条。
+
+**我另核了它自陈的两处缺陷，确实在树里**：
+- `backend/app/integrations/stay_osm.py:58` 就是 `timeout=max(30.0, settings.real_city_timeout_seconds)`
+  ⇒ 配置的 12s 在这条发现路径上被静默丢弃，属实；
+- `backend/app/stay_mobility.py:1520-1526` 四个 outcome 码齐了：`OPTIONS_FOUND` /
+  `NOT_APPLICABLE_ZERO_NIGHTS` / `NO_OFFERS_FROM_PROVIDER` / `ALL_CANDIDATES_REJECTED`
+  ⇒ "HTTP 200 但 top_k 为空"从此可自解释，属实；且它声明计时是 `CITYNEXUS_PROVIDER_TIMING` **opt-in、
+  关闭时被断言为惰性**，所以量具不会变成契约——这一条正是我要求 QA 工具遵守的标准。
+
+**时序结论（它测的，我认可其形状）**：冷 Xiamen 120.86s 几乎全在住宿发现——photon 763ms、
+三个 Overpass 镜像**串行** 15.9 + 31.5 + 30.5s、两次 Nominatim 各 21.1s；而候选建模 + mobility +
+**十次 CP-SAT 合计约 60ms**；同城市热调用 3.5s。⇒ **优化器/路由/数据库是被测量排除的，不是被读代码排除的**，
+这正是仲裁要的"先时序后理论"。
+
+`verdict: ACCEPTED`（本单第 1、2、4 项达成：分段计时 ✓、串行超时定位 ✓、空结果可解释 ✓）。
+**仍欠两项，所以本单不算关闭**：
+1. 第 3 项（可安全预热/缓存，或压不到 ≤10s 就转 `202 + operation_id` 异步作业）它**故意没实现**，
+   只作为 §90.5 提案 —— 理由我认同（后端还不能真正放弃 provider 等待之前，不该存在"取消"按钮），
+   但**改产品契约需要仲裁点头**，我已把这条列入下一次请裁；
+2. 前端可见等待体验在 **ORD-0047**，与本单成对交付，只交后端不算修完。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -579,25 +675,6 @@
   priority: urgent
   if_head: 954edaa
   order: |
-    我按仲裁 Amendment E 第 5 条那五项自己核了你的发布集（没只看你的报告），**大方向通过，三处要改**：
-    (1) **剔掉 `frontend/e2e/.qoder-seed-state.json`。** 它是 `_qoderRealSeed.setup.ts` 每次跑生成的
-        Playwright storage-state：里面是 `"origin": "http://127.0.0.1:3171"` 加本机本次会话的
-        journey UUID（文件 mtime 04:46），**HEAD 里根本没有这个路径**。这是环境产物不是源码，
-        而且带本地端口与会话标识。剔完重新出清单，并把总数与字节重算（预计 697→696）。
-    (2) **两条 blob 与 HEAD 不一致，必须显式处置而不是混着发：**
-        - `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`：暂存树里是 sanitize 过的版本（0 命中），
-          而 **HEAD 那个 commit 里仍是 1 命中**。这是好事但不是收口 —— 见本文件底部
-          HUMAN_ATTENTION 第 1 条，我不替你提交、也不改历史。你要在交接文档里把它写成"已知限制"。
-        - `tools/verification/mutation_campaign.py`：暂存树带的是我**未提交**的硬化版（杀手归属 +
-          byte-exact 还原 + atexit），HEAD 里是 04:1x 的旧版。二者只能选一个口径：
-          要么这条门先由归属线提交进权威树再发，要么在交接里明写"发布包内的量具比 HEAD 新"。
-          **不要**默默发出去。
-    (3) 交接文档里必须点名：权威 HEAD、上面两条限制、以及被排除的 111 类路径的分组理由
-        （你 `convergence.json` 里的 `excluded` 正好 111 条，我核过数）。
-    仍然：不建分支、不推送、不 force-push，等 Mission 002 最终 HEAD 冻结 + 绿灯。
-  status: DONE@20260920-054000 by 6af4cf53；**Commander 05:44 独立复核通过**
-          （696 / 10,091,919 逐行重求和一致、seed-state 0 命中、无 .git、清单与暂存树逐条对齐）
-  evidence: |
     Commander 亲测（`D:\moodle\_cnx_auth_stage`，HEAD `954edaa`）：
     清单 697 条 → **696 条存在于 HEAD**，唯一不在 HEAD 的就是 (1) 那个 seed-state；
     `git hash-object --stdin-paths` 与 `git ls-tree -r HEAD` 逐条比 → **694 条字节全等，2 条不同**（即 (2)）；
@@ -609,6 +686,16 @@
     确认为环境产物，判定成立。
   status: DONE@20260920-054000
   evidence: |
+    Commander 亲测（`D:\moodle\_cnx_auth_stage`，HEAD `954edaa`）：
+    清单 697 条 → **696 条存在于 HEAD**，唯一不在 HEAD 的就是 (1) 那个 seed-state；
+    `git hash-object --stdin-paths` 与 `git ls-tree -r HEAD` 逐条比 → **694 条字节全等，2 条不同**（即 (2)）；
+    暂存树**无 `.git`**、目录内文件总数恰好 697（无夹带）；
+    `grep -rl sk-5343f86b` = 0 命中；`converged_secretscan.json` 2 条均为 `DEEPSEEK_API_KEY=` 空赋值的
+    示例文本（REVIEW 级误报，真实 key 匹配数 0）。
+    CLAIM 时复核 (1)：frontend/e2e/.qoder-seed-state.json 确含 origin=http://127.0.0.1:3171
+    与 journey UUID 0736f92f-…，且 `git ls-tree -r HEAD | grep qoder-seed-state` = 0，
+    确认为环境产物，判定成立。
+
     三处已改，交付 D:\moodle\_qoder_publish_manifest_20260920\handover_authoritative.md。
     (1) 已剔 frontend/e2e/.qoder-seed-state.json（含 127.0.0.1:3171 + journey UUID 0736f92f-…；
         HEAD 中该路径不存在，确为环境产物）。剔后 = **696 files / 10,091,919 B（9.62 MB）**，
@@ -629,6 +716,7 @@
     暂存树最终核验：696 文件、无 .git、无 seed-state、泄漏 key 0 命中、活跃 key 0 命中。
     合规：未建分支、未推送、未 force-push、未访问 github.com、未调 credential fill。
 
+  
 - id: ORD-0016
   to: commander
   from: e345b9d6 (UI Worker)
@@ -933,30 +1021,17 @@
   priority: normal
   if_head: 954edaa
   order: |
-    ORD-0015 我复核通过（剔 seed-state 后 **696 文件 / 10,091,919 B**，我逐行重求和一致；
-    清单里已无 seed-state；暂存树无 `.git`；清单 696 条与暂存树文件数**完全对齐、无缺无夹带**）。
-    只剩**一件事**没落地：**发布包里现在没有交接文档。**
-    你写的 `handover_authoritative.md`（05:14，含 §1 HEAD / §4 两条限制 / §5 111 条分组）
-    在 `_qoder_publish_manifest_20260920\` 里，**不在 `_cnx_auth_stage\` 里** ——
-    我按 `find _cnx_auth_stage -maxdepth 2 -iname "*handover*"` 查为 0，
-    清单里唯一的 "handover" 命中是 `backend/tests/test_sol_plan_handover.py`（同名巧合，不是它）。
-    仲裁 Amendment E 第 5 条的最后一项要的是"**最小交接**要能说明权威 HEAD 与已知限制"，
-    而交接文档若留在包外，发布出去的分支就是**自我说明缺失**的。
-    → 把 `handover_authoritative.md`（以及收敛摘要，一页即可）放进包内一个明确位置
-      （建议 `qoder-handoff/`，与已有交接材料同处），重出清单与总数，
-      并让交接正文里的 HEAD 与你实际发布的内容自洽（写全 sha，不要只写短号）。
-    仍然：不建分支、不推送、不 force-push。
-  status: DONE@20260920-055500 by 6af4cf53；**Commander 05:52 独立复核通过**
-          （交接已在包内 `qoder-handoff/handover_authoritative.md`；重出后
-          **698 文件 / 10,100,098 B** 逐行重求和一致；`os.walk` 也是 698，无缺无夹带无 `.git`；
-          seed-state 0 命中 ⇒ Amendment E 第 5 条五件事全闭）
-  evidence: |
     Commander 05:40 亲测：`696 / 10,091,919` 重算一致；seed-state 0 命中；`os.walk` 暂存树 696 个文件；
     清单路径逐条 `os.path.exists` 全在（0 缺）；`handover_authoritative.md` **不在暂存树**。
     CLAIM 时复核：`find _cnx_auth_stage -maxdepth 2 -iname "*handover*"` = 0；
     清单内 "handover" 唯一命中 backend/tests/test_sol_plan_handover.py（同名巧合），判定成立。
   status: DONE@20260920-060000
   evidence: |
+    Commander 05:40 亲测：`696 / 10,091,919` 重算一致；seed-state 0 命中；`os.walk` 暂存树 696 个文件；
+    清单路径逐条 `os.path.exists` 全在（0 缺）；`handover_authoritative.md` **不在暂存树**。
+    CLAIM 时复核：`find _cnx_auth_stage -maxdepth 2 -iname "*handover*"` = 0；
+    清单内 "handover" 唯一命中 backend/tests/test_sol_plan_handover.py（同名巧合），判定成立。
+
     ⚠ 先说一个必须让你知道的状态变化：**权威 HEAD 已从 954edaa 前进到
     a75ba7aabb9b526e48a7c3f1693ec7e108c68089**（+1 提交 `a75ba7a`
     "test(e2e): own the frontend guard that says a finished step is not the current one"，
@@ -992,6 +1067,7 @@
     ⇒ **Amendment E 第 5 条五件事全部闭口，发布卫生这一侧我给出绿灯（仅"内容可发"这一层，
     建分支/推送仍未授权，等 Mission 002 终态）。**
 
+  
 - id: ORD-0023
   to: e345b9d6
   priority: urgent
@@ -1527,24 +1603,6 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
   priority: normal
   if_head: 94295e5
   order: |
-    ORD-0016 那次依赖恢复留下一个**没人认领的后果**，归你（你本就是管依赖与发布卫生的车道）：
-    恢复用的源树与 `package-lock.json` 并不严格一致 —— `@types/react` 实际是 **19.3.0**，
-    而 lock 文件里**没有锁这个包**。于是 UI 车道与我各自跑出来的 `tsc` 数字都**不可比**，
-    他们已经明确拒绝把 0/0 当证据（这个判断我跟着认，见 ORD-0030 的更正）。
-    请回答三件事，不要动手修权威树：
-      1. **以哪棵树为准**：`CityNexus\frontend\node_modules`（被恢复过）、
-         `_qoder_integration_20260919\frontend\node_modules`（恢复源）、
-         还是 `package-lock.json` 本身？给出三者的 `@types/react` 实际版本与
-         `npm ls @types/react` 或 lock 里的条目为证。
-      2. **一次性目录里离线重装修正不确定度**：`npm ci --offline`（不许联网；缓存里没有就直说装不上，
-         别退化成 `npm install`），装完只跑 `tsc --noEmit` 两道，报"错误条数与文件名列表"。
-         **重跑目录必须是你自己的**，不许拿权威树或 UI 树当试验田。
-      3. 结论只允许三种：`LOCK 是权威（则现有 node_modules 有偏移，列偏移清单）` /
-         `某棵树的树是权威（则 lock 需要更新，但**今晚不提交**）` /
-         `离线装不出来（说明缺什么，写进 HUMAN 待办）`。
-    为什么现在做：终态包里"前端 build/E2E 绿"这一条如果建立在不可比的类型检查上，
-    我宁可写成"未证"，也不要写成一个好看的数字。
-  evidence: |
     来源：UI 车道在 ORD-0023 交付里主动写的"仍然没解的一件事"（`@types/react` 19.3.0 未锁、
     三个报错点源文件与 `00dfd62` 逐字节相同、所以 0/0 不可比）；
     Commander 复测：`CityNexus\frontend\node_modules` 恢复后顶层 394 条与恢复源逐条同名，
@@ -1552,7 +1610,15 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     CLAIM 时复核：if_head 94295e5 存在且为当前 HEAD（a98babb）的祖先，订单成立。
     注：tip 已从 94295e5 前进到 a98babb，按你已采纳的收口步骤，最终同步比对留到冻结后做。
   status: DONE@20260920-064000
-  commander_check: |
+  evidence: |
+    来源：UI 车道在 ORD-0023 交付里主动写的"仍然没解的一件事"（`@types/react` 19.3.0 未锁、
+    三个报错点源文件与 `00dfd62` 逐字节相同、所以 0/0 不可比）；
+    Commander 复测：`CityNexus\frontend\node_modules` 恢复后顶层 394 条与恢复源逐条同名，
+    但同名不等于同版本 —— 版本面未核，正是本单要做的事。
+    CLAIM 时复核：if_head 94295e5 存在且为当前 HEAD（a98babb）的祖先，订单成立。
+    注：tip 已从 94295e5 前进到 a98babb，按你已采纳的收口步骤，最终同步比对留到冻结后做。
+
+    【commander_check】
     **Commander 07:15 独立复核（自己跑，不看回报）**：
     `ls CityNexus/frontend/node_modules | wc -l` = **394**，
     `ls _qoder_integration_20260919/frontend/node_modules | wc -l` = **394**（两棵都没被再次伤到）；
@@ -1564,7 +1630,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     **对终态包的直接影响**：`前端 build / E2E 绿`这一条继续成立（build exit 0、e2e 50 passed 可复现），
     而 **typecheck 一律记"未证/不可比"**，谁把 0 errors 当成门通过都算错。
     冻结后要做的：lock 补三条声明（需联网，属 HUMAN 待办）或明确以安装树为准并放弃 lock 的复现承诺。
-  evidence: |
+
     交付 D:\moodle\_qoder_publish_manifest_20260920\ord31_dependency_authority.md。
     **结论：LOCK 是权威**，两棵 node_modules 有同一处偏移（仅 3 条，两棵树完全一致）：
       @types/react      安装 19.3.0 / lock 无条目
@@ -1609,6 +1675,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     （mtime 与 git status 均为证）；未提交；未对 github.com 做任何 git 操作。
 ```
 
+  
 - id: ORD-0032
   to: 6af4cf53
   priority: urgent
@@ -1686,9 +1753,15 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
     → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
     所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
-  my_interim_082000: |   # 中间态 status（已作废，保留供审计；认榜取本单最后一条 status）
+  evidence: |
+    本单历经多次口径变更（手比 sha → verifier 工具），以下按时间顺序留档。
+    最终状态：verifier 读数 required 22 / missing 3 / forbidden 0 / exit 1；
+    包 712 文件、与 HEAD 相同 708 / 有意不同 2 / 仅包内 2；build EXIT=0 产物 10。
+
+    【第一版交付（已作废，保留审计）】
     status_was: DONE@20260920-082000
-  my_interim_evidence: |
+
+    【第一版 evidence 正文】
     【修正版】按你 07:5x 的更正重做：整树重建 + 包外跑测。报告：
     D:\moodle\_qoder_publish_manifest_20260920\ord32_rebuild_report.md
 
@@ -1738,7 +1811,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     三棵受保护树只读（权威树那 2 行改动 mtime 03:31/07:05 早于我的操作，非我造成）；
     node_modules 真实复制、无 junction（D-7）；交付包内无任何跑测产物。
 
-  commander_verification_0800: |
+    【Commander 核验 08:00】
     我 08:0x 独立复跑 `raw/check_stage_vs_head.py bfe8d7e`（读数 `raw/stage_vs_head_bfe8d7e.txt`）：
     **704 文件 / 10,233,260 B；与 HEAD 逐字节相同 700；不一致 2（正是那两条有意不同）；仅包内 2；
     禁路径命中 0；交付物内真实 key 0（HEAD 侧仍恰 1 个文件命中）** —— 这六个数与 evidence (a)(d) 一致，收下。
@@ -1746,7 +1819,8 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     `qoder-mobile-ui-overnight.spec.ts`、`_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`、
     `qoder-e2e-config-guard.spec.ts` 全在，包内 `.spec.ts` 计数 **27**。
     `5a33eaf..bfe8d7e` 只动两件事（`INTEGRATION_REPORT.md` + 那份新 guard spec），后端 collected 我重采 = **928**。
-  commander_rejection_0803: |
+
+    【Commander 拒单 08:03】
     **(c) 不收，理由是分母自相矛盾**：evidence (2) 自陈已把 `qoder-e2e-config-guard.spec.ts` 补进包，
     而 (c) 仍报 **54 passed / 5 skipped**。我实测：`5a33eaf` 可跑 spec **26** 份（=我的 54/5，总数 59），
     `bfe8d7e` 可跑 spec **27** 份，新 spec 声明 5 个 `test(`，其提交信息自陈
@@ -1766,9 +1840,11 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     `npx playwright test --list` 的 collected 数。因此我对 (c) 的硬要求不是"必须等于 58"，而是：
     **读数必须高于 54/5、附上 `--list` 的 collected 总数、且差额能逐条归到那份 guard spec 的用例上**；
     `58/5` 只是 `bfe8d7e` 提交信息自己给的预期。实测与预期不同不算错，不解释差值才算错。
-  commander_verdict_0803: |   # 已作废（(b)(c) 已于 083000 补报；认榜取本单最后一条 status）
+
+    【该拒单的 status（已作废）】
     status_was: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
-  commander_verification_0815: |
+
+    【Commander 核验 08:15】
     车道整树重建后我第三次比对（`raw/check_stage_vs_head.py bfe8d7e`，读数 `raw/stage_vs_head_bfe8d7e_pass3.txt`）：
     **704 文件 / 10,234,029 B；与 HEAD 相同 700；不一致 2；仅包内 2；禁路径 0；交付物内真实 key 0** ⇒ 卫生与对齐这一层现在成立。
     两条"有意不同"钉成可比对的 blob（谁以后再声称"包内是硬化/sanitize 版"，按哈希认，别按形容词认）：
@@ -1777,14 +1853,16 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       所以包内交接里"**发布包内的量具比 HEAD 新**"这句必须继续明写，否则读包的人会在 HEAD 里找不到这三件事。
     - `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`：包内 = `6e9e090ab`（sanitize 版），HEAD = `03b0ff82c`（含 key）。
     仍不收的两项只有 (b)(c) 的**新分母读数**（见上：`--list` collected + 一次干净跑与一次突变跑的完整 summary 行）。
-  commander_closing_082x: |
+
+    【Commander 收口 08:2x】
     我问的那个"加不上的数"，实现线用提交 **`c0367c1`** 回答了，理由成立：那份 guard spec 顶格声明 **4** 条，
     但 `chromium` 工程依赖 `real-seed` **setup 工程**，所以单跑这个文件汇总必然是 **5 行**
     ⇒ `3 failed / 2 passed` 与 `collected 4` **不矛盾**（多出来的那行是 setup 行，且它在突变下仍绿，
     杀掉的正是"沉默"而不是"文件加载能力"）。三条读数（`--list` 总数 / 干净跑 5 passed exit 0 / 突变跑 exit 1）已入其报告。
     ⇒ **今后引用这套门的标准口径**：任何 Playwright 数字必须同时报 `--list` 的 collected 与其中属于 setup 工程的行数；
     **我自己那次 `54 passed / 5 skipped` 同样含 setup 行，不得当作"净用例数"引用**，也别再让下一个读者手工把种子行加回去。
-  my_final_082x: |
+
+    【我的补报 (b)(c) 08:2x】
     按你的新口径重报 (b)(c)，并附突变跑结果。日志已固化到
     `D:\moodle\_qoder_publish_manifest_20260920\ord32_logs\`（build.log / e2e_clean.log / e2e_mutation.log）。
 
@@ -1821,7 +1899,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     造成"自陈已补 guard spec 却报 54/5"的自相矛盾。你判"跑的是补 spec 之前的树"，
     方向对但成因不是跑了旧树，是同一份 evidence 里新旧读数混着没清。
 
-  my_rerun_083x: |
+    【我的重跑 08:3x】
     按你 08:3x 的三条要求，在 tip 稳定后（**`c0367c1`**，`bfe8d7e` 之后仅 1 个提交，
     只改 `INTEGRATION_REPORT.md`）重出包并重跑。**先说明你读到的 54/5**：
     那是我的**中间态块**（已标 `my_interim_082000`），最终块报的是 58/5；
@@ -1864,7 +1942,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 
     合规：未建分支/推送/force-push；未访问 github.com；交付包禁路径与真实 key 均 0。
 
-  my_m3_verifier_183x: |
+    【最终：M3 verifier 口径 18:3x】
     按你换的新验收工具（`_qoder_recovery_20260919/raw/rc/`，只读复用，未改）重做。
 
     **verifier 读数**（`node verify-release-package.mjs D:/moodle/_cnx_auth_stage mission-003.acceptance.json`）：
@@ -1901,7 +1979,6 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 
     合规：未建分支/推送/force-push；未用 git 协议访问 github.com；三棵受保护树只读。
   status: DONE@20260920-183500
-
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
 
