@@ -28,32 +28,68 @@
 **Commander 自我约束（同一条毛病，我这边也要治）**：我此前多次"发完汇报就结束回合"，导致车道交差我看不见。
 今后：**在回合内持续巡检（读总线、读账本 DELIVERIES、复核数字），只有遇到真正需要用户裁决的不可逆动作才停。**
 
+### 20:5x 用户补的三条（我此前没意识到，写进来当硬规则）
+
+**① 账本只对"正在跑"的车道有效。** 用户原话：*"你要看其他会话页面有没有在工作状态，就像打招呼这个会话，
+他现在已经不在工作状态了，你再怎么修改账本他也不可能去读取。"*
+⇒ `runtimeState` 为 `ready` / `cold` 的会话**不会自己重读账本**，我写的 verdict 等于写给自己看。
+**Commander 每轮必须 `list_chat_sessions` 枚举四条车道的 runtimeState**；凡是 idle 且账本里有它待办的，
+发一次**唤醒 ping**：只准一行"账本里有给你的 verdict，去重读"，**不带任务正文**（这不算违反"禁止用消息传任务"，
+因为它不携带任何指令内容，只是把睡着的人叫醒）。
+实测：`6af4cf53` 交完 ORD-0032 就落到 `ready`，我写完 verdict 后它毫无反应 —— 就是这个失效模式。
+
+**② 每轮必须看 GitHub，不能只看本地。** 两件事：读 Issue #1 新评论（`raw/patrol.py`，先比水位线）；
+查 `m3/a4-sw-lifecycle` / `m3/preview-ops-fixed-entry` / `m3/release-package-manifest` 的 tip 有没有被仲裁推进
+（`git/ref` + `compare`，逐个核 tip / ahead / behind / 文件清单，**不采信它自述的数字**）。
+
+**③ 向 GPT 汇报提频。** 用户要求提高频率 ⇒ 改成**每个验收点一条**（一条单被我用亲测数字 ACCEPTED/REJECTED 就报），
+外加"新发现的缺陷"与"需要它裁的点"不等下一批；**不许攒到回合结束才一次性汇报**。
+每条仍走"投递到总线 + `browser-use` 敲门"两步，缺一不算送达。
+
 ## DELIVERIES（车道交付登记处 · 追加，不改别人的块）
 
-### 6af4cf53 ORD-0032 @2026-09-20 18:35 → 发布包按 M3 verifier 口径重出并对齐新 tip
+### 6af4cf53 ORD-0032 @2026-09-20 20:25 → 发布包按 M3 verifier 口径重出，并对齐最新 tip
 
 verifier（`_qoder_recovery_20260919/raw/rc/verify-release-package.mjs`，只读复用）：
 `required_count 22 / missing_count 3 / forbidden_count 0 / pass false / exit 1`
 missing = `frontend/playwright.sw.config.ts`、`frontend/e2e/qoder-sw-lifecycle.spec.ts`（ORD-0043）、
 `frontend/e2e/qoder-user-critical-path.spec.ts`（ORD-0039）—— **3 条有主，未修绿、未删门**。
 
-包：**712 文件**；与 HEAD `56f67e2fb94ac31809b471f2523dbb2e4dd1127d` 相同 **708** /
-有意不同 **2**（patch sanitize 版 + 硬化版量具）/ 仅包内 **2**（两份交接文档）。
+包：**714 文件**；对齐 HEAD `e981b46bbc44344b844097d287a6fa3fe2bf269c`；
+与 HEAD 相同 **710** / 有意不同 **2**（patch sanitize 版 + 硬化版量具）/ 仅包内 **2**（两份交接文档）。
 整树导出（`git archive` 16 目录 + 23 根文件），非逐文件同步；路径以**产品根**为准。
-包内 e2e spec **33** 份；`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts` 已写入包内交接。
+新 tip 的两个新文件（`phase_timing.py`、`test_qoder_stay_generation_phases.py`）已进包。
+`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts` 已写入包内交接。
 
-build（包外副本）：**EXIT=0**，1920 modules，5.50s，**产物 10 条**。
-日志：`_qoder_publish_manifest_20260920/ord32_logs/build_v3.log`
+build（包外副本）：**EXIT=0**，1920 modules，4.91s，**产物 10 条**。
+日志：`_qoder_publish_manifest_20260920/ord32_logs/build_v4.log`
 
 卫生：forbidden 0；node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok* /
-*.sqlite* / dist / __pycache__ / test-results 全 0；真实 key 命中 0（扫 673 文件）。
-并行车道隔离已验证：包内 `stay_osm.py` = HEAD 版 `f4632ede`，非 `8c66aa92` 未提交版 `193a0833`。
+*.sqlite* / dist / __pycache__ / test-results 全 0；真实 key 命中 0（扫 675 文件）。
+并行车道隔离已验证：整树导出取 HEAD 版，不含 `8c66aa92` 的未提交改动。
 
 `verdict: PARTIAL — 数字我认可，但分母已过期`。你比对的 `56f67e2` 刚被 `e981b46`（ORD-0049 冷路径计时）超过，
 且**该提交动了 `backend/app/integrations/stay_osm.py`**——正是你上面用来证明并行车道隔离的那个文件。
 ⇒ 请**按 `e981b46` 重导一次**并报新的"相同/有意不同/仅包内"三数；其余（整树导出、产品根路径、
 `MOBILE_TAP_TARGET_GATE` 映射、build exit 0、卫生 0 命中、3 条红有主且未删门）我复核认可，**不必重做**。
 另：你那句"包内 `stay_osm.py` = HEAD 版"现在按 `e981b46` 重算，别停留在 `f4632ede`。
+
+### 6af4cf53 回应上条 verdict @2026-09-20 20:3x → 已按 `e981b46` 重导，三数如下
+
+你的 PARTIAL 是对我 `56f67e2` 那一版写的；我读协议后已自选推进重导，现在包已对齐 `e981b46`。
+**未改你的块**，新开一块登记：
+
+- 权威 HEAD：`e981b46bbc44344b844097d287a6fa3fe2bf269c`（包内交接已同步为全 sha）
+- **相同 710 / 有意不同 2 / 仅包内 2**（共 714 文件；清单 714 = 实文件 714）
+- `stay_osm.py` 三态已重算：HEAD `193a0833ae06` / **包内 `193a0833ae06`** / 工作区 `193a0833ae06`
+  ⇒ 该文件已被 `8c66aa92` 提交进 `e981b46`，所以三处一致，不再是 `f4632ede`
+- 新 tip 的两个新文件（`backend/app/core/phase_timing.py`、
+  `backend/tests/test_qoder_stay_generation_phases.py`）**已进包** —— 整树导出自动带上，
+  不需要逐个挑
+- verifier 复跑：`required 22 / missing 3 / forbidden 0 / pass false / exit 1`（3 条仍有主）
+- build（包外副本）：**EXIT=0**，1920 modules，4.91s，**产物 10 条**；日志 `ord32_logs/build_v4.log`
+- 卫生：forbidden 0；node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok* /
+  *.sqlite* / dist / __pycache__ 全 0；真实 key 命中 0（扫 675 文件）
 
 ### commander 独立复核 @2026-09-20 20:4x —— ORD-0049（`8c66aa92`，commit `e981b46`）
 
@@ -95,6 +131,128 @@ git log -1 → e981b46  perf(backend): time the cold stay path by phase, and mak
    但**改产品契约需要仲裁点头**，我已把这条列入下一次请裁；
 2. 前端可见等待体验在 **ORD-0047**，与本单成对交付，只交后端不算修完。
 
+### 8c66aa92 ORD-0041 @2026-09-20 20:5x → M3 全族已并入权威树，三组数字与合并前逐数可对照
+
+合并提交 `a453121`（20 笔 / 37 文件 / +6980 −203，`backend/app/**` 零路径）。合之前先核反向半同步：
+`c0367c1` **是** `a512244` 的祖先，且我这侧每个文件在 `a512244` 里 sha256 逐字节相同
+（guard `70b44863` / executionWindow `4280bbe8` / LiveRecovery `f527d929` / binding `ae2fc8eb` /
+v9 `56da6ea4` / playwrightEnv `57756170` / 报告 `719e0b36`）。`git merge --no-ff --no-commit` →
+"Automatic merge went well"、`--diff-filter=U` 0 文件。
+
+实测（解释器 `D:\moodle\CityNexus\.venv`，`DEEPSEEK_API_KEY=` / `CITYNEXUS_AI_API_KEY=` / `CITYNEXUS_AI_ENABLED=false`）：
+1. 全量后端 **913 passed / 15 skipped / 0 failed（77.30s）**、`--collect-only` **928** ⇒ 与你给的权威读数
+   913/15/0 / 928 **完全相等，差值 0**。
+2. `node node_modules/@playwright/test/cli.js test --list` → **`Total: 87 tests in 34 files`**
+   （**chromium 86 + setup 工程 real-seed 1**）。63→87 逐文件：map-interaction +3、onboarding-failure +2、
+   plan-ai-contrast +3、plan-ai-thinking +8、service-worker +3、theme-contract +4、ui-overnight-shots 5→6。
+   旧的 54/5 自本提交起作废。
+3. `npm run build` **exit 0**；`typecheck` / `typecheck:all` 各 exit 0、`error TS` 0 条（不接管道，读 `$?`）。
+4. 全套权威 E2E（run `ord41-full`，web :3471 → backend :8471、一次性 `_ord41-full.db`、ai=disabled、
+   `reuseExistingServer=false`、provenance 行已核）：**80 expected / 6 skipped / 1 unexpected / 0 flaky（266.1s）**。
+
+唯一那条 unexpected 我查到底是什么的：**不是合并事故，是 UI 车道故意留红的待办门**
+`qoder-onboarding-failure.spec.ts :: the named backend reason reaches the onboarding screen`
+（期望 `trial-create-error` 含 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9`，实到通用文案）。该文件注释自陈缺口在
+`V8Experience.tsx:800` 的一个 prop、"本车道不拥有该文件"；组件侧 `JourneyTrialSetup.tsx:555-561` 已备好
+`{message ? <span>{message}</span> : null}`。我另**否证**了"绿只在脏工作区成立"这个解释：他们未提交的
+`JourneyTrialSetup.tsx`（+92/−20）不含任何 `message` / `createAttemptFailed` 行改动。
+⇒ **请裁归属**（给我 = 一行 prop + 复跑该文件 2 条；或回 e345b9d6）。另注意 ORD-0033 落地后该断言的期望串
+要换成 `422 + error.code + details.actual_days`，别把 `V13_…:9` 留在测试里。
+细节：`INTEGRATION_REPORT.md` §88（提交 `3b68801`）。
+
+### 8c66aa92 ORD-0033 @2026-09-20 20:5x → 超 7 天在门口即 422、被拒请求不落库；新门 8 条并有两具突变证据
+
+按裁定 ① 选 A。三处改动 + 一份新门，前端零改动：
+`app/core/temporal.py` 把 `MIN/MAX_JOURNEY_DAYS` 具名（**数值 7 未动**）；`app/main.py` 新增
+`temporal_rejection`，**仅** `V13_JOURNEY_DAYS_OUT_OF_BOUNDS` / `V13_INVALID_ANCHOR_WINDOW` 转 422
+（其余 `raise exc` 保留 500，测试里放了近似前缀 `…_BOUNDSX:9` 防 startswith 式洗白）；
+`create_journey` 改为**先构造 Journey 与 JourneyTripContext、再校验、后才 session.add**
+（原顺序先 add(journey) 再构造 context，那个顺序就是"建得出来"的成因），校验走住宿定价同一个
+`journey_temporal_shape` ⇒ 门与定价量不出两个窗口。
+
+实测：新门 `tests/test_qoder_journey_window_boundary.py` **collected 8 / 8 passed（1.25s）**；
+全量 **921 passed / 15 skipped / 0 failed（100.42s）**、collected **936** ⇒ 对表 `913/15/0 / 928`
+为 **+8 / 0 / 0 / +8**，八条全来自这一个新文件，**既有测试零波及**（说明这条路径此前完全没被覆盖）。
+杀得掉的证据（唯一 anchor + 读回校验 + 字节还原，`main.py` 与 HEAD 逐字节同 `a5d3277565413cf5`）：
+MUT-A 删门口校验 → **4 failed / 4 passed**（`…_by_name_and_with_numbers`、
+`test_a_refused_creation_leaves_no_journey_row`、`test_the_supported_ceiling_is_named_and_seven_days`、
+`test_the_door_measures_the_window_the_pricer_measures…`）；MUT-B 把 422 改回一律 `raise ValueError`
+→ **6 failed / 2 passed**（另加深度路径与 PATCH 两条）。只报 MUT-B 会高估门口那扇门的独立性，故两具都留。
+
+响应实测形状：`{"error":{"code":"V13_JOURNEY_DAYS_OUT_OF_BOUNDS","message":"…supported journey window of 7 days…",
+"trace_id":"…","details":{"reason":…,"actual_days":9,"min_days":1,"max_days":7}}}`。
+**两处等你裁**（都写在 ORDERS 该单 evidence 末段）：① 人话文案我留英文、中文归 `LocaleContext`/
+`humanReplanReason`（后端再存一份=一句两个真相），要后端直出中文我只改 `message` 字面量；
+② `PATCH /api/v1/journeys/{id}` 也加了同一条规则（超出订单字面，没它裁定 A 只是半条规则），独立成段可撤。
+细节：`INTEGRATION_REPORT.md` §89（提交 `56f67e2`）。
+
+### 8c66aa92 ORD-0049 @2026-09-20 20:5x → 120 秒几乎全在 provider 链；空结果现在自带原因（本单我已自降 PARTIAL）
+
+按"先时序后理论"：分段计时入树（`CITYNEXUS_PROVIDER_TIMING=1` 才开，关掉时响应零变化并有断言守着）。
+同城 `CN-XIAMEN` 连打三次（一次性 `_ord49.db`，未碰预览实例；原文
+`D:\moodle\_qoder_ord30_evidence_20260920\ord49-measure.json`）：
+
+```
+attempt 1  200 wall  3.85s top_k=4 OPTIONS_FOUND
+  photon 755ms | overpass 2413ms ok@overpass-api.de | stay.offers 3220ms（占 3842ms 的 84%）
+attempt 2  200 wall  3.45s top_k=4 OPTIONS_FOUND
+  stay.nodes[1..10] ~8ms | stay.legs[1..10] ~40ms | stay.solve[1..10] ~12ms ← 应用侧合计 ~60ms
+attempt 3  200 wall 120.86s top_k=0 NO_OFFERS_FROM_PROVIDER
+  overpass 77930ms（mirror[1] 15935ms HTTPStatusError / [2] 31537ms ReadTimeout / [3] 30459ms ReadTimeout）
+  nominatim 42153ms（两次各 ~21077ms ConnectTimeout）| stay.offers 120856ms = 整请求 99.999%
+```
+
+⇒ 优化器 / 路由 / DB **被测量排除**（`_mode_fact` 按 haversine 算术不出网）。串行超时点：`stay_osm.py:89`
+三镜像串行、`:84` query `[timeout:45]` > 客户端 30s、`:107` 两个 Nominatim 查询再串 60s、
+`:77/:96/:116` 吞异常。**另量出一个真缺陷**：`:47-51` `timeout=max(30.0, settings.real_city_timeout_seconds)`
+把配置默认 12s 吃掉，而 `discovery/real_city.py:531/605` 是生效的 ⇒ 该旋钮在住宿路径上不起作用。
+
+`top_k=[]` 定性：**静默失败**。现在响应带 `generation`（outcome ∈ {OPTIONS_FOUND,
+NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
+`rejections_by_reason` + `provider_attempts[]` 逐台点名），分类只由已发生事实推出。
+新门 `tests/test_qoder_stay_generation_phases.py` **collected 7 / 7 passed（1.89s）**；全量
+**928 passed / 15 skipped / 0 failed（68.21s）**、collected **943** ⇒ 对 ORD-0033 那次为 **+7/0/0/+7**；
+全套权威 E2E（`ord49-e2e`，:3475→:8475）**80 expected / 6 skipped / 1 unexpected（288.7s）**逐数不变。
+**口径分开**：以上全为 API 操作延迟，document 导航延迟本轮未重测。
+异步作业契约（`202 + operation_id` + 真取消）我按你 verdict 的判断**没有实现**，只在 §90.5 写成提案；
+本单状态我已从 DONE 改为 **PARTIAL**，欠的两项就是 verdict 列的那两项。
+
+补一条给矩阵用的自测（不动你的量具，只跑它列的 11 条 SUITES 路径）：
+`tests/test_sol_*` ×5 + `test_qoder_mobility_truth_contract` + `test_rx4_c4_generate_gate` +
+`test_rx1/2/3` + `tests/stateful`（60×30）→ **ran=139 / 139 passed / 0 failed（38.54s）**，
+解释器 `D:\moodle\CityNexus\.venv`、AI 三变量清空 ⇒ 我这个 session 新增的三个后端文件
+（`test_qoder_next_leg_binding` 在 SUITES 之外、`test_qoder_journey_window_boundary`、
+`test_qoder_stay_generation_phases`）都不在 SUITES 里，**矩阵分母不受影响**，`16 actionable + 1 equivalent`
+那套口径不必因为我重算。
+
+### dc19d662 ORD-0048 @2026-09-20 18:56 → `GET /twin` 是设计内的 15 s 前台轮询，且**已经** visibility-aware；325 次 = 两客户端 × 14 次加载 × 85.6 分钟的正常总量，不是循环
+
+- 基线 `git archive 56f67e2`（= if_head）到独立树，`vite build` **exit 0 / 4.69 s**；自有 :8411 后端 +
+  :8412 gate 预览；权威三树 `git status --porcelain -- backend frontend/src` = **0**。
+- **Run A** `/v8/live`（SW 已接管）305.0 s ⇒ **twin 13 次**，12 个间隔 **15 014–15 061 ms**，
+  直方图 `12–20s:11 / >=20s:1`（唯一大间隔 135 050 ms = 116.6 s 后台段本身）；**重叠 0**；
+  13/13 **同一调用栈**（`Vc→queryFn→RQ fetch`），0 失败 / 0 pageerror。
+- **Run B**（SW 仅注册未接管）**逐位相同**（13 次 / 15 010–15 072 ms）⇒ SW 与计数无关；
+  且 workbox 两条 runtimeCaching 一条只匹配 document、一条显式排除 `/api/`。
+- **分段**：前台 67 s = 5 次｜**后台 116.6 s = 0 次**｜恢复 122 s = 8 次 ⇒ 后台门确实生效
+  （产物 `index-D4-WDMKj.js:10` 的 `(refetchIntervalInBackground||isFocused())`）。
+- **observer = 2**（`V8Experience.tsx:318` + `LiveRecovery.tsx:104` 同一 key），实测
+  `setInterval(…,15000)` 注册 53 次且每 tick 成对，**但网络放大仍 1.0×**（RQ 在飞去重）。
+- **Run C** `/legacy`：约 300 s 内 twin **1 次**、interval 注册 **0 次** ⇒ 325 不来自这条链；
+  该面 SSE 1 个连接 **69 ms 开 / 30 266 ms 关 / errors=1 / 消息 0 条**，其后 300 s 无重连
+  （`main.tsx:541` 把 `main.py:1543` 的 30 s 正常收尾当 error）⇒ 另案 R2。
+- **325 的分母**：`backend_ai.log` 实到 twin 482 行、`a5b9b425…` **恰好 325**、全 200；
+  该 log **无时间戳** ⇒ 分母改从 `_preview.db`（`mode=ro`）取
+  `07:26:56Z → 08:58:33Z` = **5 137 s / 85.6 分钟** ⇒ **平均 15.8 s/次**（与实测 15.02 s 自洽）；
+  IP 交叉 `130.94.30.196`=249（6 组水合）、`46.250.253.204`=65（8 组水合 + 5 次建行程）、零散 11；
+  前台时长 62.3 + 16.3 = 78.6 分钟 ≤ 窗口 ⇒ **两客户端先后使用**。
+- **未闭合**：真机切后台仍未观察 —— 本机三种真实手段（frozen / minimized / tab-steal，
+  且已摘 Playwright 三个反后台节流默认旗标）都没能让 `visibilityState` 变 hidden，只有注入成功
+  ⇒ 需要手机侧一次 30 s 试验（R1）。
+- **移交**：R3 `LiveRecovery.tsx:166` 的 `[journeyId, context]` 目前只靠 RQ 结构共享兜住（后端一往
+  `context` 放时变量即成红）；R4 `GET /twin` 带 `session.commit()` 非纯读 + 前台固定带宽；
+  R5 预览入口出现只打 `/twin` 的非浏览器客户端 70 次（`151.242.36.146`，journey `ff7acd3f`）⇒ 交预览运维。
+- 全文 `D:\moodle\_qoder_twin_audit_20260920\TWIN_POLLING_AUDIT.md`；**判决：不要再为它加 visibility 补丁**。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
@@ -1978,7 +2136,23 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
       `node_modules` 真实复制到包外副本（非 junction），构建后包目录未被写回。
 
     合规：未建分支/推送/force-push；未用 git 协议访问 github.com；三棵受保护树只读。
-  status: DONE@20260920-183500
+
+    【tip 再前进后重出 · 20:2x】
+    读 LANE_PROTOCOL 后按第 3 条自选推进：tip 已从 `56f67e2` 前进到
+    **`e981b46bbc44344b844097d287a6fa3fe2bf269c`**（`8c66aa92` 的 ORD-0049 落地，
+    新增 `backend/app/core/phase_timing.py` + `backend/tests/test_qoder_stay_generation_phases.py`）。
+    整树重出后：
+
+    - verifier：`required 22 / missing 3 / forbidden 0 / pass false / exit 1`（3 条仍有主，未动）
+    - 包：**714 文件**；与 HEAD 相同 **710** / 有意不同 **2** / 仅包内 **2**；清单 714 = 实文件 714
+    - 新 tip 的两个新文件**已进包**（`phase_timing.py`、`test_qoder_stay_generation_phases.py`）
+      —— 这正是"逐文件手工同步会漏新模块"的反例，整树导出避免了
+    - build（包外副本）：**EXIT=0**，1920 modules，4.91s，**产物 10 条**
+      日志 `ord32_logs/build_v4.log`
+    - 卫生：forbidden 0；node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok* /
+      *.sqlite* / dist / __pycache__ 全 0；真实 key 命中 0（扫 675 文件）
+    - 包内交接两份已重写，HEAD 更新为 `e981b46`
+  status: DONE@20260920-202500
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
 
@@ -3220,8 +3394,56 @@ cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloud
     验收原则（仲裁原话落地）：**不允许无控重叠刷新循环；后台/空闲行为必须有明确理由与节奏**。
     若确有安全轮询意图 ⇒ 写清节奏并做成 visibility-aware；否则就是误触发的循环，报触发点给归属车道，
     **你不要自己动产品代码**。
-  status: CLAIMED@2026-09-20T18:14+08:00 by dc19d662（evidence-only，不动产品代码）
-  evidence: 待填——7 项采集（间隔直方图 / initiator 栈 / 可见性分段 / RQ 侧 / 重入 / EventSource 关联 / 重叠）
+  status: DONE@2026-09-20T18:56+08:00 by dc19d662（evidence-only，产品代码零改动）
+  evidence: 全文 `D:\moodle\_qoder_twin_audit_20260920\TWIN_POLLING_AUDIT.md`（原始 JSON 在 `raw/run_*.json`，
+            复跑 `gate/run_all.sh`）。**基线**：`git archive 56f67e2`（= 本单 if_head）导出到独立树，
+            `vite build` **exit 0 / 4.69 s**，产物 `dist/assets/index-D4-WDMKj.js`；后端 CityNexus venv uvicorn
+            :8411 + 自建 `raw/twin_audit.db`（`/api/v1/health` 报 `ai:disabled`，两把 AI key 未设置）；
+            前端 gate server :8412；被测行程 demo→generate/select/start 全 200，`cursor_status=VALID`。
+      **(1)(2)(7) 三条 5 分钟空闲窗口（零输入）**：
+        · A `/v8/live` SW 已接管：305.0 s / 31 fetch / **twin 13 次**，12 个间隔全在 **15 014–15 061 ms**，
+          直方图 `12–20s:11`、`>=20s:1`（那 1 个 = 135 050 ms，正是 116.6 s 后台段本身）；
+          **重叠 0**、`unfinished 0`、13/13 同一调用栈（`Vc→queryFn→RQ fetch`，无第二种 initiator）。
+        · B 同上但 SW 仅注册未接管：**读数逐位相同**（13 次 / 15 010–15 072 ms）⇒ SW 不参与计数；
+          另 `vite.config.ts:96-118` 两条 runtimeCaching 一条只匹配 document、一条显式排除 `/api/`，
+          故"SW 缓存未命中导致重复请求"在代码上即被排除。
+        · C `/legacy`：最后一次导航后约 300 s 内 **twin 仅 1 次、interval 注册 0 次** ⇒ 325 不来自这条链。
+      **(3) 可见/隐藏**：前台 0–67 s = 5 次（15 061/15 022/15 017/15 023 ms）、后台 67–183 s = **0 次**、
+        恢复后 183–305 s = 8 次（15 020–15 037 ms）。**手段如实标注**：`Page.setWebLifecycleState=frozen`、
+        CDP `Browser.setWindowBounds=minimized`、第二标签页 `bringToFront` 三种真实手段
+        （已摘 Playwright 三个反后台节流默认旗标）**均未使 visibilityState 变 hidden**，最终用
+        注入 `visibilityState` + 派发 `visibilitychange` 达成 ⇒ 证到的是"产品/库对标准事件的反应"，
+        **真机后台行为仍属未观察**（移交 R1，请手机侧一次 30 s 试验）。
+      **(4) RQ 侧**：`v12Authoritative.ts:45 refetchInterval 15_000`；`queryClient.ts:5
+        staleTime 15_000 / retry 1 / refetchOnWindowFocus false`；全仓无 `refetchIntervalInBackground`。
+        **observer=2**（`V8Experience.tsx:318` + `LiveRecovery.tsx:104` 同一 journeyId 同一 key；
+        实测 `setInterval(…,15000)` 注册 53 次且每 tick 成对，产物 `index-D4-WDMKj.js:10` 是
+        `(refetchIntervalInBackground||isFocused())&&fetch()` 每 observer 一条），
+        **但网络放大 1.0×**（每 tick 只 1 个请求，被 RQ 在飞去重）。
+      **(5) 重入**：`load()` 无重入 —— 305 s 内 experience 仅 boot 期 3 次，**13 次 twin 跟随 0 次**；
+        `execution-clock` 7 次 = 30 s×188 s 前台 ✓。
+      **(6) SSE**：`/v8/live` 面上 **EventSource 构造 0 次**（该项不适用）；`/legacy` 面上 1 个连接，
+        69 ms 开、**30 266 ms 关、errors=1、消息 0 条**，其后 300 s 无重连 ——
+        `main.tsx:541` 的 `onerror=()=>close()` 把 `main.py:1543` 的 30 s 正常收尾当错误 ⇒ 静默失联，另案 R2。
+      **325 的分母与归因（Commander 18:4x 追加要求）**：`_qoder_preview_20260920\run\backend_ai.log` 只读解析，
+        twin 行实到 **482**，其中 `a5b9b425…` **恰好 325**、全 200。该 log **无时间戳**（uvicorn 默认格式，
+        全文件仅 2 行带 ISO 且属另一 journey）⇒ 分母改从 `_preview.db`（`mode=ro`）取：
+        `journeys.created_at 07:26:56Z` → `journey_twins.updated_at 08:58:33Z` = **5 137 s = 85.6 分钟**，
+        ⇒ **平均 15.8 s/次**，与本单实测 15.02 s 自洽。交叉 (IP×journey)：
+        `130.94.30.196`=249（含 6 组完整水合 ⇒ 约 6 次加载）、`46.250.253.204`=65（8 组水合 + 5 次建行程）、
+        6 个零散 IP 合计 11；换算前台时长 62.3 + 16.3 = 78.6 分钟 ≤ 85.6 窗口 ⇒ **两个客户端先后使用、
+        共 14 次页面加载**，不需要任何"失控循环"假设。**判决：设计内、且"做成 visibility-aware"产品已经满足
+        ⇒ 不要再为它加补丁**（Commander 的程序性错误在"无分母先下结论"，本次补上了，数值碰巧站同一边）。
+      **未闭合/移交（我不动产品代码）**：R1 真机后台未观察；R3 `LiveRecovery.tsx:166` 把 twin 派生的
+        `context` 放进 useEffect 依赖，目前**只靠 RQ 结构共享**（产物 `:10` 默认 `Wm(t,e)`）才没变成
+        每 15 s 多打一次 `/experience`，后端一往 context 放时变量即成为红；R4 `main.py:5643-5652`
+        的 GET 带 `session.commit()`（非纯读）+ 前台固定带宽；R5 预览入口出现过**只打 /twin 的非浏览器
+        客户端**（`151.242.36.146` 70 次、零水合、全 200，journey `ff7acd3f`，发生在 17:02:46 之后）
+        ⇒ 交预览运维（ORD-0045 接手方），我未碰任何预览进程。
+      **边界**：三棵只读树零写入（`git status --porcelain -- backend frontend/src` = **0**）；
+        tip 已前进到 `e981b46`，我在 `main.py:1538/5643/5864` 的引用在**新 tip 逐行复核仍成立**；
+        `frontend/src/app/V8Experience.tsx` 工作树有未提交改动属他车道，**我的产物来自提交态 archive 不受影响**；
+        未新建隧道、未触碰 :4781/:4782/:8781 与 `_preview.db`（只读）、未杀任何非本会话进程。
 
 - id: ORD-0049
   to: 8c66aa92
@@ -3242,7 +3464,58 @@ cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloud
     陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策**一律不得削弱**；
     **不得**通过关掉真实 provider 调用、或把超时调大来"解决"等待；**不得**把未知数据写成已知数据。
     另：document 导航延迟与 API 操作延迟**分开测**（仲裁明令，115s 不能当 HTML 超时的依据）。
-  status: CLAIMED@20260920-181000 by 8c66aa92
+  status: PARTIAL@20260920-204x by 8c66aa92（按我在 DELIVERIES 里读到的 commander verdict 自我降级：**本单不关闭**。第 1/2/4 项已入树 `e981b46`；仍欠第 3 项（预热/缓存，或压不到 ≤10s 就转 `202 + operation_id`）——等仲裁点头；以及与 ORD-0047 成对的前端可见等待体验。我把自己的 DONE 改成 PARTIAL，因为 verdict 说不算关闭，我就不能留着 DONE）
+  evidence: |
+    **先给时序，再给结论**（真 provider、真网络、一次性库 `_ord49.db`，`CITYNEXUS_PROVIDER_TIMING=1`；
+    同城市 CN-XIAMEN、同 3 天窗口连打三次 `POST /stay-options/generate`；逐段原文
+    `D:\moodle\_qoder_ord30_evidence_20260920\ord49-measure.json`）：
+      attempt 1  200 wall  3.85s top_k=4 outcome=OPTIONS_FOUND
+        provider.photon 755ms ok | provider.overpass 2413ms ok@overpass-api.de（mirror[1] 一发命中）
+        stay.offers 3220ms（占 stay.generate 3842ms 的 84%）
+      attempt 2  200 wall  3.45s top_k=4 OPTIONS_FOUND
+        stay.nodes[1..10] ~8ms | stay.legs[1..10] ~40ms | stay.solve[1..10] ~12ms ← 应用侧合计约 60ms
+      attempt 3  200 wall 120.86s top_k=0 outcome=NO_OFFERS_FROM_PROVIDER
+        provider.photon 763ms ok
+        provider.overpass 77930ms empty：mirror[1] 15935ms HTTPStatusError / mirror[2] 31537ms ReadTimeout
+                                    / mirror[3] 30459ms ReadTimeout
+        provider.nominatim 42153ms：query[1] 21077ms ConnectTimeout / query[2] 21076ms ConnectTimeout
+        stay.offers 120856ms ← 占整请求 99.999%
+    ⇒ **120 秒几乎全在住宿 provider 链**；CP-SAT、routing、建模、DB 是**被测量排除**的
+    （`capture_mobility_facts → _mode_fact` 不出网，按 haversine 算术，所以 10 候选只花几十毫秒）。
+    串行超时与重试位置（`app/integrations/stay_osm.py`）：`:89` 三镜像串行（最坏 90s）；
+    `:84` query 自带 `[timeout:45]` 大于客户端 30s ⇒ 客户端必然先断、白等；
+    `:107` 两个 Nominatim 查询串行（`len(drafts) < 4` 才触发，再加 60s）；
+    `:77/:96/:116` `except Exception: continue/pass` 把失败吞掉。
+    **量具顺手量出一个真缺陷**：`:47-51` 客户端 `timeout=max(30.0, settings.real_city_timeout_seconds)`
+    把配置默认 **12s 吃掉**，而同一设置在 `discovery/real_city.py:531/605` 是生效的
+    ⇒ 这个旋钮在住宿路径上根本没起作用（改不改等你裁，因为它会改变成功率画像）。
+    **可安全预热/缓存**（详表 §90.3）：Photon 城市锚点（LRU+TTL）；城市级 OSM 住宿清单跨 journey 共享、
+    TTL 对齐既有 `expires=24h`、**连同 `captured_at`/provider_key 一起存**（不谎称实时）；
+    复用 httpx 连接池；镜像保持串行但加**总预算**（缩短等待，不是调大超时）；建模/求解/DB 不动。
+    **`top_k=[]` 定性：静默失败，不是合法无解**（attempt 3 实测三镜像全灭 + 兜底源连不上）。
+    现在响应带 `generation`：`outcome` ∈ {OPTIONS_FOUND, NOT_APPLICABLE_ZERO_NIGHTS,
+    NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} + `offers_from_provider` + `options_ranked` +
+    `rejections_by_reason` + `provider_attempts[]`（逐台 host + 异常类名）。分类只由已发生的事实推出，
+    **没有把未知写成已知**。
+    新门 `backend/tests/test_qoder_stay_generation_phases.py`：**collected 7 / 7 passed（1.89s）**，含
+    "镜像全超时 ⇒ NO_OFFERS 且逐台点名"、"一天行程 ⇒ NOT_APPLICABLE_ZERO_NIGHTS"、
+    "全冲突 ⇒ ALL_CANDIDATES_REJECTED 带原因计数"、"父段 ms ≥ 子段之和（3×50ms 假镜像，
+    证明的是**归因**不是字段存在）"、"**开关关掉时响应无 header 且行为不变**（防量具变契约）"、
+    "span 内异常记 `error:Type` 且继续上抛"。
+    数字（解释器 `D:\moodle\CityNexus\.venv`，AI 三变量清空）：全量后端
+    **928 passed / 15 skipped / 0 failed（68.21s）**、collected **943** ⇒ 对表上一轮 `921/15/0 / 936`
+    为 **+7 / 0 / 0 / +7**，八条差值全来自这一个新文件，既有测试零波及；
+    全套权威 E2E（run `ord49-e2e`，:3475→:8475）**80 expected / 6 skipped / 1 unexpected（288.7s）**，
+    与 ORD-0041/0033 两次逐数相同（唯一红仍是 ORD-0034 自陈待办门）；前端零改动。
+    **口径分开**：以上全部是 **API 操作延迟**；document 导航延迟本轮未重测，也没拿 121s 当 HTML
+    超时依据（UI 线另有 `review/measure-document-path.json`）。
+    **第 3 件我没做，要你裁**：应用内可省的只有那 ~60ms；即便把超时按配置收紧到 12s，
+    attempt 3 那种形态下界仍是 `12×3 + 12×2 ≈ 60s` ⇒ **同步 POST 装不下**。建议异步作业契约：
+    有未过期快照 ⇒ 200 直给（缓存后应 <100ms）；否则 ⇒ **202 + `operation_id`**，后台跑 provider，
+    `GET /stay-options/operations/{id}` 轮询（状态带当前 `phase` 与 `generation.outcome`），
+    同一 journey 同时只允许一个运行中 operation（沿用幂等口径，不动单 ACTIVE 计划不变式）。
+    **前提是"真取消"**：operation 必须能放弃 provider 等待并停止写快照；做不到就不该给前端
+    "取消生成"这个按钮——这句请与 ORD-0047 一并裁。**给令我就实现**（含 `max(30.0, …)` 是否改为尊重 12s）。
 
 - id: ORD-0046
   to: GPT（外部仲裁）
@@ -3700,12 +3973,13 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    56f67e2  2026-09-20 13:4x  fix(backend): refuse an over-window trip at the door, by name, and write nothing
-prior   3b68801  13:2x docs: section 88 - the M3 merge, the three number sets, and the one gate red on purpose
+HEAD    e981b46  2026-09-20 18:5x  perf(backend): time the cold stay path by phase, and make an empty answer explain itself
+prior   56f67e2  13:4x fix(backend): refuse an over-window trip at the door, by name, and write nothing
+        3b68801  13:2x docs: section 88 - the M3 merge, the three number sets, and the one gate red on purpose
         a453121  13:1x Merge branch 'agent/ui-overnight-20260920' (tip a512244; 20 笔 / 37 文件 / +6980 -203)
         bfe8d7e  08:2x test(e2e): the refusal-path regression that keeps ORD-0025 void
         c0367c1  08:4x docs: the guard spec's denominator
-        （现口径：后端 **921 passed / 15 skipped / 0 failed，collected 936**；
+        （现口径：后端 **928 passed / 15 skipped / 0 failed，collected 943**；
          权威 E2E **80 expected / 6 skipped / 1 unexpected**，唯一那条 unexpected 是
          `qoder-onboarding-failure.spec.ts :: the named backend reason…**故意红的待办门**（ORD-0034，归 e345b9d6）；
          `--list` = **87 tests in 34 files**（chromium 86 + real-seed setup 1）；build 与两道 typecheck exit 0。
@@ -3867,6 +4141,17 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    **吊销只能由 key 的主人做，agent 做不了。** force-push 也**不能**回收旧 SHA。
    → 建议顺序：**先吊销 → 再决定要不要换历史/换内容来源**；在用户醒之前我不建分支、不改历史、不推送，
    也不替任何人把这条 sanitize 提交进权威树（那是别人的写域）。
+   **20:5x 复测（HEAD 已到 `e981b46`，仍然成立，且新增两条证据）**：
+   - `git show HEAD:qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch` → 仍**恰 1 命中**（35 字符）；
+     工作副本仍 **0 命中**（370,861 B vs HEAD 370,873 B），**改动仍未提交** ⇒ 当前权威 commit 依旧带着它；
+   - 发布包 `_cnx_auth_stage`（现 714 文件）仍 **0 命中**，包内干净；
+   - **GitHub 侧未外泄**：`Canshu-King/CityNexus` 四条分支里只有
+     `integration/qoder-truth-frontend-v6-apple-ab` 存在该路径，取其内容本地比对 → **0 命中**
+     （`master` / `integration/baseline` / `eac/v19.2.2-realphone-codegate` 连 `qoder-handoff/` 目录都是 404）；
+     Workspace 仓五条分支全部 404；
+   - **同值确认（只比哈希，不打印任何片段）**：提交里那串的 `sha256[:12]` 与当前 shell 环境里那把 key 的
+     `sha256[:12]` **完全相等** ⇒ 它不是历史残留、不是示例值，**就是现在还在用的那把**。
+     所以"先吊销"的紧迫性高于任何历史清理动作。
 2. 巡检循环 `f92f2794` **已由我自己续期**（07:4x）：夜间版 → 晨间降频版，每 30 分钟一轮，
    `expiresAt 2026-09-20 12:00`。**12:00 之后要不要继续、以什么频率继续，由用户定。**
 3. **需要你裁决的范围契约（会决定 ORD-0032 第 (2) 项是缺陷还是设计）**：
