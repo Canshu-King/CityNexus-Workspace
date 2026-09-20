@@ -79,6 +79,46 @@
 ORD-0032 单张 17377 字符）。放进**下一个集成检查点**做，届时先冻结写者再动结构。
 **车道状态巡检也收窄**：只查活跃 4~5 条，只看 `runtimeState + queuedTurnCount` 两个字段。
 
+### 02:0x 同步阻塞的根因与处置（侧聊量出根因，我执行；三个量具都改了）
+
+**根因（侧聊只读实测，我复现认可）**：账本涨到 652,695 B ⇒ base64 后 PUT 请求体 **~849 KB**；
+读回校验还要**再下 850 KB**。同一台机器当晚 455 KB 的请求能成（45.3s），**849 KB 从不成功**
+（三次读回分别读到 525,733 / 844,584 / 881,262 字节就断）。⇒ **这条链路约 500 KB 就是上限**，
+而我那几轮"重试"不是在卡住，是**真的在失败**。
+风险不是慢，是**账本只存在本地磁盘**——它是唯一的协调状态载体。
+
+**处置一：冷热分卷（我把侧聊建议从"下个检查点"提前到现在做）**
+```
+主账本  652,695 B / 6796 行  →  **169,755 B / 1844 行**（26%）
+归档    新增 CITYNEXUS_AGENT_CONTROL_ARCHIVE.md  487,246 B / 5161 行
+搬走的：03:26 仲裁修正案段、MISSION 002 段、监督轮次记录段，
+        23 张已结单（正文 >2000 字符的）＋ 30 个旧 DELIVERIES 块
+留下的：LANE_PROTOCOL、17 张未结单、最近 6 个交付块、CURRENT_*/FILE_OWNERSHIP/CURRENT_GATES、
+        HUMAN_ATTENTION_REQUIRED、水位线页脚
+索引：每张搬走的单在主账本留**一行** `- ORD-00xx — <状态>（正文已归档）`，grep 仍能命中
+```
+**过程中我犯的错（如实记）**：第一次替换 ORDERS 正文时把**页脚水位线一起删了**
+（那三行 `Commander:` / `External arbiter:` / `Refreshed: … LAST_*_COMMENT_ID = …`
+物理上位于 ORDERS 段内部，不是我以为的 DELIVERIES 里）。
+断言拦住了落盘，我从备份还原了两次才修对：现在抽页脚 → 重建 → **原样追加回末尾**，
+并在落盘前断言 `LAST_ARBITER_COMMENT_ID` **与** `LAST_OWN_COMMENT_ID` **同时**存在。
+⇒ 教训：**改结构前先断言"改完还要存在的东西"**，而不是只断言"删掉的确实删了"。
+
+**处置二：读回不再下载整文件**（侧聊建议 2，正是失败的那一步）
+`raw/sync_ledger.py` 的 `remote_blob_sha()`：用 `git/ref` + `git/trees?recursive=1` 拿远端 blob id，
+与本地算出的 git blob sha 直接比 —— **零下载**。实测：
+```
+CITYNEXUS_AGENT_CONTROL.md       169,755 B  blob fc2b301d1e42  PUT 98a98981  readback MATCH
+CITYNEXUS_AGENT_CONTROL_ARCHIVE.md 487,246 B blob 30811a020310  PUT f5a3bf16  readback MATCH
+```
+**处置三：patrol.py 去掉重复拉取 + 增量**（侧聊建议 1 的另一半）
+同一 URL 从"拉 3 遍"改成 1 遍；评论列表用 `raw/patrol_since.txt` 里的 ISO 时间做 `since=` 增量；
+`OTHER_REPO` 降为 `per_page=1` 轻量探测。实测：**首轮 30s → 次轮 2s**。
+⇒ 今晚被链路重置打断七八次的问题同时大幅缓解。
+
+**三条量具都属 Commander 写域**（`raw/patrol.py` / `raw/sync_ledger.py` / `raw/ledger_split.py`），
+车道未受影响；分卷期间我核过没有车道正在改历史段（它们都在跑长任务）。
+
 **Commander 自我约束（同一条毛病，我这边也要治）**：我此前多次"发完汇报就结束回合"，导致车道交差我看不见。
 今后：**在回合内持续巡检（读总线、读账本 DELIVERIES、复核数字），只有遇到真正需要用户裁决的不可逆动作才停。**
 
