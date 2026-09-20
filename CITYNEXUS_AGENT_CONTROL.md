@@ -1173,6 +1173,41 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     副作用声明：因此**我没能亲跑** LiveRecovery 那条前端门（3 条 + seed）；我只做到
     `--list` 确认 4 个节点被发现 + 逐条读断言。它的"干净态通过"与"退化即变红"目前仍是实现线自报，
     在 ORD-0011(2) 关掉之前我不替它背书。
+            [8c66aa92 回执@20260920-082x，报告 §87，提交 `bfe8d7e`] 这单今天又以 urgent 重发了一次，
+    而账本状态是 `VOID by commander`，所以我**按当前树重测**再回答，不引任何一方文本。结论：**VOID 成立**。
+    三条命令（`ee6a93e`，Node v24 / Playwright 1.63，`node node_modules/@playwright/test/cli.js … --list`）：
+      A) 不加 AUTHORITATIVE（bash 原生）→ exit 0，stdout 641 B，stderr 183 B（announce）；
+      B) **只加 AUTHORITATIVE=1、bash 原生赋值 → exit 1，stderr 1505 B**：
+         "authoritative mode refuses to start: CITYNEXUS_E2E_PORT must be set explicitly
+         (the frontend must not be borrowed)" + "fix the invocation, not the assertion"
+         + 栈 `at refuse (playwrightEnv.ts:30:9)` / `at requiredEnv (playwrightEnv.ts:38:15)`；
+      C) 与 B **完全同一条命令，改成 `env VAR=1 node …`** → exit 0、stdout 0 B、stderr 0 B。
+    **要求 (1) 无需施工**：拒绝路径本来就响亮且非零，`playwrightEnv.ts` / `playwright.config.ts` 一行未改。
+    要求 (3)（"变量给齐了还静默，到底还缺什么"）有确定答案，且**不在产品侧**：我把变量给齐
+    （RUN_ID、`_ord25-envtest.db`、:3465/:8465、存在的 venv、AI 关）再走 `env(1)`，结果是
+    `exit=0 / stdout 0 B / stderr 0 B / 库文件不存在` —— **`env` 前缀下 Playwright 根本没运行，却回报成功**。
+    这一次观测同时解释你留档的四组对照（`auth.out` 0/0、`run2.out` 0/0、`refuse_*` 0/0）与
+    "`_cmd01.db` 至今不存在"，不需要假设 config 有缺陷；UI 那棵树也不是反例，
+    包括你那条 `--config=nope.config.ts` 对照组——**它唯一的自变量也是启动器**。
+    **要求 (2) 我照做了**，依据不是本单而是 `FILE_OWNERSHIP` 对我这两个文件的明文
+    （"改它必须带回归：缺必需变量时必须非零退出并打印缺哪个"）——此前**没有**这条回归，
+    一个现在响亮的守卫哪天改成不响亮不会有人知道。新增 `frontend/e2e/qoder-e2e-config-guard.spec.ts`，
+    **collected 4**：起真 CLI 只跑 `--list`（求值 config 而不起 webServer，所以不会 Adopt 邻道 :8000），
+    逐缺 `CITYNEXUS_E2E_PORT` / `_BACKEND_PORT` / `_PYTHON` / `_DATABASE_URL` 各断**两件事**
+    （非零退出 **且** stderr 点名该变量，正是防"非零但静默"），另断"缺解释器不得回退系统 Python"（Pass-12）、
+    "带活 DEEPSEEK 键必须拒"，最后一条要完整环境被接受且 announce 含 `authoritative=true`/双端口/
+    `ai=disabled`/`reuseExistingServer=false`，并要求 `--list` 的 stdout 里确有节点（防空转）。
+    **鉴别力实测**：把 `refuse()` 换成静默 `process.exit(2)`（就是你点名的那个形状）→ **3 failed / 2 passed**，
+    其中"完整环境被接受"那条仍绿，所以红的是沉默而不是文件加载失败；一次性、唯一 anchor、
+    还原后与 HEAD 逐字节相同（`577561705393609c…`）。同口径复跑：typecheck 0 / typecheck:all 0 / build 0；
+    `guard + live-recovery + stale-cursor` = **10 passed / 15.7s**（run `ord25-guard2`，
+    完整可照抄的权威命令在 §87.4 —— 你还没亲跑的那扇门用它即可，注意一次跑换一个 RUN_ID 与同名 `_*.db`，
+    并且**不要**加 `env` 前缀）；**全套 E2E 58 expected / 0 unexpected / 0 flaky / 5 skipped（157.5s）**
+    （run `ord25-full`）= 原 54 + 新门 4 条，其他车道的用例一条没动。
+    自查一条留在账上：第一版用了 `__dirname`，这套 spec 是 ESM 加载，收集期直接
+    `ReferenceError: __dirname is not defined in ES module scope`、整跑 exit 1，已改
+    `fileURLToPath(import.meta.url)`；这类错的形状恰是"门没测任何东西却像被测过"，
+    所以文件里另留了"CLI 不存在就自己抛"——门起不来要说明自己起不来。
 
 - id: ORD-0026
   to: 8c66aa92
@@ -1580,8 +1615,12 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     而包里带的这两份生产源都在 import 它：
     `frontend/src/app/V8Experience.tsx:12` 与 `frontend/src/features/execution/V10LiveExecutionPanel.tsx:13`
     （`import { liveActivityWindow } from "../lib/executionWindow"`）。
-    ⇒ 现在这个包**解不出模块、`npm run build` 必然挂**。这是 `5a33eaf` 合并带来的新文件，
-    包是按合并前的 `a75ba7a` 出的，所以漏了。
+    ⇒ 现在这个包**解不出模块、`npm run build` 必然挂**。
+    **成因纠正（我 07:38 那一版写错了，07:5x 逐提交 `git cat-file -e` 实测）**：
+    该文件**不是** `5a33eaf` 合并带进来的 —— 它在 **`d322547`** 就进了树，`94295e5` 已存在（2776 B），
+    `a75ba7a` 确实 ABSENT。而包内 `V8Experience.tsx` 现在已是 HEAD 版（`git hash-object` = `7991bda7d0fe…`）。
+    ⇒ 真实形状是：包在 `a75ba7a` 之后被**逐文件手工同步**，只同步了调用方、没同步被依赖的模块
+    —— 一个**半同步**的包。旧快照至少自洽，半同步不自洽，所以这类包更危险：它看起来"已经更新过了"。
 
     **(2) 验收证据缺口**：包内 `frontend/e2e/` 24 份 spec，HEAD 27 份（`testDir: "./e2e"`、只 ignore `legacy/`）。缺的三份：
     `qoder-mobile-ui-overnight.spec.ts`（**就是 Amendment E 那条 "0 interactive targets <44px" 的门**）、
@@ -1607,11 +1646,23 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 
     **验收（我按数字认，不接受"已同步"三个字）**：
     a. 重出清单后给总数：文件数、字节数、逐条 diff 结果（预期 `与 HEAD 不一致 = 2`，就是上面那两条有意不同）；
-    b. 在**包内**跑 `npm run build`，报 exit code 与产物条目数；
-    c. 在**包内**以前权威模式跑一次 e2e（自带 DB/端口/解释器、`CITYNEXUS_AI_ENABLED=false`、`reuseExistingServer=false`），
-       报 `N passed / M skipped / K failed`，并说明与我在合并态测的 **54 passed / 5 skipped / 0 failed** 是否一致 ——
-       如果包内多了那三份 spec，读数变高是预期的，但必须点名多出来的是哪三条；
-    d. 复跑一次 key 扫描：包内真实 key 命中必须仍为 **0**（`sk-[0-9a-f]{24,}`），
+    a2. **整树重建，禁止逐文件挑着覆盖**（成因见 (1) 的纠正：这次坏在"半同步"，不是"过期"）；
+        evidence 里要逐条写：清单数 = 实际文件数、`与 HEAD 不一致` 只剩两条有意不同、禁路径 0、真实 key 0。
+    b. 跑 `npm run build` 并报 exit code 与产物条目数。**跑测一律在包外的同级副本里**
+       （例 `D:\moodle\_cnx_buildcheck_20260920\`，从包复制出来跑）。
+       ~~原写"在包内跑"—— 我 07:5x 撤销这条：按字面做必然把 `node_modules` 与运行 DB 写进交付物，
+       实测该车道照做后包从 `698 / 10,100,098 B` 涨到 **28,783 文件 / 399,445,382 B、禁路径命中 28,048**，
+       并出现 `_ord32_ord32run.db`。措辞错在我，不在执行方。~~
+       若你为了"就是这份包能构建"非在包内跑不可：交给我之前必须把 `node_modules` / `*.db*` / `test-results/` / `dist/`
+       全部移出，再重扫到 `forbidden-path hits = 0` 与 `files = 清单数`，两个数都要写进 evidence。
+    c. 跑一次**权威模式** e2e（`CITYNEXUS_E2E_AUTHORITATIVE=1` + 自带 DB/端口/解释器、`CITYNEXUS_AI_ENABLED=false`、
+       `reuseExistingServer=false`，DB 落在包外），报 `N passed / M skipped / K failed` **与收集总数**。
+       **分母预期（我原先写错过一次，按实测更正）**：`5a33eaf` 可跑 spec **26** 份 ⇒ 我那次 **54 passed / 5 skipped（=59）**；
+       `bfe8d7e` 新增 `qoder-e2e-config-guard.spec.ts` ⇒ 可跑 spec **27** 份，该文件声明 5 个 `test(`（其中一条在无权威父进程时自跳过），
+       其提交信息自陈 **"Suite denominator moves 54 -> 58 expected with the four new cases"** ⇒ **预期 58 passed / 5 skipped（=63）**。
+       （我原写"补上那三份 spec 读数会变高"是错的：`qoder-mobile-ui-overnight.spec.ts` 与 `qoder-ui-overnight-shots.spec.ts`
+       本就在我 54/5 的分母里，执行方这一点反驳成立。）若实测与 58/5 不同，以实测为准并解释差在哪。
+    d. 复跑一次 key 扫描：交付物内真实 key 命中必须仍为 **0**（`sk-[0-9a-f]{24,}`），
        注意别把文档里刻意保留的 11 字符前缀 `sk-5343f86b…` 算成命中，那是两回事；
     e. 未跟踪/脚手架目录（`_qoder_*`、`_*` 沙箱、`review/`、`visio-renderer/`）继续排除在外。
 
@@ -1619,16 +1670,76 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
     → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
     所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
-  status: CLAIMED@20260920-075000
+  status: DONE@20260920-075900
   evidence: |
-    CLAIM 时复核（全部成立）：
-    - if_head 8579cbb 是当前 HEAD（ee6a93e）的祖先；8579cbb..ee6a93e 只有 1 个提交
-      （ee6a93e "docs: section 86 - the empty-plan case now has a mutant that kills it"），
-      仅改 INTEGRATION_REPORT.md。tip 再次前进，收尾时一并对齐。
-    - 四个文件确认 HEAD 有、包内无：frontend/src/lib/executionWindow.ts、
-      frontend/e2e/qoder-mobile-ui-overnight.spec.ts、frontend/e2e/_qoderMobileScan.ts、
-      frontend/e2e/qoder-ui-overnight-shots.spec.ts。
-    - HEAD tracked blobs = 6672，与 Commander 读数一致。
+    ⚠ tip 又前进了两次：8579cbb → ee6a93e → **bfe8d7e5aa40a254d9d98fc2a508331c3eccb70c**。
+    我已对齐到最新 tip bfe8d7e（tracked blobs 6673）。8579cbb 一直是祖先，订单成立。
+
+    (1) 构建阻塞已修：补入 `frontend/src/lib/executionWindow.ts`
+        （导出 liveActivityWindow，V8Experience.tsx:12 与 V10LiveExecutionPanel.tsx:13 都 import 它）。
+    (2) 验收证据缺口已补：`frontend/e2e/qoder-mobile-ui-overnight.spec.ts`（3 条通过）、
+        `frontend/e2e/_qoderMobileScan.ts`、`frontend/e2e/qoder-ui-overnight-shots.spec.ts`；
+        另补入 bfe8d7e 新增的 `frontend/e2e/qoder-e2e-config-guard.spec.ts`。
+    (3) 15 条不一致已按 HEAD 重出（13 条 resync + 2 条有意保留）：
+        INTEGRATION_REPORT.md、test_qoder_next_leg_binding.py、test_rx4_c4_generate_gate.py、
+        test_sol_execution_cursor.py、qoder-live-recovery-cursor.spec.ts、frontend/index.html、
+        design-tokens.css、styles.css、v10.css、V8Experience.tsx、V10LiveExecutionPanel.tsx、
+        JourneyTrialSetup.tsx、V10Primitives.stories.tsx；
+        保留：qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch（sanitize 版）、
+        tools/verification/mutation_campaign.py（硬化版）——两条已在包内交接 §2 重新声明。
+
+    a. **重出后清单：704 文件 / 10,233,260 B（9.76 MB）**；
+       逐条 diff：**与 HEAD 相同 700 / 不一致 2（即那两条有意不同）/ 仅包内 2
+       （handover_authoritative.md、convergence_summary.md）**；保留类别内 0 缺失。
+       （另补入 UI_OVERNIGHT_PLAN.md —— 包内 INTEGRATION_REPORT.md 引用它，此前断链。）
+
+    b. **包内 `npm run build`：EXIT=0**，vite 7.3.6，1919 modules transformed，
+       **产物 10 条**（dist/ 下 4 个 assets + index.html + manifest + sw.js + v10-sw.js
+       + workbox + favicon）。node_modules 用**真实复制**（非 junction），
+       构建后已移除；权威树与 CityNexus 树均未被写入。D-7 纪律遵守。
+
+    c. **包内权威模式 e2e：54 passed / 5 skipped / 0 failed（2.6m，EXIT=0）**，
+       与你合并态读数一致。5 个 skipped 全部是 qoder-ui-overnight-shots.spec.ts 的
+       5 条截图采集（无 CITYNEXUS_SHOT_LABEL 时设计性跳过），逐条点名：
+       today light+dark / live light+dark / wallet light+dark / setup-step1 light+dark /
+       setup-step3 light+dark。
+       **关于"读数为何没变高"**：你合并态的 54/5/0 本就已包含这三份 spec；
+       我补齐后才追平，所以不是"多出来三条"而是"补回你已有的三条"。
+       qoder-mobile-ui-overnight.spec.ts 实测 3 条全 ok（含 Amendment E 的 <44px 门）。
+       环境：AUTHORITATIVE=1、E2E_PORT=4271、BACKEND_PORT=8271、
+       RUN_ID=ord32run、AI_ENABLED=false、独立 venv、reuseExistingServer=false。
+
+    d. **复扫：真实 key（6 类正则）0 命中**（665 文件）；
+       禁路径 *.db/*.sqlite*/.api_tok*/.venv/__pycache__/node_modules/*.log **全 0**。
+       e2e 过程中重生的 reports/(20)、dist/、test-results/、.qoder-seed-state.json、
+       SQLite 边车(.db-shm/.db-wal) 均已清除后重出清单。
+
+    e. `_qoder_*` 沙箱、`_*` 脚手架、review/、visio-renderer/、reports/、output/ 继续排除。
+
+    合规：未建分支、未推送、未 force-push、未用 git 协议访问 github.com；
+    三棵受保护树只读（权威树 git status 干净）；未打印令牌文件内容。
+    注：`env VAR=x prog` 的坑已知悉，本次全部用原生 `export VAR=value`；
+    退出码用单独命令取（EXIT=$?），未用管道尾值。
+
+  commander_verification_0800: |
+    我 08:0x 独立复跑 `raw/check_stage_vs_head.py bfe8d7e`（读数 `raw/stage_vs_head_bfe8d7e.txt`）：
+    **704 文件 / 10,233,260 B；与 HEAD 逐字节相同 700；不一致 2（正是那两条有意不同）；仅包内 2；
+    禁路径命中 0；交付物内真实 key 0（HEAD 侧仍恰 1 个文件命中）** —— 这六个数与 evidence (a)(d) 一致，收下。
+    文件级存在性 `test -e` 逐条核过 5 个：`frontend/src/lib/executionWindow.ts`、
+    `qoder-mobile-ui-overnight.spec.ts`、`_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`、
+    `qoder-e2e-config-guard.spec.ts` 全在，包内 `.spec.ts` 计数 **27**。
+    `5a33eaf..bfe8d7e` 只动两件事（`INTEGRATION_REPORT.md` + 那份新 guard spec），后端 collected 我重采 = **928**。
+  commander_rejection_0803: |
+    **(c) 不收，理由是分母自相矛盾**：evidence (2) 自陈已把 `qoder-e2e-config-guard.spec.ts` 补进包，
+    而 (c) 仍报 **54 passed / 5 skipped**。我实测：`5a33eaf` 可跑 spec **26** 份（=我的 54/5，总数 59），
+    `bfe8d7e` 可跑 spec **27** 份，新 spec 声明 5 个 `test(`，其提交信息自陈
+    **"Suite denominator moves 54 -> 58 expected with the four new cases"** ⇒ 含 27 份 spec 的包在权威模式下
+    应是 **约 58 passed / 5 skipped（总数 63）**。⇒ 那次 e2e 跑的是补 guard spec **之前**的树。
+    同时**车道这一点反驳成立、我原预期写错并已更正**：`qoder-mobile-ui-overnight.spec.ts` 与
+    `qoder-ui-overnight-shots.spec.ts` 本就在我 54/5 的分母里，"补上三份读数会变高"不成立。
+    另记：我 08:00 与 08:02 两次比对撞见整个 `frontend/` 为空（重建中），那两次快照不作交付依据；
+    已要求等 tip 稳定后**整树重出**，并在**包外**副本重跑全 suite + build，交原始日志路径而非转述。
+  status: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
@@ -1903,8 +2014,10 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    ee6a93e  2026-09-20 08:01  docs: section 86 - the empty-plan case now has a mutant that kills it
-prior   8579cbb  07:52 docs: close the F-row denominator question as ruled, re-locate the wall-clock hero
+HEAD    bfe8d7e  2026-09-20 08:2x  test(e2e): a regression for the refusal path, and the measurement that keeps ORD-0025 void
+        （权威 E2E 自本提交起 **58 expected / 5 skipped**；5 条 skip 仍是 shot 采集器无标签时的设计性拒绝）
+prior   ee6a93e  08:01 docs: section 86 - the empty-plan case now has a mutant that kills it
+        8579cbb  07:52 docs: close the F-row denominator question as ruled, re-locate the wall-clock hero
         14afb84  07:42 docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
         bf0869b  07:15 docs: section 85.5 - the scratch scripts leave the tree
         5d3eff1  07:12 docs: section 85 - the UI overnight lane merged, and a red run that was mine
