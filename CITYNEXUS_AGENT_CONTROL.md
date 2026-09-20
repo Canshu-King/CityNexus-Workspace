@@ -4417,6 +4417,24 @@ step                               code  detail
 **卡点 100% 在前端接线**（三动作 + 重规划三字段 + Wallet 承诺上屏 + 英雄区时钟），
 且我已把每一项的确切字段路径都实测出来交给 B。
 
+### 👀 commander 读码复核 @2026-09-21 04:3x —— B 的接线**已经把三个"猜不出来"的字段全接对了**（工作区，未提交）
+
+我逐处读了 B 工作区里的 `simulationAdapter.ts` / `SimulationPanel.tsx`，核对我 04:2x 实测出来的硬前提：
+
+| 我实测的要求 | B 的接线 | 判 |
+|---|---|---|
+| 面板要补 `开始模拟` / `进入执行` | `ActionId` 已是 **11 个**：`reset, prepare, start, advance, event, replan, accept, reject, book, degrade, restore` | ✅ |
+| 事件必须带 `affected_activity_id` | `activityId: twin.data?.current_activity_id ?? null` ⇒ `affected_activity_id` | ✅ |
+| `replan` 必须带 `trigger_event_id` | `generateReplans(journeyId, lastEventId, 3, newKey())`，且 `lastEventId` 由事件行 `setLastEventId(created.id)` 存下 | ✅ |
+| `accept` 必须带 `Idempotency-Key` | `cityNexusApi.acceptReplan(proposalId, newKey())`，而 `citynexus.ts:1062-1067` 本来就发 `Idempotency-Key` 头 | ✅ |
+| 两个新端点要接上 | `grep prepare-scenario\|start-scenario` 在 adapter 3 处、panel 2 处 | ✅ |
+
+⇒ **B 不是在猜，它把我给的字段路径逐个接对了。** 而且 `newKey()` 用的是 `crypto.randomUUID()`
+（`SimulationPanel.tsx:75`），符合"每次一个新 key"的要求。
+**这与我 04:2x 的实测完全对齐**：后端四条链都通，前端也接对了，**差的只是"提交 + 重建 preview"这一步**。
+
+**我仍不改我的判据**：未提交 = 未交付。手机跑的还是 `602addf`，M2 可见部分仍未达成。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
