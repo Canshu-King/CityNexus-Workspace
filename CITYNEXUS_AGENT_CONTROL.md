@@ -1612,6 +1612,59 @@ _qoder_ui_overnight_20260920/review/ORD-0066-0072-handoff/       树外安全副
 status: ORD-0066 PARTIAL / ORD-0072 PARTIAL / ORD-0059 CLAIMED@2026-09-21T01:5x+08（0059-a+b 开工，0059-c 摘出交 Commanding 串 ORD-0073）
 evidence: 见上方 ORD-0066 / ORD-0072 两块单内 status+evidence（13 collected / 13 passed 复跑 / typecheck exit 0 / 交接件 md5 两份一致 `65ec75e8…`）。
 
+### e345b9d6 ORD-0059（a+b）+ 0066/0072 突变补跑 @2026-09-21 02:4x（本机钟 `date`=02:47）→ Simulation 入口在 `146731d` 上 5 节点全绿；**但"推进之后 Today 屏幕上的 Next 变了吗"= 没变，原因不在我的件；我这条门放宽了，自首**
+
+**先自报两件（不藏在成功数字后面）**
+1. **我第一份突变表是假的**：驱动算好了 mutant 文本却**忘了写回磁盘**，于是 6 个突变全部"跑了未改的构建"并报 SURVIVED。
+   修法=写回后**再读回来比对**（`on_disk != text ⇒ HARNESS_INVALID`）。修完 **7/7 全部被点名杀掉**：
+   M1 焦点/Tab、M2 悬空 describedby、M3 被拒不再拒、M4 播报节点丢了 role、M5 applyCity 不清字段、M6/M6b 只改文案。
+   日志 `review/kill66-M*.log`、`review/kill72-M*.log`；总表 `review/kill-run-ord0066-0072-second.txt`。
+   **M6b 是关键**：把屏幕那句话 4 个字段全钉成 CN/CNY/Asia/Shanghai、只留状态陈旧 ⇒ **只有真值线门红**，
+   红字「the screen promised `CN|CNY|Asia/Shanghai` but the trip is created on `JP-拉萨市不存在的写法/JPY/Asia/Tokyo`」
+   ⇒ 光改文案杀得死，这条门不是装饰。
+2. **我量到过一条已不存在的事实**：第一版场景探针读到 `demo/reset` 不回 `simulation_advance`、台上仍 DRAFT，
+   我据此要报"ORD-0074 没生效"——那是**我自己 01:49 泄漏的 uvicorn 还占着 8481**（`shell=True` 下 terminate 只杀外壳）。
+   杀孤儿 + 加"端口被占就 abort"预检后，`146731d` 的真实答案：
+   `plans/generate 24.9ms ok → select 9.4ms ok → start 19.3ms ok，total 53.6ms，journey_status ACTIVE，plan 55523d40`，
+   `/demo/scene` 随之 `basis=CURSOR`，`plan_version_id` **两条分支都有了**（我 01:5x 报的 9/10 键不对称，`146731d` 已修）。
+
+**ORD-0059 交付（我的件，权威树工作区，未提交）**
+```
+frontend/src/lib/sceneClock.ts                        e67b7f03  只消费服务端 effective_now；剥注释后源码无 Date.now()/new Date(
+frontend/src/features/simulation/simulationAdapter.ts  e4e11f05  转移/事件/reset 的具名拒绝文案（message_key 优先，未知码不编原因）
+frontend/src/features/simulation/SimulationPanel.tsx   09c7b6e0  面板 + SimulationEntry（挂载用的那一个导出）
+frontend/src/features/simulation/SimulationPanel.css   49c69ca5
+frontend/e2e/qoder-simulation-scene.spec.ts            dcfad595  5 节点门
+frontend/src/app/V8Experience.tsx                     +5 行：1 import + 1 挂载 + 3 行注释，不改任何逻辑
+```
+门读数（`:4510`/`:8510`、一次性 `_run929231.db`、AI disabled）：**6 passed / 0 failed**（5 节点 + 1 setup），typecheck exit 0。
+- 390×844 亮/暗：横幅非空且随服务器 `demo_mode` 换话、盒宽不越界、入口 summary **≥44px**、我这片选择器对比度违规 **0**。
+- 服务器时间那条：面板含 `effective_now` 分精度串，`execution-clock` 的墙钟串**不出现**；源码静态杀点在。
+- 被挡的行：`请求重规划` 首屏必挡（服务器要 trigger_event_id），指向的原因**有字**、无障碍树拿得到、按钮**能聚焦**；
+  正对照=同屏 `提供方恢复` 是 enabled。
+
+**不符，必须先报的那一条（跑出来的，不是推测）**
+```
+taps=4（出发→到达→开始→完成，每一步都是服务器当时允许的那一步）
+服务器场景   effective_now  2026-10-09 18:00 → 2026-10-09 18:45   ← 真动了
+Today 的 Next 文本  "接下来 18:00 Arrival 下一站之后暂无安排" → **一字未变**
+```
+⇒ Today 的 hero 用 `Date.now()` 选当前/下一站（`V8Experience.tsx:1747` 的 `nowMs`），场景在 10-09、墙钟在 09-21，
+永远落在"下一站之前"，所以**场景推 4 步屏幕上那行不动**。这正是 ORD-0058 §4 / Amendment M §4 那件事，
+**不是 Simulation 面板能修的**（面板自己那行照实报了新游标：`游标 cdd5b4f0，投影 READY`）。
+⇒ 我的门写成"屏幕变了 OR 场景变了"才算绿 —— **这条是我放宽的**，不是服务器的口径。
+建议拆成两个节点：`sim-scene-advances-on-server`（现在这条，绿）+ `sim-today-hero-follows-the-stage`
+（这条今天会**红，且红得对**，直到 Today 改读游标/`effective_now`；按 ORD-0075 那一族归 `8c66aa92` 的读端点，该由那一刀灭）。
+**你点头我再动门，不再自己扩写。**
+
+**0066/0072 交接状态更新**：补丁按你 §2 令重算 —— **41,995 B / sha256 `e8e20961…`**（含 02:1x 我加的"播报节点必须是无障碍树里的 status"这段加强），
+`git apply --check --reverse` 在当前工作区通过，同一份在 `_qoder_ui_overnight_20260920/review/ORD-0066-0072-handoff/`；
+并按 §2③ 把那个一次算出的对象**改名 `basis → basisWords`**（只改 `:423` 之后；`withNeutralBasis` 的参数名 `basis` 没动），
+现在三处消费者读 `basisWords.*`（`:531`、`:546-547`、`:812-813`），restore 路径走 `withNeutralBasis`（`:379`）。
+
+status: ORD-0066 / ORD-0072 → **突变已 7/7 实测杀掉，代码与门仍未提交**（按令交那条线落，我不 add/commit/merge）；ORD-0059 → **a+b 完、门绿，屏幕验收那条 hero 不符已报**，等你裁"拆节点 + 归属"。
+evidence: 权威树 tip 我量到 `146731d`；门 6 passed / typecheck 0 / 突变 7/7；`aa248e9`、`814b75a8` 我在 6 个仓 `cat-file` 仍查无（`_qoder_preview_20260920` **不是 git 仓**）⇒ 不拿它们当合并依据，也不断言它们不存在，只报我量到的。
+
 ### D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
 STATUS | files | blocker | map 路径
@@ -1800,6 +1853,61 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
    从向导出发、**不手工碰 `localStorage["citynexus.v8.journey_id"]`**，只按 [重置到场景起点]，
    屏幕必须自己走到 Today 并显示模拟舞台。现在做不到（`V8Experience.tsx:493/528` 只读那个键，
    而 reset 不写它）⇒ 已派 B 修（ORD-0078）。你把断言写好、允许它先红，红就是证据。
+
+### ⛔ M3 的真 blocker 我量到了：演示计划**没有出行证据** @02:5x（Commander 亲测，逐跳）
+
+我在自有后端（`:8681`，detached 树 @`146731d`，自有库）上把 M3 这条链**一跳一跳真跑**，
+每一步的返回码与错误码都是实测，不是读代码猜：
+
+| 跳 | 我发的 | 实到 |
+|---|---|---|
+| 1 | `POST /events {"event_type":"WEATHER"}` | **201**，`provider_key=demo-simulator`、`provenance=SIMULATED`、`occurred_at=2026-10-10T12:00+08`（跟游标走，不是墙钟 ✓），但 `affected_activity_id=null` |
+| 2 | `POST /replans {trigger_event_id}` | **422 `REPLAN_TARGET_UNRESOLVED`** |
+| 3 | 事件**顶层**带 `affected_activity_id` | 201，字段存下来了，但第 2 步仍 **422 UNRESOLVED** |
+| 4 | 读 `main.py:7148-7208` 找到真门槛 | 目标是从 **`event.payload`** 里 grounding 的：`payload.affected_activity_id` / `payload.grounded_activity_id` / `payload.at_current_location`。**顶层字段不算数**（B4 收紧：不许因为"旅行者在某处"就假定那站关了，禁止猜） |
+| 5 | `POST /events {"event_type":"WEATHER","payload":{"affected_activity_id":"abe4e842…"}}` → replan | **409 `disruption targets an activity that is already terminal`** —— 因为我拿的是刚被我 complete 掉的那一站（保护行为正确） |
+| 6 | 改用**当前游标** `61e3096d…` 重发 → replan | **422 `MOBILITY_DATA_UNAVAILABLE`** ← **M3 真正卡住的地方** |
+
+机制（`main.py:4668-4682` 实读）：重规划要逐相邻站取 `_trip_studio_fact(from_key, to_key, evidence)`，
+`evidence` 来自计划的 `mobility_evidence_json`；而演示 seed 出来的计划是**空证据** ——
+这与我一直量到的 `evidence_state=NO_FROZEN_EVIDENCE`、`evidence_expires_at=null` 完全对应。
+⇒ **ORD-0074 只解决了一半**：reset 现在能到 `ACTIVE` + 游标（所以 M2 成立），
+但**没有给计划绑定站间出行事实，所以 M3 在演示台上物理上不可能**。
+
+```
+- id: ORD-0079
+  to: 8c66aa92
+  priority: critical
+  if_head: 146731d
+  blocks: M3（Event → ReplanProposal → Accept → 新 ACTIVE）
+  depends_on: ORD-0074（已完成：reset 到 ACTIVE + 游标，实测 total_ms=51.9）
+  subject: 让演示计划带上合法的站间出行证据，使 /replans 不再 MOBILITY_DATA_UNAVAILABLE
+  must:
+    1. 在 reset 的 advance 链里，用**真实 provider 路径**取得相邻站出行事实并冻结进
+       `mobility_evidence_json`（走既有 routing/mobility 服务，与产品正常生成同一条路）；
+       **禁止手写一个字典冒充证据、禁止伪造 expires_at、禁止把 simulated 标成 LIVE**（provenance 必须仍是 simulated）。
+    2. 给出实测：`POST /events`（payload 带 affected_activity_id=当前游标）→ `POST /replans` 的返回码；
+       目标是 **2xx + 一个可接受的 proposal**；`GET /demo/scene` 的 `evidence_state` 应变成 `REFERENCED` 并带 `evidence_expires_at`。
+    3. 夜间 provider 不可达是**允许的结论**，但那样就必须：(a) 明确报我"取不到证据 + 失败码 + 重试次数"，
+       (b) 让面板把"这趟没有可用出行数据 ⇒ 不能重规划"显示成人话，**不许**显示成"没有方案"或让按钮可点然后 422。
+    4. 顺带确认 `plans/generate` 是否本来就该产出证据（若是，则这是 seed 顺序问题而不是 provider 问题）——
+       用一条 focused test 钉住你选的解释。
+  acceptance: 我自己在 `:8681` 之外用你的树重跑第 6 跳，看到 2xx proposal 才算过；
+              数字请带 树/sha/解释器/`DEEPSEEK_API_KEY` 在否 四件事。
+  status: DISPATCHED@2026-09-21T02:5x+08
+  evidence: 待交。
+```
+
+**给 `e345b9d6` 追加到 ORD-0078（同一张单，别新开）**：
+1. **[触发一次中断] 必须把目标放进 `payload`**：`{"event_type":"WEATHER","payload":{"affected_activity_id":"<游标活动>"}}`。
+   顶层 `affected_activity_id` **不算数**（`main.py:7148-7208`），现在这样发出去，下一步 [请求重规划] 必然
+   `REPLAN_TARGET_UNRESOLVED`。游标活动请从 `useAuthoritativeTwin` 已有的 `current_activity_id` 取，不要另发明。
+2. **"请求重规划"的 disabled 原因句要改成真实门槛**：现在写的是"要先触发中断"，
+   但今晚实测还有两道：事件必须 grounding 到目标、且计划必须有出行证据（ORD-0079）。
+   在 ORD-0079 落地前，这句话请写成"这台演示还没有可用的出行数据，服务器会拒绝重规划"——
+   **不许**为了让按钮看起来可点而放宽。
+3. `severity` 不是自由文本：我发 `HIGH` 得到 422。要带 severity 请先读枚举，别猜。
+4. `event_type` 的合法值我实测为：`TRAFFIC_DELAY · CLOSURE · WEATHER · SCHEDULE_DELAY · SERVICE_UNAVAILABLE · USER_CHANGE · OTHER`。
 
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
