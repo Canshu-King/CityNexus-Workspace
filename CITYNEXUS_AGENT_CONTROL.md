@@ -932,7 +932,82 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - 其余 6 个文件的行尾**已经是对的**，别一起动。
     - 本单**不改变** ORD-0057/0063/0064 的任何要求与优先级，只处理提交形状。
     按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
-  status: DISPATCHED@2026-09-20 23:2x
+  status: PARTIAL@2026-09-20 23:3x（A 路第 1 笔已由 Commander 亲测通过；第 2 笔业务提交尚未落地，**本单不关闭**）
+  evidence: |
+    [Commander 亲测 @2026-09-20 23:3x，本机钟] `8c66aa92` 选了 **A 路**并已提交第 1 笔：
+    `605e2c5 chore(models): normalize models.py line endings to LF, no semantic change`。
+    我按 ORD-0067 验收第 2 条**逐字节核过**，不是读它的提交信息：
+    ```
+    git show --numstat 605e2c5  -> 只碰 1 个文件 backend/app/db/models.py，1022 增 / 1022 删（纯行尾，符合预期）
+    零语义变化证明（我在 Python 里 strip 掉 CRLF 后比 sha256）：
+                                parent(3f1b44c)          605e2c5
+      bytes                     57308                    56286        差 1022 = 正好是被删掉的 1022 个 CR
+      CRLF / 裸 LF              1022 / 89                0 / 1111
+      sha256(原文)              787e7b06b2c06fd4         aa42a808a9e91947
+      sha256(去掉 \r\n 后)      aa42a808a9e91947         aa42a808a9e91947   ← **相等**
+    ⇒ ZERO SEMANTIC CHANGE 成立。字节差与 CR 计数**算术自洽**（1022 = 1022），这是我最看重的一点：
+      两个独立的量对上了，才不像"恰好都能自圆其说"。
+    拆开的效果也量到了：models.py 现在的待提交 diff = **33 增 / 0 删，naive 与 --ignore-all-space 完全相同**
+      （拆之前是 naive 1055/1022、真实 33/0）。⇒ 那 1022 行幻影已经不在评审路径上了。
+    ```
+    **仍欠（所以不关闭）**：第 2 笔——那 33 行业务改动 + 其余 6 个文件 + ORD-0057 的两个新模块
+    （`stay_generation_operations.py` / `test_qoder_stay_generation_operations.py`）提交干净、权威树脏项归零。
+    提交后我跑 ORD-0067 验收第 1、3 条（`git show --numstat <sha> -- models.py` 必须是 33 行量级；
+    `pytest tests/test_qoder_stay_generation_operations.py` 我自己在权威树跑）。
+    **正面记录**：从下单到第 1 笔提交落地 **≈7 分钟**（23:2x 下单 → 23:29 提交），
+    且它**只**动了那一个文件、没有顺手夹带别的 —— 这正是 Amendment J §9 要的响应速度。
+
+
+- id: ORD-0068
+  to: 8c66aa92
+  priority: medium
+  if_head: 605e2c5
+  order: |
+    **异步化只覆盖了三个门里的一个：另外两个**用户能点到的**门仍在请求线程里跑完整条 provider 链。**
+    我在 `605e2c5` 的工作树上把所有 `generate_stay_options(` 调用点映射回它们所属的路由，量到：
+    ```
+    已改好（走 operation 队列）：
+      POST /api/v1/journeys/{id}/stay-options/generate      main.py:2619
+        → submit_operation() + wait_for_operation()，**不是第二套实现**：
+          同步门排到同一个 worker、同一个状态机、同一份存储结果后面，
+          并把 X-CityNexus-Phase-Ms 与具名 422 从 worker 记录里重新发出（:2641-2650）
+          ⇒ ORD-0049 的计时契约与 ORD-0033 的 422 契约在搬家后仍然成立。这个设计我认可，**记正面**。
+      POST /api/v1/journeys/{id}/stay-generations           main.py:2546  status_code=202
+      GET  …/stay-generations/{operation_id}                main.py:2577
+      POST …/stay-generations/{operation_id}/abandon        main.py:2592
+
+    **仍然 inline**（同一个函数，直接在请求线程里跑）：
+      POST /api/v1/journeys/{id}/stay-options/{option_id}/weather            main.py:2780  fn=apply_stay_weather
+      POST /api/v1/journeys/{id}/stay-options/{option_id}/autopilot/recover  main.py:2890  fn=stay_autopilot_recover
+    ```
+    **我量到的**：这两处调用在源码里是同步的、且挂在**用户能点到的路由**上。
+    **我没量的（所以不下缺陷结论）**：它们在真实冷城市下**到底阻塞多久**。
+    如果 `generate_stay_options` 在已有冻结证据时走复用、不重新打 provider，它们可能很快；
+    如果会重跑链路，那用户点"天气"或"自动驾驶恢复"就会撞上 ORD-0049 量过的 ~115 秒静默等待
+    —— 也就是 ORD-0057 本来要消灭的那个症状，从另一个按钮上又长出来。
+    **我不接受用推理代替测量**，所以本单第一步是量，不是改。
+
+    要求：
+    1. **先测**：对这两个端点各给一组真实数字（冷城市 / 已有冻结证据两种条件），
+       记录 HTTP 往返毫秒数、是否触发 provider 网络调用、以及当时 DB 写锁是否被独占。
+       用你自己的 `review/probe-ord57-acceptance-latency.py` 那套隔离手法（自己的端口、自己的一次性库、
+       AI 关掉、key 清空、不碰预览实例）——那个探针的隔离与 caveats 写法我认可，照它来。
+    2. **再判**：若测出来确实会长时间阻塞，按 ORD-0057 同一个 operation 契约收编（**不要造第二套状态机**，
+       理由同 `main.py:2628` 你自己写的那段）；若测出来很快（走复用），**就把数字贴出来结案**，
+       并在账本写明"这两处不需要异步化，因为 …"——**"不需要改"也是一个合法交付**，我不要求你为了接单而改代码。
+    3. 无论哪种结果，都要说明：一个冷生成在整个过程中独占 DB 写能力（ORD-0049 量过 ~115s）这件事，
+       在这两个端点上是否同样成立。
+
+    **边界（重要，别踩）**：
+    - **不许夹带进 ORD-0057**。异步契约的收口和这两个端点是两件事；
+      "一个冷生成独占写锁 ~115s"那个**残留真值缺陷**需要分阶段提交才能修，那是**单独一单**，
+      不是本单、也不是 ORD-0057 的顺手活。本单只要"量 + 判 + 必要时按同一契约收编"。
+    - 不许为了让数字好看而给这两个端点加缓存或降低证据口径（`provenance` / `fact_quality` 冻结清单）。
+    - 不动 `tools/verification/mutation_campaign.py`（我的量具）。
+    - 本单优先级 **medium**，排在 ORD-0067 第 2 笔与 ORD-0057 收口**之后**；
+      关键路径仍是"行程能在手机上跑通 3 分钟生命周期"，别为这单让路。
+    按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
+  status: DISPATCHED@2026-09-20 23:3x
 
 
 - id: ORD-0001
@@ -2101,15 +2176,38 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     **不得把它计作真实产品能力已验收**。" ⇒ HJ-P2 / 承诺型 persona 的 journey
     **只有在 Wallet + booking/commitment 真实后端链路跑通后才计入 persona acceptance**，
     不许用现有 stub 结果凑 fleet denominator。
-8b. **A4 服务工作者生命周期：完成条件 = 6/6 机制 + 定向门跑通**（仲裁 `5750593629` §2，长期有效）。
-    当前状态 **PARTIAL / 5-of-6，不得签收**。已进权威树：`SW_VERSION`、`citynexus-recovery`
-    版本化恢复 worker、**收窄后的** `navigateFallbackDenylist`、`runtimeCacheVersion`、`clientsClaim`。
-    **仍缺** `main.tsx` 那一半，且它不是"补一个字符串"：
-    ① production register 必须带 `updateViaCache:"none"`；
-    ② DEV 不注册生产 SW，并**清理同源遗留 registration**；
-    ③ old controller → new controller **只允许一次受控 reload**；
-    ④ 现有 lifecycle spec 必须在这三处机制**真实存在之后**才算有效。
-    ⇒ **"门在、机制 5/6" 不能叫 DONE。**
+8b. **A4 服务工作者生命周期：完成条件 = 6/6 机制在权威树 + 定向门对 exact HEAD 跑通**（仲裁 `5750593629` §2，长期有效）。
+    **状态刷新 @2026-09-20 23:3x（Commander 亲测）：`MERGE-PENDING`，仍不得签收。**
+    仲裁点名的三处 `main.tsx` 机制**已经写出来了**，我在 `agent/ui-overnight-20260920` @ `728b048` 上读到实现本体：
+    ① production register 带 `updateViaCache:"none"` —— `src/main.tsx:1735` ✓
+    ② DEV 不注册生产 SW + 清理同源遗留 registration —— `unregisterProductionServiceWorkers()` `:1708-1715`，
+       DEV 分支 `:1744-1753`（只注册 `/sw.js`，并注销上次预览留下的 `/v10-sw.js`）✓
+    ③ old controller → new controller 只允许一次受控 reload —— `:1720-1731`，
+       用 sessionStorage 记 `before->after` transition 挡重复重载 ✓
+    ④ lifecycle spec 已在该分支（`e2e/qoder-sw-lifecycle.spec.ts`）✓
+    **但权威树 `_qoder_integration_20260919` @ `605e2c5` 上这六条命中 0**，两边 `public/sw.js` 是两个不同文件
+    （权威树首行仍是 `/* Vite's development service worker…`），且权威树没有那个 spec。
+    ⇒ **判词从"门在、机制 5/6"改成"机制 6/6 与门都在待并分支上，权威树 0/6"**。
+    两种说法都不能叫 DONE；**报告时必须把两个分母一起说**（UI 树 6/6 / 权威树 0/6），
+    只说前一半就是把我 17:3x 那个毛病反过来再犯一次。收口路径见 DELIVERIES 23:2x 那条的 7 步检查点顺序。
+9. **任何百分位数字必须自带样本量**（Commander 立，起因是实测）。
+    `percentile(samples, 95)` 用 `index = round(0.95*(n-1))`，**n=8 时 index=7 = 最后一个**，
+    也就是 **p95 恒等于 max**；n=20 时才是第 18 个。所以"p95 ≤ 1s"这种验收，
+    **必须同时写 n**，否则读者无法判断这是分布还是单次最差值。
+    对 ORD-0057 的 `review/probe-ord57-acceptance-latency.py`（`JOBS = 8`）的具体裁定：
+    - 它的 p95 就是 8 次里最慢的那次 ⇒ 用它去卡"≤1s"是**偏严**的方向，**通过是有意义的**，我不打回；
+    - 但**报告里必须写成 `max of 8` 或 `p95(n=8)`**，不许只写 `p95`；
+    - 若要拿它当**发布证据**（而不只是切片自证），n 提到 **≥20**，并附 `over_1000ms` 计数
+      （探针已经在算这个字段，很好）；
+    - 探针目前**没有覆盖**"幂等复用"与"刷新恢复同一 operation"两条仲裁验收点
+      （它故意用 `candidate_count: 5+index` 让每次都是不同问题）⇒ 那两条要另给证据，
+      不能用这份延迟报告顶替。
+10. **禁止在别的车道正在编辑 `main.py` / `stay_mobility.py` 时跑变异批处理**（Commander 立，约束我自己也约束车道）。
+    变异批处理是"读出字节 → 改 → 跑 → 按读出的字节还原"，所以**还原会与并发编辑打架**，
+    跑出来的现象是**收集错误**，而收集错误会被读成"突变存活"——一个假的绿灯/假的红灯双向都可能。
+    当前状态：权威树有 `8c66aa92` 未提交的 `main.py`(+131/-44) 与 `stay_mobility.py`(+22/-1)，
+    ⇒ **在它提交干净之前我不跑 `tools/verification/mutation_campaign.py`**（它此刻还带着我自己 +334/-43 的未提交改动）。
+    要跑变异，先确认这两文件无人编辑；跑完把"还原后 sha256 == 跑之前 sha256"贴进证据。
 ### commander 独立复核 @2026-09-21 02:3x —— ORD-0063 / ORD-0064（`3f1b44c`）→ `ACCEPTED`（后端部分），前端部分待并
 
 车道交了 `3f1b44c fix(backend): make one trip shape and one currency the only truth a screen can read`：
