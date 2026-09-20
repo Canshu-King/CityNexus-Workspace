@@ -2143,8 +2143,28 @@ git pull --ff-only 在本树报 "no tracking information"（分支 integration/f
 **要 Commander 裁一句**：`V8Experience.tsx` 到底谁写？你说 ②①④ 归 C，但我这棵树里 C 的实现不存在、我的实现未提交；
 要么我把 patch 交 C 后**撤掉我的脏件**（我按令才没动它，撤需要点头，因为它是当前唯一副本），要么我以 3 行挂载补齐 ①。
 ```
-status: ORD-0081① **未达成（我报红）**，②③④⑤ 待你复测；ORD-0070 只回了 (b) 审计（按令不动文件）；ORD-0082 ①④ 在盘待归属裁定；全量 e2e 读数跑完追加。
+status: ORD-0081① **未达成（我报红）**，②③④⑤ 待你复测；ORD-0070 只回了 (b) 审计（按令不动文件）；ORD-0082 ①④ 在盘待归属裁定；**全量 e2e 读数已取（见下）**。
 evidence: `review/evidence/ui-overnight/ord0081-reset-arms.json`、`review/kill-run-ord0066-0072-second.txt`、`review/ORD-0082-14-handoff-for-C.diff`。
+
+**全量 e2e（本树，`git -C ... rev-parse --short HEAD` = `924461e`，含我未回退的 ①④ 脏件）——日志 `review/run-run934613.log`**
+```
+Running 134 tests using 1 worker  →  **113 passed / 11 failed / 10 skipped（8.5m，exit=1）**
+11 条红里 **9 条是我新写的两个门**（`qoder-today-follows-the-stage.spec.ts` 6 条 + `qoder-simulation-scene` 1 + `qoder-reset-from-wizard` 1 + 我自己两条断言写坏的）：
+  · `today-now-names-the-servers-cursor` ×4（zh/en × 390/412）红 = **② 的 Hero 实现不在这棵树里**
+    （实测 `grep -c cursorActivity|nextStopIndex` = **0**、`grep -c simulationAdvanceLabel` = **0**，
+      `git log -1 -- frontend/src/features/simulation` = **602addf（我的提交）**，`git cat-file -t 4a86c1d` = **fatal: Not a valid object**）
+  · `today-clock-source-is-spoken...` ×2 红 = **我的断言写坏了**：组件那句是"**读不到**服务器场景…用这台设备自己的时间"，
+    我用 `!/服务器场景/.test(said)` 去否，把带"读不到"的正确句子误杀成假话 —— 红在门，不红在产品，我已记下不狡辩
+  · `sim-blocked-action-explains-itself...` 红 = 我断言 replan 的原因必须提"触发/中断"，而 `65e184d` 之后真实原因是"**还没有 ACTIVE 计划**"
+    ⇒ 这也是**我的断言过期**，不是产品少说了理由
+  · `today-attention-does-not-contradict-the-map` 红 = **④ 我引入的新矛盾**：我的 predicate 只看活动/住宿坐标，
+    而 MapPanel 还能用 **legs 路线几何**定心 ⇒ attention 说"没坐标"、地图却画得出来。修法：predicate 把 legs 几何算进去（或让 MapPanel 上报），
+    按令我不再自己动这三处，写回给你转 C
+另外 2 条与我无关的既有红：`qoder-map-interaction drag-moves-camera`（"gestures are switched off"，环境开关）、`qoder-preventive-lifecycle`（planning→executed 无 reload）
+```
+⇒ **① 我要更正账本上我自己那条**：手机链路我这量不到 —— `which cloudflared` **不在 PATH**、
+   两个候选路径也 **无二进制**（我的探针在 build 出包 `index-DJQs3uRC.js` 之后死于 `spawn cloudflared ENOENT`，没起隧道、没碰 4781/8781 那两个**正在 LISTENING 的既有预览进程**）；
+   而三臂门已给出更根本的红：**向导态与滞留态屏幕上没有 [重置] 可点**。要我在手机链路上复测 ①，需要 cloudflared 的路径或你那边重建后的链接。
 
 ### SESSION=c01d72a3 · D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
@@ -2282,6 +2302,7 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
 点名回执 @2026-09-21 03:2x（本机钟 date=03:23:57 +0800，HEAD `2449d29`，未 push、权威树 0 改动）：**① 路由自证再跑一遍 = 28/28 于 `:8681`（GET-only，零写入）**，同一份清单打到生产链路 `127.0.0.1:4781` 也是 **28/28**：17 条 POST-only 全 `405/Method Not Allowed`、6 条读侧全命中、5 条"没有路由"的能力全 `404/Not Found`、`/demo/scene` 恒 10 键。**② B 层 testid 重指向**已在上一笔 `9334d43` 完成（B 实测 9 行 id：reset·advance·event·replan·accept·reject·book·degrade·restore；C 自己适配层的字段/门禁测试整层删了）。**③ ORD-0082 红门已加并在生产构建上现场演算 ⇒ RED**（bundle `index-BPtBTSpD.js`，390×844，只读、未点任何写按钮）：banner `2026-10-10 09:00` = 后端 `effective_now` ✓，但 `接下来 09:00 Old Town Gate` 是**游标当前站**，服务器 twin 的 next 是 `Riverside Museum @10:30` ⇒ 判据(2)红。**方法学一条要记：只比"时刻"看不见这条缺陷** —— 游标停在第一站时 09:00 对 09:00 满足任何 `>=` 规则却仍指错站，所以我把判据换成"必须等于 twin 说的下一站站名"，`>=` 只留作第二道。**顺带撤回我自己的一处疑心**：我 03:1x 看见 banner 17:00 而后端已 09:00，一度怀疑面板说假话；**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题（reactivity），不是真值缺陷；红门里因此先 reload、再在**同一次 JS 回合**内同时读 DOM+scene+twin，免得把竞态当缺陷报给你。报数四件事：`:8681` 进程 cwd 我读不到（命令行只有 `python -m uvicorn app.main:app --port 8681`，pid 67040），sha 靠行为反证（答 10 键 ⇒ 含 ORD-0074；`_qoder_cmdr_gate_20260921`@`f8d9dc2` 只 9 键，已排除）；生产侧我量的是 `:4781` 服务的 `index-BPtBTSpD.js`（就是你 03:4x 部署的 `f56e9cb` build）；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（当场核）；`DEEPSEEK_API_KEY` 在我这侧 shell 里存在（len 35），被测进程环境读不到，但这两层只发 GET、不进 AI 路径，与本批读数无关。执行面仍如实：路由层两次执行过；spec 13 个 test 源点（collected 14，含 390/412 两宽度）里 **2/3/4 层仍未由 Playwright 执行**（C 树无 node_modules、派单禁装），ORD-0082 那条的**读数**我已按上面用只读浏览器在生产构建上取到，计数请接线方回填。B 的文件我一个都没碰。
 点名回执续 @2026-09-21 03:3x（本机钟，最终 HEAD `48f39fa`，仍只有我这一个 spec 文件变化、未 push、权威树 0 改动、B 的文件一个字没碰）：① 路由层再跑一遍 **28/28**，同一份清单在 `:8681`（你自有的台）与生产链路 `127.0.0.1:4781` 上都是 28/28（17 条 POST-only→405、6 条读侧→命中、5 条无路由→404），全程 GET。② 静态复核当前 tip **`65e184d`**（一小时内又动了：`602addf`→`12dd81a`→`65e184d`）：17 条 POST-only 路由**一条不少**、5 条"没有路由"的能力仍 0 命中 ⇒ 映射表内容成立；但**行号全漂**（start 5577→5780、complete 5722→5926、skip 5802→6006、accept 9044→9260、reject 9516→9732、bookings 10384→10600、demo/reset 1779→1870）⇒ 任何按行号引用这张表的人，都必须连 sha 一起报，单报行号就是过期证据。③ ORD-0082 我这条红门在生产构建上**现场演算=RED**，并且我把判据从"时刻大小"换成"**必须等于 twin 的 next 站名**"，理由要记下来：**游标停在第一站时，hero 09:00 对场景现在 09:00 满足任何 `>=` 判据却依然指错站** —— 这就是这条缺陷藏了两小时的机制；时刻比较只留作第二道。④ 撤回我自己一处疑心：我一度以为面板 banner 说假话（17:00 vs 后端 09:00），**reload 之后两者一字一致** ⇒ 那是"别的会话 reset 后旧页面不重读"的时效问题，不是真值缺陷；红门因此先 reload、再在同一次 JS 回合内同时读 DOM+scene+twin，避免把竞态报成缺陷。⑤ 一条**留给你的边界，不我自己拍板**：`65e184d:1762` 已改成 `nowMs = stageMs ?? Date.now()`（并把设备回落写在 `today-clock-source` 上，这点按 ORD-0082 must 1 是合格的），但选站判据是 `end_at >= nowMs`，于是**正在进行的那一站会被冠名为"接下来"**（实测：游标 Old Town Gate 09:00–10:15，twin.next=Riverside Museum 10:30，hero 接下来=Old Town Gate）。若你与仲裁认这个语义，我把判据改指 `execution.now` 并要求改标签；不认，则这条断言保持红 ⇒ 等部署新 build 后重跑才算。⑥ 计数如实：spec 13 个 test 源点（collected 14）；执行过的只有第 1 层（两次，含生产链路那一次）与 (ii) 那条红门的**读数演算**（只读浏览器，未点任何写按钮、未写 localStorage），其余由接线方在 production build 上跑 `playwright.sw.config.ts` 那条真链路回填。
 三点回话回执 @2026-09-21 03:5x（本机钟 date=03:56:20 +0800，**要收的 sha：`3b06a8c`**；前序 `9334d43`→`2449d29`→`48f39fa`→`3b06a8c`，全在 `agent/sim-component-20260921`，未 push、权威树 0 改动、B 的文件一个字没碰、临时脚本已清）：① 我那条红门保持你说的判据（同一次 JS 回合内取 DOM+scene+twin），没动。② **路由自证已改打 `:8692`：31/31**（POST-only **19/19→405**、读侧 **6/6 命中**、无路由 **6/6→404**），全程只 GET。同一份清单交叉打过 `:8681`：**17/19**，缺的正是 `demo/prepare-scenario`、`demo/start-scenario`（404）⇒ 台子归因是用行为做的，不是照抄标签：`:8692`=`65e184d`（`git log -S` 显示这两条端点由 `65e184d` 引入，且它的 scene 回 **11 键**、多一个 `current_activity_id`，与实到完全一致）、`:8681`=更老的 `146731d`（10 键）。报数四件事：树/sha 如上；解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（当场核）；`DEEPSEEK_API_KEY` 在我这侧 shell 存在（len 35），两个被测进程的环境我读不到，但这两层只发 GET、不进 AI 路径，与本批读数无关；写入 0。③ spec 已按 `65e184d` 更新完（`3b06a8c`）：19 条 POST-only 含 `/demo/prepare-scenario`、`/demo/start-scenario`、`/demo/reset` 三条；scene 检查从"固定 10 键相等"改成**核心 11 名 + 允许后出的 4 名（`evidence_snapshot_id`/`evidence_reference_consistent`/`mobility_legs_total`/`mobility_legs_hard_eligible`）+ 任何未登记新名一律红**。**这里有一条要给 A/B 的事实**：那 4 个 coverage 字段在 `65e184d` 的**提交版 scene 返回体里没有**（`git log -S mobility_legs_hard_eligible` 在提交史里 0 命中，`:8692` 实到也只有 11 键）⇒ 它们现在只活在 A 未提交的工作集里；谁要把面板文案绑到 `evidence_reference_consistent`/`mobility_legs_*` 上，得先让那笔提交落地，不然真机上永远读不到。`evidence_state` 允许集我也按提交版 + A 的差集写成 5 个值（今天实到 `NO_FROZEN_EVIDENCE`）。④ 顺带把 `reset 现在只播种` 的语义写进了 ORD-0078 那条门的注释里（红绿都要连着"一个 [重置] 该不该自己走完 prepare→start"这句看 —— 那是产品决定，我不替你认）。计数如实：spec 13 个 test 源点（collected 14）；**执行过的只有第 1 层**（本轮 :8692 一次 + :8681 对照一次）与 (ii) 那条红门的读数演算（生产构建、只读浏览器）；第 2/3/4 层仍等生产 build 真链路回填。
+交单 @2026-09-21 04:1x（本机钟 date=04:16:55 +0800，**今晚最后一笔 sha `dff9744`**，仍只在 `agent/sim-component-20260921`、未 push、权威树 0 改动、B 的文件没碰）：**405 断言命中 22 条**——路由表 **19/19** ＋ 你要的演示面三条 **3/3**（覆盖 19 条不同路由；`GET /demo/scene`=200、`reset`/`prepare-scenario`/`start-scenario` 全 `405/Method Not Allowed`，04:16 又复打一次仍如此）；读侧 **6/6 命中**、无路由 **6/6→404**，全部打在 `:8693`（你的新台）上，**全程只 GET、零写入**，`:8681`/`:8692` 我没再动。报数四件事：**树/sha**＝`:8693` 我读不到进程 cwd，用行为反证：15 键 + 两条新 demo 端点 405 ⇒ 必然 ≥`924461e`；**解释器**＝`D:/moodle/CityNexus/.venv/Scripts/python.exe` **3.12.14**（当场核）；**key**＝`DEEPSEEK_API_KEY` 在我这侧 shell 存在(len 35)，被测进程环境读不到，但本层不进 AI 路径，与读数无关；**写入**＝0。**撤回我 03:5x 那条判断**："四个 coverage 字段只在 A 未提交的工作集里"—— `924461e` 已把它们提交，实到 scene **15 键**、`evidence_state=FROZEN_WITHOUT_TTL`、`mobility_legs_hard_eligible/total=4/4`、`evidence_reference_consistent=true` ⇒ spec 里那四名从"允许出现"升成"**要求出现**"（CORE=15），未知新名仍一律红。② B 层 testid 重指向保持在位（`sim-panel/sim-banner/sim-scene-facts/sim-window/sim-basis/sim-evidence/sim-journey/sim-action-<id>/sim-blocked-<id>/sim-outcome/sim-entry-summary`，断言只读 innerText，外加 `aria-disabled`+`aria-describedby` 关系本身），并新加了一条独立用例专门盯这四条演示路由，红的时候会点名是哪条动了。④ 执行分母如实：spec 14 个 test 源点（collected 15，含 390/412 两宽度）里**只有第 1 层执行过**（03:4x `:8692` 31/31、本轮 `:8693` 22 条 405 命中），第 2/3/4 层仍未由 Playwright 跑（C 树无 node_modules、禁装），第 4 层 (ii) 那条红门的**读数**我用只读浏览器在生产构建 `index-BPtBTSpD.js` 上取过（banner=后端 effective_now 一字一致 ✓，但 hero"接下来"=游标当前站、服务器 next=Riverside Museum 10:30 ⇒ 红）；本文件对 tsc 干净（除本树缺 node_modules 造成的 TS2307）。收工，等明早。
 
 ### SESSION=c01d72a3 · D 车道 ORD-0083 预验 @2026-09-21 03:2x（只读 + 自起 :8581 + 自复制 DB）→ **仲裁顺序在当前 tip `12dd81a` 上整条演通，逐请求实测全 2xx**
 
@@ -4320,6 +4341,40 @@ POST    : 03:58:00  db mtime 03:58:00
 
 **我的处置**：F 的交付记为 `DONE`（侦察类），内容进 MORNING_CHECKPOINT 第 9 项。
 **AI 相关的一切实现今晚冻结**（夜令 §3：等 M1/M2 之后），只保留设计与侦察。
+
+### 🎉 commander 实测 @2026-09-21 04:2x —— **M3 整条链在后端真的跑通了**（隔离 DB，含三个必填字段的实测答案）
+
+**这是今晚第二个大进展，而且是仲裁 AR2 里"当前不能过"的那一段。** 我在隔离 DB 副本上
+（`raw/sim_m3_probe.db`，解释器 3.12.14、凭据清空、未碰演示台 `:8681`）把 M3 走完了：
+
+| 步骤 | 码 | 实测 |
+|---|---|---|
+| `reset` → `prepare-scenario` → `start-scenario` | 200 / 200 / 200 | 台子到 ACTIVE |
+| `POST /journeys/{J}/events`（WEATHER/MAJOR） | **201** | `provider_key="demo-simulator"`、`provenance="SIMULATED"` |
+| `POST /journeys/{J}/replans` | **201** | `status="PRESENTED"`、`hard_constraints_passed=true`、**`locked_commitments_preserved=true`**、`utility_score=0.6858`、`proposed_plan_version_id` 非空 |
+| `POST /replans/{pid}/accept` | **200** | 返回 `journey/proposal/twin` |
+| `GET /demo/scene`（accept 后） | 200 | **`plan_version_id` 从 `55523d40` 变成 `76d03e58`** ⇒ **新 ACTIVE 计划真的换了** |
+| `GET /twin`（accept 后） | 200 | **游标从 `3a58c470` 变成 `cdf50787`** ⇒ 真的前进 |
+
+⇒ **M3 的判据（Event → ReplanProposal → Accept → 新 ACTIVE PlanVersion）在后端逐条成立**，
+且 **C4 保护在提案里被明确报为 `locked_commitments_preserved=true`**。
+**仲裁 AR2 说 02:10 那段"当前不能过"，原因是它按"provider 不可达"设想；
+而在演示城市（`CNX-DEMO` / `mock-mobility`）上这条链根本不需要真 provider，它自己就能跑完。**
+
+**顺手拿到三个"猜不出来"的必填字段**（这正是 ORD-0077 要 F 做的表，我实测补上）：
+1. `POST /replans` **必须带 `trigger_event_id`**；不带 ⇒ 422 `VALIDATION_ERROR`（`loc: ["body","trigger_event_id"]`）。
+2. **光有 event 还不够**：event 若不带 `affected_activity_id`，replan 会答
+   **422 `REPLAN_TARGET_UNRESOLVED`**（不是 500，是具名拒绝）。带上游标那个活动 id 才 201。
+   ⇒ **面板的"触发一次中断"必须把当前活动 id 一起发**，否则"请求重规划"永远失败。
+3. `POST /replans/{pid}/accept` **必须带 `Idempotency-Key` 头**，否则 422
+   `Idempotency-Key header is required`。**面板的"接受方案"必须自己生成一个 key**（每次一个新 uuid）。
+
+**给 `e345b9d6`（接进 ORD-0082 之后）**：这三个字段是面板三个按钮能不能真通的**硬前提**，
+我已实测，**照抄即可，不用再猜**。
+
+**⚠ 但 M3 的"可见部分"仍未达成**：面板上的 `请求重规划` / `接受方案` / `拒绝方案`
+目前仍是 disabled（要求先触发中断），而且它发的事件**没有带 `affected_activity_id`** ⇒
+即使解禁也会撞 `REPLAN_TARGET_UNRESOLVED`。**这属于"后端通了、前端还没接对"**，与 M2 同族。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
