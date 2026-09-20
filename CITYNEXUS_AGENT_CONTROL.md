@@ -2744,6 +2744,60 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     边界：不削弱冻结清单；`MapPanel.tsx` 归你（改派已撤销）；不要为了走查通过而关掉真值门；
     不新建发布分支、不推送、不 force-push；回报里不要复现那把 key 的前缀。
   status: DISPATCHED@2026-09-20 13:2x
+
+- id: ORD-0043
+  to: e345b9d6
+  priority: urgent
+  if_head: 56f67e2
+  order: |
+    **落地仲裁直写的 A4 补丁并跑它自带的门。** 分支 `Canshu-King/CityNexus-Workspace` → `m3/a4-sw-lifecycle`，
+    tip `a6cfaca048c47d209cb93ad541ef7c6573d358ff`（6 提交 / 6 文件，我已逐行核过内容，见账本 16:5x 复测段）。
+    它自陈"runtime PASS 是 Commander 的责任"，所以这一轮由你跑。
+    1. REST 取回 6 个文件（前缀 `_tools/qoder-integration-20260919/frontend/`）→
+       `src/main.tsx`、`vite.config.ts`、`public/sw.js` + 新增 `playwright.sw.config.ts`、
+       `e2e/qoder-sw-lifecycle.spec.ts`、`docs/SW_LIFECYCLE_ACCEPTANCE.md`；
+    2. 跑它自带的**生产专用**门，报 `--list` collected（含 setup 工程行数）与 `N passed / M skipped / K failed`；
+    3. 做它验收文档里那条"4 秒延迟的 document 请求仍必须走网络"的实测，**把 8 秒这个候选值坐实或推翻**（它自己承认是 candidate）；
+    4. 两处我发现的问题，落地时一并处理并回报：
+       (a) `navigateFallbackDenylist` 里的 `/\.[a-zA-Z0-9]+$/` 过宽（任何带点路径都失去导航兜底），建议收窄成已知扩展名白名单；
+       (b) 仲裁 A 判断点名的 `qoder-mobile-tap-targets.spec.ts` **在权威树不存在**，
+           现在那道 <44px 门实际是 `qoder-mobile-ui-overnight.spec.ts` —— 若要改名请走订单，不要顺手改，
+           因为发布包清单（ORD-0032）会指空文件。
+    与 ORD-0042 合流做，**不要出两套方案**。边界：不削弱冻结清单；不推送、不 force-push。
+  status: DISPATCHED@2026-09-20 17:0x
+
+- id: ORD-0044
+  to: e345b9d6
+  priority: urgent
+  if_head: 56f67e2
+  order: |
+    **最高优先：合法输入也会静默卡死。** 这条比超 7 天那条更严重，因为它发生在**合规数据**上，
+    也正是用户反复说的"点了没反应、要重试好几次才进得去"。
+
+    我 17:0x 在生产构建 + 真实浏览器上实测（4 天行程，远小于 7 天上限）：
+
+    ```
+    POST /api/v1/travelers   201
+    POST /api/v1/journeys    201
+    → 之后该 journey 再无任何请求（连 stay-options/generate 都没发出）
+    localStorage.citynexus.v8.journey_id = ff7acd3f…   ⇒ 行程已建、已写本地
+    界面：停在第 3 步，连续 24 秒不变，且没有 .trial-create-error（零提示）
+    ```
+
+    断点定位到 `V8Experience.tsx` 的 `createJourney`：`localStorage.setItem(...)` 之后、
+    `await v8Request('/stay-options/generate')` 之前/之中，**成功路径自己吞掉了**。
+    请查清具体是哪一行：`v8Request` 在什么条件下不发出请求就抛？抛到哪去了？`load()` 还是 `setItem` 之后断的？
+
+    要求：
+    1. 成功路径必须**自己推进**到应用主界面，不需要用户重试；
+    2. 任何中途失败（包括"请求没发出去"这种）都要在屏幕上说一句人话，不许再出现"停在原地且零提示"；
+    3. 修完给一条 e2e：合法窗口创建后 **5 秒内**出现 `.v8-product-shell`（主界面壳层），
+       并给**杀得掉的证据**——把 `stay-options/generate` 调用去掉时该节点必须红（点名节点 id）；
+    4. 报 `--list` collected（含 setup 行数）+ 一次全量 suite 读数，与账本对表、差值逐条点名。
+
+    边界：不动后端契约（ORD-0033 已完成并经我实测）；不删那条故意留红的门；不削弱冻结清单。
+    我已把这条发到总线请仲裁确认优先级（5748852498 §4），**但修复不必等它回**。
+  status: DISPATCHED@2026-09-20 17:0x
   evidence: |
     **[Commander 13:4x 标注] 本块内容实际是 ORD-0041 的合并回执（并发写入撞位），归属以 ORD-0041 为准。**
     我对其中两个请求的裁决：
