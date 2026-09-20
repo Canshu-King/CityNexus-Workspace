@@ -2025,7 +2025,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     整份预览日志里 `plans/generate` 被调用 **0 次**。⇒ 也就是"建得出来、走不下去、还不报错"的
     **永久不可用行已经堆了 5 条**，每条都占着一个 journey 身份。这就是我在 (2) 里倾向**方案 (A) 入口即拒**的实测依据；
     你若选 (B) 必须在响应里把这个事实带出来，不能让它继续只是库里的静默垃圾。
-  status: DISPATCHED@2026-09-20 09:2x
+  status: CLAIMED@20260920-130600 by 8c66aa92（M3-A；按裁定 ① 选 A：入口即 422 且不落库）
 
 - id: ORD-0034
   to: e345b9d6
@@ -2645,7 +2645,75 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     不要动它（它现在仍是未提交状态）。
     **归属更正**：我 11:0x 把地图（ORD-0037）改派给你，是过早的决定 —— UI 线 11:2x 已经交付了实现与门。
     现在**撤销该改派**：地图归 `e345b9d6`（M3-C），你回到 M3-A（ORD-0033 超 7 天入口即 422，那条还没人交）。
-  status: DISPATCHED@2026-09-20 12:5x
+  status: DONE@20260920-132000 by 8c66aa92（合并提交 `a453121`，文档 `3b68801`；合并树有 1 条**故意红**的门，见 evidence 末段）
+  evidence: |
+    **合并已做**：`git merge --no-ff --no-commit a512244` → "Automatic merge went well"、
+    `git diff --name-only --diff-filter=U` **0 文件** → 合并提交 `a453121`（20 笔 / 37 文件 / +6980 / −203，
+    其中 `backend/app/**` 零改动）。合之前先核了反向半同步风险：`c0367c1` **是** `a512244` 的祖先
+    （他们分支已含我的 tip），且我这一侧每个文件在 `a512244` 里 sha256 **逐字节相同**
+    （guard `70b44863`、executionWindow `4280bbe8`、LiveRecovery `f527d929`、binding `ae2fc8eb`、
+    v9.py `56da6ea4`、playwrightEnv `57756170`、报告 `719e0b36`）。
+    三组数字（同一棵树 `a453121`，全部亲测，日志在 `D:\moodle\_qoder_ord30_evidence_20260920\ord41\`）：
+      1. 全量后端 `pytest -q -p no:cacheprovider --no-header`（解释器 `D:\moodle\CityNexus\.venv`，
+         `DEEPSEEK_API_KEY=` / `CITYNEXUS_AI_API_KEY=` / `CITYNEXUS_AI_ENABLED=false`）→
+         **913 passed / 15 skipped / 0 failed（77.30s）**；`--collect-only -q` → **928 collected**。
+         与权威读数 **913/15/0 / 928 完全相等，差值 0**（合并面里没有任何 `backend/` 路径）。
+      2. `node node_modules/@playwright/test/cli.js test --list` → **`Total: 87 tests in 34 files`**；
+         按工程：**`chromium` 86 + setup 工程 `real-seed` 1**（`_qoderRealSeed.setup.ts:110`）。
+         63 → 87 的差值逐文件点名：`qoder-map-interaction` +3、`qoder-onboarding-failure` +2、
+         `qoder-plan-ai-contrast` +3、`qoder-plan-ai-thinking` +8、`qoder-service-worker` +3、
+         `qoder-theme-contract` +4、`qoder-ui-overnight-shots` 5→6(+1)。**旧的 54/5 作废，别再引用。**
+      3. `npm run build` **exit 0**；另 `typecheck` exit 0 / `error TS` 0 条、`typecheck:all` exit 0 / 0 条
+         （不接管道，`> file 2>&1` 后读 `$?`）。
+    **合并后全套权威 E2E 亲跑**（run `ord41-full`，:3471→:8471、`_ord41-full.db`、ai=disabled、
+    `reuseExistingServer=false`、provenance 行在）：**80 expected / 6 skipped / 1 unexpected / 0 flaky（266.1s）**。
+    那条 unexpected 不是合并事故，是 UI 车道**故意留红的待办门**：
+    `qoder-onboarding-failure.spec.ts :: the named backend reason reaches the onboarding screen`
+    期望 `trial-create-error` 含 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9`，实到
+    "This step did not complete — no journey was created."（同文件第一条"失败必须可见"是绿的）。
+    该文件注释自陈："单独拆出来……缺口是 `V8Experience.tsx:800` 的一个 prop，本车道不拥有该文件"；
+    组件侧 `JourneyTrialSetup.tsx:555-561` 的 `{message ? <span>{message}</span> : null}` 已经就位。
+    我另核并**否证**了另一个解释：他们工作区未提交的 `JourneyTrialSetup.tsx`（+92/−20，ORD-0036 在做的
+    刷新恢复）不含任何 `message`/`createAttemptFailed` 行改动 ⇒ 不是"绿只在脏工作区成立"。
+    **本轮我没补那一行 prop**：ORD-0033 边界明写"不要碰前端（错误可见性另单 ORD-0034）"，而 ORD-0034
+    归 `e345b9d6`、状态 PARTIAL。请裁归属：给我（一行 prop + 复跑该文件 2 条，15 分钟内交），或回给 UI 车道。
+    并请注意它与 ORD-0033 的连带：入口改成 422 + `JOURNEY_DAYS_OUT_OF_BOUNDS` + `actual_days`/`max_days` 之后，
+    这条门的期望串要跟着换成新契约，不能把 `V13_…:9` 硬留在测试里。
+
+
+
+### 13:1x 新根因（红队发现，我独立复核确认）：autoUpdate 静默换版才是"挂后台回来自动刷新"
+
+`dc19d662` 在跑 ORD-0039 时发现，我用三条命令复核成立：
+
+```
+vite.config.ts:13   registerType: "autoUpdate"
+vite.config.ts:18   injectRegister: false        ⇒ 注册由 src/main.tsx:1679 手写
+grep -rn "onNeedRefresh|needRefresh|updateReady" src   ⇒ 全仓 0 命中
+```
+
+⇒ **新版本会在用户脚下静默替换并让页面重载，界面上没有任何"有更新/正在更新"的提示。**
+这解释了我此前只归因给 dev HMR 的那次自刷新，也解释了用户说的"挂一下后台就刷新、点不回刚才的界面"——
+**生产构建同样会发生**，与我 11:0x 换拓扑无关（我那个归因不完整，在此更正）。
+
+**这条改变 ORD-0036 的修法方向**：不能只做"dev 不注册 SW / 不给 .js 兜底 HTML"，还必须处理升级时机——
+要么 `registerType: "prompt"` + 可见的"有新版本，点击更新"，要么保留 autoUpdate 但在替换前给出用户可感知的提示；
+**"静默替换"本身就是要修的对象**（Mission 003 A4 第 5 条：stale-version upgrade 必须能恢复，且不得让用户以为还在加载）。
+
+同一轮红队还留下三条**我接受为事实**的副产品：
+- 它的 W4 在流程里采到 **24 条未捕获致命错/失败请求**（与我这边实测到的 `manifest.webmanifest` 401、
+  `assets/maplibre-gl-*.js` `ERR_CONNECTION_CLOSED` 同类），说明"控制台干净"这条断言现在是**真的会红**；
+- 它自报 **W3 / W5 / W7 三处是门自身的测量缺陷**（W5 取色返回空、W7 量了 SVG 而地图是 canvas），
+  并明确"不能当产品判决报"——这个自我限定我记进验收口径：**门红要先自证不是门的错**；
+- 它一度产出 `8/52` 的假红（自己拔了服务），主动在同一 evidence 里补了防误读说明。**这类主动标注是我想要的行为。**
+
+### 13:1x GPT 委托通道阻塞（记为 HUMAN，不代做）
+
+我把 A4 委托同时发到总线（**5748608817**，sha1 回读一致）和 ChatGPT 窗口。窗口侧短消息发出去后页面跳到
+`auth.openai.com/mfa-challenge/…`（"查看你的身份验证器应用"）⇒ **OpenAI 二次验证需要用户本人的验证器，agent 不能也不应代做**。
+后果：GPT 暂时不会读总线、也不会推 `m3/a4-sw-lifecycle` 分支。
+⇒ **不让 A4 悬着**：已按上面的方向给 `e345b9d6` 下**先行修复令**（不等 GPT 补丁），GPT 回来后再做外部评审。
+用户醒后需要做的两件事：① 完成 OpenAI 二次验证（否则仲裁链断）；② 轮换那把 key。
 
 
 
