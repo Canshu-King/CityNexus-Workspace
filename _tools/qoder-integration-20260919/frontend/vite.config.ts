@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 const isStorybook = Boolean(process.env.STORYBOOK);
+const runtimeCacheVersion = "m3-a4-v1";
+const documentNetworkTimeoutSeconds = 8;
 
 export default defineConfig({
   plugins: [
@@ -11,10 +13,8 @@ export default defineConfig({
       disable: isStorybook,
       filename: "v10-sw.js",
       registerType: "autoUpdate",
-      // main.tsx owns the environment-specific registration: /sw.js in
-      // development and /v10-sw.js in production.  Letting vite-plugin-pwa
-      // auto-inject its dev-sw.js as well creates two competing controllers
-      // and makes repeated navigation/reload nondeterministic.
+      // main.tsx owns registration. Development never registers a production
+      // worker; production always registers this generated worker.
       injectRegister: false,
       includeAssets: ["favicon.svg"],
       manifest: {
@@ -28,34 +28,50 @@ export default defineConfig({
         icons: [{ src: "/favicon.svg", sizes: "any", type: "image/svg+xml" }],
       },
       workbox: {
-        // The product shell now includes the real mission timeline and MCP
-        // disclosure UI. Keep the single application chunk precacheable while
-        // retaining Workbox's safety ceiling.
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: "/index.html",
-        additionalManifestEntries: [{ url: "/index.html", revision: "v10-shell" }],
+        // A navigation fallback is only for documents. API and asset URLs must
+        // fail as themselves rather than being replaced by the SPA HTML shell.
+        navigateFallbackDenylist: [/^\/api\//, /\/assets\//, /\.[a-zA-Z0-9]+$/],
         cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         runtimeCaching: [
           {
             urlPattern: ({ request, url }) =>
               request.destination === "document" && url.pathname.startsWith("/v8/"),
             handler: "NetworkFirst",
             options: {
-              cacheName: "citynexus-pages",
-              networkTimeoutSeconds: 3,
-              cacheableResponse: { statuses: [0, 200] },
+              cacheName: `citynexus-pages-${runtimeCacheVersion}`,
+              // The previous 3s budget produced false stale-shell fallbacks on
+              // real mobile/tunnel use. 8s is the M3-A4 candidate: CI must prove
+              // that a 4s delayed document still returns the fresh network shell
+              // while a >8s delay may use only a same-version cached document.
+              networkTimeoutSeconds: documentNetworkTimeoutSeconds,
+              cacheableResponse: { statuses: [200] },
+              expiration: {
+                maxEntries: 12,
+                maxAgeSeconds: 24 * 60 * 60,
+                purgeOnQuotaError: true,
+              },
             },
           },
           {
             urlPattern: ({ request, url }) =>
               !url.pathname.startsWith("/api/") &&
-              ["script", "style", "worker", "image", "font"].includes(
-                request.destination,
-              ),
-            handler: "CacheFirst",
+              ["script", "style", "image", "font"].includes(request.destination),
+            handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "citynexus-static",
-              cacheableResponse: { statuses: [0, 200] },
+              cacheName: `citynexus-static-${runtimeCacheVersion}`,
+              // Never persist opaque/status-0 executable responses. Vite's
+              // script/style filenames are content-hashed; SWR therefore keeps
+              // current assets responsive without pinning an old module graph.
+              cacheableResponse: { statuses: [200] },
+              expiration: {
+                maxEntries: 96,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
+                purgeOnQuotaError: true,
+              },
             },
           },
         ],
