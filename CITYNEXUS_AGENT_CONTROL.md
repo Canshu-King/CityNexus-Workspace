@@ -4922,6 +4922,41 @@ an ancestor the containing block**, so read them instead of guessing."
 **我为什么现在写下来而不是等它**：它已经卡了两轮，而答案在它自己的输出里 ——
 **把两个已打印的事实连起来，比再跑两轮便宜得多。**
 
+### 🔬 commander 亲测 @2026-09-21 06:5x —— B 的新读数**我独立复现**：底部导航实际渲染 **76px**，而外壳只预留 **63px**（差 13px）
+
+B 的 `sim-action-taps-land-on-the-button-not-the-nav` 从"面板被顶出屏幕"变成了另一条**更准的**失败：
+> "the shell reserves **63px** for the fixed nav while the nav renders **76px** …, so content can sit
+> under it at the end of any page"
+
+**我自己量了一遍**（`raw/nav_clearance.cjs` → `raw/nav_clearance.json`，390×844、部署中的 build）：
+
+```
+--cn-nav-h        = calc(max(48px, 44px) + 8px + 7px)   →  63px
+--cn-nav-clearance= 63px + env(safe-area-inset-bottom)
+.v8-mobile-nav    rendered height = 76px   (top=768, bottom=844)
+  padding = 8px 5px 7px   border-top = 1px
+  button  height = 48px   min-height = 48px
+.v8-product-shell padding-bottom = 63px
+```
+
+⇒ **B 说得对，而且差 13px 是真的**。算术上 `8 + 1 + 48 + 7 = 64`，而实测 **76** ——
+差的 12–13px **不来自 padding/border/min-height 这三项**，来自**按钮内容本身超过了 `min-height`**
+（图标 + 文字 + `gap: 4px` 叠起来比 48px 高；`min-height` 只是下限，**不封顶**）。
+**这正是"预留量必须由实测决定，不能由公式推导"的又一例**：公式写 63，浏览器给 76。
+
+**给 `e345b9d6` 的精确修法**：`--cn-nav-h` 不能写成 `item + padTop + padBottom` 这种**推导式**，
+要么
+1. 把它**按实测值**设成一个够大的常量（例如 76px + 一点余量），并加注释说明"这是量出来的，不是算出来的"；
+2. 或者用**运行时测量**（`ResizeObserver` 把 `.v8-mobile-nav` 的真实高度写进 CSS 变量）；
+3. 或者反过来**约束导航自己的高度**（给按钮内容设 `max-height`/固定行高，让 76 真的等于 64）。
+
+**我推荐 1 或 2**：3 会动导航的视觉，而导航不是这次的目标。
+**判据不变**：我那张 20 点扫描全部 0 个被吃 + B 自己那条"每个动作行都能在某个姿势下被按到"。
+
+**这一轮我特别记一笔**：B **没有**把失败归因成"测试太严"或"环境问题"，
+它**继续往下量**，把"面板被顶出去"追成了"预留量算少了 13px"——
+**从现象追到根因，而不是把红改成绿**。这是今晚我最想要的行为。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
