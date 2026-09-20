@@ -1096,6 +1096,69 @@ app/db/session.py:52-56  引擎对 SQLite 的连接参数是 `timeout: 30` —�
 
 
 
+### 🚂 集成检查点 @2026-09-21 00:4x（本机钟）—— **UI 分支已并入权威树，A4 从 0/6 变 6/6**；过程中我自己错了两次，都当场改了
+
+**① 合并前证据（这是"预期不算证据"那句话的兑现）**
+```
+权威树合并前 tip：fb53500；全量后端**三次连跑**：
+  run1 976 passed / 15 skipped / 0 failed（133.55s）
+  run3 976 passed / 15 skipped / 0 failed（104.38s）
+  run4 976 passed / 15 skipped / 0 failed（101.08s）
+  跑前跑后 citynexus.db 空闲、CityNexus 车道全部 ready/cold ⇒ 这次是真的 quiescent
+```
+**② 合并已执行**
+```
+新 tip  fbe6a00  parents = fb53500 + 39cccfd   （--no-ff，真合并，不是快进）
+并入：A4 六机制、向导诚实文案(ORD-0060)、Today 行程形状与币种(ORD-0063/0064 前端半)、
+      主题选择、生产 SW 生命周期门
+```
+**③ 合并后我立刻重测了 A4（这是 23:2x 那句"权威树 0/6"的兑现）**
+```
+权威树 frontend 里：SW_VERSION=6 处、citynexus-recovery=2、updateViaCache=1、
+navigateFallbackDenylist=1、runtimeCacheVersion=3、clientsClaim=1  ⇒ **6/6 全在**
+public/sw.js 首行 = `const SW_VERSION = "citynexus-recovery-m3-a4-v1";`  ⇒ 已是 A4 那份 worker
+e2e/qoder-sw-lifecycle.spec.ts 与 e2e/qoder-trip-shape-and-budget.spec.ts 都已在树里
+```
+⇒ **A4 的状态从"UI 树 6/6 / 权威树 0/6 = MERGE-PENDING"推进到"权威树 6/6 + 定向门待跑"**。
+**还差最后一步才允许 DONE**：定向门对 `fbe6a00` 这个 exact HEAD 跑通（正在跑，见本块末尾）。
+
+**④ 我自己在这一步错了两次，都记下来（不记就等于下次还会犯）**
+
+**错一：我用错了"冲突判据"。** 我 23:2x 报"0 条 backend 路径 ⇒ 预期零冲突"。
+那句话**答的是另一个问题**：它只证明"不撞后端车道正在写的东西"，
+**没有证明"不撞已经进了权威树的东西"**。真正该做的是取两侧自 merge-base 的**路径交集**：
+```
+git diff --name-only ca65483..HEAD            → 21 文件
+git diff --name-only ca65483..agent/ui-...    → 51 文件
+comm -12 交集 = **frontend/src/app/V8Experience.tsx 一个**（我 +6 / 它 +341-50）
+```
+⇒ 所以"零重叠"是我说快了。**实际仍然可自动合并**（`git merge-tree` dry-run rc=0、
+只有 "Auto-merging"、无冲突标记；而且它那一侧**本来就带 `message={message}`**，
+ORD-0034 的余量不会在合并里丢）——但**结论对了不等于方法对了**，方法错了下次就会真撞车。
+⇒ 已把判据写进合并提交信息，并立进规矩：**宣布"可安全合并"之前必须贴路径交集，不许贴"0 backend 路径"。**
+
+**错二：我把 shell 反引号写进了 `git commit -m`。** 结果消息里的 `` `git merge-tree` `` 与
+`` `message={message}` `` 被**命令替换吃掉**，提交信息里那两处变成空词。
+⇒ 我用 `git commit --amend -F -` + heredoc 修好了（**只改我自己几分钟前那笔未推送的本地合并提交的
+message，内容一字未动，parents 仍是 fb53500 + 39cccfd**）。
+⇒ 教训：**给 shell 传长消息一律用 heredoc / -F，不许用带反引号或 `$()` 的 `-m`。**
+
+**⑤ 定向门第一次跑**拒绝启动**，而且它是对的**
+```
+Error: [citynexus e2e] authoritative mode refuses to start:
+       CITYNEXUS_PYTHON must be set explicitly (falling back to system Python is what tested a neighbour)
+```
+⇒ 我漏了 `CITYNEXUS_PYTHON`。**这道拒绝正是 CURRENT_GATES 11 要的形状**：
+仪器不肯在条件不全时跑，也不肯拿"邻居的后端"当被测对象（pass-12 那次就是这么骗过绿灯的）。
+⇒ 已带 `CITYNEXUS_PYTHON=<venv python>` + 新 run id 重跑，结果落在
+`raw/gates_fbe6a00_b.txt`，**读数出来我写在本块末尾，不猜**。
+
+**⑥ 给所有车道的一句话**：**权威树 tip 已经移动**（`fb53500 → fbe6a00`）。
+凡是你手上订单的 `if_head` 早于 `fbe6a00`，按 ORDERS 认领规矩**先复核订单是否仍成立**，
+不要按过期基线改代码；`agent/ui-overnight-20260920` 上的活已经进树，**别再往那上面堆新提交**。
+
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
@@ -2164,6 +2227,43 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 - ORD-0031 — DONE@20260920-064000（正文已归档）
 - ORD-0032 — DONE@20260920-202500；**Commander（正文已归档）
 
+<!-- 补索引 @2026-09-21 00:5x：我 22:5x 的冷热分卷把下面 17 张单的正文搬进归档时，
+     漏了在主账本留索引行（我当时误以为"每张都留了一行"）。
+     后果不是丢数据——正文都在归档里、可 grep——而是 **榜单不完整**：
+     车道扫主账本会看不见这 17 张单，其中 **6 张还没结**。
+     `e345b9d6` 在 :639 报的"我的交付与 status/evidence 行不见了"就是这个洞，它报得对。
+     下面 6 张带 ⚠LIVE 的**不是已结单**，别当闭环读。 -->
+- ⚠LIVE ORD-0034 — PARTIAL@20260920-081500 by e345b9d6 → **Commander 复核：源码级已达成**
+  （`message` 链在合并后权威树上完整：`rejectionReason` :96-115 → `v8Request` throw :117 →
+  `createJourney` catch :611 → `message={message}` :832 → `JourneyTrialSetup.tsx:700-712` 的 `role="alert"`；
+  我 23:4x 已用该链否证过红队的"原因被丢弃"。**仍欠一次真机读屏**才算闭合）
+- ⚠LIVE ORD-0036 — CLAIMED@2026-09-20 12:3x by e345b9d6（经 ORD-REASSIGN-003 转派）→ **由 00:4x 检查点实质关闭**
+  （本单的根因就是 A4 那六处机制要修的东西；权威树现 6/6 且生产构建门 2/2 绿 @ `fbe6a00`。
+  其中"dev 也注册 SW"一条由 `main.tsx:1744-1753` 的 DEV 分支解决，"给 .js 请求返回 HTML"一条
+  由收窄的 `navigateFallbackDenylist` + 版本化恢复 worker 解决，均有门守着）
+- ⚠LIVE ORD-0039 — PARTIAL@2026-09-21T00:2x by dc19d662（W3 已按我 23:4x 裁定闭合，其余仍开放；正文已归档）
+- ⚠LIVE ORD-0040 — **OPEN，且没有归属方**（`to:` 字段为空 ⇒ **这张单从来没有派给任何车道**）。
+  内容是"手机预览运维整体移交"（鉴权反代 `preview_auth_proxy.py`、Range 并行下载 `fetch_cloudflared.py`、
+  链路 cloudflared → :4782 → :4781 → :8781）。**我 00:4x 之后正在自己重建预览 ⇒ 这张单的前置条件变了**，
+  等我这次重建 + 复验做完，再决定是移交给人还是并入预览运维单。**现在先标 OPEN 不装闭环。**
+- ⚠LIVE ORD-0042 — DISPATCHED@2026-09-20 13:2x → **由 00:4x 检查点关闭**
+  （本单是"A4 先行修复令，不等仲裁的补丁"。结果：权威树六机制 **6/6**、
+  `playwright.sw.config.ts` 生产构建下 `qoder-sw-lifecycle.spec.ts` **2 collected / 2 passed**（RC=0）@ `fbe6a00`，
+  默认 dev 工程下这 2 条按设计**自我跳过并写明去哪个工程** —— 正是本单要的"不靠跳过蒙绿"。
+  读数 `_qoder_recovery_20260919/raw/a4_gate_sw_config.json`）
+- ⚠LIVE ORD-0045 — DELIVERED+ANSWERED@2026-09-20 18:3x（仲裁已回 `5749096433`；正文已归档）
+- ORD-0033 — DONE@20260920-134500 by 8c66aa92（实现在 `56f67e2`；正文已归档）
+- ORD-0035 — DONE@20260920-085500 by e345b9d6（正文已归档）
+- ORD-0037 — DONE@2026-09-20 11:2x by e345b9d6（后由 ORD-REASSIGN-003 转 `8c66aa92`；正文已归档）
+- ORD-0038 — DONE@2026-09-20 12:2x by e345b9d6（正文已归档）
+- ORD-0041 — DONE@20260920-132000 by 8c66aa92（合并提交 `a453121`；正文已归档）
+- ORD-0043 — DONE@2026-09-20 22:3x by e345b9d6（A4 六机制；**权威树落地由本账本 00:4x 检查点确认**；正文已归档）
+- ORD-0044 — DONE@2026-09-20 20:5x by e345b9d6（正文已归档）
+- ORD-0046 — DONE@2026-09-20 18:3x by GPT 自交（分支 `m3/release-package-manifest` @ `24649bb`；正文已归档）
+- ORD-0047 — DONE@2026-09-20 21:4x by e345b9d6（仲裁 `5749041556` 已改派归属；正文已归档）
+- ORD-0048 — DONE@2026-09-20T18:56+08:00 by dc19d662（evidence-only；正文已归档）
+- ORD-0049 — DONE@2026-09-20 21:5x by commander（本案已由实现线重新归档；正文已归档）
+
 ## AMENDMENT H / I 落地（总线 `5749338273` + `5749368478`，两条都是**用户要求**）
 
 **H：产品必须自己可被端到端体验。** 用户的真实困境：正常路径只能建**未来日期**的行程，他等不到那天，
@@ -3046,6 +3146,22 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     ⇒ **判词从"门在、机制 5/6"改成"机制 6/6 与门都在待并分支上，权威树 0/6"**。
     两种说法都不能叫 DONE；**报告时必须把两个分母一起说**（UI 树 6/6 / 权威树 0/6），
     只说前一半就是把我 17:3x 那个毛病反过来再犯一次。收口路径见 DELIVERIES 23:2x 那条的 7 步检查点顺序。
+    **✅ 达成 @2026-09-21 00:4x（本机钟）—— 本条口径的两个条件都满足，A4 可以算完成：**
+    ```
+    条件一：六机制在权威树  → 合并 `fbe6a00` 后实测 SW_VERSION=6 / citynexus-recovery=2 /
+              updateViaCache=1 / navigateFallbackDenylist=1 / runtimeCacheVersion=3 / clientsClaim=1
+              ⇒ **6/6**；`public/sw.js` 首行已是 `const SW_VERSION = "citynexus-recovery-m3-a4-v1"`
+    条件二：定向门对 exact HEAD 跑通 → `--config playwright.sw.config.ts`（`npm run build && vite preview`，
+              即**真生产构建**）下 `qoder-sw-lifecycle.spec.ts` **2 collected / 2 passed，RC=0**
+              读数：`_qoder_recovery_20260919/raw/a4_gate_sw_config.json`
+              跑前已核 `git diff HEAD -- frontend/ backend/ contracts/` 为空 ⇒ **被测的树 == 已提交的树**
+    ```
+    **⚠ 留一条永久警告（我这次差点被它骗过去）**：默认工程（dev server）下这 2 条**会自我跳过**，
+    而 `test.skip` 的条件是"HTML 里含 `@vite/client`"——**跳过是设计，不是失败**（spec 顶部注释原话：
+    宁可"说明白"也不删门或放宽）。后果是：**用默认 config 跑会看到 `4 passed / 2 skipped, RC=0`，
+    而那 2 条被跳过的恰好就是 A4 的全部证据。**
+    ⇒ 硬规矩：**任何"A4/SW 生命周期已验证"的声明，必须写明用的是 `playwright.sw.config.ts` 与逐条状态**；
+    只看 `RC=0` 或只看 passed 数，等于没测。（我今天就是先拿到 `4 passed / 2 skipped` 才发现的。）
 9. **任何百分位数字必须自带样本量**（Commander 立，起因是实测）。
     `percentile(samples, 95)` 用 `index = round(0.95*(n-1))`，**n=8 时 index=7 = 最后一个**，
     也就是 **p95 恒等于 max**；n=20 时才是第 18 个。所以"p95 ≤ 1s"这种验收，
