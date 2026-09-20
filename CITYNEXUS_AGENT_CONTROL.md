@@ -3864,6 +3864,59 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
 `mock-` 显式标"模拟承诺"**；真值来源仍是后端字段，**不许前端自己判断"这大概是假的"**。
 **这一条排在 M2 可见之后、M3 之前**，因为它决定 M4 能不能诚实地讲。
 
+```
+- id: ORD-0084
+  to: e345b9d6
+  priority: high
+  if_head: 65e184d
+  blocks: M4 的 Wallet 真值门（仲裁 AR2 第 2 门）
+  subject: 把 commitments 上屏，并按 external_ref 显式标出"模拟承诺"
+  why: |
+    我读码核到：`V8Experience.tsx:83-88` 的 `commitments` 类型里有 `external_ref`，但
+    **全仓没有任何渲染点**（`grep external_ref` 在 features/components 下 0 命中；
+    `Bookings` 只画 `wallet?.reservations`，`:2806` 与 `:2962` 两处都是）。
+    ⇒ 后端即使落了 `external_ref=mock-booking:…` 的 CONFIRMED 承诺（D 已实测），
+      屏幕上也不会出现"模拟承诺"，**仲裁 AR2 第 2 门在前端物理上过不了**。
+  must:
+    1. 在 Wallet / Bookings 视图里渲染 `wallet.commitments`（现在完全没画），至少显示
+       `level`（如 `C3_Guaranteed`）、`kind`、`status`。
+    2. **真值标注只由后端字段决定**：`external_ref` 以 `mock-` 开头 ⇒ 该行必须显式标
+       "模拟承诺 / simulated commitment"；**不许前端自己猜"这大概是假的"**，
+       也不许对非 `mock-` 的承诺乱标。
+    3. 390/412 × 亮/暗 各一张截图，元数据含 HEAD/build/demo_mode 与"这条是 mock 还是真实"。
+    4. 若后端 `commitments[].external_ref` 当前为空（无预订时），保持不显示标签 —— **空不是 mock**。
+  acceptance: 我手机上建一个硬承诺后，Wallet 里能看到该承诺**且**带"模拟承诺"字样；
+              没有承诺时该字样不出现。
+  status: DISPATCHED@2026-09-21T03:3x+08
+  evidence: 待交（渲染 diff + 截图路径 + 有/无承诺两种状态的实测）。
+```
+
+```
+- id: ORD-0082
+  to: e345b9d6
+  priority: critical
+  if_head: 65e184d
+  blocks: M2 的可见验收（今晚唯一的可见里程碑）
+  subject: Today 英雄区按服务器场景钟选站（含无场景时的诚实回落 + 红门必须回来）
+  why: |
+    同一屏上面板写"现在 = 12:00"、下方 Today 却写"接下来 · 09:00 Old Town Gate" ——
+    服务器游标已经过了那一站，而 hero 还在用 `Date.now()` 选站（`V8Experience.tsx:1748`）。
+    我 03:2x 已用真读数证实：9 次采样里对照组（场景时间）3 个不同值、被测（hero Next）恒 1 个值。
+  must:
+    1. 有场景时按 `effective_now` 选站（`stageMs ?? Date.now()`，已在工作区）；
+    2. `NO_SCENARIO` / 读不到时才允许回落设备时间，且**回落必须在屏幕上说出来**
+       （`today-clock-source` 诊断行，已在工作区），**不许静默**；
+    3. 判据不是"把面板那行字搬到 hero 上"，而是**推进活动后"接下来"的站名/时间真的跟着变**，
+       且与服务器 twin 的下一站一致；
+    4. **那条红门必须回来**：`sim-today-hero-follows-the-stage` 要重新断言
+       "推进之后 `today-next` 的文字必须变"。先写门后改代码时，中间那次红是**正确的红**，
+       **不许为了让它绿而放宽门**（ORD-0079 第 3 条，与本条是同一件事）。
+  acceptance: 我手机上点 `推进当前活动`，英雄区 Now/Next 文字跟着变；
+              且把"场景时间变了但屏幕没变"的值代回去时，那条门确实红（我会自己复验）。
+  status: DISPATCHED@2026-09-21T03:3x+08（B 已在工作区实现 must 1/2，**未提交**）
+  evidence: 待交（hero 接线 diff + 回落文案 + 红门自证 + 复跑条数）。
+```
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
