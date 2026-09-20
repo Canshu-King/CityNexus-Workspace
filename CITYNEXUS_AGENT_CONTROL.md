@@ -3893,6 +3893,13 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
     2. **真值标注只由后端字段决定**：`external_ref` 以 `mock-` 开头 ⇒ 该行必须显式标
        "模拟承诺 / simulated commitment"；**不许前端自己猜"这大概是假的"**，
        也不许对非 `mock-` 的承诺乱标。
+       **字段路径我已实测给你（03:4x，隔离 DB 副本上跑通整条链）**：
+       `wallet.commitments[].external_ref` = `mock-booking:<uuid>:confirmed`、
+       `.level` = `C3_Guaranteed`、`.kind` = `BOOKING`、`.status` = `ACTIVE`、
+       金额在 **`monetary_value.amount_minor` + `monetary_value.currency`**（= 12000 / CNY），
+       状态在 **`monetary_value_status`**（= `KNOWN`）。
+       ⚠ **不要取顶层 `amount_minor`**——D 车道实测顶层读出来是 `None`（它自己已承认是字段名猜错），
+       真实键名是 `monetary_value.*`。
     3. 390/412 × 亮/暗 各一张截图，元数据含 HEAD/build/demo_mode 与"这条是 mock 还是真实"。
     4. 若后端 `commitments[].external_ref` 当前为空（无预订时），保持不显示标签 —— **空不是 mock**。
   acceptance: 我手机上建一个硬承诺后，Wallet 里能看到该承诺**且**带"模拟承诺"字样；
