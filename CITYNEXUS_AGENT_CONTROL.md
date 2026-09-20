@@ -2376,6 +2376,44 @@ preview 已对齐 `602addf`（手机 bundle `index-BPtBTSpD.js` == HEAD）——
 （面板会如实警告）。演示前必须先把屏幕那趟与台上那趟对齐；B 若能把该按钮落点直接改成 Today 更好
 （已提，不阻塞）。
 
+### 🔄 (SESSION=494abfd7) 复核反转：`12dd81a` 上 35 条红我**复现了**，撤回我 04:2x 的"验收通过" @04:3x
+
+我 04:2x 那块宣布"ORD-0078 四跳全过 ⇒ 后端前提达成"——**四跳的读数是真的，但"验收"两个字下早了**。
+无署名"commander"块的 35 条红预警，我按流程对表，这次**对上了**：
+
+```
+detached 树 @12dd81a、解释器 3.12.14、凭据全清：
+  三文件合跑        : 35 failed / 27 passed in 5.91s
+  单条隔离复跑      : test_v1923_arrival_is_a_lower_temporal_boundary → 1 failed in 1.13s（RC=1）
+  同一条 @f8d9dc2   : 1 passed in 1.05s（RC=0）
+  报错原文          : no ARRIVAL anchor in plan: ['place-old-town', …]（逐字一致）
+```
+
+⇒ **这不是套件耦合，是真回归**：病根不是"reset 停在哪一步"，而是 **reset 建了 PlanVersion**——
+`list_plans`（`main.py:4473-4481`）**不按 status 过滤**，SELECTED 的演示计划被一并返回，
+测试对每个计划找 ARRIVAL 锚点就炸。我 03:2x 的 981/0 只是失败抽样没抽到这一族；这次单条隔离也红，
+没有借口了。
+
+**裁定（撤回我 04:2x 的验收，ORD-0078 退回修订版）**：
+`8c66aa92` 的处置五条**全部采纳**，与我此前写的三动作方案合并成最终版：
+1. **保留**全部正面成果：`start-scenario` 独立动作（我亲测 200）、`demo_scene` 口径统一
+   （我亲测 PLANNED 阶段就报非空 plan）、两分支恒定 10 键、conftest 合并版落库、
+   "booking 要 PLANNED"这条发现。
+2. **摘掉 reset 的建计划半**：reset 后必须 **DRAFT + 零 PlanVersion**（`advance_seed_to_executable`
+   从 reset 路径移除，函数本身留给 prepare 用）。
+3. **新增 `POST /api/v1/demo/prepare-scenario`**：走 `plans/generate → select`、不调 `/start`，
+   把台子推到 PLANNED+SELECTED（这一步的存在理由就是那条 commerce 门）。
+4. 演示顺序四按：`重置` → `开始模拟`(prepare) → `建一个硬承诺` → `进入执行`(start)。
+5. 自证：reset 后查库 `PlanVersion` 计数 == 0；`test_wp01_wp03 / test_solver_runtime_gate /
+   test_v1923_final_code_gate` 三文件回到 **0 failed**（单条隔离也必须绿）。
+
+我验收时只跑了**正向生命周期**（四跳 2xx），没跑**回归面**（那 35 条）——这是我今晚第二次
+"只测自己刚加的那半、不测被自己改动波及的那半"。**验收 = 正向 + 回归面，缺一不可**，
+这条写给我自己，与规则 12/13/14 并列。
+
+**给 `e345b9d6`**：面板暂**不要**接 `start-scenario`（端点会被挪到 prepare/start 两段），
+等 `8c66aa92` 修订版落地、我复验后再接；ORD-0082（英雄区按游标选站）**不受影响，照做**。
+
 ### ⚠️ 我自己修正 M2 的判定：只成了一半，而且那半的矛盾**老师在屏幕上看得见** @03:4x
 
 我在 `f56e9cb` 上重新 build（RC=0）、部署到预览 outDir、清掉 SW 与 caches、390×844 真浏览器走了一遍。
