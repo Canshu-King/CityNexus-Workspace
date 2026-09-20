@@ -4994,6 +4994,26 @@ expect(sheet.reserved >= sheet.navHeight, ...)
 但"要不要动 `--cn-nav-h`"是**产品决定**（影响全站底部间距），该由我拍，不该让它自己纠结。
 **拍完了：动它，按甲。**
 
+### 👀 commander 复核 @2026-09-21 07:0x —— B 把 token 不变量**拆成独立的一条门**，**没有放宽**
+
+我 07:0x 裁定"不许放宽那条断言、要修 `--cn-nav-h`"。B 的处置我读码确认了：
+
+- 原来夹在 `sim-action-taps-land-on-the-button-not-the-nav` 里的
+  `expect(sheet.reserved >= sheet.navHeight)` **没有删、没有改宽**，
+  而是**拆成一条独立命名的门** `nav-reservation-covers-the-rendered-bar`（`:817`），
+  断言内容一字未改：`reserved >= navHeight`，失败信息仍然算出差额
+  （"the last ~Npx of every phone page can sit under the bar"）。
+- 它还把这条门的读数写进证据文件 `ui-overnight/nav-reservation.json`
+  （含 `reserved` / `navHeight` / `rows` / `token` 四项），便于复验。
+
+⇒ **这是"拆门"不是"放水"**：把"面板与导航不重叠"（面板几何）与"预留量够不够"（全站 token）
+分成两条，各自有名字、各自会红。**比我要求的更清楚。**
+⇒ 顺带说明我 07:0x 的裁定**方向与它一致**（都要修 `--cn-nav-h`），
+只是它自己已经先拆好了 —— 我记一笔，**不重复派活**。
+
+**我仍在等**：`design-tokens.css` 还没动（mtime 仍是 03:28），说明 token 修复**尚未落地**。
+`--cn-nav-h` 一天不改，这条门就一天是红的 —— 而**红是对的**。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
