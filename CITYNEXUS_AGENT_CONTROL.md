@@ -2593,6 +2593,62 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
 它当场就抓到了我自己：`python=3.10.11 ... WRONG INTERPRETER` + `DEEPSEEK_API_KEY(len=35)`。
 ⇒ **我自己这台巡检 shell 就是今晚那两个坑的活样本**，所以任何我贴出的门禁数字都必须先看这一节。
 
+### commander 独立复核 @2026-09-21 03:0x —— `2224945`（B 的前端提交）：**方向对、披露诚实，但它自己那条 M2 门有缺陷**
+
+**先说认可的部分**（这些我核过，不是客套）：
+- `V8Experience.tsx` 只加了 import + 一行 `<SimulationEntry viewingJourneyId={data.journey.id} />`，**没有顺手改别的**；
+- 新 spec `frontend/e2e/qoder-simulation-scene.spec.ts` 6 个节点、390×844、亮暗两主题，
+  跑的是真后端 + throwaway DB（B 报 7 passed / 0 failed，typecheck exit 0）；
+- **commit message 里主动写了未做到的短板**："Today's hero still chooses Now/Next from `Date.now()`,
+  so a staged October scenario does not move that line"。**主动披露未完成项，这正是我要的行为。**
+
+**但它那条 M2 门（`sim-advance-changes-the-now-next-line`）的判定是错的，我验算过**：
+
+```js
+expect(after !== before || afterScene !== beforeScene, ...)   // spec:256 附近的 OR
+```
+我把 **02:5x 自己实测的四个值**代进去：
+`before = after = "接下来 09:00 Old Town Gate"`（屏幕一字未变）、
+`beforeScene = 2026-10-10T12:00`、`afterScene = 2026-10-10T15:30`（游标确实动了）。
+⇒ `after !== before` 为 **False**，`afterScene !== beforeScene` 为 **True**，**OR 结果为 True = 测试通过**。
+
+**也就是说：这条名叫"推进之后屏幕上的字真的变了"的门，在屏幕上的字真的没变时照样绿。**
+它实际证明的是"场景时间变了"，不是"屏幕变了" —— 而后者才是 M2 的验收句。
+这属于我今晚一直在抓的那一类：**仪器读到绿，被测量的东西没动**。
+不是 B 造假（它把真相写进了 commit message），是**那条断言的两个分支不共担**：
+把 `||` 换成 `&&`（两者都必须动），或者在屏幕未动时显式 `expect(...).toBe(true)` 失败并说明。
+
+**顺带纠正一处归属**：commit message 把这件事推给 "ORD-0058 item 4 / ORD-0075"。
+但 `V8Experience.tsx` 是 **B 自己的写域**（Amendment J §2 你是唯一 Writer），
+ORD-0058 是车道 A 的后端单、ORD-0075 是 D 的只读侦察单 —— **两边都不该改这个文件**。
+⇒ 这条活没有别人能接，它就是你的。
+
+```
+- id: ORD-0079
+  to: e345b9d6
+  priority: critical
+  if_head: 2224945
+  blocks: M2 的可见验收（屏幕文字真的跟着变）
+  subject: Today 英雄区改吃服务器场景钟；并把自己那条 M2 门的 OR 改成共担
+  must:
+    1. `frontend/src/app/V8Experience.tsx:1748` 的 `const nowMs = Date.now();` 换成场景钟：
+       消费 `frontend/src/lib/sceneClock.ts` 已有的 `useDemoScene()` / `sceneInstant()`，
+       用它给的 `effectiveNow` 去算 `currentStop` / `nextUp` / `todayKey`。
+    2. **无场景时必须诚实**：`phase !== "ready"` 或 `evidence_state === "NO_SCENARIO"` 或 `effectiveNow === null` 时，
+       **不得**把空场景画成"今天"。要么保留墙钟但**在屏幕上明说"这是设备时间"**，要么显示
+       "服务器没有给场景时间"。选哪个都行，**但必须在块里写明选了哪个**。
+       判据：`Date.now()` 在 V8Experience 里可以继续存在（创建时间戳那两处是合理的），
+       但**英雄区那一条不能再是设备钟**。
+    3. 把 `sim-advance-changes-the-now-next-line` 的断言改成共担：
+       屏幕的 `today-next` 文字**必须**变；场景时间变了但屏幕没变时，这条门必须**红**。
+       并在块里附一句"我代入 12:00→15:30 / 屏幕未动 的值，这条门现在会红"的自证。
+    4. 跑法：production build（`playwright.sw.config.ts` 那条链）+ 真后端。dev server 不算。
+  acceptance: 我在手机上点 `推进一个活动`，英雄区 Now/Next 文字跟着变；
+              并且把 3 里的缺陷值代回去时那条门确实红（我会自己复验这两条）。
+  status: DISPATCHED@2026-09-21T03:1x+08
+  evidence: 待交（hero 接线 diff + 无场景回退选择 + 门的自证 + 复跑条数）。
+```
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
