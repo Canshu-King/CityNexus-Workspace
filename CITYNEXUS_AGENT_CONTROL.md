@@ -1975,6 +1975,74 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 我自己在这条订单上犯的两处也一并认：措辞"在**包内**跑 build/e2e"直接把 28,048 个禁路径文件诱导进了交付物；
 "补上那三份 spec 读数会变高"的预期是错的（那两份本就在我的 54/5 分母里，车道反驳成立）。
 
+- id: ORD-0033
+  to: 8c66aa92
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **真机预览抓到的：行程超过 7 天时，创建流程以裸 500 崩掉，用户看到的是"卡住"。**
+    用户 09:16 在手机上填了 09-27 抵达 → 10-05 离开（**9 天 / 8 晚**），第 3 步"确认创建"点了 4 次没反应。
+    预览后端日志（`D:\moodle\_qoder_preview_20260920\run\backend_ai.log`）四连：
+
+    ```
+    POST /api/v1/journeys                                  201  ×4
+    POST /api/v1/journeys/<id>/stay-options/generate       500  ×4
+    ValueError: V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9
+      app/core/temporal.py:37（max_day_count 默认 7，见同文件 22 行）
+      ← app/stay_mobility.py:201 _nights ← :240 capture_accommodation_offers ← :1277 generate_stay_options
+      ← app/main.py:2394 generate_stay_journey_options
+    ```
+
+    我自己按同一载荷走公网复现过：9 天窗口 journey **201** 然后 stay-options **500 / 1.1s**；
+    把窗口改成 7 天（09-27 → 10-03）同样载荷 → stay-options **200 / 3.6s**，向导就能往下走（用户随后确认"已经进去了"）。
+    ⇒ **7 天这个上限本身我不质疑**，它是产品规则；要修的是它**表达失败的方式**，两件事：
+
+    (1) **撞上限必须是具名 4xx，不是 500 + 栈回溯**。本仓已经有这个口径（`C4_ANCHOR_UNRESOLVED` 那种：422 + 消息里带具名码）。
+        请在 `stay-options/generate`（以及任何会走到 `derive_journey_temporal_shape` 的公开入口）把
+        `V13_JOURNEY_DAYS_OUT_OF_BOUNDS` / `V13_INVALID_ANCHOR_WINDOW` 转成 **422**，消息里带上**实际天数**与**允许上限**，
+        不要把 Python 栈抛给客户端。
+    (2) **边界要在创建入口就说**，不要等到最深处才响。`POST /api/v1/journeys` 现在对 9 天窗口返回 **201**（行程被建出来了），
+        然后下一步才炸——这等于把用户推进一个已知不可用的状态。请判定：要么 `POST /api/v1/journeys` 就以同一规则 422 拒绝，
+        要么明确声明"行程可以建，但超过 7 天不可生成住宿"并在响应里带出这个事实。**选哪个由你定，但必须二选一且写进报告**，
+        不能维持现在这种"建得出来、走不下去、还不报错"的第三态。
+
+    **验收（按数字认，不接受"已修复"）**：
+    a. 新门收集到的节点数（`pytest tests --collect-only -q -p no:cacheprovider` 的 collected，注明解释器）；
+    b. 一条断言"9 天窗口 → 422 且消息含 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS` 与实际天数"，**并给出它杀得掉的证据**：
+       把 422 改回 `raise ValueError` 时该节点必须变红（点名那条节点 id）；
+    c. 一条断言"7 天窗口仍然通过"（防我把上限改小蒙过去）；
+    d. 全量后端跑一遍并报 `N passed / M skipped / K failed`，与账本权威读数 913/15/0 对表；差值要逐条点名。
+    **不要顺手扩大范围**：不要改 7 天这个数值本身，不要动 `/twin` 的 `projection_status`，不要碰前端（另单 ORD-0034）。
+  status: DISPATCHED@2026-09-20 09:2x
+
+- id: ORD-0034
+  to: e345b9d6
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **首进门向导把失败完全吞掉了 —— 这是用户"一直卡在确认创建"的直接观感来源。**
+    后端那条 500 是另一单（ORD-0033），你只管界面这一半，但请注意：**没有你这一半，后端的具名错误用户依然看不见。**
+
+    实测锚点（我逐行读过，不是推断）：
+    - `src/app/V8Experience.tsx:796-801` 渲染 onboarding 时只传了四个属性：
+      `onCreate` / `onUseTianjinDemo` / `onCancel` / `busy`，**没有传 `message`**；
+    - `src/features/setup/JourneyTrialSetup.tsx` 里**根本不存在 `message` 这个字**（全文件 0 命中），
+      所以它也没有任何渲染错误的位置；
+    - 而 `createJourney` 的 `catch` 是写了状态的（`setMessage(error instanceof Error ? error.message : …)`，约 `:530`），
+      壳层也确实会显示它（`:812`、`:819` 两处 `message ?? …`）——**只有 onboarding 这条提前 return 的分支漏了**。
+    结果：`setupBusy` 归位、按钮能再点、**屏幕上没有任何一处告诉用户为什么没成** ⇒ 与"卡死"不可区分。
+
+    要求：
+    1. 把 `message` 传进 `JourneyTrialSetup` 并在**第 3 步的确认按钮附近**渲染出来（可见、可读、暗色下对比度达标）。
+    2. 遵守 Amendment F：这是"声明视觉地基"，**不要**为了显示一条错误就把向导搬进 `.v8-product-shell`、也不要引入底部主导航。
+    3. 失败时**不要**让界面回到"看起来还能再点一次"的静默态：要么显示原因，要么明确显示"这一步没有成功"。
+    4. 触控目标继续 ≥44px（触屏层），桌面细指针的 30px 密度照旧保留。
+    **验收**：一条 e2e 门，断言"创建请求失败时屏幕上出现该错误文案"，并给出**它杀得掉的证据**
+    （把 `message` 属性去掉 → 该节点必须红，点名节点 id）；附 `npx playwright test --list` 的 collected 与其中 setup 工程行数，
+    以及一次全量 suite 的 `N passed / M skipped / K failed`。
+    **不要顺手扩大范围**：不动后端、不改导航拓扑、不动 `V8Experience.tsx` 的壳层结构。
+  status: DISPATCHED@2026-09-20 09:2x
+
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
 **手机地址：`https://intake-matt-white-wearing.trycloudflare.com`** · 服务的是权威树 `c0367c1`（`_qoder_integration_20260919`）
@@ -1996,6 +2064,32 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 **限制（已实测，不是推测）**：quick tunnel 无访问控制。原先的敞口是"能改这套演示数据"（公网 `POST /api/v1/demo/reset` 实测 200）；**用户 08:5x 开了实时 AI 之后，敞口升级为"能花真钱"**——见上表那把 key 与 9.04 CNY。我给的缓解选项（用户点头我才做）：① 把 4 小时生命周期缩短；② 重启隧道换一条新 URL（旧链接立即失效，代价是用户要重新打开）；③ 换命名隧道 + Cloudflare Access 加访问控制；④ 把 `CITYNEXUS_DEEPSEEK_REASONING_EFFORT` / `CITYNEXUS_DEEPSEEK_WEB_SEARCH` 降档以限单价。**已明确告知用户：链接别外传。**
 
 **给其它车道**：**不要**重启或抢占 `127.0.0.1:4781` / `:8781`，**不要**删 `D:\moodle\_qoder_preview_20260920\`；**不要**为了"恢复干净状态"把 AI 又关掉或在启动行把 `DEEPSEEK_API_KEY` 置空——开实时 AI 是用户此刻的明确指令；也**不要**拿这个库去跑 e2e（会写坏用户正在看的界面状态）。需要跑门请用自己的端口与自己的 `_*.db`。
+
+### 真机预览抓到的产品缺陷（用户 09:16 截图"一直卡在这个界面"）— 已下 ORD-0033 / ORD-0034
+
+**这不是隧道问题，也不是 AI 问题。** 用户在首进门向导第 3 步"确认创建"点了 4 次没反应。我从预览后端日志里直接拿到了原因：
+
+```
+POST /api/v1/journeys            201   ×4（每次都建成功了）
+POST /api/v1/journeys/<id>/stay-options/generate   500   ×4
+ValueError: V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9
+  app/core/temporal.py:37  ←  max_day_count 默认 7（同文件 22 行）
+  app/stay_mobility.py:201 _nights → :240 capture_accommodation_offers → :1277 generate_stay_options
+  app/main.py:2394 generate_stay_journey_options
+```
+
+用户的行程是 09-27 抵达 → 10-05 离开 = **9 天 / 8 晚**，超过产品自己的 7 天上限。两条**互相独立**的缺陷：
+
+1. **后端（ORD-0033，`8c66aa92`）**：撞上限时抛裸 `ValueError` ⇒ HTTP **500 + 栈回溯**，而不是本仓其他地方那种具名 4xx 拒绝（对照 `C4_ANCHOR_UNRESOLVED` 的口径）。而且向导第 1 步允许用户填任意长度，边界只在最深处才响。
+2. **前端（ORD-0034，`e345b9d6`）**：`V8Experience.tsx:796-801` 渲染 `<JourneyTrialSetup>` 时**只传 `onCreate/onUseTianjinDemo/onCancel/busy`，没传 `message`**，而 `JourneyTrialSetup.tsx` 里根本没有 `message` 这个字。所以 `createJourney` 的 `catch` 把错误写进了一个界面上不显示的状态 ⇒ **失败完全不可见**，用户看到的就是一直停在同一步。壳层是有显示的（`:812`、`:819` 两处 `message ?? …`），只有 onboarding 这条分支漏了。
+
+**我实测的复现与绕行**（同一套载荷、同一把尺子，走公网隧道）：
+- 用户原窗口 09-27 → 10-05（9 天）：journey **201**，stay-options **500**，1.1s ⇒ 与日志一致；
+- 改成 09-27 → 10-03（**7 天 / 6 晚**）：journey 201，stay-options **200**，3.6s ⇒ 向导能继续走，用户随后自己确认"已经进去了"。
+- 附带一条待查（不当缺陷记账）：那次 7 天成功响应里我按 `options` 取列表读到的是 0 条，但我**没核对该响应的真实键名**就去取，所以这个"0"不成立、不作证据；用户随后确实进了应用，说明路径是通的。
+
+**给用户的口径**：预览里的行程**最长 7 天**，超了现在会静默卡住（已派单修）。
+
 回收（按端口，别照抄 PID）：
 ```
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 4781,8781 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force"
