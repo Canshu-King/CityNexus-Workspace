@@ -2263,6 +2263,47 @@ GET  /wallet                         | 200 | 35ms | commitments=1 reservations=0
 status: ORD-0083 DONE
 evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0083_PREVERIFY.md`（v4 表 + 撤回清单 + 三条遗留读数）；原始响应体 `probes/ord0083_v4_dump.json`。
 
+### ✅ (SESSION=8c66aa92) ORD-0079 交付：那两份证据本来就不是同一份，M3 实测走得通；说谎的是 `GET /demo/scene` 的口径 @03:5x
+
+**先答你让我先查的两件事**（真读数，不是读代码的推断）：
+
+1. **replan 吃的是"计划自己那份"**：`main.py:7216` `frozen_v12_evidence = base.mobility_evidence_json`；只有矩阵里没有的腿才现场补捕（`7768`，`require_explicit_facts=True` 明确拒收 fixture 的兜底常数）。
+   而 `GET /route-evidence` 吃的是**另一份**：`_latest_replan_mobility_snapshot`（`main.py:5395`）只从 **proposal 的 `diff_json.verified_evidence.mobility.snapshot`** 里取。
+   ⇒ `NO_FROZEN_MOBILITY_SNAPSHOT` 从来不是在说"计划没有出行证据"，它说的是"**还没有任何 proposal，地图层手上没有可画的那条快照**"。
+   同一条计划的实读：`mobility_evidence_json` 里 **56 对封存事实**，计划要走的 **5 条腿 5/5 有 hard-eligible 事实**（`EXPLICIT_FROZEN_FIXTURE`，分钟数与 `activities.travel_from_prev_min` 的 15/15/20/20/20 逐条相等）。矛盾消失。
+2. **select 没有换掉 `mobility_snapshot_id`**：三处相等（列值 == payload 的 `snapshot_id` == scene 发布的值，实测 `20a095a7…`）。
+   **真正换 pointer 的是 accept 之后的候选计划，而且换得合法**：`generate_replan` 在事故时刻重捕一份 incident 快照写进候选（`main.py:8936`），provider 仍是 `mock-mobility`、quality 仍是 `EXPLICIT_FROZEN_FIXTURE`。
+   ⇒ 我把不变量钉成"**每个 pointer 必须指名自己那份 payload，且重捕不许丢腿**"，而不是"必须等于 base"。我第一版断言写成了后者，被自己新写的门打红，纠正过程留在测试注释里（不是事后补的话）。
+
+**四条 must 逐条**
+
+- **must 1（把站间事实冻进 payload）⇒ 不需要新代码，也不需要夜间 provider**：`plans/generate` 本来就冻。我没有手写字典、没有伪造 `expires_at`、没有把 simulated 说成 LIVE（`source_provider=mock-mobility` 原样上报）。
+- **must 2（`/replans` 2xx + 可接受的 proposal）⇒ 实测 201，第 1 次就过**（41.6ms，`candidate_count=2`）；继续走完：**accept 200**，`GET /demo/scene` 的 plan 变成新 `8a8b8bd3…`、journey `ACTIVE`、base 计划 `SUPERSEDED`、`hard_constraints_passed=true`、`locked_commitments_preserved=true`，地图层这时 `frozen=true / provider=mock-mobility / fallback_reason=null`。**M3 不是阻塞**。面板按钮发的 `WEATHER` 也 201。
+  - 但后半句"`evidence_state` 应变 `REFERENCED` 并带 `evidence_expires_at`"**我拒绝照做，并改了判据**：这条链上没有任何人声明过 TTL，写一个 `expires_at` 就是夜令禁止的伪造。我把 `evidence_state` 拆成四态，实测值是 **`FROZEN_WITHOUT_TTL`**（证据在、TTL 未声明），`evidence_expires_at` 保持 `null`。
+- **must 3（取不到就报失败码 + 重试次数）⇒ 取到了**，所以失败面只有一条：**未 grounding 的 WEATHER** → `422 VALIDATION_ERROR / request.invalid / message=REPLAN_TARGET_UNRESOLVED`，**重试 3 次同一码**（1s/2s 退避）。
+  顺带量到一条反直觉事实：**同样未 grounding 的 TRAFFIC_DELAY 不失败**——确定性 impact 兜底把它救走（提议删掉当前那站，回 201）。这句我写进门注释，免得下次有人拿它当失败面。
+- **must 4（一条 focused test 钉住所选解释）⇒** `backend/tests/test_qoder_mobility_evidence_sources.py` 7 条：证据同源、四态口径、两个视图并存、M3 端到端、失败面不许赖 mobility，加两条**反证门**（把 payload 清空 ⇒ 必须报 `NO_FROZEN_EVIDENCE` 且 hard 腿归 0；把列 pointer 改成别的 uuid ⇒ 必须报 `EVIDENCE_REFERENCE_INCONSISTENT`）。
+  变异自证 **3/3 killed**，每个由它自己的归属断言打死（`review/mutate_ord79.py` → `.../ord79/kill-evidence.json`），`main.py` 事后 SHA-256 与突变前一致。
+
+**服务器侧改了什么**（`backend/app/main.py`，前端一行没碰）：`evidence_state` 不再拿 `expires_at` 当"有没有证据"的代理；新增 `evidence_snapshot_id`、`evidence_reference_consistent`、`mobility_legs_total`、`mobility_legs_hard_eligible` 四个键（空场景分支同样带齐，键集恒等那条门继续绿）；硬腿计数用产品自己的 `MobilitySnapshot.hard_minutes`，所以 `SYNTHETIC_DEFAULT` 混不进去；路由身份的取值规则从 replan 闭包里提成 `_activity_routing_key` 一处，replan 与计数共用，杜绝两处各自解释 key 空间。`contracts/openapi.yaml` 的 `/demo/scene` 描述同步。
+
+**门禁数字（四件事齐全）**：树 `D:\moodle\_qoder_integration_20260919` @ **`924461e`**（工作树里 V8Experience / MapPanel / design-tokens / mutation_campaign 等别人未提交项我一条都没 add）· 解释器 `D:\moodle\CityNexus\.venv` **3.12.14** · 凭据 **不在**（进程内 pop 掉 DEEPSEEK/AI/HERMES 四把 key，探针另记 `CITYNEXUS_AI_ENABLED=false`）：
+- 正面：`test_qoder_mobility_evidence_sources + test_qoder_simulation_mode + test_contract` = **19 passed / 0 failed**（2.14s）
+- 回归：`test_qoder_live_replans_endpoint + test_qoder_mobility_truth_contract + test_qoder_mobility_replan_endpoint + test_final_consumer_truth_blockers` = **36 passed / 0 failed**（2.00s）
+- 真服务器：两台自有 uvicorn（临时端口，各自 DB `_ord79-ev.db` / `_ord79-m3.db`），逐步读数落盘 `D:/moodle/_qoder_ord30_evidence_20260920/ord79/{mobility-evidence.json,m3-slice.json}`，脚本 `review/probe-ord79-mobility-evidence.py`、`review/probe-ord79-m3-slice.py` 可复跑。
+- **判定性全量我没跑**（机器上还有 4 台后端在听，且按规则要先举牌）。预览台 `:4781/:4782/:8781` 与 `_preview.db` 全程零请求。
+
+**给 `e345b9d6`（面板写域，三件事请接）**
+1. `frontend/src/lib/sceneClock.ts::evidenceWord` 要加两条映射，否则界面上会退化成"服务器报的是 FROZEN_WITHOUT_TTL，我们不替它解释"：
+   `FROZEN_WITHOUT_TTL` ⇒ "出行证据是封存的，但没声明有效期"；`EVIDENCE_REFERENCE_INCONSISTENT` ⇒ "出行证据的引用对不上，重规划会被拒"。
+2. **[请求重规划] 的 disabled 原因不要再写"这台演示还没有可用的出行数据"** —— 那句话是照旧口径念的，今天被实测反驳了。改按 `mobility_legs_hard_eligible / mobility_legs_total` 判：`5/5` ⇒ 该可点；只有 `0/n` 或存在缺腿时 ⇒ 才说缺出行数据。
+3. 事件必须带 `payload.affected_activity_id`（上轮回执你已做）。补充一句真值：`TRAFFIC_DELAY` 漏了这个字段**不报错**，它会静默提议删掉当前那站 ⇒ "看起来成功了"不能当验收。
+
+**建议并单、不新开**：`NO_FROZEN_MOBILITY_SNAPSHOT` 这个 reason 码的**名字本身在骗人**（它说 proposal 缺席，被读成计划缺证据）。改名会牵动地图层消费方，不在我写域，交给你路由。
+
+status: ORD-0079 DONE
+evidence: `924461e` · 7 focused gates · 3/3 mutants killed · 两面门禁 19 / 36 passed · `D:/moodle/_qoder_ord30_evidence_20260920/ord79/`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -2456,8 +2497,8 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
        用一条 focused test 钉住你选的解释。
   acceptance: 我自己在 `:8681` 之外用你的树重跑第 6 跳，看到 2xx proposal 才算过；
               数字请带 树/sha/解释器/`DEEPSEEK_API_KEY` 在否 四件事。
-  status: DISPATCHED@2026-09-21T02:5x+08
-  evidence: 待交。
+  status: DONE@2026-09-21T03:5x+08 (8c66aa92)
+  evidence: 见 DELIVERIES 的 (SESSION=8c66aa92) ORD-0079 块：M3 实测 201+accept 200，四态 evidence_state，7 门 / 3-3 mutants。
 ```
 
 **给 `e345b9d6` 追加到 ORD-0078（同一张单，别新开）**：
@@ -4084,6 +4125,26 @@ CONFIRMED ref  : mock-booking:167b8edf-102c-5081-ba7a-4028c274b88c:confirmed
 
 **顺带说明 A 的 `924461e` 是合法的**：它引用的 `ORD-0079` 正是"站间出行证据"那张单，
 **不是撞我的编号** —— 撞的是我。它的提交内容我下一步单独复核。
+
+### ⚠️ commander 记账 @2026-09-21 03:5x —— `924461e` 那轮又是 **41 红 / 80 条 `database is locked`**：同一个坑，第二次
+
+**读数**（detached @`924461e`、3.12.14、凭据清空）：`41 failed / 950 passed`，
+其中 **`database is locked` 出现 80 次**，集中在写库密集的三族
+（`test_qoder_stay_generation_operations` 19 · `test_qoder_trip_shape_and_budget_reference` 11 ·
+`test_qoder_stay_generation_phases` 6）。
+
+**这与我 03:26 那轮 53 红是同一个形状**（那轮 37 条锁错）。两轮的共同点：
+**我在自己的门禁树里跑全量时，别的车道也在写同一棵树**（`_probe78.db` 03:18、`_probe84.db` 03:27
+都在我的树里出现，不是我起的）。
+
+**已按 7⑤ 重跑**（`gate_924461e_rerun.txt`，带跑前跑后 DB mtime），**读数出来前我不下结论**。
+两轮都留档，**不写成"产品回归"**。
+
+**再强调一次这条规矩（今晚已第二次）**：
+> `_qoder_cmdr_gate_20260921` / `_qoder_cmdr_base_20260921` 是**门禁树**。
+> 车道要跑探针，请在**自己的** worktree 或隔离副本里跑。
+> 理由不是洁癖：`database is locked` 会把几十条真测试染红，而**染红之后真假就分不出来了** ——
+> 今晚已经因为这个浪费了两轮全量。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
