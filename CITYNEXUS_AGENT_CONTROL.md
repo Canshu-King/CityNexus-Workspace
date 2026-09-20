@@ -2460,6 +2460,21 @@ GET  experience            → cursor "Old Town Gate" · cursor_status VALID · 
 status: ORD-0082 **①④ 代码在盘未提交、②实现是我那份**；门 12/4跳/1红；ORD-0081① **未达成**（原因与两个可选修法已报）；ORD-0070 未动（(b) 审计已答）。
 evidence: `review/ORD-0082-work-in-progress.diff`(105,846 B/sha256 b665b3edae5fea3a)、`review/scene-envelope-*.json`、`review/probe-stage-walk.py` 输出、`review/evidence/ui-overnight/ord0081-reset-arms.json`。
 
+### e345b9d6 状态转达（不是交付）@2026-09-21 06:2x（本机钟 `date`=06:21）→ 四张单实现全在工作区，门在逐文件跑；hero-follows 4/4 已绿
+
+按 25~30 分钟节律报一行：**本轮 ORD-0082 / 0085 / 0086 / 0087 + prepare/start 接线全部改完，两种 tsc config 均 RC=0，门正在跑，尚未提交。**
+
+- `sim-today-hero-follows-the-stage` zh/en × 390/412 **4/4 绿**（`run-run941378`：整文件 15 collected / 14 passed / 1 failed，唯一那条红是下面第 2 条）。
+  读数在 `review/evidence/ui-overnight/hero-follows-*.json`：zh@390 `serverNow="Check in · Haihe Riverside Hotel"` == `heroNow`，`serverNext="Overnight · Haihe Riverside Hotel"` 出现在 `heroNext` 里，`cursorMoved: true`；en@412 `serverNow="Tianjin Museum"`、`serverNext="Tianjin Eye"`、`heroNext="NEXT 18:30 Tianjin Eye 4 stops today"`。
+  **根因有两条，两条都改了**：① Hub 的 props 里收了 `onStageChanged` 却**从没往自己挂的 `<SimulationEntry>` 传**，所以面板推进之后 `/experience` 一次都没重读（英雄区根本没被告知要跟着动）；② 选站规则从"我自己按 sequence_no 推 next"换成服务器那一份 `twin.context.execution`（`now_activity_id`/`next_activity_id`/`cursor_status`，与 Live 读同一块，`_execution_truth` 的 docstring 自己写了"客户端不得按墙钟推断执行状态"）。`STALE` 游标仍按时间窗读并在诊断行点名。
+- `sim-refusal-does-not-outlive-the-reading` **绿**（`run-run942577` 813ms，逐步计时 `[refusal-node +688ms] refusal retired`）；`sim-action-in-flight-is-perceivable` **绿**（aria-busy + 按钮文案自报"正在执行"）。
+  上一轮那条红的真因**是量具**：`click()` 会等 enabled 而 `aria-disabled` 算 disabled，卡到超时；改成 `click({force:true})` 之后又发现 `expect(locator).toHaveCount(0)` 在句子已经消失的屏幕上仍挂满 240 秒（`Received: undefined`），换成 `expect.poll(() => page.evaluate(计数))` 才判得动 —— **断言一句没删、没放宽**，`data-clock-source` 那条前置也照旧。
+- `sim-action-taps-land-on-the-button-not-the-nav`：上一版**我不认它算证据**。它绿，但 `window.scrollTo` 在这棵树里是空操作（容器才是滚动条），"默认态"继承的是上一个姿势的滚动位置，而 atBottom 那一次**屏幕上 0 个按钮＝什么都没断言**（读数：`light-atRest visible=4/11`、`light-atBottom visible=0`）。已重写为：直接量"面板整体在 fixed 导航之上"（`position`/`bottom`/`navTop`）+ 滚动**所有**可滚盒 + 每个姿势要求至少 1 行可见 + 逐行（11 行）hit-test。**重写版还没重跑，跑完补数字。**
+- 正在读：`qoder-wallet-commitments.spec.ts`（真链路 + UNKNOWN 价 + 非 mock 引用 + 空列表四臂）与 `qoder-reset-from-wizard.spec.ts`（含新加的三步链节点：重置→准备舞台→开始执行→"现在"必须等于服务器游标那一站）——`:4521/:8521` + throwaway DB。
+- ORD-0081 的 (a)/(b) 我不再等裁：`924461e` 的七跳亲测已把三步链定成老师路径，我按 (a) 把门改成三步链并让它自己读数。
+- 突变表备好未跑：`review/ord0082_0087_kill_drivers.py` 8 个变异体，其中 `killC1`（把面板的顶部安全区选择器改成不匹配）专门用来判 ORD-0085 那条门会不会"只在摆好的姿势下过"。
+- 一条脏账如实报：`V8Experience.tsx` 对 HEAD 的 diff 有 ~1095 行，**真实改动是 19 个 hunk / 471 行**（`review/V8Experience.semantic.diff`，先把 HEAD 过一遍 prettier 再对齐算出来的）。多出来的是 04:4x 我那次 `npx prettier --write` 的整档重排，还在盘上。我试过把 19 个 hunk 贴回未格式化的 HEAD 副本：18/19 上了、**英雄区选站那一块没上**，所以我没有拿它替换正在被门验证的那份内容。要零 churn 我可以再做一轮，代价是门要重跑 —— **请裁要不要**。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -4780,6 +4795,31 @@ B 新建了 `frontend/e2e/qoder-today-follows-the-stage.spec.ts`（工作区，�
 
 ⇒ **这条失败属于"仪器等错了条件"，改仪器不改判据，处置正确。**
 **仍按老规矩：未提交 = 未交付**，我还没自己跑过这个文件。
+
+### 🧰 commander 准备 @2026-09-21 06:2x —— 列车前的两件基建（都已落盘，不是口头计划）
+
+**① 我查清了"手机后端到底跑的是哪棵树"**（这是今晚一直悬着的风险）：
+`:8681` 的进程是 02:39 起的，**磁盘上没有任何文件记录它用哪棵树、哪个 DB** ——
+这正是"手机跑着没人能命名的东西"的成因。实测：它用
+`D:/moodle/CityNexus/.venv/Scripts/python.exe -m uvicorn app.main:app --port 8681`，
+而**当前它在 :8681 上答的还是旧行为**（`demo/prepare-scenario` = 404）⇒ **它跑的是旧代码**。
+
+**② 我写了可复现的重启脚本** `raw/restart_phone_backend.sh`（已落盘）：
+```bash
+bash raw/restart_phone_backend.sh [port]     # 默认 8681
+```
+它做三件对的事：
+- **打印**要用的 tree / HEAD / port / DB / 解释器版本（**先命名，再动手**）；
+- **只杀真正在监听那个端口的那个 PID**（`netstat` + `LISTENING` 过滤），
+  **绝不"把所有 python / 所有 cloudflared 都杀了"** —— 这台机器跑着多条车道，
+  盲杀今晚已经害我们丢过证据；
+- 用 `CITYNEXUS_DATABASE_URL` / `CITYNEXUS_DEMO_MODE=true` / `CITYNEXUS_AI_ENABLED=false` 起，
+  日志落 `run/backend_<port>.log`，最后**回读一次 `/demo/scene` 让人确认台上那趟对不对**。
+
+⇒ **重建 preview 时我会先跑它**，这样"手机后端 = 当前权威树"这件事**有据可查**，
+而不是靠"我记得是那棵"。
+
+**我仍不发车**：B 的工作区还没提交（`qoder-today-follows-the-stage.spec.ts` 06:24 仍在改）。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
