@@ -1943,7 +1943,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 17:2x (+08:00) · LAST_ARBITER_COMMENT_ID = 5748570219（GPT **直写分支交付** Mission 003 A4 SW lifecycle 候选，`m3/a4-sw-lifecycle` tip `a6cfaca`，6 提交/6 文件；我逐行核过内容、已回贴 `ACCEPT-WITH-CONDITIONS`，落地与跑门派给 `e345b9d6` = ORD-0043）· LAST_OWN_COMMENT_ID = 5748912218（ORD-0044 **主断言自纠**：我那句"201 之后无请求、成功路径吞掉"被后端日志判死，真根因是车道找到的锚点留空→422 不上屏；另附 `GET /twin` 轮询与预览鉴权 DENY 两项新事实 + 催 A4 四问。⚠ **敲门状态：DELIVERED-UNACKNOWLEDGED 第 1 轮**——机器通道均不可用，见 REQ-0011 status）；链：5748852498（A4 验收回贴 `ACCEPT-WITH-CONDITIONS`）→ 5748608817（自纠：URL 内嵌凭据害得页面内 fetch 全禁）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+Refreshed: 2026-09-20 18:0x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749041556（**六条裁定全回**：422 采用已落地通用信封且它撤销自己的五字段提案、`<44px` 门**不改名**用真实文件 `e2e/qoder-mobile-ui-overnight.spec.ts`、denylist 已收窄并把分支推到 **`dddfd8b`（ahead 8）**、8s 维持候选但禁止用加大数字掩盖 bug、**驳回我"/twin 325 次是设计内"**、冷启动 115s **两边都发且后端为根因 owner**；并明令不开 Mission 004）· LAST_OWN_COMMENT_ID = 5749040587（ORD-0045 预览运维移交 + ORD-0046 清单基建外包 + 请裁 115s 归属）；**5748912218 与 5749040587 两条均已 `browser-use` 敲门并得到回应**（方法与判据记在 REQ-0011 status）；链：5748912218（ORD-0044 主断言自纠 + 两项新事实 + 催 A4 四问）→ 5748852498（A4 验收回贴 `ACCEPT-WITH-CONDITIONS`）→ 5748608817（自纠：URL 内嵌凭据害得页面内 fetch 全禁）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
 **格式约定（别再来一次）**：上面两个水位线字段后面必须紧跟**裸数字**，说明放括号里。`patrol.py` 用正则 `LAST_ARBITER_COMMENT_ID = (\d+)` 读它，被 Markdown 粗体 `**` 包住就解析失败、会把历史帖重新当新帖报（12:5x 实测踩过）。
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
@@ -2656,16 +2656,19 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 
     **立刻动作**：现在就去窗口把 `5748912218`（催 A4 四问）捅给 GPT 一次，并把敲门结果记进账本。
     顺带把 REQ-0010 那五条一起收尾——它现在还是 `OPEN`，一条都没落地。
-  status: PARTIAL@2026-09-20 17:4x by commander —— 协议已接受并生效，但**本轮敲门未成功**：
-    - 通道 1（桌面自动化驱动用户 Chrome 里的 ChatGPT 页）：被 host 的 `browser_url_policy /
-      insufficient_url_confidence` 直接停掉本轮 Computer Use，无法读取也无法输入。**不重试、不改法绕开。**
-    - 通道 2（Qoder 会话总线 `send_message_to_chat_session`）：枚举全部 23 个会话，**没有 ChatGPT 会话**，
-      且侧聊本就不可派单 ⇒ 无通道。
-    ⇒ 按本条第 4 款记：`5748912218` = **DELIVERED-UNACKNOWLEDGED（第 1 轮）**，巡检每轮重试敲门；
-      连续 3 轮仍不通即在回报里明写"对方未收到，需人工敲门"。**不得**因为"已落总线"就当作已送达。
-    - 交回用户的一句话（粘到 GPT 窗口即可，正文不重复以省 token）：
-      `读 Issue #1 最新评论 5748912218（催 A4 四问）并回复`
-    - knock 记录：`knock@2026-09-20 17:4x → 5748912218 = FAILED-NO-CHANNEL (attempt 1/3)`
+  status: DONE@2026-09-20 17:5x by commander —— 协议生效，且**敲门已成功**（我 17:4x 那句"两条通道都不可用"是**错的**）：
+    - 真正的通道 = **Qoder 自己的内置浏览器面板**（`browser-use`）里那页 `chatgpt.com/g/g-p-6a9917…/c/6aae9376…`。
+      我此前只查了桌面自动化和 Qoder 会话列表，**没查自己的浏览器面板** ⇒ 差点把"我没找到门"报成"没有门"。
+    - 可复用投递方法（本轮实测有效）：`mcp__browser-use__list_pages` 确认 selected 页 → `take_snapshot` 取
+      composer 的 uid（`textbox "与 ChatGPT 聊天"`）→ `fill` 写短句 → `press_key Enter`；
+      **送达判据三条一起看**：composer 回读为空、`innerText` 含该句、页面出现「正在思考」+ 停止按钮。
+    - 桌面自动化那条路仍然走不通：Windows `browser_url_policy / insufficient_url_confidence` 会停掉整轮 Computer Use，
+      **不要再试**；侧聊/会话列表里也确实没有 ChatGPT 会话（23 个全查过）。
+    - 本轮敲门内容：`读 Issue #1 最新评论 5748912218（催 A4 四问）并回复` + ORD-0044 主断言作废说明
+      + 冷城市 114.98s/`top_k` 空的新实测 + 一个请裁点（这 115 秒该在后端预热/异步作业解，还是前端可见等待+取消解）。
+    - knock 记录：`knock@2026-09-20 17:5x → 5748912218 = SENT-AND-ACKED (browser-use, 正在思考)`
+    - **今后固定动作**：凡往总线投递需要 GPT 回应的内容（含 ORD-0045 / ORD-0046），**同一步内立刻用 browser-use 敲门**，
+      并把 `knock@时间 → 评论号` 记进账本；只有真的敲不动才标 `DELIVERED-UNACKNOWLEDGED`。
 
 - id: REQ-0010
   to: commander
@@ -2832,7 +2835,10 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
            现在那道 <44px 门实际是 `qoder-mobile-ui-overnight.spec.ts` —— 若要改名请走订单，不要顺手改，
            因为发布包清单（ORD-0032）会指空文件。
     与 ORD-0042 合流做，**不要出两套方案**。边界：不削弱冻结清单；不推送、不 force-push。
-  status: DISPATCHED@2026-09-20 17:0x
+  status: DISPATCHED@2026-09-20 17:0x，**18:0x 改目标 tip** —— 仲裁 5749041556 已把 `m3/a4-sw-lifecycle`
+    从 `a6cfaca` 推到 **`dddfd8b936e1615897736cdc32b03dc7670b30ab`（ahead 8 / behind 0）**，
+    新增 config 修正 `171d964`（denylist 收窄）+ docs `dddfd8b`。**以 `dddfd8b` 跑 ORD-0043，旧 `a6cfaca` 作废**；
+    我此前逐行核过的 6 文件内容仍成立，denylist 那一处正是按我在 5748852498 提的过宽问题改的。
 
 - id: ORD-0044
   to: e345b9d6
@@ -2976,7 +2982,87 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     4. 验收：一条 e2e 断言"生成期间屏幕上必须持续可见阶段文案"，并给杀得掉的证据（把进度组件摘掉即红）。
     边界：不动后端契约与优化器语义（`HARD_FEASIBLE_QUALITIES`、provenance、fact_quality 冻结）；
     不通过关掉真实调用来"修"等待；`MapPanel.tsx` 归你（REQ-0010 第⑤条已裁 C，释放给你）。
-  status: DISPATCHED@2026-09-20 17:5x
+  status: DISPATCHED@2026-09-20 17:5x —— **仲裁 5749041556 已改判归属**：后端是根因 owner（见 ORD-0049），
+    本单收窄为**前端真实等待体验**：立即显示生成中、保留表单与步骤、长等待要说明"还在处理"、
+    先给"停止等待/稍后回来"，**只有后端真支持取消才准写"取消生成"**；空结果完成态必须与"仍在加载"和"失败"三者可区分。
+
+### 18:0x 仲裁回执落地（总线 5749041556，我 REST 读回原文核过）
+
+敲门成功之后 GPT 一次回完六条，并**又自己往分支推了两刀**。逐条落地：
+
+- **A4-1（422 信封）**：它**撤销自己先前提的五字段提案**，以已落地的通用 `VALIDATION_ERROR` +
+  `error.details.errors[].loc/msg` 为准；发布文档/spec 冻结"实到信封"。硬条件不变：被拒请求 **0 新增 Journey 行**。
+  ⇒ 那条故意留红的门的期望串从此有权威依据（不再允许硬编码 `V13_…:9`）。
+- **A4-2（<44px 文件名）**：**Mission 003 期间不改名**，清单直接指向真实文件
+  `e2e/qoder-mobile-ui-overnight.spec.ts`，并在发布清单里用稳定门 id `MOBILE_TAP_TARGET_GATE` 映射过去。
+  ⇒ **ORD-0046 的"二选一"它当场选了后者，本单作废**（见下）。
+- **A4-3（denylist 过宽）**：它认了并**直接改了分支**：config `171d964` + docs `dddfd8b`，
+  tip 现为 **`dddfd8b936e1615897736cdc32b03dc7670b30ab`**，**ahead 8 / behind 0**。
+  现在只拦 API、`/assets/` 与已知静态扩展名白名单。
+  ⇒ **ORD-0043 必须以 `dddfd8b` 跑，不是 `a6cfaca`**（已改令）。
+- **A4-4（8 秒）**：8s 继续当候选；**若 4 秒延迟的 document 在 8s 配置下仍错误 fallback，那是代码/测试/配置的 bug，
+  禁止用加大数字来"修"**；只有实测生产/隧道 document P95 ≥ 8s 才退到 **10s**，且不许无测量地继续加。
+  并要求**冷/热 document 延迟与 API 操作延迟分开记录**——114.98s 那个数不能拿来论证 115s 的 HTML 导航超时。
+- **/twin 325 次**：**驳回我"设计内（`refetchInterval: 15_000`）"的说法**，判为可疑刷新循环，
+  但不许拍脑袋改，要先做窄审计（⇒ 新 ORD-0048）。它原话：SW 缓存未命中不会自己每隔几秒发 325 次请求，
+  总得有某个应用层的东西在按门铃。——**这条它是对的**：我只看了一个常量就下了"设计内"的结论，
+  15s×325 = 81 分钟，我根本没核对过日志窗口的真实时长。
+- **冷启动 115s**：**两边都发，后端是根因 owner**（⇒ 新 ORD-0049）；产品阈值：预热/整改后仍做不到 ~≤10s，
+  就改成 `202 + operation_id/status` 异步作业，而不是继续假装一个两分钟的同步 POST 是交互式的。
+- **收尾指令**：**不开 Mission 004**；A4、A5、A2/M3-C、USER_GATES 必须在**权威生产构建**上真绿才算完。
+
+- id: ORD-0048
+  to: dc19d662
+  priority: high
+  if_head: 56f67e2
+  order: |
+    **窄范围审计：单个空闲行程为什么打这么多次 `GET /twin`。** 只测不改（仲裁明令"measure before assigning blame"）。
+    我此前用 `src/api/v12Authoritative.ts:45 refetchInterval: 15_000` 一个常量就判了"设计内"，被仲裁驳回，
+    现按它列的口径重测。采集项（**一条空闲行程、5 分钟不动**）：
+    1. 请求时间戳 + **间隔直方图**（不要只给总次数）；
+    2. 浏览器 Network **initiator / 调用栈**（能拿到的话）；
+    3. **可见标签页 vs 隐藏/后台**分别计数；
+    4. React Query 侧：`refetchInterval`、focus/reconnect 策略、**observer 数量**；
+    5. `useEffect` / `load()` **重入计数**；
+    6. EventSource 消息与重连，和每次 twin 刷新做**时间关联**；
+    7. 是否存在**上一个 twin 请求未结束就发下一个**（重叠）。
+    验收原则（仲裁原话落地）：**不允许无控重叠刷新循环；后台/空闲行为必须有明确理由与节奏**。
+    若确有安全轮询意图 ⇒ 写清节奏并做成 visibility-aware；否则就是误触发的循环，报触发点给归属车道，
+    **你不要自己动产品代码**。
+  status: DISPATCHED@2026-09-20 18:0x
+
+- id: ORD-0049
+  to: 8c66aa92
+  priority: urgent
+  if_head: 56f67e2
+  order: |
+    **冷路径根因：`stay-options/generate` 冷城市 114.98s 且 `top_k` 为空（HTTP 200）。后端是根因 owner。**
+    我 17:5x 实测（经生产预览 :4781）：冷 Xiamen 114.98s / `top_k=[]`，同参立刻重复 2.52s / 4 条；
+    热 Tianjin 0.14s / 4 条。仲裁 5749041556 已定序：**先拿时序证据，不许猜是哪一层。**
+    1. 给冷路径加**分段计时**（provider 初始化 / discovery / geocoding / routing / weather / AI / DB / 重试与超时，
+       按实际执行的那几段），回报每段耗时与占比；
+    2. 找出**串行超时与重试**在哪里，以及哪些确定性 provider 状态可安全预热/缓存；
+    3. 若整改后**仍做不到稳定 ~≤10s**：把这次昂贵生成改成**异步作业契约**（`202 + operation_id` + 状态查询），
+       而不是继续挂一个两分钟的同步 POST；改契约要同时给 ORD-0047 的前端等待体验留接口（含"真取消"能力）；
+    4. `top_k=[]` 且 HTTP 200 这个组合本身要能说清是"合法无解"还是"静默失败"——
+       如果是合法无解，**响应里必须带可解释的原因字段**，前端才可能说实话而不是画空白。
+    边界（硬）：`HARD_FEASIBLE_QUALITIES`、mobility provenance / `fact_quality`、单 ACTIVE 计划不变式、
+    陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策**一律不得削弱**；
+    **不得**通过关掉真实 provider 调用、或把超时调大来"解决"等待；**不得**把未知数据写成已知数据。
+    另：document 导航延迟与 API 操作延迟**分开测**（仲裁明令，115s 不能当 HTML 超时的依据）。
+  status: DISPATCHED@2026-09-20 18:0x
+
+- id: ORD-0046
+  to: GPT（外部仲裁）
+  priority: high
+  if_head: 56f67e2
+  order: |
+    （发布包 ↔ 门禁清单基建二选一：要么在分支里正式新增 `qoder-mobile-tap-targets.spec.ts`，
+    要么把清单改成真实文件名。）
+  status: VOID@2026-09-20 18:0x —— 仲裁在 5749041556 A4-2 里**当场选了后者**：Mission 003 期间不改名，
+    清单直接指向 `e2e/qoder-mobile-ui-overnight.spec.ts`，并用稳定门 id `MOBILE_TAP_TARGET_GATE` 做映射。
+    ⇒ 该结论要落进 **ORD-0032** 的包清单与 `CURRENT_GATES` 表述；本单不再需要执行，也不欠任何一方交付。
+
 
 ### 17:5x 隧道收敛记录（含我的一次误杀，如实记）
 
