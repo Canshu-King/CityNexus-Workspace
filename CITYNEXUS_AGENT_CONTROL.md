@@ -692,6 +692,47 @@ CITYNEXUS_DEMO_MODE=true CITYNEXUS_DATABASE_URL=sqlite:///./_lane_b.db <uvicorn 
 **我这边状态**：ORD-0058 保持 PARTIAL（第 4 项待做）；ORD-0057 的 503 形状按仲裁 `5751385585` **保持不动**；
 ORD-0068、新 provider 探针、新变异批按你指示**今晚 PARK**；ORD-0071 不动、不插队。
 ⇒ **B 现在就可以开工**，不用等我把剩下的漂亮验收做完；要我补什么，直接在这块下面留 `REQ-####` 点名。
+
+
+### 8c66aa92 ORD-0074 @2026-09-21 02:4x+08 → DONE：`/demo/scene` 现在读得到"台上有一步可走"（解释器 D:/moodle/CityNexus/.venv/Scripts/python.exe = Python 3.12.14）
+
+`146731d`：`demo/reset` 的 seed 之后**串既有 handler** —— `plans/generate` → `select` → `/start`
+（同一个 session、同一套 validator；**无新写端点、不手写 ACTIVE、不绕** 单 ACTIVE / C4 / provenance / stale）。
+
+实测一次 reset 的三步耗时（订单 must 2 要的就是这个数）：
+
+```
+plans/generate 18.5 ms  ok
+select          8.4 ms  ok
+start          19.5 ms  ok
+total          46.4 ms            ← 远低于 10s 门槛，不需要就地停下报你
+
+GET /api/v1/demo/scene → journey_status=ACTIVE
+                         plan_version_id=55523d40-cafe-5bd2-b30a-de057ec7a839
+                         basis=CURSOR
+                         effective_now=2026-10-10T09:00:00+08:00
+                         evidence_state=NO_FROZEN_EVIDENCE
+                         键数=10
+NO_SCENARIO 分支同 10 键（补 plan_version_id: null）⇒ 两分支键集**相等**由门断言（set 相等，不是包含）
+```
+
+门：`tests/test_qoder_simulation_mode.py` 6 条 + `tests/test_contract.py` 4 条 =
+**10 passed / 0 failed（2.54s）**，focused 未跑全量（你在跑）。
+
+两点如实报，不当已解决：
+
+1. advance 中任何一步被策略或 ORM 拒绝时，现在**记进 `simulation_advance.steps[].refused` 并回滚**，
+   reset 仍回 200 —— 因为它是约 30 个测试模块与面板共用的 fixture 门，一个 500 会把整库带走；
+   `selected_plan_version_id` 改成**从 journey 行读回**，拒绝时不会谎报一个它并没有选中的计划。
+   过程中我自己踩过两个真问题并留在这里：`plans[0]` 在进程内是 ORM 行不是 JSON（`TypeError`），
+   以及 ORM 的 `StaleDataError` 在 **commit 时**才抛、单步 try 抓不住 ⇒ 必须整体包一层。
+   另外我把一个断言写反了：ACTIVE 之后 `basis=CURSOR`，**改窗口不该动 `effective_now`**；
+   门先红了一次，是我的假设错，不是产品的。
+2. `evidence_state` 现在是 **NO_FROZEN_EVIDENCE**：这条演示计划的 mobility evidence 里没有可读的
+   `expires_at`，所以"推进 >4h 会不会被判 STALE"**仍未被证明**——那正是 ORD-0058 第 4 项（今晚 PARK）
+   要收的东西。B（`e345b9d6`）现在可以接面板，但**别把"多推几小时也不会 stale"写进任何断言**。
+
+
 ### commander 亲测 @2026-09-21 01:4x —— 预览已重建到检查点 `1e942d2`；向导修复我读屏复验通过，**并抓到一处新缺口**
 
 **先记运维动作（Amendment J §8：检查点后必须重建预览，并记 `preview HEAD == checkpoint HEAD`）**
@@ -1607,8 +1648,78 @@ status: DONE（侦察交付）
 evidence: 全部行号取自 `f8d9dc2` 当前树本体（10 个 `.complete()` 调用点逐一读原文核对）；本文与该 map 均不含任何 API key 或其片段。
 「零改动」= 本次侦察对权威树零写入；未跑测试、未 commit、未装依赖，与 ORD-0058/0059 关键路径零文件重叠。
 
+### F 车道 ORD-0077 字段级动作对照表 @2026-09-21（会话 494abfd7 派发，只读，严格未发写请求）
+
+STATUS | files | blocker | 表路径
+`DONE`（7/7 端点逐字段给到；must 4 的 C4 那一问已答到行号；无「应该可以」、无未测项）| 新增 `D:/moodle/_qoder_ai_scout_20260921/ORD-0077_ACTION_CONTRACT_TABLE.md` + `head_snapshot/`（`git show` 抽出的 f8d9dc2 与 146731d 两份只读快照，供 B/E 复算行号）| 无 blocker；**未起 :8681**（静态读代码即可给全，无需实调，也就零写请求风险）| `D:/moodle/_qoder_ai_scout_20260921/ORD-0077_ACTION_CONTRACT_TABLE.md`
+
+**口径（先核这个再用行号）**：表体按单子声明的 `if_head: f8d9dc2` 给，全部行号取 `git show f8d9dc2:<file>` 快照。
+我第一遍量歪了一次并**已作废重测**：02:12:16 起工作树里 `main.py` 被 A 写脏（`+102/−1`），同一内容比快照**晚约 70 行**，
+我最初读到的 `:6083/:9114/:10454` 是那批漂移数，不是 `f8d9dc2` 的数。**D 车道块给的 `:6013/:6910/:9044/:9516/:10384/:10488/:3663` 与本表一致，D 是对的。**
+⇒ B/E 别混用自己在工作树里现读的行号。
+
+**必答：`/replans/{pid}/accept` 会不会因 C4 保护被拒？会，返回 409（不是 422）。**
+`_accept_replan_executing` 在 `main.py:9382`（新 tip `:9483`）调 `_revalidate_locked_commitments`（def `:9086`/`:9187`）；
+保护集 = `Activity.locked` ∪ ACTIVE 且 `level=="C4_Anchored"` 且 `activity_id IS NOT NULL` 的承诺（`:9100-9118` / 新 `:9201-9219`）；
+不保留则 `:9149-9152`（新 `:9250-9254`）抛 **409**，正文 `"replan no longer preserves the locked and protected commitments captured since this proposal was generated"`；
+第二条 C4 路在重映射阶段 `:9432`（新 `:9533`）抛 **409** `"accepted replan cannot remap an active C4 commitment: …"`。
+**验收陷阱**：`:9119-9121`（新 `:9220-9222`）—— `must_survive` 为空时直接把 `locked_commitments_preserved=True` 并 return ⇒
+**演示台上没有 C4 行时这道门恒过**，"accept 保护了 C4"这句话在 `demo/reset` 上**不可证**。与 D 的 ORD-0075 第 4 条（`commitments` 表 0 行）是同一个洞的两面。
+
+**⚠ 我这条要单独请 Commander 裁决（已从预测变成事实）**：你派我时 tip 还是 `f8d9dc2`，交付期间 A 把 ORD-0074 提交成了 **`146731d`**。
+该提交的 reset 串链是 `plans/generate → select → start` 三步，**没有 booking/capture**；而 `/start`（`:5577`/新 `:5674`）把 journey 写成 `ACTIVE`、plan 写成 `ACTIVE`，
+`commerce/validators.py:34-37` 却要求预订必须是 **`PLANNED` + `SELECTED`** ⇒ **reset 一落地，预订窗口就永久关死**，
+台子上再也长不出 C4/locked 承诺。M2（推进游标）因此通了，但 **M4 的"受保护承诺被保留"没有台子可演**，只能撞上面那条空集分支。
+唯一同时满足两条的次序是 `generate → select → bookings → transactions(CAPTURE) → /start → events → replans → accept`，
+**不需要新写端点、不写库伪造状态**（不违反 must 1）。是否转给 `8c66aa92` 请你定，我没有碰代码。
+
+**今晚可用性一张话（按新 tip）**：`/events`（不带 `affected_activity_id`）、`/inbox/{draft}/confirm`（无 body）、`/replans`、`/accept`（**`Idempotency-Key` 头必填，缺→422 `:9298`/新 `:9399`**）、`/reject`（无 body 无头、REJECTED 重放 200）**都可用**；
+`/bookings`、`/transactions`（`Idempotency-Key` 必填 `:10501`/新 `:10602`，金额必须等于权威总额 `validators.py:68`）**在演示台上不可用**，原因见上一条。
+
+status: DONE（ORD-0077 交付）
+evidence: 全部字段/门/错误码取自 `f8d9dc2` 与 `146731d` 两份 `git show` 快照正文（逐条读原文，非转述）；请求模型字段与默认值另核 `schemas.py:450/527/542/597`、`Money` `:12-14`。
+零写入：未 commit、未装依赖、未向 `:8481` 或 preview DB 发任何写请求；AI Narrative PoC 按夜令 §3 **今晚未做**。
+
+
+### D 车道 ORD-0075 实调 @2026-09-21 02:1x（隔离 DB + 自起 :8581）→ **六步全 2xx，管道本来就走得通；M2 的"Now 变了"已量到**
+
+**先报一件影响归因的事**：我开工时权威树 `backend/app/main.py` **变脏了**（mtime `02:08:47`，+71 行，A 正在写 ORD-0074 的 reset 串链，现树 `main.py:1808` 可见 `timed("plans/generate"…)`）。⇒ 我没有在那棵树上量：用 `git archive f8d9dc2 backend data` 抽了**只读固定副本** `pinned_f8d9dc2/`（已核实其中**不含** 0074 串链）。下表 = **`f8d9dc2` 原样代码 + 六个独立 HTTP 调用**，正是 A 落地前你要的那份可行性证据。解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe` = **3.12.14**（uvicorn 0.52.4 / fastapi 0.141.1 / sqlalchemy 2.0.52）。
+
+STATUS | files | blocker | 报告路径
+`DONE` | 新增 `_qoder_sim_scout_20260921/`：`ORD_0075_PIPELINE_PROOF.md`、`ord0075_probe.py`、`pinned_f8d9dc2/`、`sim_pinned.db(+wal/shm，已走完一遍)`、`probes/{dump,plans_post_complete,history}.json`、`uvicorn_pinned_8581.log`；**权威树零写入**（其 `citynexus.db` mtime 仍 `09-20 23:04`、无侧文件）| 无 | `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`
+
+**一行一路（`f8d9dc2`，`CNX-DEMO` journey，AI disabled）**
+```
+GET  /demo/scene (pre-reset)     | 200 | 174ms | 基线 DRAFT / plan=null / basis=JOURNEY_START | -
+POST /demo/reset                 | 200 |  45ms | seed 完成，返回 journey_id                   | -
+POST /plans/generate             | 201 |  48ms | 3 个候选(CANDIDATE)                          | -
+POST /plans/{pid}/select         | 200 |  23ms | 写 active_plan_version_id，journey→PLANNED    | -
+POST /start                      | 200 |  55ms | journey→ACTIVE，游标落活动1                   | -
+POST /activities/{aid}/complete  | 200 |  24ms | 活动1 COMPLETED、活动2 ACTIVE、游标前进        | -
+GET  /twin                       | 200 |  34ms | projection_status=READY，current 已换          | -
+```
+六步合计 **0.32s**；generate+select+start = **126ms**，**距 ORD-0074 的 10 秒红线很远**，无需异步、无需新端点。
+**分母**：`city_code=CNX-DEMO`、`source_provider=mock-mobility`、`degraded=false` ⇒ 这条路**一次网络都没有**；此数**不可**外推到真实城市（天津）journey。
+
+**M2 证据（scene/twin 的 Now/Next 真的换了）**：`effective_now` `2026-10-10T09:00:00+08:00` → **`10:30`**，`basis` 保持 `CURSOR`；twin 游标 `3a58c470` → **`abe4e842`**；上屏文字实读 = **"Old Town Gate" `COMPLETED`** → **"Riverside Museum" `ACTIVE`**。
+
+**四条改变打法的后端读数（请 A/B 认领，都不是面板的锅）**
+1. **`/demo/scene` 在 `select` 之后仍报 `plan_version_id=null`**：它用 `PlanVersion.status=="ACTIVE"` 找计划（`pinned` `main.py:5927-5929`），却用 `journey.active_plan_version_id` 找 journey（`:5903-5907`）——两套口径。计划到 `/start` 才变 ACTIVE ⇒ **"已选中未开始"这段在台是隐形的**，B 的严格 parser 会照字面显示"没有计划"。修法在后端统一口径，**不是**前端放宽。
+2. **更正我自己 map 的第 4 项**：演示计划的 `mobility_evidence_json` **压根没有 `expires_at`**（实读键集 `captured_at/degraded/facts/operation_key/provider_capabilities/snapshot_id/source_provider`；`GET /plans` 里 `stale=false`、`stale_reason=null`）。4h 那个写入点 `stay_mobility.py:1306` 属于**住宿比较**那条写者，不在 `plans/generate` 上 ⇒ **A 推 ACTIVE 不会撞过期门**，今晚不必碰 TTL。反面：`normalizer_version` 缺失使 `_is_authoritative_execution_plan()`（`main.py:5687-5704`）为 False，**演示计划走 legacy 完成分支**（实读 `metadata.legacy_execution_compatibility=DIRECT_COMPLETION_PRE_V12_CONTRACT`）。
+3. **完成时刻用的是机器钟**：`main.py:5748` `completed_at_actual=datetime.now(timezone.utc)`（`:5785` 同）。实读 `GET /history` 7 条 `timestamp` 全是 `2026-09-20T18:12:0x+00:00`，而场景日期 `2026-10-10` ⇒ 屏幕会念成"旅行开始前 20 天活动就已完成"。
+4. **twin 给不出 "Next" 的文案**：complete 前后 `upcoming_commitments=[]`、`opportunity_window=null`、`next_commitment_buffer_min=null`（`commitments` 表 0 行，无预订即无承诺）⇒ 面板 "Next" 只能来自 `plans[].activities[]`，别指望 twin，否则 M2 之后立刻是一个空的"下一站"。
+
+**约束遵守**：未对 `:8481` 或 preview DB 发任何**写**请求（对 `:8481` 只发过一次只读 `GET /health`，用于自证没搞挂演示台）；未 commit；未跑全量 suite / provider 探针 / 变异；我起的 `:8581` 进程已停。复跑命令在报告文末。
+
+status: ORD-0075 DONE
+evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含逐请求码/耗时、scene 五阶段表、三条缺陷的 文件:行号 + 响应体实读字段名）。
+
+### C 车道 Simulation 组件 + focused spec @2026-09-21 02:2x（本机钟 date=02:22:28 +0800）｜PARTIAL-CANDIDATE | agent/sim-component-20260921 @ 7bcfe13（基点 f8d9dc2，**未 push、权威树 0 改动**）| 新增 4 文件：frontend/src/features/simulation/{SimulationPanel.tsx,simulationAdapter.ts,SimulationPanel.css} + frontend/e2e/qoder-simulation-panel.spec.ts | 动作映射 **11/11 全找到真实路由**（清单 10 条 + 自报附加 generate_replan；每条把方法+路径+main.py 行号印在按钮下方），另 **3 项后端确实无路由**的能力列成 unavailable（手动拨场景时钟 / 单独确认已有预订 / 切换地图·交通 provider 健康）；无场景时 11/11 条件性 disabled 且每条原因自带源码出处 | blocker：02:1x 改令把 features/simulation/** 划给 B、ORD-0076 只准 C 写 spec，与我手上派单的 4 文件 WRITE_SET 冲突（ORDERS 顶部已报一行，等你裁）；且 ORD-0076 §4 判 dev-server 结果不算证据，而 A 层只能在 dev server 里 import TS 模块 | evidence：**本轮没跑 build、没跑 Playwright ⇒ 0 条断言被执行过**；本地只做三件事——①适配器 Node 下可 import 且门禁真值表正确（无场景 11/11 disabled / ACTIVE+PRESENTED 11/11 可点 / 缺游标只关 complete,skip,book,accept,reject）②两源文件 grep 无 new Date( 与 Date.now( ③借权威树既有 typescript 只读跑 tsc --noEmit（同仓 strict:false），除本树无 node_modules 的 TS2307/jsx-runtime 外 0 诊断，**不等于门禁绿**
+复核补充 @02:3x（本机钟，全部只读量自权威树 D:/moodle/_qoder_integration_20260919）：① 权威 tip 已是 **146731d**（ORD-0074 落地），GET /api/v1/demo/scene 两个分支现在都是 **恒定 10 键**（main.py:6019 给 NO_SCENARIO 补了 plan_version_id，:6059 是有场景那份）⇒ 我映射表里的行号属**基点 f8d9dc2**，在新 tip 上整体下移（NO_SCENARIO 5918→6019、scene return 5958→6059），并给 B 之前必须按新 tip 重跑一遍行号，别照抄。② 实测 B 的 frontend/src/features/simulation/SimulationPanel.tsx（18,214 B，mtime 02:26 仍在改）用的 testid 是 sim-panel / sim-banner / sim-entry / sim-entry-summary / sim-actions / sim-outcome / sim-outcome-note / sim-scene-facts / sim-window / sim-basis / sim-evidence / sim-journey / sim-journey-mismatch / sim-retry，**没有** sim-badge / sim-evidence-state / sim-effective-now / sim-demo-mode / sim-journey-status / sim-route-* / sim-button-* / sim-unavailable ⇒ 我 spec 的 B 层断言的是 C 那套 testid，直接跑在 B 的面板上必红——这是归属问题不是断言问题。③ 所以我停手不追 B 的文件（它正被重写，此刻钉上去的断言明天就是假证据）；裁定 (a) 的话我在**自己的 spec 内**把 B 层重指向 B 的 testid 与 B 的适配层路径，裁定 (b) 的话 B 层原样可用。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+
+C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 features/simulation/**），而 02:1x 改令 / ORD-0076 把组件所有权划给 B、只准 C 写 frontend/e2e/qoder-simulation-panel.spec.ts —— 直接冲突。我已按派单在**隔离分支** agent/sim-component-20260921@7bcfe13 提交这 4 个文件（未 push、权威树未动、不接线），停在这里等你裁：(a) 弃我的组件只留 spec，还是 (b) 把适配层的"动作→main.py 行号"映射表并给 B 的面板用。另：我的 spec B 层断言的是我自己那套 testid（sim-badge / sim-button-<id> / sim-route-<id>），B 若用别的 testid，重指向由接线方做，我不去改 B 的文件。
 
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
@@ -1654,7 +1765,7 @@ evidence: 全部行号取自 `f8d9dc2` 当前树本体（10 个 `.complete()` �
        (b) 有场景/无场景两分支的**键集完全相等**（断言 set 相等，不是"包含"）。
   acceptance: 我这边直接 `curl :8481/api/v1/demo/scene` 能读到 ACTIVE + 非空 plan_version_id + basis=CURSOR，
               不采信任何转述；跑完在 ORD-0058 同块补一行读数即可，不新开报告。
-  status: CLAIMED@2026-09-21T02:3x+08 by 8c66aa92（按 must 1-4 做；reset 里串既有 plans/generate→select→/start，不新增写端点、不写库伪造状态；>10s 就停下报你）
+  status: DONE@2026-09-21T02:4x+08 by 8c66aa92（`146731d`：reset 串既有 generate→select→/start，实测 **total 46.4ms**（18.5/8.4/19.5）；scene 实到 **ACTIVE + plan_version_id + basis=CURSOR**、两分支**恒定 10 键**由门断言；门 10 passed/0 failed 2.54s，解释器  3.12.14。无新写端点、不写库、不绕 validator。读数与两点如实报在 DELIVERIES 我的 ORD-0074 块）
   evidence: 待交（scene 实到值 + focused test 条数 + reset 实测耗时）。
 ```
 
@@ -1795,6 +1906,85 @@ focused tests 与静态实现不受影响。跑完我在 DELIVERIES 里发读数
 > 我已经建好 `D:/moodle/_qoder_cmdr_gate_20260921`（`--detach` 于 `f8d9dc2`，独立 DB，6758 文件已 checkout），
 > 正在那里重测真正的 tip 读数。谁要引用"全量绿/红"，请指明是**哪棵树、哪个 sha、哪个解释器**——
 > 三者缺一，数字就只能当故事听。
+
+---
+
+### 🧪 对照实验：那 9 条红**不是** `f8d9dc2` 的回归，是我 shell 里的 provider key @02:3x（Commander 亲测）
+
+**做实验的原因**：上一块那条 UUID 让我差点判定"A 把 140 个测试文件的入口打红了"。
+判定回归只能靠对照，不能靠推测，所以我在**同一时刻、同一负载、同一批 node id** 上跑了两棵干净树：
+
+| 树 | sha | 结果 | 耗时 |
+|---|---|---|---|
+| `_qoder_cmdr_gate_20260921`（detached，独立 DB） | `f8d9dc2`（当前 tip） | **9 failed / 1 error** | 177.08s |
+| `_qoder_cmdr_base_20260921`（detached，独立 DB） | `fbe6a00`（我三次全绿的那个 sha） | **8 failed / 1 passed / 1 error**（同一批名字） | 141.34s |
+
+⇒ 我 00:4x 三次跑出 `976/15/0` 的**同一个 sha**，现在也红了同一批 ⇒ 与 `722e2c8` / `f8d9dc2` 两笔无关。
+
+**根因（实测，不是猜）**：错误体自己说了话 ——
+`DeepSeek discovery failed: DeepSeek Responses request failed`。
+我查了本 shell 的变量存在性（**只测存在，没打印值**）：`DEEPSEEK_API_KEY = SET`。
+把它从进程环境里 pop 掉，重跑**同一批 10 条 node id**：
+> **`10 passed in 11.31s`，RC=0**（对照：有 key 时这 10 条要 177 秒且 9 红 1 error）。
+
+机制说清楚，免得下次又有人去改产品代码：这类测试（`test_v15_copilot_reports_fallback_mode_without_deepseek_configuration`
+等）要证明的是"**没有 DeepSeek 配置时走确定性 fallback**"。环境里带着真 key，它们就真去联网打 provider，
+夜间隧道/额度一失败就红；顺带把全量从 101–133s 拖到 379s。**红的是环境，不是 CityNexus。**
+
+**新立规则 13（对所有人，也包括我）**：
+> 报任何后端门禁数字之前，先确认 `DEEPSEEK_API_KEY` 在进程环境里**不存在**；
+> 跑法用 `python -c "import os;os.environ.pop('DEEPSEEK_API_KEY',None);import pytest,sys;sys.exit(pytest.main([...]))"`。
+> **不要**用 `env -u VAR …` 前缀去删（本仓实测坑：它可能什么都没启动却退 0）。
+> 数字若不带"哪棵树 / 哪个 sha / 哪个解释器 / key 在不在"，一律当故事。
+
+**给 `8c66aa92` 的一条根子上的修法（属于你 ORD-0058 写域，值得做，一行的事）**：
+`tests/conftest.py` 现在只 `setdefault("CITYNEXUS_DEMO_MODE","true")`。请顺手在 import app 之前
+显式 `os.environ.pop("DEEPSEEK_API_KEY", None)`（连同本仓其它真 provider key 变量名，你 grep 一下 settings 读哪些），
+让"无配置走 fallback"这类测试**在任何人的终端里都成立**。判据：带 key 与不带 key 两种终端各跑
+`tests/test_v15_copilot.py`，两次都必须绿。这条比"每个人记得 pop"根本。
+
+### ✅ 门禁结论：`f8d9dc2` **没有回归**（13 条红全部逐条复跑通过）@02:5x（Commander 亲测）
+
+无 key 环境下重跑 `f8d9dc2` 全量（detached 树、独立 DB、解释器 3.12.14）：
+> **`13 failed / 968 passed / 15 skipped` in 98.34s** —— 耗时回到正常区间（101–133s），
+> 再次证明 379s 那个数是 provider key 拖的，不是写锁。
+
+但我没有就此宣布"tip 红了"。把 13 条**逐条放进各自的进程**重跑（仍无 key、仍同一棵树）：
+
+| # | node id | 隔离结果 |
+|---|---|---|
+| 1 | `test_v13_integrity::test_v13_execution_rejects_terminal_wrong_activity_and_old_plan_mutation` | 1 passed 3.39s |
+| 2 | `test_v7_traveler_twin::test_v7_flagship_journey_a_to_b_to_c_traveler_twin_loop` | 1 passed 5.56s |
+| 3 | `test_wp05_integrity_next::test_replan_requires_active_journey` | 1 passed 2.55s |
+| 4 | `test_wp05_integrity_next::test_replan_accept_remaps_current_activity_to_new_active_plan` | 1 passed 1.35s |
+| 5 | `test_wp06_followup_assist::test_replan_generation_optional_idempotency_key_replays_without_new_candidates` | 1 passed 1.28s |
+| 6 | `test_wp06_followup_assist::test_completed_c4_is_not_projected_as_upcoming` | 1 passed 20.78s |
+| 7 | `test_wp06_postgate_hardening_next::test_reject_retires_candidate_plan_and_is_idempotent` | 1 passed 1.18s |
+| 8 | `test_wp06_postgate_hardening_next::test_twin_aggregates_unresolved_provider_degradation…` | 1 passed 1.16s |
+| 9 | `test_wp06_postgate_hardening_next::test_replan_recomputes_duration_metadata_after_delay` | 1 passed 1.21s |
+| 10 | `test_wp06_twin_v2_gate::test_twin_v2_derives_envelope_opportunity_and_degradation_at_injected_time` | 1 passed 1.21s |
+| 11 | `test_wp06_twin_v2_gate::test_delay_family_persists_real_diff_and_envelopes_while_preserving_c4` | 1 passed 17.54s |
+| 12 | `test_wp06_twin_v2_gate::test_weather_family_uses_deterministic_indoor_replacement` | 1 passed 1.19s |
+| 13 | `test_wp06_twin_v2_gate::test_non_actionable_event_and_stale_proposal_fail_safely` | 1 passed 1.18s |
+
+⇒ **13/13 隔离全绿 ⇒ 红来自同一进程内的测试互相污染，不是代码回归。**
+而且污染名单**每次都不一样**（我 02:4x 单跑那两个文件时红的是另外 3 条名字）——
+这本身就是"全量红/绿不是可复现门禁"的直接证据，包括我 00:4x 那三次 `976/15/0`：
+**那三次是同一套件的三次抽样，绿不等于可复现，只是当时顺序与负载恰好没撞上。**
+
+**新立规则 14（归因的标准动作，比"再跑一次全量看运气"便宜得多）**：
+> 全量出现失败时，**先逐条进程隔离复跑失败项**（13 条 ≈ 60 秒），再谈回归：
+> - 隔离仍红 → 是真缺陷，按 sha 归因（必要时对照 base sha 同负载再跑一次）；
+> - 隔离变绿 → 是套件耦合，**不许写进产品结论**，也不许今晚去修它（另开单，排在 Simulation 之后）。
+> 报告里请写"13 failed(全量) / 13 passed(隔离)"，不要只写前面那半句。
+
+**今晚列车的放行判据（据此调整，不再等一个不可复现的全量绿）**：
+1. **focused 必绿集**（每条都要在集成树里真绿）：`tests/test_qoder_simulation_mode.py`、
+   `tests/test_guardian_v4.py`、`tests/test_wp05_integrity_next.py`、`tests/test_wp06_twin_v2_gate.py`
+   —— 后两个文件正是 M3（Event→Replan→Accept→新 ACTIVE + C4 保留）的门。
+2. ORD-0074 的 `curl /demo/scene` 实到 `ACTIVE` + 非空 `plan_version_id` + `basis=CURSOR`（我亲自量）。
+3. 真机走查（E 车道 + 我自己截图）胜过任何绿灯。
+4. 套件耦合这件事我另记一笔（明早决定要不要单开 ORD 修 setup 隔离），**今晚不修**。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
