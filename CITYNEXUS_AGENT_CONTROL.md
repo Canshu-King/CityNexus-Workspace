@@ -464,6 +464,33 @@ git show --numstat e0a7e85 → `.git-blame-ignore-revs 5/0`，`backend/app/db/mo
 我没有去"改成能过"的写法（比如换断言范围），因为那是把验收口径改掉而不是把事做完；
 要按字面过，只能等你换一条不含空行的行范围去测，或裁决把验收写成"非空行 0 命中"。
 
+### 8c66aa92 ORD-0057 续 @2026-09-21 00:5x+08 → **受理门口那条 500 是真缺陷，已定位已修**；探针仍未产出延迟数；请裁一条取舍
+
+**新发现（是 ORD-0057 自己验收点内的缺陷，不是别的单）**
+真 uvicorn 探针第二次 `POST /stay-generations` 直接 **500**：
+`sqlite3.OperationalError: database is locked`，SQL 是 `INSERT INTO stay_generation_operations …`
+（栈与 SQL 在 `.../ord57/uvicorn.log`，**这个文件现在有实体了**；`acceptance-latency.json` 仍然没有 ⇒ §94.4 的"未产出"只对 JSON 更正，不撤回对 log 的更正）。
+成因：**一条在飞的生成从第一条 offer 落库到排序结束独占 SQLite 唯一写者**，
+所以"用来把活儿交出去"的那条 INSERT 排在它自己刚提交的作业后面，等到 30s 引擎超时后变成裸 500。
+⇒ 这直接违反本单"受理要快、provider 工作移出关键路径"的承诺，所以我修在契约一侧。
+
+**修法（`fb53500`）**：提交连接 `PRAGMA busy_timeout=200`、最多 4 次（总预算 <1s，对着 p95≤1s 定的），
+仍写不下就抛 `GenerationStoreBusy`，两个门口统一回答
+`503 / GENERATION_STORE_BUSY / message_key generation.store_busy / retry_after_ms 500`。
+**没有**把"分阶段提交释放写锁"塞进来（那是你单独立的残留缺陷单）。
+门：新增 2 条（两个门口都回具名 503、重试有界且 <1s 后改口），本文件隔离跑 **25 passed / 0 failed（20.49s）**。
+
+**要你裁的一条取舍（我不静默替你定）**：同一个 200ms×4 的界，在**别的车道正持有写锁**时
+会把"多等 30 秒然后成功"变成"1 秒后具名 503"。实测证据：改完之后我第一次整套跑
+`tests/test_qoder_stay_generation_operations.py + test_contract.py` 出现 **19 failed / 10 passed（42.89s）**，
+而同一文件随后单跑 **25 全绿**、`BEGIN IMMEDIATE` 探测当下写者可获取（0ms）⇒ 那 19 条是**与被持有写锁的并发跑撞上了**，
+不是我的断言变松。请裁：受理门**宁可等久一点换成功率**，还是**宁可 1 秒内明确拒绝**（我按你裁的调，
+默认保留现在"快 + 具名拒绝"，因为它符合仲裁写的 p95≤1s）。
+
+**其余两件**：ORD-0069 已 DONE，但字面验收不过（空行仍归 `605e2c5`：非空行 0/136 空行，反向对照 241/781），数已摆、未改断言口径。
+ORD-0068 保持 CLAIMED：探针缺陷按你要求修完（真 deadline + polls + 仪器没跑就 return 3 写 `fatal`，`no_option_produced` 单列），
+**一次测量都还没跑**，所以本单没有任何数字；ORD-0057 仍 PARTIAL（延迟分布未取、全量未复绿、变异批按你要求未重跑）。
+
 #### aad2d1f2 HJ-P3 第三轮 @2026-09-21 00:5x（本机钟 20:5x）→ 先自我更正 H-8 的归因；再交不压后端的 4 条（含 1 条 TRUTH_DEFECT）
 
 **读数归属（Amendment J §8 要求，先量再跑）**
@@ -1464,6 +1491,59 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
       关键路径仍是"行程能在手机上跑通 3 分钟生命周期"，别为这单让路。
     按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
     ---
+    **Commander 预检第二轮 @2026-09-21 00:3x（本机钟）—— `cd7f1ac` 的修复我核过是对的，
+    但我又量出**第二个同类缺陷**：探针的请求形状让它 4 行里只有 1 行有效。你还没跑测量，所以现在改正好。**
+
+    先确认你修好的部分（我逐行读过 `cd7f1ac`）：
+    ```
+    :211-212 deadline = time.monotonic() + 600          ← 我点名的 :204 缺陷，真截止，注释还写了为什么
+    :207/:216/:226 polls 计数并落进报告                  ← "自证跑过"
+    :236-251 fatal 分类：polls==0 / 未达终态 / 非 COMPLETED / **no_option_produced 单列**
+    :263 有 fatal 就 print("FATAL from this probe, not the product") + **return 3**
+    :264 只有 option_ids 非空才产出 with_evidence 行（原来那条 `oid or "none"` 的降级路径已不用于 with_evidence）
+    ```
+    ⇒ **CURRENT_GATES 11 的三条要求全部落地，这部分我认。**
+
+    **但 `:169` 还留着 `oid=option_id or "none"`，而且 `:170` 两个路由都发 `json={}`。**
+    我起了自己的隔离实例（自己端口、自己一次性库、AI 关、key 空、不碰预览）实测了三种请求形状：
+    `raw/ord68_cold_row_validity.py` → `raw/ord68_cold_row_validity.json`
+    ```
+    路由                请求形状                        状态    毫秒   到达 handler？
+    weather            探针自己的形状（空 body）          422    28.2   **False**
+    weather            合法 body + 不存在但格式正确的 uuid 404    34.5   True
+    weather            合法 body + 字面量 "none"          422    30.0   **False**
+    autopilot/recover  探针自己的形状（空 body）          404    16.6   True
+    autopilot/recover  合法 body + 不存在 uuid            404    12.1   True
+    autopilot/recover  合法 body + 字面量 "none"          422    31.4   **False**
+    ```
+    根因（我读了 schema，不是猜）：`app/schemas.py:223` `WeatherDisruptionRequest.state` **没有默认值（必填）**，
+    而 `:242` `StayAutopilotRecoveryRequest.state` **默认 "RAIN"** ⇒ 同一个 `json={}` 在两条路上命运不同。
+    ⇒ **两处独立的"请求根本没进 handler"**：
+    1. `oid="none"` 被**路径 UUID 校验**拒（两条路都拒）⇒ 两个 `cold_city` 行都是废的；
+    2. 空 body 被**请求体校验**拒 ⇒ **weather 的两个行全是废的**。
+    **合计：4 行里只有 1 行（autopilot 的 with_evidence）是有效测量。**
+
+    **为什么这条必须现在改，而不是等报告出来再说**：
+    如果照现在这样跑完，报告会长成
+    `"route":"weather","condition":"cold_city","status":422,"http_ms":28.2`
+    —— 一个**格式完整、字段齐全**的行。读它的人会看到"28 毫秒"，
+    于是很可能得出**"weather 这条路不让人等 ⇒ ORD-0068 无缺陷 ⇒ 结案"**。
+    而那 28 毫秒里发生的事是 FastAPI 在校验参数，**一次 provider 调用都没发起、handler 一行都没执行**。
+    ⇒ 这是一个**假阴性**，而且它正好会关掉我们为了"别让用户点一下等两分钟"而开的单。
+    （和你 `:204` 那个缺陷同一族：仪器没跑，但报告看起来像跑过。）
+
+    ⇒ **要求（三条，都是硬）**：
+    1. **发合法 body**：两条路都送 `{"state": "RAIN"}`（weather 的 state 必填，autopilot 的也接受这个值）。
+    2. **不要拿假 id 测冷路径**：`cold_city` 对这两条**必须挂在已存在 option 上**的路由是**结构上不可测**的。
+       正确做法是把"冷/热"定义在**底层证据新鲜度**上，而不是"有没有 option id"：
+       - `cold`：刚做完一次冷生成、证据尚未冻结时调用；
+       - `warm`：同一 option 在证据已入库后再次调用。
+       若你认为"冷"对这两条路确实没有意义，就在报告里写 `"cold_city": "not_applicable_for_option_scoped_routes"`
+       并说明理由 —— **不许用假 id 凑一行**。
+    3. **每一行都要自证"请求被接受了"**：在计时之前先断言 `status != 422`（或断言 body 里没有校验错误），
+       否则该行为 fatal。判据：**"对一个被拒绝的请求计时"不是测量。**
+       这条我也顺手立进 CURRENT_GATES 11 的补充：**任何延迟/等待类测量，必须先证明请求进了 handler。**
+    ---
     **Commander 预检 @2026-09-21 00:0x（本机钟）—— 你的 `review/probe-ord68-inline-routes.py` 我读过了，
     设计是对的，但有一个**会让报告说谎**的缺陷，跑之前先修。**
 
@@ -2216,7 +2296,7 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
       因为只读 `ord57_mutants.json` 的人看到 A9 自己写着 `killed_as_expected: false`，会得出 9/10。
       **实质 10/10 我认**（按 `expected ⊆ killed` 重算，主批 9/9 主人断言成立、还原字节相同 10/10）。
       我自己第一遍用集合相等去卡、误报"只有 5/10 有主人断言"，已当场撤回——见 DELIVERIES 23:5x ③。
-  status: PARTIAL@2026-09-21T00:2x+08 by 8c66aa92（A 已闭：4 表面入契约 + 读侧 GET `…/stay-generations`，隔离 **27 passed/0 failed 24.06s**；B/C 三处引用与口径已更正，**受理延迟 p50/p95/max 仍未产出**；剩：真 uvicorn 探针跑通拿延迟数 + 全量两次连跑绿。变异口径：主批 9/9 + A9 单独复跑 = 实质 10/10。见 `83bb07b` 与 DELIVERIES 同名块）
+  status: PARTIAL@2026-09-21T00:5x+08 by 8c66aa92（A 闭 + 受理门 500 真缺陷已定位已修 `fb53500`：busy_timeout 200×4 界内重试，仍写不下则两门口统一 503 `generation.store_busy`；本文件隔离 **25 passed/0 failed 20.49s**。仍缺：延迟 p50/p95/max 未取、全量未复绿、变异批按你要求未重跑。**一条取舍请你裁**：写锁被别的车道持有时，宁可多等成功还是 1 秒内具名拒绝（DELIVERIES 同名块））
 
 - id: ORD-0058
   to: 8c66aa92
@@ -2818,6 +2898,27 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     同源教训（我自己犯过三次）：`orders total=0`（正则匹配到散文里的标题）、
     水位线读到旧值（`re.search` 取第一个匹配）、`VERDICT: VACUOUS`（`git show` 语法错导致 blob 读到 0 字节）。
     ⇒ **仪器读到 0，先怀疑仪器，再下结论。**
+    **11 的补充（@00:3x，实测驱动）：延迟/等待类测量必须先证明"请求进了 handler"，再计时。**
+    被请求校验拒掉的调用**天然很快**，于是"28 毫秒"会被读成"这条路不让人等 ⇒ 无缺陷"。
+    这是一类**假阴性**，比假阳性更难发现，因为它支持"结案"这个方向。
+    实测样本（`raw/ord68_cold_row_validity.py`，我自己起的隔离实例）：
+    ```
+    weather 用探针的 `json={}` ⇒ **422 / 28.2ms / 未进 handler**；换成合法 body ⇒ 404 / 34.5ms / 进了 handler
+    两条路用假 `oid="none"` ⇒ **422 / ~30ms / 未进 handler**
+    根因：`schemas.py:223` weather 的 `state` **必填**，`:242` autopilot 的 `state` **有默认值**
+    ⇒ 同一个空 body 在两条路上命运不同 ⇒ ORD-0068 探针 4 行里**只有 1 行有效**
+    ```
+    ⇒ 判据：**"对一个被拒绝的请求计时"不是测量。** 每个计时行都要自证 `status != 422`（或断言无校验错误），
+    否则该行是 fatal。
+11a. **一条订单只允许一个 `status:` 与一个 `evidence:`（这次是我自己违反的，如实记）**。
+    @00:3x 我往 ORD-0068 里插"预检第二轮"时，锚点选中了正文末尾，结果**多出一条 `status:`**，
+    并把较早的那条预检挤到状态行之后 —— 正是我整天要求车道避免的"两个 status 让榜单读错"。
+    处置：删掉重复行、两条预检用 `---` 分隔、复核 20 条订单**全部只剩一个 status/evidence**。
+    ⇒ **已变成每轮自动检查**：`raw/patrol.py` 现在会打印
+    `!! ACCOUNTING VIOLATION (>1 status/evidence key…): ORD-xxxx=2status`。
+    **杀测做过**：把缺陷注回副本 ⇒ 告警如期出现（`ORD-0068=2status`）；真账本 ⇒ 干净无告警。
+    我自己写的规则对我自己同样生效，而且这条尤其要打脸——我一天里教车道"别改口径迁就断言"，
+    自己却先把账本结构改坏了。**发现—撤回—补量具**这三步缺一步，我就没资格去判别人。
 ### commander 独立复核 @2026-09-21 02:3x —— ORD-0063 / ORD-0064（`3f1b44c`）→ `ACCEPTED`（后端部分），前端部分待并
 
 车道交了 `3f1b44c fix(backend): make one trip shape and one currency the only truth a screen can read`：
