@@ -3842,6 +3842,28 @@ POST    : 03:31:13  citynexus.db mtime 03:31:13
 **但仍不发车**，因为还差第二条：`preview HEAD == checkpoint HEAD`，而手机现在跑的是 `602addf`，
 B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 B 落地 → 重建 preview → 我手机复测 M2。
 
+### 🔎 commander 读码发现 @2026-09-21 03:3x —— 仲裁 AR2 的 **Wallet 真值门（第 2 门）在前端物理上过不了**：`commitments` 从来没被渲染过
+
+**这是读码 + 类型核对得出的，不是猜**（我还没读屏实测，所以标为"待实测确认"）：
+
+1. `V8Experience.tsx:83-88` 声明了 `commitments: Array<{ id; level; kind; external_ref; status }>` —— **类型里有 `external_ref`**；
+2. 但全仓 `grep external_ref frontend/src/features/ frontend/src/components/` = **0 命中**，
+   在 `V8Experience.tsx` 里也**只出现在那个类型声明处**（`grep -c external_ref` = 1）；
+3. `Bookings` 组件（`:2713`）**只渲染 `wallet?.reservations`**（`:2806` `data-testid="wallet-reservation"`），
+   另一处 `:2962` 同样只取 `wallet?.reservations`；**`commitments` 没有任何渲染点**。
+
+⇒ **后果**：即使 A 把 `prepare-scenario` + booking 全跑通、后端真的落了
+`external_ref=mock-booking:38727c58…` 的 `CONFIRMED` 承诺（D 已实测），
+**屏幕上也不会出现"模拟承诺"这四个字**，因为那个字段根本没上屏。
+
+**这正是仲裁 AR2 第 2 门要防的事**：
+> 因为 `external_ref=mock-booking:…`，屏幕必须明确标 **"模拟承诺"**，否则就是把 mock 穿西装送给老师。
+
+**我按"未证"记账**（我不替产品宣布它已满足，也不宣布它一定不满足——我还没读屏）。
+**处置**：派一张新单给 B（ORD-0084），要求把 `commitments` 上屏、并**按 `external_ref` 前缀
+`mock-` 显式标"模拟承诺"**；真值来源仍是后端字段，**不许前端自己判断"这大概是假的"**。
+**这一条排在 M2 可见之后、M3 之前**，因为它决定 M4 能不能诚实地讲。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
