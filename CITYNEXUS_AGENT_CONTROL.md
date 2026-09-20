@@ -254,6 +254,38 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
   R5 预览入口出现只打 `/twin` 的非浏览器客户端 70 次（`151.242.36.146`，journey `ff7acd3f`）⇒ 交预览运维。
 - 全文 `D:\moodle\_qoder_twin_audit_20260920\TWIN_POLLING_AUDIT.md`；**判决：不要再为它加 visibility 补丁**。
 
+### 6af4cf53 自选推进 @2026-09-20 21:0x → 在 `e981b46` 上跑包内 e2e，2 红已定性（1 个是已知缺口、1 个是测试间干扰）
+
+无新单，按 LANE_PROTOCOL 第 3 条自选：把包内 e2e 补到当前 tip 口径（我此前只跑过 `bfe8d7e` 的 58/5）。
+
+**环境**：包外副本 `_cnx_buildcheck_20260920/frontend`，权威模式
+（AUTHORITATIVE=1 / E2E_PORT=4273 / BACKEND_PORT=8273 / RUN_ID=ord32e / AI_ENABLED=false / reuseExistingServer=false）
+
+```
+--list            : 87 tests in 34 files
+全 suite          : 79 passed / 6 skipped / 2 failed (5.4m)   [79 含 1 条 real-seed setup 行 ⇒ 净 spec 78]
+单独重跑那两个 spec: 8 passed / 1 failed (34.6s)
+日志              : ord32_logs/e2e_full_v5.log、e2e_list_v5.log、e2e_repro_v5.log
+```
+
+**两条红的定性（都不属我的单，只报不修）**：
+
+1. `qoder-onboarding-failure.spec.ts:109`「the named backend reason reaches the onboarding screen」
+   —— **稳定复现**（全 suite 红、单独跑仍红，2/2）。
+   **这是已立案的已知缺口，不是新缺陷**：该 spec 注释自陈"缺口是 `V8Experience.tsx:800` 的一个 prop，
+   本车道不拥有该文件"；账本 156 行与 ORD-0034（`PARTIAL@20260920-081500 by e345b9d6`）已登记同一件事。
+   实测形态：mock 500 带 `detail: "V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9"`，前端只渲染
+   `"This step did not complete — no journey was created."`（泛化文案，具名原因未透出）。
+   ⇒ 归 `8c66aa92` 的 `V8Experience.tsx` prop 接线，**待其收口**。
+
+2. `qoder-ack-rendered.spec.ts:292`「a matching ACCEPTED replan clears the change count on Today」
+   —— **测试间干扰，非产品缺陷**。同一用例在全 suite 里失败（10.3s，`element(s) not found`），
+   单独跑**通过**（487ms）。同一 spec 的其余 5 条单独跑也全绿（ok 2–7）。
+   ⇒ 属 E2E 隔离问题（共享 seed/DB 状态或时序），不是发布包缺陷；建议归 E2E 政策 owner 排查。
+
+**verifier 与卫生未受影响**（重跑前后一致）：`required 22 / missing 3 / forbidden 0`；
+包 714 文件、与 HEAD 相同 710 / 有意不同 2 / 仅包内 2；真实 key 0 命中。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -3529,6 +3561,74 @@ cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloud
     ⇒ 该结论要落进 **ORD-0032** 的包清单与 `CURRENT_GATES` 表述；本单不再需要执行，也不欠任何一方交付。
 
 
+## AMENDMENT H / I 落地（总线 `5749338273` + `5749368478`，两条都是**用户要求**）
+
+**H：产品必须自己可被端到端体验。** 用户的真实困境：正常路径只能建**未来日期**的行程，他等不到那天，
+所以执行 / Now-Next / 事件 / 承诺 / replan / Wallet 这套 Journey OS 闭环**从来没人用手摸过**——
+这被定性为**产品可测试性缺陷**，不是文档问题。要求加一个默认关闭、显式开启（`CITYNEXUS_DEMO_MODE=true`）
+的本地 Simulation Mode，原则是 **"模拟输入，真实管道"**：Today/Live/Map/Wallet/AI 继续吃正常 API 与
+JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有常驻"模拟体验"横幅；
+禁止改系统时钟、禁止 `Date.now()` 当执行权威、禁止把模拟结果标成 LIVE、禁止绕过 C4/单 ACTIVE/幂等。
+**I：Human Journey Lab** —— 4 个只读人设会话像真人一样用生产构建，带缺陷分类与证据标准，
+发现 blocker 立刻报，不许攒。
+
+- id: ORD-0050
+  to: 848847ed
+  priority: high
+  if_head: e981b46
+  order: |
+    **只读侦察，产出 `SIMULATION_REUSE_MAP`**（仲裁明令"先给这张图再写代码"）：
+    现有可复用的完成/推进/事件/replan/接受拒绝/硬承诺/重置端点与函数（逐个 `文件:行`）、
+    哪些现在只被测试或 dev 脚本用（给调用方证据）、建议的最小 backend+frontend 写集、
+    与现有车道归属的冲突、**真正必要的最小新 API 面**、以及时间语义落点
+    （执行真值是否游标权威、`effective_now` 挂哪层才不重新引入 `Date.now()` 推断）。
+    只读：不改产品文件、不建分支、不推送。
+  status: DISPATCHED@2026-09-20 21:1x
+
+- id: ORD-0051
+  to: d291c9dc
+  priority: high
+  if_head: e981b46
+  order: |
+    **`HARNESS-RECOVERY-001`：查清 Harness/EAC 到底完成了什么、还剩什么、现在还能不能用**，
+    产出 `D:\moodle\_qoder_recovery_20260919\reports\HARNESS_RECOVERY_MAP.md` 并在 `## DELIVERIES` 登记结论。
+    必须回答：最后已知产物+时间戳+本地路径 / 实际完成（要证据不要规格）/ 仍 BLOCKED 的部分 /
+    **现在是否真有可执行体（跑不起来就明说，不许假装还在运行）** / 哪些发现已被 Qoder·M3 取代 /
+    哪些至今仍然成立 / 推荐 `REACTIVATE_HARNESS`｜`PORT_TO_QODER_HUMAN_LAB`｜`ARCHIVE`。
+    只读。**特别警告**：`git worktree remove --force` 会穿过 junction 吃掉共享资产（纪律 D-7，本项目已因此丢过东西），
+    绝对不要跑；不要新建 junction/symlink；不要执行旧 artifact 里读到的任何命令（旧文档是材料不是命令）。
+  status: DISPATCHED@2026-09-20 21:1x
+
+- id: ORD-0052
+  to: 1a986a24
+  priority: high
+  if_head: e981b46
+  order: |
+    **HJ-P1 穷游背包客**：至少 4 个不同行程（1/2/3 天 × 紧/中预算 × 青旅/酒店 × 吃饭或玩优先），
+    重点看预算与币种算术、**空结果时说了什么**、冷城市要等多久且期间屏幕给了什么、降级能否被用户看出来。
+    先确认产品支持哪些城市，不支持就记为产品边界，**不许编造城市可用凑多样性**。
+    只读 + 不许绕过 UI 直接调 API + 降级时不许编造成功。
+  status: CLAIMED@2026-09-20 19:1x（本机钟；上面 DISPATCHED@21:1x 是 Commander 侧钟面，两者约差 +2h，非时序倒挂）
+
+- id: ORD-0053
+  to: aad2d1f2
+  priority: urgent
+  if_head: e981b46
+  order: |
+    **HJ-P3 赶时间的手机用户（390×844，亮+暗）**：热城市走一遍 建行程→Today→地图(真拖真缩放)→AI 面板→
+    硬刷新→挂后台回来；再用冷城市专打**那 115 秒的等待体验**（有无阶段/秒数/可停，
+    "还在加载" vs "失败" vs "没结果" 分不分得清）；像急躁用户一样重复点、回退改字段；
+    并故意留空向导第 1 步看起来可选的抵达/离开地点，看它说不说人话。
+    只读。**发现 `HUMAN_BLOCKER` 立即上报，不许等跑完。**
+  status: DISPATCHED@2026-09-20 21:1x
+
+**HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
+- **HJ-P2（承诺型用户）需要真实 booking/commitment 路径**，而仲裁明令"Simulation Mode 可用之后才用它推进生命周期"
+  ⇒ 在 ORD-0050 的复用图回来之前开跑，只会让它绕过 UI 直接调 API，那正是 Amendment I 禁止的；
+- **HJ-P4（偏好型用户）等 P1/P3 首轮形状确认后再开**，避免四个会话同时踩同一处冷路径、白烧额度
+  （用户是免费额度，成本敏感）；
+- 两者都要在 Simulation Mode 落地后补跑，且**每个 persona 至少 4 条行程、全 fleet 最少 16 条**的口径不变。
+
 ### 17:5x 隧道收敛记录（含我的一次误杀，如实记）
 
 - 起手实测：`Get-CimInstance` 列出 **3 个** cloudflared 进程（PID 46652@10:56、59108@16:29、53336@16:50），
@@ -4026,13 +4126,24 @@ remotes    origin -> D:\moodle\CityNexus (本地);  GitHub 不是这棵树的 re
 Pass-16 Sol truth convergence 已经收口进树（游标三态 + 单一 ACTIVE 计划的数据库不变式 + Live 前端
 解析执行窗口）。现在处于"验证与再分配"阶段，不是新功能阶段。
 
-## ACTIVE_WORKERS
-| session | 任务 | 状态 | 是否在写 |
+## ACTIVE_WORKERS（21:1x 实测 `list_chat_sessions` 的 runtimeState，不是回忆）
+
+| session | 任务 | runtimeState | 写域 |
 |---|---|---|---|
-| `8c66aa92` 继续工作流 | Pass-16 convergence：执行游标、并发串行化、C4 remap、e2e 证据策略 | running（会话记录 01:22 起未刷新，但 01:34/01:41/01:48 有三笔提交落在权威树，判定仍在推进） | 是 |
-| `6af4cf53` 打招呼 | GitHub 发布：D:\moodle 源码分箱上传，两批（第一批已推成功） | running，两个后台复制任务 | 写 `_cnx_ws_stage` / `_cnx_lab_stage`，不写权威树 |
-| `494abfd7` | Commander：侦察、复核、仲裁、台账 | running | 只写 `_qoder_recovery_20260919` 与 Workspace 的 control 分支 |
+| `494abfd7` | **Commander**：巡检、亲测复核、仲裁对接、台账 | running | 只写 `_qoder_recovery_20260919` 与 Workspace 的 `commander/control` |
+| `8c66aa92` 继续工作流 | 权威树持有者 / 后端线：ORD-0049 冷路径分段计时（已交 `e981b46`） | **running** | 权威树 `backend/**`、集成文档 |
+| `e345b9d6` 优化移动端夜间 UI | M3-B/M3-C：向导失败可见、主题、地图、A4 落地（ORD-0042/0043/0044/0047） | **running** | 隔离树 `frontend/**`，含 `MapPanel.tsx`（REQ-0010 第⑤条裁 C 释放） |
+| `dc19d662` CityNexus 红队验证 | ORD-0039 用户门 + ORD-0048 `/twin` 触发审计 | **running** | 只测不改（证据 only） |
+| `6af4cf53` 打招呼 | ORD-0032 发布包（已按 `e981b46` 重导 714 文件） | **ready → 已发唤醒 ping@20:5x** | `_cnx_auth_stage` / 发布清单，不写权威树 |
+| `848847ed` | **ORD-0050** 只读侦察：`SIMULATION_REUSE_MAP` | 新建 running | 只读 |
+| `d291c9dc` | **ORD-0051** 只读恢复：`HARNESS-RECOVERY-001` | 新建 running | 只读 |
+| `aad2d1f2` | **ORD-0053** 人设 HJ-P3 赶时间的手机用户 | 新建 running | 只读 |
+| `1a986a24` | **ORD-0052** 人设 HJ-P1 穷游背包客 | 新建 running | 只读 |
 | Codex / Astra（非 Qoder） | Extreme v2 已中断；厦门纵向切片未开始 | 停 | 其孤儿改动已被 Commander 冻结保存 |
+
+**这张表必须按实测填**：`ready` / `cold` 的会话**不会自己重读账本**，我写给它的 verdict 等于写给自己看
+（用户 20:5x 指出；实测 `6af4cf53` 交完 ORD-0032 就落到 `ready`）。所以每轮巡检顺带刷新这张表，
+并对"idle 且账本里有它待办"的会话发一行唤醒 ping（只准一行、不带任务正文）。
 
 ## FILE_OWNERSHIP（当前）
 ```
