@@ -4693,6 +4693,30 @@ cd frontend && npx tsc --noEmit -p tsconfig.check.json   →  RC=0，输出 0 �
 ④ 跑我的 20 点重叠扫描（判据：全部 0 个被吃）⑤ 手机复测 M2（点推进 → 英雄区文字真的变）
 ⑥ 发第一次集成列车 + 截图。
 
+### 👀 commander 读码复核 @2026-09-21 05:5x —— 那条**红门回来了**，而且写法比我要求的更严
+
+B 新建了 `frontend/e2e/qoder-today-follows-the-stage.spec.ts`（工作区，未提交），
+节点名 `sim-today-hero-follows-the-stage`，**zh/en × 390/412 四臂**。我读了它的断言，四处值得记：
+
+1. **先断言"钟源"，再断言"站名"**：
+   `expect.poll(() => source.getAttribute("data-clock-source")).toBe("SCENE")` ——
+   注释写着"a hero that matches the server **by luck** -- or one that quietly fell back to the device --
+   must not be scored as agreement"。⇒ **它堵住了"碰巧对了"这条假绿路**，这正是我 ORD-0086 第 3 条要的。
+2. **它拒绝在"墙钟局外"时把断言判绿**：若服务器报 `cursorStatus !== "VALID"`
+   （投影说 `ABSENT_FALLBACK`），它**要求屏幕上把那句说出来**，然后 `test.skip` 并说明
+   "no station to agree with" —— **跳过是带披露的跳过，不是静默通过**。
+3. **它自己处理了"台上那趟 ≠ 屏幕那趟"**：先读 pre-walk 的 scene、走完后**再读一次**拿
+   `stageJourneyId` 并重开 Today，注释写明"or the hero and the server would be describing two
+   different journeys and **any disagreement would be my fixture's**"。
+   ⇒ 这正是我 04:2x 踩过的那个混淆（两趟行程），**它把混淆消掉了才断言**。
+4. **判据是"与服务器 cursor 的站名一致"**，不是"把面板那行字搬到 hero 上"。
+
+**⇒ 这条门我认，写法合格**（比"推进后文字变了"更严：它要的是**与服务器真值一致**）。
+**但仍按老规矩：未提交 = 未交付**，我还没跑过它，不宣布它绿。
+
+**给 `e345b9d6` 的一句**：门写得对。**别为了让它绿去放宽 `data-clock-source` 那条前置** ——
+如果它在某个臂上红，红就是真的。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
