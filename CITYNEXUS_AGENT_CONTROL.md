@@ -242,6 +242,30 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 `test_qoder_stay_generation_phases`）都不在 SUITES 里，**矩阵分母不受影响**，`16 actionable + 1 equivalent`
 那套口径不必因为我重算。
 
+### e345b9d6 ORD-0044 @2026-09-20 21:0x → 合法输入不再静默卡死：第 1 步指名缺项、422 回落本字段、审核页不说"-"；9 变异 9 杀
+
+提交 `26d5555` + `5feaa83` + `4516777` + `ca65483`（隔离树 `_qoder_ui_overnight_20260920`，未推送）。
+`typecheck:all` **exit 0**。
+- 该文件节点：`qoder-onboarding-failure.spec.ts` **6 个节点全绿**；`legal-window-create-advances`
+  实测 **1815ms** 到壳层（门限 5s，真后端无 mock）。
+- 全量：**`--list` 92 collected / 35 files**，其中 **setup 工程 1 行**（`_qoderRealSeed.setup.ts:110`）。
+  run 1 `run902166` **83 passed / 6 skipped / 3 failed（7.4m）**；
+  run 2 `run902887` **86 passed / 6 skipped / 0 failed（6.8m）**。三条红单独重跑
+  `run902741` **14 passed / 0 failed（1.7m）** ⇒ 不复现；`workers: 1` 排除抢 CPU，判为同库跨用例状态串扰，
+  逐条点名与归属已写进 ORD-0044 evidence（config-guard 的 `spawnSync` 失败不可分辨、predictive 固定 journey id）。
+- 杀证据：**9 个变异体 / 9 杀**，每例一个变异、红名点名本节点、字节还原 sha 校验 OK。
+  表 `review/ord44-kill-table.txt`，逐例日志 `review/kill44-*.log`，说明 `review/ORD-0044-kill-evidence.md`。
+- 实到信封（`review/probe-envelope.py`）：未捕获异常 = **500 / text/plain / "Internal Server Error"，不含抛出码文本**；
+  空锚点 = **422** `VALIDATION_ERROR` + `details.errors[].loc/msg`；9 天窗口 create **201**、其 generate
+  **500 text/plain 0.01s 且不含 `V13_JOURNEY_DAYS_OUT_OF_BOUNDS``** ⇒ 我原先那条门 mock 的
+  `{"detail":"V13_…:9"}` 是抛出串不是线上传输串，已按实测替换（这条自纠由仲裁"冻结实到信封"的要求触发）。
+- 我自己的一处不可红断言已公开记录并修好（审核页裸 "-" 的检查原本放在到不了的位置，现拆独立节点、
+  走产品持久化草稿路径、中英两臂都跑、变异 g 证明可红）。
+- `GET /twin` 39–40 次：**不是循环**，实测 hub 6 次/13 次 API/75s、live 6 次/20 次/75s ⇒ 15s 设计轮询
+  （与 `dc19d662` ORD-0048 独立结论一致）。
+
+
+
 ### dc19d662 ORD-0048 @2026-09-20 18:56 → `GET /twin` 是设计内的 15 s 前台轮询，且**已经** visibility-aware；325 次 = 两客户端 × 14 次加载 × 85.6 分钟的正常总量，不是循环
 
 - 基线 `git archive 56f67e2`（= if_head）到独立树，`vite build` **exit 0 / 4.69 s**；自有 :8411 后端 +
@@ -776,6 +800,184 @@ frontend（2 + 1 新）：
 **未收尾**：4 条行程矩阵（第 1 条 厦门·1 人·总预算 600·住宿 120·美食优先，正在走）、预算与币种算术、空结果文案、
 冷城市等待体验、降级可见性。新 blocker 继续即时上报。
 
+### commander 独立复核 @2026-09-20 22:2x —— HJ-P1（`1a986a24`）三条界面缺陷**我在源码里逐条证实**
+
+| 它的发现 | 我的复核（权威树 `576fbf6`，`frontend/src/features/setup/JourneyTrialSetup.tsx`） | 结论 |
+|---|---|---|
+| **F-1** 抵达/离开两栏永远写"厦门" | `:296 <span>{zh ? "抵达厦门" : "Arrive at"}</span>`、`:305 "离开厦门" : "Depart from"`；占位符 `:281 "例如：厦门"`、`:301 厦门高崎国际机场`、`:310 厦门北站` | **成立，且形状比它报的更难看：中文分支是硬编码文案，英文分支反而不带城市 ⇒ 只有中文界面在骗人** |
+| **F-2** 城市认不出来零提示、"下一步"照样能点 | `:220 const step1Ready = draft.cityName.trim().length > 0;` —— 只看非空，**不看是否被识别** | **成立。与我 21:5x 自己在生产构建上量到的 `nextStillEnabled = true` 吻合**（两条独立证据指向同一行） |
+| **F-3** 识别城市全过程 0 个 `/api` 请求 | `:49 export function inferCityFacts(cityName)` 是本地函数；该文件内 `grep "fetch(\|v8Request"` **无命中** | **成立 —— 识别来自前端内置表（`:25` 那种硬编码字典），产品既不列清单也不校验命中** |
+
+**H-B（共享预览 DB + 全局 ACTIVE 行程）我判为双重问题**：干净 tab 打开 `/` 返回 200，
+渲染的却是**别的车道刚建的那趟行程**的 Today 页，`[data-testid="trial-city"]` 计数 0、向导根本不出现。
+⇒ 对实验室是隔离缺陷；**对产品也是可见缺陷**：想新建行程的用户被静默塞进别人的行程，
+屏幕**没说这是哪一趟、是不是他建的**（`HUMAN_MISLEADING` + `HUMAN_STATE_LOSS`，复现率 2/2）。
+
+**H-A（多车道共用同一个 Playwright Chrome 同一个 tab）`ACCEPTED`，属实验室方法学缺陷**：
+证据链干净（frame 序列里向导自己变 `✓`、console 全是**已死隧道**的历史、三次长探测被
+`Execution context was destroyed` 打断）。**我自己没受影响**是因为走的是独立 `node + playwright` 进程，
+不共享那个 MCP 服务器实例。⇒ 规矩入册：**人设/验证会话不得共用同一浏览器实例**（见 ORD-0061）。
+
+**要表扬的一条**：这批里它**主动撤回了自己先前的误读**（"天津 >1.8s 才识别、可能不支持"
+其实是共享 tab 造成的假象）。这种自我撤回比新增发现更值钱，记进账本。
+
+`verdict: ACCEPTED`（H-A/H-B/F-1/F-2/F-3 全部成立）。⇒ 新开 **ORD-0060**、**ORD-0061**。
+
+#### aad2d1f2 ORD-0053 HJ-P3（完整交付）@2026-09-20 20:02 → 9 条人设缺陷，其中 2 条 HUMAN_BLOCKER；先说清我跑的到底是哪个构建
+
+**人设**：HJ-P3 赶时间的手机用户（第一次用，只想 1 分钟内看到能用的行程）。
+**视口**：390×844。**主题**：亮色走完主路径，深色覆盖 向导第 1 步 / 创建中 / AI 面板 三屏。
+**只读声明**：未改任何产品文件、未建分支、未推送、未新建隧道、未绕过 UI 调 API；下面每个数字都是我自己采集的。
+
+##### ⓪ 前提（先读这条，否则后面的归因会错）
+
+我浏览器加载的前端主包是 `index-D4-WDMKj.js`，该文件在预览目录里的构建时间是 **本机钟 16:29:09**。
+而权威树的提交序列是：`a453121` 16:00:14 → `56f67e2` 16:41:22 → `e981b46` 18:45:32 → **`576fbf6` 19:23:07**。
+⇒ **我跑的前端 = `a453121` 时代**，不含 `576fbf6`。`56f67e2` / `e981b46` 是纯后端提交，所以前端不重建是合理的；
+但 `576fbf6` **改了前端** `V8Experience.tsx`，而且它改的正是我 H-1 那条：
+> “ORD-0034's whole remainder was this line. The wizard returns before the shell renders `message`,
+> so a named backend rejection … died in shell state and the traveller saw only a generic notice.”
+
+⇒ **H-1 必须在重建前端后重测**，我在下面把"已被 576fbf6 处理的部分"和"仍然剩下的部分"分开了写。
+另：订单给我的 `当前权威 HEAD e981b46` 在我这一轮跑动期间已被推进到 `576fbf6`（19:23），`## CURRENT_HEAD` 若还没更新请一并核。
+
+##### H-1 `HUMAN_BLOCKER`：向导按"三步完成"放行必填项，后端拒绝后仍不指路（`e981b46` 前后都存在，但 576fbf6 只修了一半）
+
+见本区上方 `### aad2d1f2 ORD-0053 HJ-P3 @19:29` 那块：`trial-arrival` / `trial-departure` 的
+`required=false`、无 `aria-required`、无 `aria-invalid`，第 1 步只要目的地非空就放行；
+`POST /api/v1/journeys` → 422，响应体两条 `String should have at least 1 character`。复现率 **4/4**。
+**在 576fbf6 之后还剩什么**：我抓到的 422 载荷顶层是 `message: "Request validation failed"`，
+字段名只存在于 `details.errors[].loc`。所以 `message={message}` 传进向导后，用户大概率看到的是
+"Request validation failed" 这句机器话，仍然**不知道是哪两格、该回第 1 步**。
+⇒ 剩下的是后端把 `VALIDATION_ERROR` 翻译成人话（`56f67e2` 已经为"超 7 天"做了 by-name 拒绝，同一套做法可以复用）。
+**最小回归点**：手机视口 E2E，断言"留空两格地点点到底"之后，屏幕上出现的文案**包含"抵达/离开"字样**，
+而不是只断言"有错误提示"——现在这条提示是存在的，只是不含信息。
+
+##### H-2 `HUMAN_BLOCKER`：AI「帮我规划」在我这一轮 4/4 全部"没有生成可行方案"，热城市也一样
+
+- 动作序列：建好行程 → hub 上自动弹 AI 面板 → 输入自然需求 → 点"开始规划" → 等 → 失败。
+- 四次输入：① 天津"两个人去天津三天，想轻松一点，吃煎饼锅巴菜和海鲜，走路不要太多，住海河边上。"
+  ② 同一句重试 ③ 厦门"两个人去厦门三天…住海边。" ④ **无约束**"随便安排一下就行，谢谢"。
+- 结果：4/4 都是 `没有生成可行方案` + `你的需求已…没有改动`。`POST /:j/agent/commands` 分别
+  **27 907 / 21 622 / 22 720 / 14 198 ms**。
+- 第 ④ 次是关键：我把约束全部去掉，仍然失败 ⇒ 这不是"我的预算/需求真不可行"，而是**这条路径在预览里一次都没交付过**。
+  而 hub 顶部的承诺是"告诉 AI 你想怎么玩，它会生成可选方案"。
+- 期望：至少有一种输入能让用户看到"可选方案"。实际：Today 永远是"还没有安排"，地图永远是空。
+- 复现率 **4/4**（两座城市、四种措辞）。分类 `HUMAN_BLOCKER`。
+- 疑归：`agent/commands` 的可执行性判定那一侧（我读的是界面结果，没进后端定位）。
+- 最小回归点：一条真机/真浏览器 E2E，断言"提交一个无约束需求 ⇒ 屏幕出现至少一个可选方案卡"，
+  而不是断言"请求返回 200"。返回 200 + 空草稿正是现在的漏网形态。
+
+##### H-3 `HUMAN_MISLEADING`：失败卡片里把模型的内部推理句当"解释"直接渲染，语义还和标题相反
+
+同一个卡片里从上到下是三行：`没有生成可行方案` → `你的需求已理解，但这次没能排出可行方案…` → **模型的内部回执原文**。
+四次采到的第三行分别是：
+1. `Parsed a 3-day relaxed Tianjin trip for two, protecting local food, seafood, Haihe River lodging, and low walking…`
+2. `已提取天津三天两人轻松行程；…设为保护项…`
+3. `理解为两人厦门3天轻松行程…具体地点与时间需由服务端解析。`
+4. **`No specific Journey mission details were provided; returning an empty draft for later clarification.`**
+证据：`12_ai_no_feasible_plan_light.png`（1、2 两次）、`15_ai_leaked_internal_line_dark.png`（第 4 次，深色）。
+同一语言开关（EN 未点）下第三行中英文随机出现 ⇒ 它是模型自由文本，不是 i18n 表。
+用户读到的是"已经解析好了、保护项都设好了"，与"没排出来"直接矛盾。复现率 **4/4**。
+疑归：AI 面板渲染 `agent/commands` 响应摘要的那一处（把内部摘要当成用户文案输出）。
+最小回归点：断言失败卡片上**不出现**任何未被 i18n 表覆盖的自由文本（可用"是否含拉丁字母句子"做粗门）。
+
+##### H-4 `HUMAN_LATENCY`：冷城市创建要 118.5 秒，而这 118 秒里屏幕上只有一个变淡的按钮
+
+- `POST /journeys/:id/stay-options/generate` 实测：厦门 **118 525 ms**，天津 **1 240 ms**（同一台预览、同一套路径）。
+  加上 `/travelers` 3 806 ms + `/journeys` 776 ms ⇒ 从点"确认创建"到看见 Today ≈ **2 分钟**。
+- 期间屏幕反馈**只有**按钮文案"正在创建…"，`disabled=true`、`cursor:not-allowed`、`opacity:0.45`。
+  **没有阶段、没有秒数、没有百分比、没有取消按钮。** 证据：`08_create_pending.png`（亮）、`14_creating_dark_xiamen.png`（深）。
+- 对照：**同一个产品里的 AI 面板已经实现了完整三件套**——"发出请求，等待模型返回 · 已等待 7 秒" +
+  三阶段清单（✓读取已有方案作为基线 / ●发出请求 / ○核对本次是否真的产出了新方案）+ `取消` 与 `取消并关闭` 两个按钮，
+  还有一句"后端不会中途汇报进度，所以这里只有真实等待时间，没有百分比，也没有猜"。
+  ⇒ **不是能力缺失，是创建路径没复用**。这条我认为是本轮性价比最高的修法。
+- 复现率 1/1（冷城市）。分类 `HUMAN_LATENCY` + `HUMAN_RECOVERY_GAP`。
+- 顺带量到：该按钮文字在深色下前景白、底色 `rgb(10,102,255)`、裸对比 **4.82:1**，但整块 `opacity:0.45`
+  使实际对比降到约 **3.3:1**（我按 alpha 合成算的，没做像素取样）。它是 disabled 控件，**不算 WCAG 违规**，
+  只是"唯一的进度反馈刚好最难读"。记 `POLISH`，别当成无障碍红线。
+
+##### H-5 `HUMAN_MISLEADING` + `TRUTH_DEFECT`：地图明明正常，却永久挂着"底图未加载"
+
+- 现象：Today 的地图面板顶部长期显示"底图未加载，显示的是路线示意。"，而同一屏里 OSM 瓦片已经渲染出街道与区名。
+  证据：`10_today_light_390.png`、`11_map_after_gestures.png`（缩放后仍在）。
+- 网络事实：底图只有一个来源 `tile.openstreetmap.org`；z12/z11 共 12 个请求 `net::ERR_ABORTED`
+  （maplibre 取消被取代的瓦片，属正常），随后 z10 全部 200 并成功渲染。
+- 代码事实（我只读，未改）：`frontend/src/components/v8/MapPanel.tsx:237-240` 对**任意**一个
+  `sourceId === "open-street-map"` 的 `error` 事件就 `setTilesUnavailable(true)`；
+  `:244-247` 在 load 时若缓存桶为空也置真；**全文件没有任何把它设回 false 的路径**
+  （`grep setTilesUnavailable` 只有 2 处调用，都是 true）。
+- 期望：底图可用时不出现失败文案。实际：一次良性的 ERR_ABORTED 就把它永久锁存。
+- 复现率 1/1 次加载命中，且跨越"初始渲染 → 双指缩放后"两个观察点。分类 `TRUTH_DEFECT`（UI 断言了一个没发生的数据路径降级）。
+- 最小回归点：给 `MapPanel` 加一条"瓦片随后成功 ⇒ 撤下提示"的断言；现有测试只覆盖了"全挂时必须说"（ORD-0037 要求 3），
+  没覆盖"没挂时不许说"。
+
+##### H-6 `HUMAN_MISLEADING`：AI 快捷建议与当前行程城市无关，点一下就把别的城市写进需求
+
+当前行程是天津时，面板里 placeholder 与两枚快捷建议全部是厦门文案（`我和朋友两个人去厦门…`、`带爸妈去厦门三天…`）。
+点第一枚 ⇒ textarea 变成完整的厦门需求、"开始规划"随即变为可用（我实测 `taValue` 与 `startDisabled:false`）。
+赶时间的人最快的那条路恰好是错的那条。证据：`09_hub_today_light.png`、`12_ai_no_feasible_plan_light.png`。
+复现率 2/2（天津、厦门行程下建议内容不变）。分类 `HUMAN_MISLEADING`。
+**更正我自己**：我一度以为这是"预填"，实际 `textarea.value` 为空、厦门那句是 placeholder；报告按 placeholder+建议来算。
+
+##### H-7 `HUMAN_BLOCKER`（轻）：AI 需求框有一条没人告诉你的 8 字门槛
+
+"随便安排一下。"（7 字）输入后 `plan-ai-submit` 始终 `disabled`，点不动。逐长度探测：
+**4 字禁用、7 字禁用、8/10/12/15/20 字可用** ⇒ 门槛是 8 个字符。
+整个面板文案里没有任何"至少 N 字"的说明（我对面板 innerText 做了正则检查：`至少|最少|\d+ ?个字|too short` 全部 false）。
+用户视角就是"我打了字，按钮是死的"。复现率 1/1。分类 `HUMAN_BLOCKER`（小范围）+ `HUMAN_MISLEADING`。
+最小回归点：门槛存在时把规则写出来，或改成"短输入也允许提交"。
+
+##### H-8 `HUMAN_STATE_LOSS`：硬刷新后我落进了别人的行程，手机侧没有任何行程列表
+
+- 我建的是"天津之旅"（2 人、每人每天 ¥500）。在 `/v8/hub` 上做整页刷新后，屏幕标题变成
+  **"厦门之旅 · 3 天 · 1 人 · 每人每天约 ¥200"** —— 是 `1a986a24` 那趟行程。证据：`13_after_hardrefresh_wrong_journey.png`（读的是渲染文字）。
+- 我随后找出口：`我的` 页只有"这趟行程 / 厦门 / 1 位旅行者 · ¥600.00"，**没有行程列表**；
+  左上角"菜单"打开的是**"全部路由"调试抽屉**（今天 / 实时行程 / 行程工作台 / 住宿选择 / 城市探索 / 旅行票夹 / Copilot / 恢复与执行 / 旅行者画像），
+  同样没有"切回我另一趟行程"的入口。⇒ 手机侧一旦 ACTIVE 行程被换掉，上一趟就**再也回不去**。
+- 这条与 `1a986a24` 的 H-B 是同一件事的两个视角（他们看到的是"新用户被塞进别人行程"，我看到的是"刷新后自己的行程消失"），
+  互相独立命中 ⇒ 复现率合计 3/3。**不是产品缺陷的部分**：共享预览 DB + 全局 ACTIVE 是实验室环境；
+  **是产品缺陷的部分**：**没有行程列表/切换器**，所以任何 ACTIVE 变更对用户都是不可逆的丢失。
+- 分类 `HUMAN_STATE_LOSS` + `HUMAN_ACCESSIBILITY`（无出口）。疑归：`V8Experience.tsx` 的 ACTIVE 解析 + 缺失的行程列表面。
+- 最小回归点：手机侧断言"存在多于一个行程时，屏幕上有一个能列出并切换它们的入口"。
+
+##### H-9 三条小的（同一批截图里读到）
+
+1. `POLISH`：向导三步全程停在 `/v8/hub`，URL 不反映步骤（我实测点"试用其他城市"后 `location.pathname` 仍是 `/v8/hub`）
+   ⇒ 刷新/系统返回键找不回当前步骤。
+2. `POLISH`：AI 面板标题"AI 帮我规划"与说明"用你自己的话描述这趟旅行"贴屏幕左边缘（`x=0`、`padding:0`），
+   亮暗两色都一样（`12_`、`15_`）。
+3. `HUMAN_MISLEADING`：确认页把用户选项回显成内部枚举 `节奏 = relaxed`、`兴趣 = food`（`05_step3_light.png`）。
+   这条与 HJ-P1 报的是同一族，我这边独立命中 2/2（天津、厦门各一次）。
+
+##### 我自己撤回或推翻的两条
+
+- **"目的地框自己变成阿斯图尔沙巴克"**：1/4 未复现，且该词不在主包 `index-D4-WDMKj.js` 里；
+  19:30 复查发现同一 Playwright 实例多出第二个标签页（`1a986a24` 的），**归因为车道串扰，不是产品缺陷**。
+  与 `1a986a24` 的 H-A 独立互证。
+- **"地图点不动"**：我最初用鼠标拖 80×60 px + 滚轮 −360，瓦片数 18→18 没动，几乎要报成死图。
+  查代码后确认 `MapPanel.tsx:228` 开了 `cooperativeGestures: true`，鼠标单指本来就不该动地图 ⇒ **撤回**。
+  改用 CDP 触摸模拟（`Emulation.setTouchEmulationEnabled` + 双指 `Input.dispatchTouchEvent`）后：
+  双指平移新增 3 张 z10 瓦片，捏合从 z10 一路到 z15 新增 30 张 ⇒ **地图在真手势下是活的**。
+  注意：这是浏览器内模拟，不是真机手指。
+
+##### 本轮没覆盖到的（不算通过）
+
+- **R1 真机切后台**：我在本机新开自己的标签页抢焦点 18 秒，`visibilityState` 全程 `visible`、
+  `visibilitychange` 一次没触发（1/1）。⇒ 与 ORD-0054 的"tab-steal 也不行"一致，
+  **这条仍然只有真手机能判**，我没有结论，也不拿它给 autoUpdate 翻案。
+- 深色只覆盖了 向导第 1 步 / 创建中 / AI 面板 三屏，**Today 与地图的深色没走**。
+- 挂后台期间的数据行为、离线/弱网、`使用封存的天津演示` 路径、预算算术校验，都没测。
+- 后端到底是不是 `e981b46` 我**没有独立证明**（我只证明了前端是 16:29 的包）。
+
+##### 收尾状态
+
+- 预览库里现在有两趟我建的行程（天津 `4a56aab5-…`、厦门），厦门那趟是我最后建的、当前 ACTIVE。
+  `1a986a24` 注意：我这次创建把 ACTIVE 从你们那趟换走了，和 H-8 是同一机制。
+- 截图证据全部在 `D:\moodle\HJ-P3_evidence\`（15 张，文件名已在正文逐条对应）。
+- 凭据未出现在本账本任何位置；我全程用不带凭据的地址（另一个标签页把凭据写进了 URL，那不是我开的）。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -788,6 +990,53 @@ frontend（2 + 1 新）：
 已完成的活计成未做（今晚 ORD-0015/0022/0030/0031 都踩到了），也让后来的人在歧义里猜进度。
 
 ```
+- id: ORD-0060
+  to: e345b9d6
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **向导文案与未识别城市的可见反馈（HJ-P1 实测 + 我源码证实）。** 三件事都在
+    `frontend/src/features/setup/JourneyTrialSetup.tsx`：
+    1. `:296` / `:305` 的中文标签把城市名**硬编码成"厦门"**（`抵达厦门` / `离开厦门`），
+       而英文分支 `Arrive at` / `Depart from` 不带城市 ⇒ **只有中文界面在骗人**。
+       一个要去东京的人在填"抵达厦门"。改成跟随**当前已识别目的地**；
+       占位符 `:281` / `:301` / `:310` 同理，不得复用上一次识别结果的残留示例。
+    2. `:220` `step1Ready = draft.cityName.trim().length > 0` —— 只看非空、不看是否被识别，
+       所以 `拉萨` / `西安` / 乱码都能"下一步"，而 `:209/:219` 的隐藏字段仍保留**上一个城市**的
+       `country=CN / currency=CNY / timezone=Asia/Shanghai` ⇒ 静默沿用错误口径继续往下走。
+       要么屏幕上明说"没认出这个城市，将按 CN/CNY/上海时间规划，或换个写法"，要么禁用创建并说明原因。
+       **注意**：只把按钮 disable 不算修完（仲裁原话：disabled button without an inline explanation
+       is still a silent blocker）。
+    3. 城市清单不可见（5/5 屏都没有"目前支持 N 个城市"的入口）。给一条**可见入口或一句说明**；
+       权威城市数由我在交接文档里钉死，**不得**前端自己另算一套。
+    **边界**：`inferCityFacts` 是本地表（`:25` 那种硬编码字典）——**不要**为了这条去调后端做识别校验
+    （那是另一件事，需要契约）；不得削弱冻结清单；断言一律读 `innerText` 渲染文字，不读 data 属性。
+    **验收**：中文界面下输入东京时屏幕必须出现"抵达东京"（且不再出现"抵达厦门"）；
+    输入未识别城市时屏幕必须有一句可读提示；两条都给杀得掉的证据（点名节点 id）。
+  status: DISPATCHED@2026-09-20 22:2x
+
+- id: ORD-0061
+  to: dc19d662
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **预览实验室隔离（HJ-P1 的 H-A/H-B 实测引出）。** 现状两条都成立：
+    ① 多条车道共用同一个 Playwright MCP Chrome 实例的同一个 tab ⇒ 互相推进页面、
+       console 里残留已死隧道的历史、长探测被 `Execution context was destroyed` 打断（复现率 3/3）；
+    ② 预览只有**一份共享 SQLite**，而 ACTIVE 行程是全局的 ⇒ 新浏览器一打开 `/` 就被静默塞进别人的行程。
+    要求（**只做方案与验证，不改产品代码**）：
+    1. 给每条人设/验证会话一份**独立浏览器实例或独立 profile**，并规定开工前断言自己的指纹存在且唯一
+       （`window.name` 之类即可）；
+    2. 给"新用户第一次进来"一个**可复现的干净态**：独立 DB 副本，或每次跑前用受守卫的 reset（见 ORD-0058 第 2 项）；
+    3. 产出一页 runbook 写进账本，列明"谁在用哪个实例/哪个 DB/哪个端口"，避免下次又出现
+       两个车道同时压同一条冷 provider 路径；
+    4. 顺带回答 HJ-P1 请裁的那句：**HJ-P2/P4 开跑前是否必须先各自拿到独立实例** —— 我倾向"是"。
+    边界：不得为此**新开公网隧道**（当前公网入口必须恰好 1 条，见 ORD-0045）；
+    独立实例一律走 `127.0.0.1`，鉴权反代与凭据不变。
+  status: DISPATCHED@2026-09-20 22:2x
+
+
+
 - id: ORD-0001
   to: 8c66aa92
   priority: urgent
@@ -3361,7 +3610,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        不许验证方自己改产品代码。
     7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
        成功定义是"用户流程走通"。
-  status: PARTIAL@2026-09-20T19:2x by dc19d662（门已迁到 tip `e981b46` 生产构建并修好自身测量有效性；仍欠 6 组合全量、冷城市/空结果用例、旗舰 fixture）
+  status: PARTIAL@2026-09-20T19:4x by dc19d662（tip `e981b46` 生产构建上门已跑到 **11 步 / collected 66**，W10 跑出有主的产品红；仍欠 6 组合全量、天津旗舰 fixture、honestState 断言与 1.09:1 复测）
   evidence: |
     交付物（只写测试/规格/证据，未动一行产品码）：
       规格 `D:\moodle\_qoder_m3d_20260920\gate\USER_CRITICAL_PATH_PRODUCTION_GATE.md`
@@ -3463,6 +3712,33 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     `expected 8 / unexpected 52` 是连接拒绝的设施性红，**不得引用**。
     隧道：我没有新建、没有触碰 :4781/:4782/:8781 与 `_preview.db`（后者只 `mode=ro` 读过），
     也没有按消除法杀任何进程；本会话自己的服务是 :8411/:8412（旧那批 8391/8392/8401/8402 早已无监听）。
+
+    **续（19:4x）——上面第 6 点②的"冷城市/空结果用例"已建成并跑出真实判决，不再只是依据**：
+    - **正确表面先纠正一次**：HotelsPanel 不在 `/v8/stay`（那条路由是 StayExplorer，实测**不发** provider 请求），
+      它在 `/v8/trips` 的 `data-testid="trips-tab-stay"` 标签里；点进去实测确实发出
+      `stays/offers/capture` + `stay-options/generate` 并落到 `hotels-empty`。
+    - **W10 读数（390x844-light，tip `e981b46` 生产构建）**：
+      `loadingVisible=true`（屏上文字 `Loading stays…`）⇒ **等待期间的可见加载态是合格的，这一条不是红**；
+      注入 `outcome=ALL_CANDIDATES_REJECTED` + `offers_from_provider=4` + `rejections_by_reason`
+      之后，屏幕上渲染的空态是
+      `"STAY / No stays to compare yet / No provider-backed accommodation is available for this city yet.
+      Try again later — we will not invent hotels."`
+      ⇒ `copyClaimsMissingData=true`、`copyNamesTheReason=false`、`fatalEvents=0`、`httpIssues=0`。
+    - **判决：产品红，有主。** 后端已经能区分"这座城市没有住宿数据"与"有四条报价但全部与行程时间冲突"，
+      界面用同一句话把后者说成前者，并给出误导建议（换城市 / 稍后再试）——
+      正是仲裁冻结的"不得把未知谎报成已知"的镜像：**把已知的限制谎报成未知**。
+      触发点：`frontend/src/features/stay/HotelsPanel.tsx:125-141`（四态共用一条文案）
+      与 `:64`（`generate` 的响应体被丢弃，`outcome` 全仓 0 消费点）。
+      ⇒ 归 **e345b9d6 / ORD-0047**，我未动产品码。
+    - **collected 更新：60 → 66**（11 步 × 6 组合，`--list` 口径，**setup 工程 0 行**）。
+    - 写这条用例时我自己踩的两个坑已写进 spec 注释，免得后人重踩：
+      ① 给 `/experience` 打桩返回残缺载荷会让产品**连壳都渲染不出来**（`trial-setup=0 v8-product-shell=0`），
+      我的 `openShell` 守卫当场把它报成 `gate fixture` 而不是产品红；
+      ② `locator.innerText()` 会自动等待元素，加载态一闪而过时能把一条用例**拖满 180 s 超时**，
+      改成 `page.evaluate` 直读 DOM 后同一条 1.5 s 出结论。
+    - **仍欠三项未闭**：6 组合全量（目前只跑了 390x844-light 一个组合的 10 步 + W10）、
+      fixture 升级为天津旗舰（否则地图三步仍是 `gate fixture`）、
+      `honestStateDisclosed` 升级为断言 + 复测 ORD-0035 的 1.09:1。
 - id: ORD-HANDOVER-0037
   to: commander
   priority: urgent
@@ -3744,7 +4020,7 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 
     边界：不动后端契约（ORD-0033 已完成并经我实测）；不删那条故意留红的门；不削弱冻结清单。
     我已把这条发到总线请仲裁确认优先级（5748852498 §4），**但修复不必等它回**。
-  status: DISPATCHED@2026-09-20 17:0x
+  status: DONE@2026-09-20 20:5x by e345b9d6（逐条验收见本块末尾 `[e345b9d6 DONE@20:5x]`）
   evidence: |
     **[Commander 13:4x 标注] 本块内容实际是 ORD-0041 的合并回执（并发写入撞位），归属以 ORD-0041 为准。**
     我对其中两个请求的裁决：
@@ -3790,6 +4066,66 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     归 `e345b9d6`、状态 PARTIAL。请裁归属：给我（一行 prop + 复跑该文件 2 条，15 分钟内交），或回给 UI 车道。
     并请注意它与 ORD-0033 的连带：入口改成 422 + `JOURNEY_DAYS_OUT_OF_BOUNDS` + `actual_days`/`max_days` 之后，
     这条门的期望串要跟着换成新契约，不能把 `V13_…:9` 硬留在测试里。
+
+    [e345b9d6 DONE@20:5x] 逐条验收（隔离树 `_qoder_ui_overnight_20260920`，全部亲测，证据 `review/ORD-0044-kill-evidence.md`）：
+    **提交**：`26d5555`（失败可见 + 成功路径自己推进）、`5feaa83`（按实到信封给原因）、
+    `4516777`（三点精修：第 1 步指名缺项 + aria 连线 + 审核页不说"-" + 422 回落本字段）、
+    `ca65483`（把两条门的期望串换成实测信封）。`typecheck:all` exit 0。
+    **1. 成功路径自己推进** —— `legal-window-create-advances`：真后端、4 天合法窗口，实测
+    `legal-window-create-advances reached the shell in 1815ms`（门限 5s），无需重试。
+    **2. 中途失败必说一句人话** —— 变异 `d`（删 `message={message}` 那一行 prop）同时打死 3 个节点：
+    `a 500 stays silent` / `named reason inside trial-create-error` / `backend-reason-lands-on-its-own-field`。
+    **3. 逐节点杀证据：9 个变异体 9 杀，每例一个变异、每例红名点名本节点、每例字节还原 sha 校验 OK**：
+    a 走完 journey 行就抛 → `legal-window-create-advances`；b 不开壳层 → 同节点；
+    c `step1Ready` 忽略锚点 → `missing-anchor-is-named-before-submit`；
+    e 去掉 `aria-required` → 同节点（红字 "trial-arrival is required by the API but does not say so"）；
+    f 去掉 `aria-describedby` 连线 → 同节点（"is blocked as required but is not tied to the visible reason"）；
+    g 审核页空锚点回退成 `—` → `review-page-says-missing-anchor-is-required`；
+    h `fieldProblem` 不按 `loc` 分流 → `backend-reason-lands-on-its-own-field`（红字 "smeared onto the departure field too"）；
+    i 客户端不说状态码 → `a 500 stays silent`。
+    **我自己的一处量具缺陷，公开记**：(1b) 第一版把"审核页不许出现裸 -"放在 `missing-anchor-is-named-before-submit`
+    末尾、且字段已填完 —— 那条断言**不可能红**（同节点的门已让空锚点到不了第 3 步）。现拆成独立节点，
+    走产品自己的持久化草稿路径（ORD-0036 d 恢复第 3 步 + 空锚点）才可达，中英两臂都跑，
+    渲染文字入证据：`"not filled in · required · 2026-09-21 10:00"` / `"未填写 · 必填 · …"`，变异 g 证明它能红。
+    **4. 实到信封（`review/probe-envelope.py`，starlette 1.6.0）**：
+    未捕获异常 → **500 / `text/plain` / `Internal Server Error`，不带抛出的代码文本**（False）；
+    空锚点 → `POST /api/v1/journeys` **422** 通用 `VALIDATION_ERROR` + `details.errors[].loc/msg`
+    （`["body","arrival_anchor","location"]` / "String should have at least 1 character"）；
+    9 天窗口 → create **201**（本树 `backend/app/**` 零改动，ORD-0033 的入口门在权威后端），
+    其 generate → 500 text/plain、0.01s、**不含** `V13_JOURNEY_DAYS_OUT_OF_BOUNDS`。
+    ⇒ 原来那条门 mock 的 `{"detail":"V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9"}` 是**服务端抛出串、不是客户端能收到的串**，
+    且抛点在 generate（`stay_mobility.py:201`）不在 create；已按实测信封改成 500 text/plain，并加两条断言：
+    必须说出收到的状态码、不得出现服务器没发的原因。仲裁给的权威依据（通用 `VALIDATION_ERROR`）与此一致。
+    **`GET /twin` 39–40 次的定性（要我说是不是循环）**：不是循环，是设计内的 15s 轮询。
+    `review/count-twin-polls.mjs` 实测 `/v8/hub: 6 twin calls out of 13 API calls in 75s`、
+    `/v8/live: 6 twin calls out of 20 API calls in 75s`；分母是 `refetchInterval: 15_000`
+    （`src/api/v12Authoritative.ts:45`）+ 首帧 ⇒ 39–40 次 ≈ 页面开着 8 分钟，与 SW/`load()` 重入无关。
+    **两次全量读数（同一棵树、同口径 AUTHORITATIVE、`reuseExistingServer=false`、ai=disabled）**：
+    `--list` → **92 collected / 35 files**，其中 setup 工程 **1 行**（`_qoderRealSeed.setup.ts:110`），
+    `qoder-onboarding-failure.spec.ts` **6 个节点**。
+    run 1 `run902166`：**83 passed / 6 skipped / 3 failed（7.4m）**；
+    run 2 `run902887`：**86 passed / 6 skipped / 0 failed（6.8m）**。
+    三条红逐条点名：`predictive-real-city-v6.spec.ts:86`（`guardian/provider-fixture` 500，后端日志
+    `UNIQUE constraint failed: city_signal_fixtures.journey_id`，同 run 有大量 `database is locked`）；
+    `qoder-e2e-config-guard.spec.ts:85`（断言 stderr 含 `CITYNEXUS_PYTHON`，实到 **空串**）；
+    `qoder-plan-ai-thinking.spec.ts :: plan-ai-elapsed-ticks (Chinese copy)`（点 `hub-plan-with-ai`
+    等 visible/enabled/stable 150s 超时）。**这三条单独重跑（`run902741`，同端口同口径）14 passed / 0 failed（1.7m）**
+    ⇒ 不复现；`workers: 1`（`playwright.config.ts:55`）排除并发抢 CPU，我判为**同库跨用例状态/SQLite 锁的串扰**，
+    不是本批改动引入 —— 但我不把 run 2 的绿单独当结论，两次读数都登记在此。
+    **需要裁/需要 owner 看的三点**：
+    (1) `qoder-e2e-config-guard` 只在 `spawnSync` **成功启动子进程**时才有意义：子进程没起来时它拿到
+    `status≠0 + stderr=""`，红字就变成"产品没点名城变量"。它没读 `result.error`，所以"量具启动失败"与
+    "门没拒"不可分。该文件归 `8c66aa92`，我没动，请它加一行区分（这是我今晚第二次撞到同一形状）。
+    (2) `predictive-real-city-v6` 用**固定 journey id** 灌 `city_signal_fixtures`，一旦上一请求"提交成功但响应丢失"
+    就必然 UNIQUE 冲突 ⇒ 该门需要幂等或独立 id；后端归 `8c66aa92`（我没碰 `backend/`）。
+    (3) ORD-0043 的 A4（`dddfd8b`）与已交付的 ORD-0036 是**同一文件的两套设计**：A4 的 `main.tsx` 让 dev
+    **完全不注册 SW** 并 unregister 全部，且 `public/sw.js` 换成 recovery worker（需 `CITYNEXUS_SW_GET_VERSION`
+    握手）。字面落地会打死我这 3 条 dev SW 节点，也会打死账本已记的两条依赖"dev 有可控 SW"的门
+    （`real-world-trip-operations-v9:139-142`、`v13-authoritative-integrity:52-53`）。我已把 6 文件按
+    `dddfd8b` 取回并 diff（`review/a4-incoming-dddfd8b/`，两刀 delta 实测只有 `vite.config.ts +5/-1` 与 docs `+1/-1`），
+    合流方向我建议：dev 保留 `/sw.js`（永不注册 `/v10-sw.js`、永不拿 HTML 顶替代码、activate 不删别人缓存）+
+    生产取 A4 的 `updateViaCache:"none"`、controllerchange 一次性安全重载、legacy 缓存清理、版本握手；
+    三条 SW 验收迁到 A4 自带的生产工程 `playwright.sw.config.ts`。等这一条认可我再动 `main.tsx`。
 
 
 
@@ -4200,7 +4536,22 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     "还在加载" vs "失败" vs "没结果" 分不分得清）；像急躁用户一样重复点、回退改字段；
     并故意留空向导第 1 步看起来可选的抵达/离开地点，看它说不说人话。
     只读。**发现 `HUMAN_BLOCKER` 立即上报，不许等跑完。**
-  status: CLAIMED@2026-09-20 19:29（本机钟）· 进行中：第 1 个 HUMAN_BLOCKER 已先行上报，见 `## DELIVERIES` 的 `### aad2d1f2 ORD-0053 HJ-P3 @19:29`
+  status: DONE@2026-09-20 20:05（本机钟）· 交付见 `## DELIVERIES` 的 `#### aad2d1f2 ORD-0053 HJ-P3（完整交付）@20:02`
+  evidence: |
+    9 条缺陷：2 条 HUMAN_BLOCKER（H-1 必填口径不一致 4/4；H-2 AI 帮我规划 4/4 全部"没有生成可行方案"，
+    含一次无任何约束的输入）+ H-3 模型内部回执泄漏进失败卡片 4/4 + H-4 冷城市 stay-options/generate
+    实测 118 525 ms（天津同路径 1 240 ms）期间屏幕只有 opacity 0.45 的"正在创建…"，无阶段/秒数/可取消 +
+    H-5 "底图未加载"被良性 ERR_ABORTED 锁存且永不复位（`MapPanel.tsx:237-247`，两处 setter 都只置 true）+
+    H-6 AI 建议与当前城市无关 2/2 + H-7 需求框 8 字门槛静默生效（4/7 禁用、8/10/12/15/20 可用）+
+    H-8 硬刷新落入他人 ACTIVE 行程且手机侧无行程列表/切换器 + H-9 三条小的。
+    AI 四次 `agent/commands`：27 907 / 21 622 / 22 720 / 14 198 ms。
+    **归因前提**：我加载的 `index-D4-WDMKj.js` 构建于本机钟 16:29:09，早于 `56f67e2`(16:41) 与
+    `e981b46`(18:45)，且**不含** `576fbf6`(19:23) 那个改 `V8Experience.tsx` 的前端修复 —— 而 576fbf6
+    正好处理 H-1 的一半。H-1 需重建前端后重测；我已在交付里分开写"已修/仍剩"。
+    撤回 2 条：目的地框"阿斯图尔沙巴克"= 车道串扰（未复现 1/4，词不在主包内）；
+    "地图点不动"= `cooperativeGestures` 设计内，改用 CDP 双指触摸后地图正常（z10→z15，新增 30 张瓦片）。
+    未覆盖：R1 真机切后台（本机 1/1 全程 visible，无结论）、Today/地图的深色、离线弱网、封存演示路径。
+    证据 15 张在 `D:\moodle\HJ-P3_evidence\`。全程只读，未新建隧道，账本内无凭据。
 
 - id: ORD-0054
   to: 各归属车道（见内文，按项分派）
