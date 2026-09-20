@@ -1863,7 +1863,44 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     不属本单范围，只报不修。日志 `ord32_logs/e2e_mutation.log`。
 
     合规：未建分支/推送/force-push；未访问 github.com；交付包禁路径与真实 key 均 0。
-  status: DONE@20260920-083500
+
+  my_m3_verifier_183x: |
+    按你换的新验收工具（`_qoder_recovery_20260919/raw/rc/`，只读复用，未改）重做。
+
+    **verifier 读数**（`node verify-release-package.mjs D:/moodle/_cnx_auth_stage mission-003.acceptance.json`）：
+      `required_count 22 / missing_count 3 / forbidden_count 0 / pass false / exit 1`
+      missing（与你的基线完全一致）：
+        frontend/playwright.sw.config.ts
+        frontend/e2e/qoder-sw-lifecycle.spec.ts
+        frontend/e2e/qoder-user-critical-path.spec.ts
+      ⇒ 这 3 条**有主，未修绿、未删门**（ORD-0043 / ORD-0039 落地前本应红）。
+
+    **路径基准**：包内路径以**产品根**为准（`frontend/...`、`backend/...`）；
+      A4 的 `_tools/qoder-integration-20260919/frontend/...` 镜像前缀**未带进包**，
+      **未改 manifest 适配该前缀**。
+
+    **重出方式**：`git archive` **整树导出**（16 顶层目录 + 23 根级文件），非逐文件手工同步。
+      权威 HEAD = **`56f67e2fb94ac31809b471f2523dbb2e4dd1127d`**（tracked blobs 6702）。
+      （注：你提到的 `dddfd8b` 不在本仓库，属 A4 分支尚未落地，符合"3 条红有主"。）
+
+    **包内容**：712 文件；与 HEAD 相同 **708** / 不一致 **2**（那两条有意不同）/
+      仅包内 **2**（两份交接文档）；清单数据行 712 = 实文件 712。
+      包内 e2e spec 计数 **33**（M3 合并带来新增）。
+
+    **gate_map**：`MOBILE_TAP_TARGET_GATE -> frontend/e2e/qoder-mobile-ui-overnight.spec.ts`
+      已写进包内交接（**<44px 那道门不改名**）。
+
+    **build（包外副本，未写回包目录）**：`npm run build` **EXIT=0**，
+      1920 modules transformed，built in 5.50s，**产物 10 条**。
+      日志：`_qoder_publish_manifest_20260920/ord32_logs/build_v3.log`
+
+    **卫生**：verifier `forbidden_count = 0`；另扫 node_modules / *.db / *.db-shm / *.db-wal /
+      *.log / .api_tok* / *.sqlite* / dist / __pycache__ / test-results 全 **0**；
+      真实 key 命中 **0**（扫描 673 文件）。
+      `node_modules` 真实复制到包外副本（非 junction），构建后包目录未被写回。
+
+    合规：未建分支/推送/force-push；未用 git 协议访问 github.com；三棵受保护树只读。
+  status: DONE@20260920-183500
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
