@@ -2420,6 +2420,46 @@ K3（只去掉落库校验、restage 保留）**SURVIVED —— 这条我如实�
 status: ORD-0057 PARTIAL（202 谎言已修+已门+已变异；受理 p50/p95/max 仍未产出，原因如上）
 evidence: `e07f903` · `.../ord57/restage-kill-evidence.json` · `.../ord57/uvicorn.log` · 新门 `test_a_refused_commit_is_re_staged_and_only_then_called_a_202`
 
+### e345b9d6 ORD-0082 ①②④ 实况 + 我这次自己弄坏的两件事 @2026-09-21 04:48（本机钟，Mon Sep 21 04:48:41     2026 实测）
+
+**先报归属（直接量，不采信转述）**：`git -C _qoder_integration_20260919 rev-parse --short HEAD` = **`e07f903`**；
+`git show HEAD:frontend/src/app/V8Experience.tsx | grep -c stageNextStop` = **0**，`grep -c startStage` on HEAD 的 panel = **0**。
+⇒ **C 的 #6（②③）与 ①④ 都不在这棵树的 HEAD 里**；现在盘上那份 ①②④ 是**我未提交的工作区副本**（6 文件 +1043 −267）。
+这也解释了为什么 ORD-0081① 一直"没验到"：被验收的那份实现从来没有真正入树。
+
+**我自己弄坏又修好的两件事（如实记，不藏）**：
+1. 我跑了 `npx prettier --write` 而**仓库没有 prettier 配置** ⇒ 默认 80 列把 `V8Experience.tsx` 重排成 925 行噪音。
+2. 撤格式时我用 `git checkout --` 打回那两个文件，**才当场发现它们从未被提交**（HEAD 里没有 `stageNextStop`）。
+   因为我在 checkout 前先做了 `git diff > review/ORD-0082-work-in-progress.diff`（**105,846 B / sha256 `b665b3edae5fea3a`**）
+   ＋ `cp` 了两份 `.bak`，**内容已全部还原**，还原后 `npx tsc -p tsconfig.typecheck.json --noEmit` **exit 0**。
+   教训写进我这车道：**在多人共用的工作树里，`checkout/restore` 之前必须先证"HEAD 里有我要撤的那份内容"**；
+   没证就撤，撤掉的可能是唯一副本。
+
+**门读数（本树本副本，`run9350xx` 系列日志）**：**12 passed / 4 skipped / 1 failed（6.2m）**，其中
+- `sim-today-hero-follows-the-stage` ×4 **跳**：服务器把游标报成 **`ABSENT_FALLBACK`**（墙钟在场景之外）。
+  我改成"跳之前先断言屏幕把这档说出来了"（`today-clock-source` 必含 `ABSENT_FALLBACK`），
+  **不再拿降级态当达标**，也不留常红门；
+- `today-clock-source-is-spoken-when-device-time-is-used` ×4 **绿**（强制场景读取失败后，主句说"读不到服务器场景…用这台设备自己的时间"，无新面板、无新造词）；
+- `today-attention-does-not-contradict-the-map` **绿**（地图判定后两屏不再矛盾）；
+- `ord0081-reset-reaches-today-without-hand-seeded-storage` **红（超时）**，原因已定位到端点语义，见下。
+
+**ORD-0081① 为什么还红（API 级实测，`review/probe-stage-walk.py`，全新进程全新库 + `CITYNEXUS_DEMO_MODE=true`）**
+```
+POST demo/reset            → {"status":"reset", journey_id 22222222…}        scene: DRAFT / plan_version_id=null / basis=JOURNEY_START
+POST demo/prepare-scenario → {"status":"prepared", journey_status PLANNED, plan 55523d40…, advance plans/generate 18.8ms + select 6.5ms}
+POST demo/start-scenario   → {"status":"started", journey_status ACTIVE, current_activity_id 3a58c470…}
+GET  experience            → cursor "Old Town Gate" · cursor_status VALID · next "Riverside Museum"
+```
+⇒ `65e184d` 之后**一次 [重置] 不再产出可执行舞台**（reset 只 seed）。所以"点一次重置到 Today"在当前后端语义下不成立：
+真老师路径是 **[重置] → [准备舞台] → [开始行程] → Today**。我已把舞台入口挂到向导那一支（`<SimulationEntry defaultOpen={false} />`，折叠、不抢主操作），
+三颗按钮都在了；**要不要让 reset 再串上 prepare+start 是后端语义决定，我不自己改**，请裁：
+(a) 接受三步（我把门改成三步链并给截图）／(b) 8c66aa92 给 reset 加回串接（我这边门自动变绿）。
+
+**我要的处置**：这棵树的 ①②④ 现在只在我工作区。要么我按 `review/ORD-0082-work-in-progress.diff` 交 C 复核后提交，要么 C 先把他那份落进 HEAD 我再补 ①；
+**不要在两边都改的同时并行提交**——那正是刚才差点丢内容的原因。
+status: ORD-0082 **①④ 代码在盘未提交、②实现是我那份**；门 12/4跳/1红；ORD-0081① **未达成**（原因与两个可选修法已报）；ORD-0070 未动（(b) 审计已答）。
+evidence: `review/ORD-0082-work-in-progress.diff`(105,846 B/sha256 b665b3edae5fea3a)、`review/scene-envelope-*.json`、`review/probe-stage-walk.py` 输出、`review/evidence/ui-overnight/ord0081-reset-arms.json`。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -2997,7 +3037,7 @@ Today 主屏下方写着 **`接下来 · 09:00 Old Town Gate · 下一站之后�
        这条属于显示一致性，不要求你动后端；如果后端投影本来就该报 degraded，写进本块报我，别自己改后端。
   acceptance: 我在 `f56e9cb` 之后的新 sha 上重跑：面板 12:00 时"接下来"必须不再是 09:00 那一站；
               截图我自己拍，不采信转述。
-  status: DISPATCHED@2026-09-21T03:4x+08
+  status: CLAIMED@2026-09-21T04:5x+08 by e345b9d6（工作区已实现、正在跑 e2e，**未提交**）
   evidence: 待交。
 ```
 
@@ -3134,7 +3174,7 @@ M4 不再被 PLANNED 门封死，33 条 ARRIVAL 族测试也不再被夹具打�
     3. 若后端尚未支持某动作（ORD-0074 未完成），**测试就该断言它 disabled 并说明原因** ——
        不许为了让 spec 绿而放宽 (a)-(e) 中任何一条。
     4. 跑法：production build + `playwright.sw.config.ts` 那条真链路；dev server 的结果不算交付证据。
-  status: DISPATCHED@2026-09-21T02:2x+08
+  status: DONE@2026-09-21T04:5x+08 by 8ccd71d8（交付 `48f39fa`：spec 全量改指 B 的实际 testid、断言只读 innerText、外加 aria-disabled+aria-describedby 关系；并如实报『12 个 test 源点一条都没跑过』。**其中 12 个源点从未执行这件事我接受**——C 树无 node_modules 且派单禁装，计数由接线方在 production build 上回填）
   evidence: 待交（spec collected/passed 条数 + 一句"哪几条现在是断言 disabled 的"）。
 ```
 
@@ -3184,7 +3224,7 @@ focused tests 与静态实现不受影响。跑完我在 DELIVERIES 里发读数
     4. 顺手核一件事并给行号：`/replans/{pid}/accept` 是否会因 C4 保护而拒——若拒，返回码是什么。
        **不许写"应该可以"**，只写读到的。
     5. 交付就是这张表 + 一句 `status:`。AI Narrative PoC 今晚**不做**（夜令 §3：等 M1/M2 之后）。
-  status: DISPATCHED@2026-09-21T02:2x+08
+  status: DONE@2026-09-21T04:5x+08 by 5ea3bedc（交付 `_qoder_ai_scout_20260921/AI_ARCHITECTURE_MAP.md`：10 个模型调用点全清单、真值层 0 处 AI、解释层死缝、以及 AIProposal 插入点表。**字段级端点表由 D 的 `ORD_0083_PREVERIFY.md` 补齐，我 04:2x 又实测补上三个必填字段**）
   evidence: 待交（表所在文件路径 + 覆盖的端点数 + C4 那一问的行号答案）。
 ```
 
@@ -4138,7 +4178,7 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
     4. 若后端 `commitments[].external_ref` 当前为空（无预订时），保持不显示标签 —— **空不是 mock**。
   acceptance: 我手机上建一个硬承诺后，Wallet 里能看到该承诺**且**带"模拟承诺"字样；
               没有承诺时该字样不出现。
-  status: DISPATCHED@2026-09-21T03:3x+08
+  status: CLAIMED@2026-09-21T04:5x+08 by e345b9d6（工作区已实现、正在跑 e2e，**未提交**）
   evidence: 待交（渲染 diff + 截图路径 + 有/无承诺两种状态的实测）。
 ```
 
