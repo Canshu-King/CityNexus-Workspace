@@ -1986,14 +1986,16 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
 | 后端 | uvicorn **127.0.0.1:8781**（`53108 → 62104`，uv venv 会 re-exec 到基础解释器，**不是外来进程**） |
 | 隧道 | cloudflared quick tunnel **PID 37052**，官方二进制 `2026.9.1`，只 tunnel 前端；`--http-host-header 127.0.0.1:4781` 过 vite 的 host 检查，**未改仓库里的 vite 配置** |
 | 数据 | 一次性库 `D:/moodle/_qoder_preview_20260920/_preview.db`，内容 = `POST /api/v1/demo/reset` 灌的 CNX-DEMO 种子；**没碰用户本地真库** |
-| AI | `CITYNEXUS_AI_ENABLED=false` + 两个 key 在启动行显式给空；应用自查：`/health → "ai":"disabled"`、`/agent/runtime-status → "deepseek_configured": false`。**注意本机 shell 里 `DEEPSEEK_API_KEY` 是有值的**，所以给空是必需步骤，不是形式 |
+| AI | **已按用户 08:5x 的明确指令开启**（"把AI开起来，我要用AI"）。重启配方：在 `backend/` 下用 `CITYNEXUS_AI_ENABLED=true CITYNEXUS_DATABASE_URL='sqlite:///D:/moodle/_qoder_preview_20260920/_preview.db' D:/moodle/CityNexus/.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8781`，**关键点是不要再把 key 置空**（`app/core/config.py:18` 是 `CITYNEXUS_AI_API_KEY or DEEPSEEK_API_KEY`，shell 里本来就有值）。实测口径：公网 `/api/v1/health` → `"ai":"enabled"`、`/agent/runtime-status` → `"deepseek_configured": true` |
+| AI 真跑一次 | `POST /api/v1/journeys/<id>/agent/commands`（就是手机 Copilot 那条路）经公网 **200 / 28.8s**，返回 `journey_missions` 里带 `source: SEMANTIC`、`explicit: true` 的 `INDOOR_PREFERRED` ⇒ 是真模型解析，不是关键词兜底。**中文没坏**：控制台那次显示成乱码是我 Windows 终端 GBK 的问题，按 `mode=ro` 直接读库取回的是原句 `我想把今晚的安排换成室内活动` |
+| ⚠ 成本敞口（新事实，上调吊销紧迫性） | 本机 shell 的 `DEEPSEEK_API_KEY` **就是仓库里泄露的那把**（同 `sk-5343f86b` 前缀、长度 35、`sha256` 前 12 位 `4cabe6bcaff4`）；`/user/balance` 实测 `is_available: true`、`total_balance: 9.04 CNY`（全额为充值）。⇒ 开着实时 AI 的公开链接 = **谁拿到链接谁就能花这 9.04 CNY**（模型默认 `deepseek-v4-flash` + `reasoning_effort=high` + `web_search=true`，单次不便宜，刚才那一次就 28.8s）。之前记忆里"余额 0.02 CNY"的读数已作废 |
 | 验收 | 公网 root **200**、公网 `/api/v1/health` **200**（连测 3 次）、`/v8/live` **200**、`/@vite/client` **200** 179,008 B、`/src/main.tsx` **200** 275,215 B（证明真机能渲染，不是空壳）；本地另测 experience/twin/wallet 全 200 |
 | 版本判据 | 公网取 `/src/design-tokens.css`：`.cn-onboarding` 命中 4、`min-height: 44px` 命中 1、`min-height: 30px` 命中 2 ⇒ 是合并后的当前码，且 44/30 分层与 Amendment F 一致 |
 | 树卫生 | `git status --short` 仍只有那两行非产品文件；未跟踪 **0**；未建分支、未推送、未动 GitHub |
 
-**限制（已实测，不是推测）**：quick tunnel 无访问控制，公网 `POST /api/v1/demo/reset` 经隧道可达并返回 200 ⇒ 链接即公开。用户已被告知只发给需要看的人。
+**限制（已实测，不是推测）**：quick tunnel 无访问控制。原先的敞口是"能改这套演示数据"（公网 `POST /api/v1/demo/reset` 实测 200）；**用户 08:5x 开了实时 AI 之后，敞口升级为"能花真钱"**——见上表那把 key 与 9.04 CNY。我给的缓解选项（用户点头我才做）：① 把 4 小时生命周期缩短；② 重启隧道换一条新 URL（旧链接立即失效，代价是用户要重新打开）；③ 换命名隧道 + Cloudflare Access 加访问控制；④ 把 `CITYNEXUS_DEEPSEEK_REASONING_EFFORT` / `CITYNEXUS_DEEPSEEK_WEB_SEARCH` 降档以限单价。**已明确告知用户：链接别外传。**
 
-**给其它车道**：**不要**动 `127.0.0.1:4781` / `:8781`，**不要**删 `D:\moodle\_qoder_preview_20260920\`，也不要把 `DEEPSEEK_API_KEY` 注进这两个进程 —— 这是用户此刻唯一能远程看到产品现状的窗口。隧道若断了，重启后 URL 会换，需重新回报 Issue #1。
+**给其它车道**：**不要**重启或抢占 `127.0.0.1:4781` / `:8781`，**不要**删 `D:\moodle\_qoder_preview_20260920\`；**不要**为了"恢复干净状态"把 AI 又关掉或在启动行把 `DEEPSEEK_API_KEY` 置空——开实时 AI 是用户此刻的明确指令；也**不要**拿这个库去跑 e2e（会写坏用户正在看的界面状态）。需要跑门请用自己的端口与自己的 `_*.db`。
 回收（按端口，别照抄 PID）：
 ```
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 4781,8781 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force"
