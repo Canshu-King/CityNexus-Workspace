@@ -338,6 +338,29 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
   R5 预览入口出现只打 `/twin` 的非浏览器客户端 70 次（`151.242.36.146`，journey `ff7acd3f`）⇒ 交预览运维。
 - 全文 `D:\moodle\_qoder_twin_audit_20260920\TWIN_POLLING_AUDIT.md`；**判决：不要再为它加 visibility 补丁**。
 
+### dc19d662 ORD-0061 @2026-09-20 21:2x → 串味的泄漏点是**共享浏览器 profile 的 localStorage**，不是共享库；但共享库另有一种更危险的表现，所以两条都要分开
+
+- 同一构建/同一库三入口对照：**全新 context** 打开 `/v8/hub` ⇒ `stored=null wizard=true heading=新建行程`（不会被塞进任何行程）；
+  **复用别车道 storageState** ⇒ `stored=22222222 shell=true heading=Demo之旅`（立刻继承）。
+  前端 grep `listJourneys` / `?status=ACTIVE` / active-journey **0 命中**，boot 只读 `citynexus.v8.journey_id`
+  ⇒ HJ-P1 描述的机制在浏览器侧，不在 DB 侧。
+- 但**共享 DB 的危险换成了一种更隐蔽的形态**：`services.py:169-170` 的 seed 是冻结的 ⇒ demo 行程 id 恒定，
+  实测"别人跑过 `demo/reset`"之后我 profile 里的 id 仍渲染出正常的 `Demo之旅`（正文 373→341 字符、
+  **0 报错 0 提示**），底层却已是别人的播种 ⇒ **只隔离 profile 不够，必须 per-lane DB**。
+- 预览共享库现状（`_preview.db` 只 `mode=ro` 读）：42 traveler / 29 行程 / **ACTIVE plan = 1**（`9c6c3d73`）。
+- 工具 `gate\lane_proof.cjs`（claim/list/release）：槽位由 lane id 派生（后端 `8401+n`、前端 `8441+n`、
+  库 `_lane_<id>_db.sqlite3`，`n=hash%40+1`）；自测 `dc19d662→8438/8478`、`zztest01→8428/8468`，
+  测试条目已 release。claim **会实际绑定端口探测**：自有服务在跑时 `8411/8412→false`、空闲 `8599→true`
+  ⇒ 未登记的占用者也会被拒。指纹用 `window.name="CNX-LANE:<id>"` + 进页面读回比对。
+- 第 4 问：**是**，HJ-P2 / HJ-P4 开跑前必须先各自拿到独立实例**且**独立 DB（依据上两条）。
+- 顺带一条需要 `8c66aa92` 同步的连带依赖：ORD-0058 给 `demo/reset` 加 403 守卫后，
+  凡用 `demo/reset` 建 fixture 的门都会红成产品缺陷的样子——**包括我自己 ORD-0039 那条**。
+  建议 flag 名与放行方式一起写进 runbook 和门码。
+- runbook 一页：`D:\moodle\_qoder_twin_audit_20260920\LANE_ISOLATION_RUNBOOK.md`。
+- **我未复现的**：H-A（共用 tab 被互相推进、`Execution context was destroyed` 3/3）是 HJ-P1 的实测；
+  我用自起 Playwright，没有去挤共享实例验证它，**不当作我自己的结论**。
+- 边界：未改任何产品码、未新开隧道、未启停任何预览进程（只按端口停自己的 :8411/:8412）。
+
 ### 6af4cf53 自选推进 @2026-09-20 21:0x → 在 `e981b46` 上跑包内 e2e，2 红已定性（1 个是已知缺口、1 个是测试间干扰）
 
 无新单，按 LANE_PROTOCOL 第 3 条自选：把包内 e2e 补到当前 tip 口径（我此前只跑过 `bfe8d7e` 的 58/5）。
@@ -1507,8 +1530,38 @@ over-window     POST /api/v1/journeys 422 V13_JOURNEY_DAYS_OUT_OF_BOUNDS
     4. 顺带回答 HJ-P1 请裁的那句：**HJ-P2/P4 开跑前是否必须先各自拿到独立实例** —— 我倾向"是"。
     边界：不得为此**新开公网隧道**（当前公网入口必须恰好 1 条，见 ORD-0045）；
     独立实例一律走 `127.0.0.1`，鉴权反代与凭据不变。
-  status: CLAIMED@2026-09-20T22:3x by dc19d662（只做方案与验证，不改产品代码，不新开隧道）
-  evidence: 待填——共享实例/共享 DB 实测、lane 指纹与端口分配模板、一页 runbook、HJ-P2/P4 前置条件答复
+  status: DONE@2026-09-20T21:2x by dc19d662（只做方案与验证，未改产品码；未新开隧道；未启停任何预览进程）
+  evidence: 一页 runbook `D:\moodle\_qoder_twin_audit_20260920\LANE_ISOLATION_RUNBOOK.md`；工具 `gate\lane_proof.cjs`（claim/list/release）；原始读数 `raw\lane_isolation.json`。
+      **① 先纠正一件事：串味的泄漏点是共享浏览器 profile 的 localStorage，不是共享 DB。**
+      同一构建、自有 :8411/:8412、同一库，三种入口对照实测：
+      全新 context 打开 `/v8/hub` ⇒ `stored=null wizard=true shell=false heading=新建行程`；
+      换 context 但复用别车道的 storageState ⇒ `stored=22222222 shell=true heading=Demo之旅`（**立刻"继承"别人的行程**）。
+      且前端**不存在**"自动挑 ACTIVE 行程"的代码（`listJourneys` / `?status=ACTIVE` / active-journey 全仓 0 命中，
+      boot 只读 `citynexus.v8.journey_id`）⇒ HJ-P1 那句"新浏览器一打开就被塞进别人的行程"，
+      机制是 **profile 共享**，不是数据库共享。
+      **② 共享 DB 的真实危险更隐蔽：静默换体。** `backend/app/services.py:169-170` 明写 seed 是冻结的、
+      两次 reset 产生同一批行 ⇒ demo 行程 id 恒为 `22222222…`。实测：在"另一车道跑了 demo/reset"之后，
+      我 profile 里那个 id 仍然渲染出一个**看起来正常**的 `Demo之旅`（正文 373→341 字符，无报错、无"行程已变"提示），
+      但底层已经是别人的新播种。⇒ **只给独立 profile 不够，必须 per-lane DB**；
+      症状是"页面正常、读数挂在别人行程上"，比崩溃难发现得多。
+      **③ 预览共享库现状**（`_preview.db` 仅 `mode=ro`）：42 traveler / 29 行程 / **ACTIVE plan = 1**（`9c6c3d73`）。
+      **④ 槽位工具（已自测）**：`lane_proof.cjs claim --lane <前8>` 由 lane id 派生
+      后端 `8401+n`、前端 `8441+n`、库 `D:\moodle\_lane_<id>_db.sqlite3`（`n=hash%40+1`），
+      登记表 `D:\moodle\_lane_registry.json` 即"谁在用哪个实例/端口/库"的唯一清单。
+      实测两条 lane 各得不同槽位：`dc19d662→8438/8478`、`zztest01→8428/8468`（测试条目已 release，现表内只剩我）。
+      **claim 不只查表，还会实际尝试绑定端口**：自有服务在跑时 `8411/8412→false`、空闲 `8599→true` ⇒
+      未登记的占用者也会被拒，不会放行一次撞车。
+      指纹按订单建议用 `window.name`：`addInitScript(() => window.name="CNX-LANE:<id>")` + 进页面后读回比对，
+      不一致就抛错（写法在 runbook §2）。
+      **⑤ 干净态**：每条车道自己的 SQLite（`CITYNEXUS_DATABASE_URL` 指向 `_lane_<id>_db.sqlite3`），
+      reset 只在自己库上跑。共享库上跑 reset = 把所有车道的地皮一起推平（②已实测）。
+      **⑥ 连带依赖，需要 `8c66aa92` 与我同步**：ORD-0058 第 2 项给 `POST /api/v1/demo/reset` 加守卫（无 flag ⇒ 403）之后，
+      **任何用 `demo/reset` 建 fixture 的门会立刻红成产品缺陷的样子**，其中就包括我自己 ORD-0039 的
+      `prepareActiveJourney()`（19:2x 起依赖它）。约定建议：门显式设 `CITYNEXUS_DEMO_MODE=true`，flag 名同时进 runbook 与门码。
+      **⑦ 第 4 问答复：是** —— HJ-P2 / HJ-P4 开跑前必须先各自拿到独立实例**且**独立 DB，依据就是①②。
+      **我未复现的**：H-A"共用一个 tab 被互相推进 / `Execution context was destroyed` 复现率 3/3"是 HJ-P1 的实测，
+      我用自起 Playwright，**没有去挤共享实例验证它**，不当作我自己的结论。
+      **R1 落点**：真机切后台那次试验按 ORD-0054 归人设会话，但必须在独立实例里做（否则正是①的受害者）。
 
 
 
@@ -4297,6 +4350,10 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
        GOOD EVENING Trip to Tianjin 3 days · 2 people …"`，`renderedReasonOnScreen=false`
        ⇒ **后端说不、界面说是**：假成功仍在，且现在有 422 作对照，不再依赖"是不是没生成成功"的推测。
        这条仍归 e345b9d6（M3-B），我未动产品码。
+       **【降级为待复核，21:2x】** Commander 正在自己复现这一条 ⇒ 在它的独立读数出来之前，
+       本条**不作已定结论**。我这边能保证的只是"那次运行屏幕上渲染出的字符串确实是这句"
+       （`emptyStateCopy`/`finalWizardText` 级别的观察），**"界面把被拒的创建谎报成成功"这一机制解释以他的复核为准**；
+       两种可能我未区分：向导在前端被截成 3 天而消息属于那条真成功的行程，或 422 之后仍弹出成功消息。
     4. **W6/W7/W8 的红是我的 fixture 不足，已停止冒充产品判决**：`/v8/map` 在 `demo/reset` 行程上给出
        `data-testid="v8-map-empty"`、`map canvases=0`、**0 请求失败、0 console error**
        （另测 `tiles.openfreemap.org`=200、`demotiles.maplibre.org`=200、`tile.openstreetmap.org`=**000 不可达**），
