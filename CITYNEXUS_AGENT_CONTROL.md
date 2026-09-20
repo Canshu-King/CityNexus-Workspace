@@ -590,6 +590,17 @@ mutation_campaign.py 与 qoder-handoff/*.patch 继续不暂存、不提交、不
 - **ORD-0064 (b)(c) CLAIMED@23:5x**：(b) 全部候选无价时不得再出现"每个费率都明确标注币种"那句承诺；(c) AI 失败文案必须把"本次没有可用价格数据"写进同一句，与 ORD-0062 原因码联动 —— **(c) 等原因码先落地**，我先只做 (b)。
 - ORD-0065 / ORD-0066 待读，读到就按同一格式登记。
 
+**ORD-0060 DONE@2026-09-21 00:1x**（详证据写在该单 evidence 块）：中文标签跟随已识别城市、未识别当场念出会被沿用的 CN/CNY/时区三枚值并连 `aria-describedby`、第 3 步再念一次、Next 保持可用（只 disable 不算修完）；
+"看支持的目的地"入口给了但**不报总数**（权威数我核不到：本地表 11 个中文名 vs 你 23:1x 说的 13 —— 给我数字与出处我一行接上）。
+门 `qoder-wizard-city-copy.spec.ts` 3 节点绿，**杀证据 3/3**（第一版 b 因"先读文后断言"活了一次，已修）；
+`--list` **106 / 39 files**（setup **1 行**），全量 **98 passed / 8 skipped / 0 failed（6.0m）**。
+途中门抓到我自己一处 bug：按 `国家:时区:币种` 去重把 9 座中国城市压成 1 个 ⇒ "天津"根本不显示，已改为按拼写各存一键。
+
+**本车道仍未闭合的（不藏）**：① ORD-0064(b)「全部候选无价时不得宣称每个费率都标注币种」**还没做**（下一件就是它）；
+② ORD-0064(c) 失败文案联动"无可用价格数据"**等 ORD-0062 的原因码**先落地；③ ORD-0059 等 ORD-0058 的 `GET /demo/scene`；
+④ A4 六机制在我树 6/6、**权威树 0/6**，合并按 8b 由你在检查点做，我不碰 `playwright.config.ts`；
+⑤ ORD-0043 遗留：document 超预算回退（case B）在生产构建上**不复现**，所以 10s 的"护栏"效果未证明 —— 这条我记成 task，等 ORD-0044/0047 之后回头。
+
 
 
 ### commander 亲测 @2026-09-20 23:1x（本机钟，`date` 实读）—— **W3 结案：`REFUTED`，不是产品缺陷**；红队自己的撤回没落进账本，我替它记
@@ -1036,7 +1047,7 @@ kill60-a / -b / -c：anchor hits=1、applied=True、exit=1、点名节点 **NAME
     刷新只改行号与"仍未修"的事实核对，**不改订单要求、不改验收口径、不改优先级**。
   status: DONE@2026-09-21 00:1x by e345b9d6（第 1、2 项 + 第 3 项"可见入口"已落；**城市总数那半句按令不前端自算**，见本单 evidence 末段）
   evidence: |
-    [e345b9d6 DONE@00:1x] 提交 `427600d`（产品+门）、`e0f…`见 git log 的三门自修笔（同分支 `agent/ui-overnight-20260920`，未推送）。
+    [e345b9d6 DONE@00:1x] 提交 `427600d`（产品+门）、`0b2f6ab`（门的归因修正）、`39cccfd`（突变表）；分支 `agent/ui-overnight-20260920`，未推送。
     证据 `review/ord60-kill-table.txt`，驱动 `review/ord0060_kill_drivers.py`，门 `frontend/e2e/qoder-wizard-city-copy.spec.ts`（3 节点，全绿）。
     - **第 1 项（硬编码"厦门"）**：中文标签改为跟随**已识别**目的地 —— 识别到才写城市名（`抵达东京`/`离开东京`），
       未识别退回中性词（`抵达地点`/`离开地点`）；占位符不再钉死某个城市（`例如：<城市>站 / 机场`），
@@ -1221,7 +1232,43 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
        （摘掉 `aria-describedby` 即红，点名节点 id）。
     边界：不改判定语义（该禁还是禁）、不改文案（已经很好了）、不削弱冻结清单；
     `V8Experience.tsx` 已按 Amendment J §2 归你，可一并改。
-  status: DISPATCHED@2026-09-21 01:4x
+    ---
+    **Commander 修订 @2026-09-21 00:1x（本机钟）—— 本单**部分已达成**，同时我修正我自己写的一条验收口径。**
+
+    我在 `agent/ui-overnight-20260920`（tip `39cccfd`）按盘读了现状：
+    ```
+    要求 1（提示容器可被播报）      ⇒ **已达成**：:831 `<p id="trial-required-hint" role="status">`
+                                        文案随 `missingStep1.join("、")` 变化 ⇒ 内容变化会被 live region 播报
+    要求 3（字段级可定位）          ⇒ **已达成**：:502 / :531 抵达·离开字段各有条件 `aria-describedby`，
+                                        :511 / :540 字段级 `role="alert"`
+    要求 2（挂到被禁的主按钮上）    ⇒ **未做**：:891 `data-testid="trial-next"` 只有
+                                        `disabled={(step===1 && !step1Ready) || …}`，**没有 `aria-describedby`**
+    `aria-disabled` 全文件命中      ⇒ **0**（没用过）
+    ```
+    **我要修正的是我自己写的验收第 4 条**（"留空时 `next[aria-describedby]` 非空且指向元素文本包含'还需要填写'"）——
+    **这条口径有洞**：`disabled` 的按钮**拿不到焦点**（不在 tab 序列里），
+    所以就算把 `aria-describedby` 加上去，很多读屏软件**永远不会走到那个按钮**，也就永远读不到那句描述。
+    ⇒ 车道如果只照我字面做（加个属性），**我的门会绿，而用户仍然什么都听不到** ——
+    这正是我最反对的"绿着骗人"。所以：
+
+    **修订后的要求（二选一，都要给可达性证据）**：
+    - **甲（推荐）**：主按钮改用 `aria-disabled="true"` + `aria-describedby="trial-required-hint"`，
+      按钮**保持可聚焦**，点击时不提交、而是把同一句缺项提示播报出来；
+      语义不变（该禁还是禁），只是从"真 disabled"换成"AT 意义上的 disabled"。
+    - **乙**：保留 `disabled`，那么**必须**证明可达性来自别的途径（例如 `trial-required-hint` 这个
+      `role="status"` 在缺项变化时确实播报），并把"按钮上的 aria-describedby"这条要求**明确作废**写进注释，
+      不许留一个没人能读到的属性冒充做完。
+    **验收改成（覆盖我原来那条）**：
+    1. 断言**可聚焦性**本身：`trial-next` 在缺项状态下 `await expect(button).toBeEnabled()` 的**反面**要写清楚
+       —— 用甲方案时按钮必须**能被 focus**（`page.focus('[data-testid="trial-next"]')` 后
+       `document.activeElement` 就是它），用乙方案时不必；
+    2. 断言**关系可达**：焦点在按钮上时，读屏能拿到那句缺项文案
+       （Playwright 可用 `getByRole('button', {name: /还需要填写/})` 这类**无障碍树查询**验证，
+       而不是查 DOM 属性字符串）；
+    3. **杀证要杀"可达性"，不是杀"属性"**：把 `aria-disabled` 换回 `disabled`（或把 `aria-describedby`
+       指向一个不存在的 id）时门必须红 —— 只摘属性字符串不算数，因为那杀不死"有属性但读不到"这一类缺陷。
+    我原来的写法会放过后者，**这是我的口径缺陷，记在我名下**。
+  status: DISPATCHED@2026-09-20 23:2x（我原先误标成 09-21 01:4x，按 23:1x 立的规矩改回本机钟；要求 1/3 已达成、要求 2 未做且验收口径已按上方修订）
 
 
 - id: ORD-0067
