@@ -3946,6 +3946,47 @@ B 的英雄区时钟修复**尚未提交**（`V8Experience.tsx` 仍脏）。等 
 **从未被渲染**（`wallet.commitments` 全仓 0 命中），所以仲裁 AR2 第 2 门要的
 "模拟承诺"标识**在前端物理上过不了**。这不是我猜的，是 grep + 类型核对得出的。
 
+### 🧾 commander 实测 @2026-09-21 03:4x —— 我把 Wallet 真值链**整条跑通了**（隔离 DB 副本），并拿到前端要渲染的真实字段
+
+**为什么要在隔离副本上跑**：这台 :8681 是**今晚的演示台**，我不在它上面建预订
+（会改掉 M1 截图对应的状态）。做法：把 `citynexus.db` 复制成
+`_qoder_recovery_20260919/raw/sim_wallet_probe.db`，用 `CITYNEXUS_DATABASE_URL` 指过去、
+`CITYNEXUS_DEMO_MODE=true`、解释器 3.12.14、凭据清空，走真 TestClient。
+
+**逐行读数**（这一条同时印证了 D 的发现和 A 的三动作）：
+
+```
+reset          : 200
+prepare        : 200
+selected plan  : 55523d40
+  booking Old Town Gate           -> 422
+  booking Riverside Museum        -> 422
+  booking Central Food Hall       -> 422
+  booking Tech Art Center         -> 422
+  booking Nexus River Cruise Pier -> 201   ← 6 个里唯一可订，与 D 的读数一致
+CONFIRMED ref  : mock-booking:167b8edf-102c-5081-ba7a-4028c274b88c:confirmed
+```
+
+**Wallet 里那条承诺的真实形状（这就是前端要渲染的东西）**：
+```json
+{"kind":"BOOKING", "level":"C3_Guaranteed", "status":"ACTIVE",
+ "monetary_value":{"amount_minor":12000,"currency":"CNY"}, "monetary_value_status":"KNOWN",
+ "external_ref":"mock-booking:167b8edf-…:confirmed",
+ "policy":{"semantic_key":"place-river-cruise","fixed_schedule":true,"user_locked":true, …}}
+```
+
+⇒ **两条结论（都有实测支撑）**：
+1. **仲裁 AR2 第 2 门要的三个值全部真实存在**：`C3_Guaranteed` / `120.00 CNY` / `KNOWN`
+   （`amount_minor=12000`、`currency=CNY`）。D 报的这三个值我独立复现。
+2. **但前端一个都不会显示**：`wallet.commitments` 全仓 0 命中（我 03:3x 已 grep 证实），
+   所以 **"模拟承诺"标识在屏幕上不可能出现** ⇒ ORD-0084 依据充分，且我现在能给 B
+   **确切的字段路径**：`wallet.commitments[].external_ref` 以 `mock-` 开头 ⇒ 标"模拟承诺"；
+   金额取 `monetary_value.amount_minor` + `.currency`（**不是**顶层 `amount_minor`，
+   D 也提醒过别猜字段名）。
+
+**演示口径因此更清楚了**：老师建的那个预订是 `mock-booking:…`，**必须标成"模拟承诺"**；
+不标就是仲裁说的"把 mock 穿西装"。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
