@@ -1739,6 +1739,12 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     `qoder-ui-overnight-shots.spec.ts` 本就在我 54/5 的分母里，"补上三份读数会变高"不成立。
     另记：我 08:00 与 08:02 两次比对撞见整个 `frontend/` 为空（重建中），那两次快照不作交付依据；
     已要求等 tip 稳定后**整树重出**，并在**包外**副本重跑全 suite + build，交原始日志路径而非转述。
+    **口径限定（免得我把话说死）**：我又造了一把静态尺子 `raw/spec_denominator.py`
+    （按 `test(` / `test.skip(` 逐文件计数，尊重 `testIgnore`，不需要 checkout），读数存 `raw/spec_denominator.txt`：
+    `5a33eaf` 可跑 spec 26 份 / 声明 **52** 条，`bfe8d7e` 27 份 / 声明 **57** 条（+5 就是那份 guard spec）。
+    但同一棵 `5a33eaf` 上真跑是 **59**（54+5）⇒ **存在循环生成的用例，静态数只能当下界用**。
+    ⇒ 所以我对 (c) 的硬要求不是"必须等于 58"，而是：**读数必须高于 54/5，且差额要能逐条归到那份 guard spec 的用例上**；
+    `58/5` 只是 `bfe8d7e` 提交信息自己给的预期。实测与预期不同不算错，不解释差值才算错。
   status: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
 
 
