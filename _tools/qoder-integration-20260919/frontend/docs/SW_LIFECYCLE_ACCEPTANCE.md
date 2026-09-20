@@ -15,7 +15,7 @@ Status: candidate patch for Commander review. This branch is not an authoritativ
 5. Recovery caches are versioned. Activation removes older CityNexus recovery caches and the known poisoned legacy cache names.
 6. The generated Workbox worker uses versioned runtime caches, accepts only HTTP 200 responses, and never caches opaque/status-0 responses.
 7. Vite content-hashed scripts/styles use `StaleWhileRevalidate`; documents use `NetworkFirst`. Worker scripts are not runtime-cached by the Workbox rule.
-8. SPA fallback is navigation-only. API, asset, and extension-like URLs are denied from `navigateFallback`.
+8. SPA fallback is navigation-only. API paths, `/assets/`, and a narrow allowlist of known static-resource extensions are denied from `navigateFallback`; dotted SPA route segments are not rejected merely because they contain a period.
 
 ## Why the document timeout is 8 seconds
 
