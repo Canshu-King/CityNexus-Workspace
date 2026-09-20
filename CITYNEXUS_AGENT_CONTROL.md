@@ -3356,6 +3356,46 @@ no ARRIVAL anchor in plan: ['place-old-town','place-riverside-museum','place-foo
 
 **仍未达成的**（不许被这四张图盖过去）：M2 的"屏幕文字跟着变"（ORD-0082）、M3、M4。
 
+### 🔬 commander 收 D 车道读数 @2026-09-21 03:2x —— 独立复现了我 03:2x 的结论，并多给四条硬事实
+
+D 交了一份只读预验（`_qoder_sim_scout_20260921/ORD_0083_PREVERIFY.md`，`:8581` 隔离台、
+`pinned_602addf` 固定副本、未碰 `:8481`/`:8681`/`_preview.db`）。**它与我各自独立量到同一件事**：
+
+> `reset` 后 `POST /bookings` 必然 422，**原因不是"DRAFT 没计划"，是 reset 自己已经把 journey 推到了 ACTIVE**；
+> 手工走"新建 → generate → select → booking"时 **201 CONFIRMED** 成立。
+> ⇒ 仲裁那套顺序 `reset → Booking → start` 在当前 tip 上**不可观测**：PLANNED 窗口在 reset 内部
+> 4.4+16.8ms 就被跨过去了。
+
+**两个独立仪器、两条不同路径、同一个结论** —— 这比我单方报数可信得多。
+
+**但它给的修法（"reset 停在 select"）会踩我 03:2x 实测的那个坑**，所以两者必须合起来看：
+- D 的观测目标（"要能演 PLANNED 窗口里的 booking"）= **对的**；
+- A 的实现（reset 停在 PLANNED+SELECTED）= **我实测 35 条红**（`12dd81a`）；
+- ⇒ **结论：目标保留，位置换掉。** PLANNED 窗口由**独立的 prepare 动作**提供，
+  而不是由 reset 提供。这正是我 ORD-0078 修订版的第 2 条。
+  **两者不矛盾**：D 要的是"PLANNED 窗口可观测"，我要的是"reset 不建计划"，三动作同时满足。
+
+**D 另外四条我认下的硬事实（都是本轮实测，不是推断）**：
+1. **演示计划 6 个活动里只有 1 个能 booking**：`Nexus River Cruise` 201 CONFIRMED，其余 4 个 422
+   （"no supported tradable commerce service" / "not available in the frozen catalog"）。
+   机制：`commerce/service_impl.py:345-350` 的 place→service 是硬编码两条，而冻结 catalog 里
+   `booking_services` 只有 cruise 一条；**Food Hall 走 `POST /orders` 不是 `POST /bookings`**。
+   ⇒ **给 B/C 的产品口径**：面板的"预订"只对 cruise 出现；Food Hall 那站该说"点餐/下单"，
+   否则 6 个按钮里 4 个必红、1 个报错误的门。**这条直接决定 M4 演示能不能不翻车。**
+2. **`reset` 的 `simulation_advance` 是二次编码的 JSON 字符串**（`type(...) == str`），不是对象。
+   B 的严格 parser 会判不可识别。**建议 A 顺手改成返回 dict**（属 ORD-0078 范围内的小修）。
+3. **排序陷阱（新缺陷）**：`seed_demo` 把演示 journey 的 `created_at` 写成**未来**的
+   `2026-10-01T00:00:00+00:00`，而 `demo_scene` 用 `order_by(Journey.created_at.desc())` 挑台上那趟
+   ⇒ **今天新建的真人 journey 永远不会被 scene 选中**（D 实读：新建已 PLANNED+SELECTED，
+   scene 仍返回 `22222222 / ACTIVE`）。**今晚不影响**（台上只有一趟），但只要出现第二条真人 journey，
+   scene 就认不出来。⇒ 记一条低优先缺陷，排在 M4 之后。
+4. **`/wallet` 在 booking 之后立刻 `commitments=1`、`offline_ready=true`**；
+   但 D 明确说它 v3 里读到的 `NoneNone` 是**自己脚本字段名猜错**（DB 行实为
+   `amount_minor=12000, status=CONFIRMED`），**不算产品缺陷**。这个自纠我记一笔正面。
+
+**顺带把 D 的自纠也记下**：它 v1 的"两条通过"是**脚本把 422 也放进 ok 列表**造成的假绿，
+它自己撤回并重跑 v2/v3。**这正是我今晚一直在要的行为**——仪器错了就说仪器错了，不包装。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
@@ -3608,7 +3648,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
        '正在为你寻找住宿'或空白"这类可杀死的门（点名节点 id）。
     边界：不得伪造方案或把未知写成已知（provenance / `fact_quality` 冻结）；
     不得为了让界面好看而隐藏失败；后端契约不动。
-  status: DISPATCHED@2026-09-21 00:2x
+  status: PARKED@2026-09-21T03:2x+08（Commander：非 Simulation 关键路径，夜令 §9/§16 明列 PARK，等 M1–M4 之后）
 
 
 - id: ORD-0066
@@ -4036,7 +4076,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     "排队等" 与 "拒绝并让你稍后再试" 是**两种不同的产品承诺**；
     车道自己也写了"这个取舍请裁，不静默决定"。
     ⇒ 若仲裁裁定"必须受理"，后端会改成排队，**那你这边两种显示都要能出**（按具名码分支，别写死）。
-  status: DISPATCHED@2026-09-21 00:3x
+  status: PARKED@2026-09-21T03:2x+08（Commander：503 显示成人话，夜令 §16 明列 PARK；但面板已自带 GENERATION_STORE_BUSY 文案）
 
 
 - id: ORD-0071
@@ -4088,7 +4128,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - 本单**不夹带** ORD-0057 的收口（那单按它自己的清单走），也不夹带全仓行尾统一（那排在 Simulation 之后）。
     - 优先级 high，但**排在 ORD-0057 剩余验收点之后**：先把已批准契约收干净，再动存储层。
     按 Amendment J §6 回报一行了。
-  status: DISPATCHED@2026-09-21 00:4x
+  status: PARKED@2026-09-21T03:2x+08（Commander：有界队列，夜令 §16 明确不得抢 ORD-0058/0059 前面）
 
 
 - id: ORD-0072
