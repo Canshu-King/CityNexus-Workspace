@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "mission": "M3",
+  "contract_id": "CITYNEXUS_RELEASE_ACCEPTANCE_M3",
+  "package_root_semantics": "Paths are relative to the root of the release package, not to CityNexus-Workspace.",
+  "required_files": [
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "frontend/playwright.config.ts",
+    "frontend/playwright.sw.config.ts",
+    "frontend/playwrightEnv.ts",
+    "frontend/e2e/_qoderAuthoritativeSetup.ts",
+    "frontend/e2e/_qoderContrastScan.ts",
+    "frontend/e2e/_qoderFreshJourney.ts",
+    "frontend/e2e/_qoderRealSeed.setup.ts",
+    "frontend/e2e/qoder-mobile-ui-overnight.spec.ts",
+    "frontend/e2e/qoder-mobile-overflow.spec.ts",
+    "frontend/e2e/qoder-dock-geometry.spec.ts",
+    "frontend/e2e/qoder-contrast-audit.spec.ts",
+    "frontend/e2e/qoder-sw-lifecycle.spec.ts",
+    "frontend/e2e/qoder-user-critical-path.spec.ts",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "backend/tests/test_v1923_final_code_gate.py",
+    "backend/tests/test_v1924_final_truth_gate.py",
+    "backend/tests/test_qoder_mobility_truth_contract.py",
+    "backend/tests/test_qoder_physical_identity_contract.py",
+    "backend/tests/test_e2e_provenance.py"
+  ],
+  "gate_map": {
+    "MOBILE_TAP_TARGET_GATE": "frontend/e2e/qoder-mobile-ui-overnight.spec.ts",
+    "MOBILE_OVERFLOW_GATE": "frontend/e2e/qoder-mobile-overflow.spec.ts",
+    "MOBILE_DOCK_GEOMETRY_GATE": "frontend/e2e/qoder-dock-geometry.spec.ts",
+    "CONTRAST_GATE": "frontend/e2e/qoder-contrast-audit.spec.ts",
+    "SW_LIFECYCLE_GATE": "frontend/e2e/qoder-sw-lifecycle.spec.ts",
+    "USER_CRITICAL_PATH_PRODUCTION_GATE": "frontend/e2e/qoder-user-critical-path.spec.ts",
+    "BACKEND_CODE_GATE": "backend/tests/test_v1923_final_code_gate.py",
+    "BACKEND_TRUTH_GATE": "backend/tests/test_v1924_final_truth_gate.py",
+    "MOBILITY_TRUTH_GATE": "backend/tests/test_qoder_mobility_truth_contract.py",
+    "PHYSICAL_IDENTITY_GATE": "backend/tests/test_qoder_physical_identity_contract.py",
+    "E2E_PROVENANCE_GATE": "backend/tests/test_e2e_provenance.py"
+  },
+  "forbidden_path_fragments": [
+    ".venv",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    "test-results",
+    "playwright-report",
+    "_qoder_recovery_",
+    "_codex_sol_",
+    ".sqlite",
+    ".db"
+  ],
+  "notes": [
+    "qoder-mobile-ui-overnight.spec.ts is the canonical existing file for the <44px tap-target gate; no Mission 003 rename is required.",
+    "qoder-user-critical-path.spec.ts is a required M3 release gate. Until ORD-0039 lands this executable spec, package verification must remain red rather than silently dropping the gate.",
+    "This manifest verifies package contents only. Runtime PASS still requires executing CURRENT_GATES against the exact packaged candidate."
+  ]
+}
