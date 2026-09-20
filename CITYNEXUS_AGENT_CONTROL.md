@@ -2385,6 +2385,41 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0083_PREVERIFY.md`（v4 表 +
 status: ORD-0079 DONE
 evidence: `924461e` · 7 focused gates · 3/3 mutants killed · 两面门禁 19 / 36 passed · `D:/moodle/_qoder_ord30_evidence_20260920/ord79/`
 
+### 🟥 (SESSION=8c66aa92) ORD-0057 续：探针追出一个**真 202 谎言**并修了；顺带量到"一次生成能把建行程打成 500" @04:4x
+
+**我怎么撞上的**：你让我先查 ORD-0079，我把 ORD-0057 欠的那个数（受理 p50/p95/max）拿去用真 uvicorn 复跑。
+探针第一件事就是"8 个提交 + 逐个读回"，结果：**8 个 202，表里只有 1 行**。剩下 7 个 operation_id 从没存在过，
+调用方第一次轮询就吃 404。⇒ 我原以为 00:5x 那笔 `busy_timeout 200×4 + 具名 503` 已经把受理门修好了，**它只做到了"失败时响亮"，没做到"成功时真的记下了"**。
+
+**根因（逐语句实测，不是我推的）**：`sqlalchemy` 日志打出 `INSERT → ROLLBACK`，紧接一次**干净的 COMMIT 什么都没写**。
+被拒的那次 `session.rollback()` 会把"已经 flush 过的新对象"从 session 里注销 ⇒ 重试那次事务里根本没有待插入的行 ⇒ commit 空转成功。
+我在量具里把两次 `commit()` 的返回都记下来才看清：`attempt 0 locked / attempt 1 COMMITTED`，但行不在库里。
+
+**改了什么**（`backend/app/stay_generation_operations.py`，一笔提交 `e07f903`）：
+1. `_commit_with_bounded_retries(..., restage=)` —— 每次回滚后**重新把行放进 session**再试，id 只铸一次（调用方手里的 status_url 不能变）；
+2. `submit_operation` 在返回前用一条 **SQL 读**确认库里真有这行（`expire_on_commit=False` 会乐呵呵地把内存对象还给我，那不算证据）；确认不过 ⇒ 具名 `503 GENERATION_STORE_BUSY`，不再给出无法兑现的 202。
+
+**门的自证（`review/mutate_ord57_restage.py` → `.../ord57/restage-kill-evidence.json`）**：K1（去掉 restage）**KILLED**、K2（去掉 restage + 落库校验，= 修前形状）**KILLED**、
+K3（只去掉落库校验、restage 保留）**SURVIVED —— 这条我如实报"没打死"**，因为 restage 在位时库里真有行，那道校验防的是将来的另一种谎，不是今天这种。把 K3 也写成 kill 就是我骗你。
+**一条量具教训（也改在门里）**：这门的初版是用**第二条连接真的去抢 SQLite 写锁**——同文件跑 **20 failed / 6 passed 两次**，单跑它自己却绿；
+换成"在 commit 这个接缝上模拟被拒"后，同文件连跑三次 26 passed。**一条会让它要保护的东西失稳的门，不算证据。**
+
+**顺带量到、并且要更正一条旧归因**：探针里 `POST /api/v1/journeys`（建一趟行程，产品最普通的写）在**只有一趟生成在跑**的时候回了
+**500 `database is locked`**（服务器栈留在 `.../ord57/uvicorn.log`）。⇒ 03:0x 你记的那笔"53 红/37 锁读数＝多台后端互相踩量具"，
+至少有一部分**不需要别人踩**：一趟冷生成自己就能把普通写变成 500（这正是我记忆里"后台任务只是把写锁挪走、没有移除"那条的可见后果）。
+我没有改这个门（它是产品语义，且 `ORD-0057` 的仲裁只允许我动受理形状），只把读数交给你路由。
+**受理 p50/p95/max 仍然未产出**：探针现在撞的就是这把锁；要拿到干净的数，得先把"长写锁拆段提交"那单落地，或给我一台没有别的写者、且允许我占 5 分钟的机器。
+
+**门禁数字（四件事）**：树 `D:\moodle\_qoder_integration_20260919` @ **`e07f903`**（`924461e` 是上一笔 ORD-0079）· 解释器 `CityNexus\.venv` **3.12.14** · 凭据 **不在**（进程内 pop 四把 key，探针另记 `CITYNEXUS_AI_ENABLED=false`）：
+- 正面：`mobility_evidence_sources + simulation_mode + contract + stay_generation_operations` = **45 passed / 0 failed**（18.49s）
+- 回归：`live_replans_endpoint + mobility_truth_contract + mobility_replan_endpoint + final_consumer_truth_blockers + stay_generation_phases` = **43 passed / 0 failed**（2.93s）
+- 变异：ORD-0079 那组 **3/3 killed**；ORD-0057 这组 **2 killed + 1 如实存活**；两个脚本都在 `finally` 里按 SHA-256 复原被改文件（`restored: true`）。
+- **判定性全量我仍然没跑**（规则：先举牌；且账本里 4 台自有后端在听）。预览台 `:4781/:4782/:8781` 与 `_preview.db` 全程零请求、零写入。
+- `tools/verification/mutation_campaign.py` 与别人的前端未提交项（V8Experience / MapPanel / design-tokens / SimulationPanel / e2e spec）我一条都没 add。
+
+status: ORD-0057 PARTIAL（202 谎言已修+已门+已变异；受理 p50/p95/max 仍未产出，原因如上）
+evidence: `e07f903` · `.../ord57/restage-kill-evidence.json` · `.../ord57/uvicorn.log` · 新门 `test_a_refused_commit_is_re_staged_and_only_then_called_a_202`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -4435,6 +4470,29 @@ step                               code  detail
 
 **我仍不改我的判据**：未提交 = 未交付。手机跑的还是 `602addf`，M2 可见部分仍未达成。
 
+### 🟢 commander 放行读数 @2026-09-21 04:3x —— `e07f903`（A 的 ORD-0057）**992 passed / 0 failed**
+
+```
+树      : _qoder_cmdr_gate_20260921 (detached @ e07f903)，树 0 脏
+解释器  : Python 3.12.14    凭据: 三个 provider key 全清空
+结果    : 992 passed / 15 skipped / 0 failed  in 71.66s   RC=0
+```
+⇒ **后端三笔连续通过**：`65e184d` 984/0 · `924461e` 991/0 · `e07f903` 992/0。
+分母 991→992 是这笔新增的 focused 测试（`test_qoder_stay_generation_operations.py` +61 行）。
+
+**这笔的性质**：它修的是 ORD-0057 那条**"重试的受理只能真的落库之后才答 202"**
+（原缺陷：8 个 202 只落了 1 行；回滚会把已 flush 的新对象注销，于是重试的 `commit()` 在空事务上成功
+⇒ 发出去的 operation id 根本不存在，调用方第一次轮询就是 404）。
+**A 的修法我认**：`_commit_with_bounded_retries` 增加 `restage` 步骤、每次回滚后重新入队、
+**保留调用方手里那个 id**；并且在答 202 之前**用 SQL 读确认行真的在库里**，不在就答**具名的可重试 503**。
+
+**两处我特别记一笔正面**：
+1. 它**自己报告了一个存活突变 K3**（只做持久化校验、不动 restage）并说明"这是设计使然，
+   因为该断言守的是未来的谎，不是这一次的谎"——**主动报存活，而不是把矩阵写成全杀**，这正是我要的。
+2. 它记录了**自己前一版门禁的副作用**：那版门在第二个连接上真持 SQLite 写锁，
+   导致下一次运行级联超时（实测 20 failed / 6 passed，两次，隔离下绿），于是改成**在提交缝上模拟忙碌写者**。
+   ⇒ **这是把"量具自己会污染机器"这件事写进了代码注释**，与我今晚两次踩锁的经历同源。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
@@ -5934,6 +5992,8 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
       **实质 10/10 我认**（按 `expected ⊆ killed` 重算，主批 9/9 主人断言成立、还原字节相同 10/10）。
       我自己第一遍用集合相等去卡、误报"只有 5/10 有主人断言"，已当场撤回——见 DELIVERIES 23:5x ③。
   status: PARTIAL@2026-09-21T00:5x+08 by 8c66aa92（A 闭 + 受理门 500 真缺陷已定位已修 `fb53500`：busy_timeout 200×4 界内重试，仍写不下则两门口统一 503 `generation.store_busy`；本文件隔离 **25 passed/0 failed 20.49s**。仍缺：延迟 p50/p95/max 未取、全量未复绿、变异批按你要求未重跑。**一条取舍请你裁**：写锁被别的车道持有时，宁可多等成功还是 1 秒内具名拒绝（DELIVERIES 同名块））
+  status_note@04:4x by 8c66aa92: 那道取舍被实测改写了——探针量到**受理自己会撒谎**（8 个 202、表里 1 行）。
+  已修+已门+已变异（`e07f903`，K1/K2 killed、K3 如实存活）；p50/p95/max 仍未产出，因为一次冷生成就能把 `POST /journeys` 打成 500。详见 DELIVERIES 第二块。
 
 - id: ORD-0058
   to: 8c66aa92
