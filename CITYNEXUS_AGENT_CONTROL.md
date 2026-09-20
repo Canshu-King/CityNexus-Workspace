@@ -2670,6 +2670,36 @@ Bookings 组件           → 只渲染 wallet?.reservations（:2806 / :2962 两
 **B 的三个 HUMAN_BLOCKER 修复完成后，M2 可见验收与 AR2 第 2 门同时解锁**——这是当前通往
 "老师 3 分钟 Demo"最大的一坨剩余工作，全部在一双手里，请按队列顺序一口气做完再一起交。
 
+### 🏁 (SESSION=494abfd7) `924461e`（ORD-0079）验收：**M3 全链七跳亲测通，M3+M4 后端全部达成** @05:5x
+
+detached 树 @`924461e`、自有库 `_probe79.db`、`:8693`、解释器 3.12.14、`CITYNEXUS_DEMO_MODE=true`。全程亲跑：
+
+| 跳 | 请求 | 实到 |
+|---|---|---|
+| 1 | `POST /demo/reset` | 200，scene `DRAFT / NO_FROZEN_EVIDENCE` |
+| 2 | `POST /demo/prepare-scenario` | 200；scene `PLANNED / **FROZEN_WITHOUT_TTL**`（`evidence_state` 不再说谎：有 56 对封证据、无 TTL 就如实报"冻着但无到期"，不再误报 NO_FROZEN_EVIDENCE）|
+| 3 | `POST /bookings`（巡游） | 201 CONFIRMED |
+| 4 | `POST /demo/start-scenario` | 200，ACTIVE + 游标 |
+| 5 | `POST /events {"event_type":"WEATHER","payload":{"affected_activity_id":"<游标>"}}` | 201 |
+| 6 | `POST /replans {"trigger_event_id":…}` | **201 PRESENTED**：`hard_constraints_passed=true`、`locked_commitments_preserved=true`、`explanation.reasons=["provider-backed recovery evidence","F1_OPTIONAL_REMOVAL",…]` ⇒ **MOBILITY_DATA_UNAVAILABLE 修掉了**（根因如 A 所判：`/route-evidence` 读的是 proposal 的快照而 replan 用计划自己的 payload，两份供应；真正说谎的是 scene 的 evidence_state 只看 `expires_at`）|
+| 7 | `POST /replans/{pid}/accept` | **先 422 `Idempotency-Key header is required`（实测，门是真的）→ 带 `Idempotency-Key` 后 200**；scene：`plan_version_id 55523d40… → 4fd62573…`（**新 ACTIVE 计划**）、`effective_now 09:00→10:30` |
+| 8 | twin + wallet 复查 | **C3_Guaranteed BOOKING 承诺在 replan+accept 后仍在**（twin `upcoming_commitments` n=1、wallet `commitments` n=1、12000 CNY）——**"重规划保 C4/C3"的完整故事在后端成立了** |
+
+⇒ **夜令的 M3（Event→ReplanProposal→Accept→新 ACTIVE+承诺保留）与 M4（Booking→Wallet）后端全部走通**。
+仲裁 Q2 的口径也已如实执行：证据是 provider-backed 的就报 provider-backed，诚实的降级态各有各的名字。
+
+**给 `e345b9d6` 的接线要点更新（并入你手上的队列，不必新开单）**：
+1. [接受方案] 必须带 **`Idempotency-Key` 头**（我实测缺它就 422）——前端为每次 accept 生成一个
+   UUID 键并在重试时复用同一个键（幂等重放），不要每次点击换新键。
+2. 面板"证据"行的新口径（服务器现在四态）：`REFERENCED`（带到期）/ `FROZEN_WITHOUT_TTL`
+   （冻着但没写到期——**人话**："这趟的出行数据是封存的，没有到期时间"）/ 
+   `EVIDENCE_REFERENCE_INCONSISTENT` / `NO_FROZEN_EVIDENCE`。不许把 `FROZEN_WITHOUT_TTL`
+   显示成"没有数据"。
+3. M3 链路现在后端全通：面板的 [触发一次中断]→[请求重规划]→[接受方案] 可以按
+   `payload 带游标活动 → trigger_event_id → Idempotency-Key` 三步真实接线了。
+4. 今晚的收尾目标更新为：**你这一轮（0082/0085/0086/0087/端点接线）合并后，
+   老师那 3 分钟 Demo 的每一步在手机上都该是真链路**。我验收完就写 MORNING_CHECKPOINT。
+
 ### 🟥 (SESSION=494abfd7) E 车道第三块受理 @05:0x —— "拒绝句粘住"是真缺陷（ORD-0086 派 B）；顺带认领一条无署名块的量具读数
 
 **ORD-0086 → `e345b9d6`（同写域，与 0082/0085 同轮提交）**：E 用 CDP 注入 1.5s 往返延迟实测到
