@@ -1943,7 +1943,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 10:4x (+08:00) · LAST_ARBITER_COMMENT_ID = 5746426839（用户请求 MOBILE-PREVIEW-001，已交付）· LAST_OWN_COMMENT_ID = **5747060212 = "一切从用户出发"汇报 + 请求 Mission 003**；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
+Refreshed: 2026-09-20 11:0x (+08:00) · LAST_ARBITER_COMMENT_ID = **5747153763 = Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`（已收到并生效，六条裁定全部落到订单与归属；见下面 MISSION 003 段）** · LAST_OWN_COMMENT_ID = **5747060212 = "一切从用户出发"汇报 + 请求 Mission 003**；链：5746552312（AI 开启变更）→ 5746509713（预览就绪）→ 5746196501（发布包漂移自纠）→ 5746109359（状态字 `CNX_CMD_002_COMPLETE`）
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
 **同时正式改口**：我此前"没有已知红项"的说法改为"**未经验证**"——928 全绿的同时用户第一次用就撞墙，说明现有门全是机器视角。
@@ -2284,10 +2284,88 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
     **不要顺手扩大范围**：不改后端几何生成逻辑（`mobility_facts` 的产出是另一件事），不动缓存策略（ORD-0036）。
   status: CLAIMED@20260920-091500 by e345b9d6
 
+- id: ORD-REASSIGN-003
+  to: all
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **Mission 003 归属调整（覆盖此前两单的收件人，按新归属干活，旧单内容不变）**
+    仲裁在 5747153763 里明确要求：会同时触碰 `main.tsx` / `V8Experience.tsx` / 壳层状态 / tokens 的关注点
+    必须**收在一个归属下**，不能让三个会话挤同一批文件。我此前拆错了，现在纠正：
+    - **`ORD-0036`（服务工作者 / 缓存 / 刷新与挂后台恢复 / 主题根契约）：`8c66aa92` → `e345b9d6`**。
+      `8c66aa92` **不要再动 `main.tsx` / `vite.config.ts` / `public/sw.js`**，那些文件现在归 UI 线。
+    - **`ORD-0037`（地图交互 + 路线可读性 + 降级可见）：`e345b9d6` → `8c66aa92`**，
+      文件集只有 `src/components/v8/MapPanel.tsx`（及必要的地图子组件），与 M3-B 不相交。
+    - M3-B（`e345b9d6`）= ORD-0034 + ORD-0035 + ORD-0036 + ORD-0038；M3-A（`8c66aa92`）= ORD-0033 + ORD-0037；
+      M3-D（`dc19d662`）= ORD-0039。
+    谁收到与自己不符的单，以本条为准，不要按旧收件人动手。
+  status: ACTIVE@2026-09-20 11:0x
+
+- id: ORD-0038
+  to: e345b9d6
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **用户当面提出（10:5x）："给 AI 运行的时候加一个可视化思考过程，免得不知道是在思考还是卡住。"**
+    这不是新功能，正是 Mission 003 A2/A4 里"loading 必须有可见状态、失败不得与加载混淆"的具体化。
+    实测背景：我这边一次真实 AI 调用耗时 **28.8 秒**（`POST /journeys/<id>/agent/commands`，`deepseek-v4-flash`），
+    期间屏幕上**只有一个"规划中…"**；用户第二次点的时候界面回到"开始规划"，完全无法判断发生过什么。
+
+    要求：
+    1. **只显示后端/网络真实上报的阶段**（例如：已发出 → 模型解析中 → 生成候选 → 排程 → 完成/失败）。
+       如果某阶段没有中间信号，就**明说没有**，显示"已发出请求 · 已等待 N 秒 · 可取消"。
+    2. **严禁伪造逐字"思考流"或假进度条**。冻结清单里写着"任何 UX 修复不得把未知数据谎报成已知数据"，
+       假进度比没进度更糟——它会让人相信系统在干活。
+    3. 必须有**实时等待秒数**与**取消入口**（取消要真的中止请求，不只是关面板）。
+    4. **失败与加载必须一眼可分**：超时、422、500 各自给出人话原因 + 可执行的下一步（重试/改条件/返回编辑）。
+    5. 亮、暗两档都要可读（这条与 ORD-0035 同一批 token，别各写一套字面色）。
+    6. 触控目标 ≥44px；不要为此改导航结构。
+
+    **验收（USER_GATES 口径，不是断言计数）**：在生产构建、390px、亮+暗两档下，
+    走一遍"点 AI 规划 → 看到阶段与秒数在动 → 成功出结果"与"强制失败 → 看到可读原因"，
+    附每步屏幕上实际渲染的文字（截图或 DOM 文本均可）；
+    并给一条**杀得掉的证据**：把阶段/秒数渲染去掉时该节点必须红（点名节点 id）。
+  status: DISPATCHED@2026-09-20 11:0x
+
+- id: ORD-0039
+  to: dc19d662
+  priority: urgent
+  if_head: c0367c1
+  order: |
+    **M3-D：建 `USER_CRITICAL_PATH_PRODUCTION_GATE` + 静默失败清单。你只写测试/规格/证据，不改产品代码。**
+    依据：仲裁 5747153763 第 ⑤ 条已把"用户视角门"批准并升进 `CURRENT_GATES`，成为与 TRUTH_GATES 并列的第二轴。
+
+    起手材料（我已经跑过一遍的基线，直接接着做，别重做）：
+    `D:\moodle\_qoder_recovery_20260919\reports\USER_WALK_PROTOCOL.md`
+    —— 十条走查（W1..W10）+ 当前基线"十条里七条失败"，每条都带实测值与订单号。
+
+    要求：
+    1. **矩阵**：360 / 390 / 412 三档宽度 × 亮 / 暗 两档 = **6 个组合全跑**；**只准跑生产构建**
+       （`vite build` + `vite preview` 或等价命令），dev 服务器结果一律不算。
+    2. **流程**：创建有效行程 → Today 可读可操作 → 地图（必须证明相机被手势改变）→ AI 面板
+       （公开 CI 可以用 mock/关闭 AI，但界面必须**如实说明**它当前的状态）→ 刷新 → 恢复行程 →
+       挂后台/回来（工具支持的话）。
+    3. **每步断言**：壳层非空（`#root` 有内容）、当前界面可理解、无未捕获致命错误、
+       加载有可见状态、失败有可见状态、主操作可达可读。
+    4. **前置检查**：走查开始前必须确认 `navigator.serviceWorker.controller === null`
+       （实测：被旧 SW 接管时 `#root` 子节点 0、按钮 0、正文 0 字 —— 那是环境不是产品）。
+    5. **静默失败清单**：至少盘点 行程创建 / 住宿生成 / 计划生成 / Today-live 投影拉取 / AI 面板请求 /
+       地图瓦片与供应商 / 刷新版本错配 / 空行程无 ACTIVE 计划 / 关键路径断网超时，
+       每项分类为 `OK_VISIBLE` / `SILENT_BLOCKER` / `SILENT_DEGRADED` / `NONCRITICAL`，
+       带文件与行号证据。**关键路径上的 SILENT_BLOCKER 必须在 Mission 003 内修掉**；
+       `SILENT_DEGRADED` 只在碰到这五个缺陷时顺带修，其余登记留后，不要变成考古。
+    6. 生产补丁**交回对应归属方**（M3-A `8c66aa92` / M3-B `e345b9d6` / M3-C `8c66aa92`），
+       不许验证方自己改产品代码。
+    7. 报数字时**必须同时报 collected 与其中 setup 工程的行数**；且**不得把测试计数当作成功定义**——
+       成功定义是"用户流程走通"。
+  status: DISPATCHED@2026-09-20 11:0x
+
 ## MOBILE-PREVIEW-001 正在运行（用户请求 5746426839，Commander 亲自执行，回报 5746509713）
 
-**手机地址：`https://intake-matt-white-wearing.trycloudflare.com`** · 服务的是权威树 `c0367c1`（`_qoder_integration_20260919`）
+**手机地址（11:0x 起，带鉴权）：`https://lecture-interfaces-edit-publisher.trycloudflare.com`** · 服务的是权威树 `c0367c1`（`_qoder_integration_20260919`）
 · 到期 **12:4x (+08:00)**，除非用户另说。
+**旧地址 `intake-matt-white-wearing…` 已随隧道进程停止而作废**（它无鉴权，Mission 003 §6 不允许继续公网暴露可消费凭据）。
+新链路：cloudflared → **`127.0.0.1:4782`（我的 Basic 鉴权反代）** → `127.0.0.1:4781`（vite preview 生产构建）→ `127.0.0.1:8781`（uvicorn）。凭据在 `run/preview_auth.txt`，**只交给用户，不写进 Issue #1**。
 
 | 项 | 值 |
 |---|---|
@@ -2341,7 +2419,78 @@ ValueError: V13_JOURNEY_DAYS_OUT_OF_BOUNDS:9
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 4781,8781 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force"
 ```
 
+## MISSION 003 已下达并生效（仲裁任务书 = 总线评论 **5747153763**，`CNX-CMD-003-USER-FIRST-RELIABILITY`）
+
+**先记我自己的一个量具错**：这条任务书第一次被 `patrol.py` 判成了"我自己的帖"而漏读，因为仲裁把它写成标题 `## Commander Mission 003`（意思是"给 Commander 的任务书"），而我上一轮加固时用了"首行含 Commander 就算我"的宽松启发式。
+⇒ 已改成**只认署名前缀**（首行 `包工头:` 才是 Commander 自述），并在代码注释里写明"给 Commander 的任务 ≠ Commander 发的帖"，禁止再引入模糊匹配。复跑后正确识别并存档 `raw/arbiter_5747153763.md`（14,780 字符）。
+
+### 六条裁定 → 落到执行
+
+| 裁定 | 内容 | 落到哪 |
+|---|---|---|
+| ① 超 7 天语义 | **选 A**：`POST /journeys` 在**落库之前**就 422，带稳定机器码 `JOURNEY_DAYS_OUT_OF_BOUNDS` + 结构化字段（实际天数、上限）+ 人话文案；被拒请求**不得留下 Journey 行**；客户端可预校验但后端才是权威。已建的 5 条孤儿行属测试/开发债，**不许为此写破坏性生产迁移**，要清理就明确记录 | ORD-0033（`8c66aa92`）已按此收紧 |
+| ② 发布包契约 | 交付包 = 生产源码 + **可执行验收 spec/回归门** + 最小运行说明；**不得**含缓存、依赖树、数据库、本地密钥、噪声截图 ⇒ ORD-0032 缺 <44px 那道门是**打包缺陷**，不是可选省略 | ORD-0032（`6af4cf53`） |
+| ③ 地图 | 正式定为**必须可交互**：手势要能真的改变相机、移动端页面滚动仍可用、优先用 MapLibre cooperative gestures（取决于安装版本），不支持就实现**显式手势契约 + 可见可供性**；路线必须按天/段或交通方式区分；瓦片/供应商失败要显示为**降级态**，不许装成一张完整的静态图 | **改派 `8c66aa92`**（见下） |
+| ④ 主题 | 加**应用内三态** System / Light / Dark，选择要持久化，从根节点 `data-theme`（或等价契约）生效；**开关不是暗色模式坏掉的遮羞布**，所有关键界面两档都必须可读；从未选过的人默认跟随系统 | ORD-0035 + ORD-0036（`e345b9d6`） |
+| ⑤ 用户视角门 | **批准、加强、正式进 `CURRENT_GATES`**：见下面双轴定义 | 新门 `USER_CRITICAL_PATH_PRODUCTION_GATE`，M3-D 建 |
+| ⑥ 泄露 key + 公网隧道 | 升级为**当前安全边界**（不是"知情即可"）：用户轮换之前，**不允许公网无鉴权的 AI 消费继续开放**；要么关掉公网实时 AI，要么给预览加访问控制；**今后任何回报不得再复现密钥或其前缀** | 已执行，见下 |
+
+### ⑥ 的执行方式（我选了"访问控制"而不是"关掉 AI"，因为用户明确要 AI）
+
+- 预览前端从 vite dev 换成**生产构建**（`vite preview`，`--outDir` 在仓库外，权威树未被写入）；
+- 新增**我自己的 Basic 鉴权反代**（`raw/preview_auth_proxy.py`，`127.0.0.1:4782 → :4781`，凭据存 `run/preview_auth.txt`，常量时间比较）；
+- **旧隧道已停 ⇒ 那条无鉴权公网链接随进程作废**，新地址为 `https://lecture-interfaces-edit-publisher.trycloudflare.com`；
+- 实测：匿名 `/api/v1/health` → **401**、错误凭据 → **401**、正确凭据 → **200**；页面 `/` 与 `/v8/hub` 带凭据 **200**；
+- 凭据**只交给用户本人，绝不写进 Issue #1**（仲裁明令，且我此前已两次在账本里写出前缀 —— 从现在起改用"那把 key"指代）。
+
+### 归属调整（仲裁要求"壳层关注点必须单一归属"，我此前拆错了）
+
+- **M3-A 后端边界归属** = `8c66aa92`：行程创建校验 + 聚焦后端测试；不得重设计规划语义。
+- **M3-B 前端壳层可靠性归属** = **`e345b9d6`（合并成一个归属）**：`ORD-0034`（向导失败可见）+ `ORD-0035`（AI 面板两档可读 + 主题根契约）+ **`ORD-0036`（服务工作者/缓存/刷新恢复）从 `8c66aa92` 改派过来** —— 因为这三件事都要动 `main.tsx` / `V8Experience.tsx` / 壳层状态 / tokens，三个会话挤在同一批文件上必然互相覆盖。
+- **M3-C 地图归属** = **`8c66aa92`**：`ORD-0037` 从 `e345b9d6` 改派过来，只碰 `MapPanel.tsx`，与 M3-B 的文件集**不相交**。
+- **M3-D 用户门/红队归属** = `dc19d662`：只写测试/规格/证据，建 `USER_CRITICAL_PATH_PRODUCTION_GATE` 与静默失败清单；生产补丁交回对应归属方，不许自己动手改产品代码。
+- Commander 仍是集成者与仲裁者，**不写生产代码**。
+
+### 新增 ORD-0038（用户 10:5x 当面提出，属 M3-B/M3-C 契约范围，不是新功能）
+
+> "给 AI 运行的时候加一个可视化思考过程，免得不知道是在思考还是卡住。"
+
+这正是仲裁 A2/A4 里"loading 必须有可见状态、失败不得与加载混淆"的具体化，已并入订单（详见 ORDERS 段 ORD-0038）。
+**硬约束（来自冻结清单：UX 不得对供应商真值撒谎）**：进度只能显示**后端真实上报的阶段**；
+若某阶段没有中间信号，就显示"已发出请求 · 已等待 N 秒 · 可取消"，**严禁伪造逐字"思考流"**。
+
+### CURRENT_GATES 升级为双轴（即刻生效，Mission 003 起所有交付判定按此执行）
+
+- **TRUTH_GATES**：确定性/后端/契约/安全/数据不变式（含 Mission 002 已验收的突变矩阵、STALE 哨兵、单 ACTIVE 计划、幂等）。
+- **USER_GATES**：**生产构建**上的关键路径可用性——360/390/412 三档宽度 × 亮/暗两档共 **6 个组合全跑**；
+  走完 新建行程 → Today → 地图 → AI 面板 → 刷新/挂后台回来 → 继续；每步必须有可读可操作的反馈；
+  `#root` 不得为空；刷新后不得出现旧壳/新模块错配；不得有"分不清在加载还是已失败"的静默；主控件满足触控契约。
+  开发期允许 390px 亮+暗冒烟，但**不能替代发布矩阵**；**dev 服务器的结果一律不得作为发布证据**。
+- ⇒ **两轴同时为绿才叫可交付**。在两条轴都真跑过之前，**禁止再说"没有已知红项"**（我已就 5747060212 正式改口为"未经验证"）。
+
+### 冻结清单（Mission 003 不得削弱）
+
+移动性 provenance 与事实质量真值、`HARD_FEASIBLE_QUALITIES`、物理身份 SAME/AMBIGUOUS 规则、
+C4 承诺保护、数据库单 ACTIVE 计划不变式、陈旧游标 fail-closed、幂等语义、权威 E2E 验收政策、领域/需求基线。
+**任何"UX 修复"不得把未知数据谎报成已知数据。**
+
+### 回报格式（完成时按此发 Issue #1）
+
+顶层小节必须恰为：`M3_AUTHORITY` / `M3_FIVE_DEFECTS` / `M3_USER_GATE` / `M3_SILENT_FAILURE_INVENTORY` /
+`M3_TRUTH_REGRESSION` / `M3_SECURITY_BOUNDARY` / `M3_RELEASE_PACKAGE` / `M3_REMAINING_RED`；
+五个缺陷每个都要含：修复前证据 / 改动文件 / 修复后可观察行为 / 聚焦回归命令与结果 / 生产走查证据；
+状态字只能是 `CNX_CMD_003_COMPLETE` 或 `CNX_CMD_003_PARTIAL`。**Mission 004 不得自动开始。**
+
+### 禁止事项（照抄进各单，防跑偏）
+
+不做与五个缺陷无关的视觉改版；不加新旗舰功能；不 force-push/改写历史；不建公网无鉴权 AI 端点；
+不拿 dev 结果当发布证据；不把后端异常吞成"什么都没发生"；不给 JS/模块请求返回 HTML 兜底；
+不做"假装功能完整"的地图降级；不用主题开关掩盖坏掉的暗色；**不为了走查通过而关掉真值门**；
+**不得只用测试计数宣布 Mission 003 完成**。
+
+
 ## MISSION 002 已交付（`CNX-CMD-002-RX4-MUTATION-CONVERGENCE`，Issue 评论 5744210383）→ 状态字 `CNX_CMD_002_COMPLETE`（评论 5746109359）
+
 仲裁裁决：`mutation 17/17 killed` 结论撤销，`0 collected / exit 5` 一律判 HARNESS_INVALID；
 禁止 force-push，`53b0362` 作历史快照，本地 `integration/frontend-apple-pass1` 为开发权威，
 全绿后再建新分支 `integration/qoder-authoritative-20260920`；RX-4 保持独立 Worker 不改派。
