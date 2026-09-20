@@ -2584,6 +2584,50 @@ parity 门绿）；面板顺序画成 `重置 → 开始模拟 → 建一个硬�
 `route-evidence fallback_reason=NO_FROZEN_MOBILITY_SNAPSHOT` 与 `mobility_evidence_json 有内容`的矛盾
 正是该单的核心，取不到就报失败码，不要硬凑。
 
+### 💳 (SESSION=494abfd7) Wallet 门复核 + ORD-0087 立单 @05:3x —— "commitments 从没被渲染"读码复核成立
+
+无署名"commander 读码"块报的 Wallet 缺陷，我按读码独立复核（同一棵权威树）：
+
+```
+V8Experience.tsx:83-88   Wallet 类型声明含 commitments + external_ref
+grep external_ref src/   → 仅类型声明 1 处，无渲染引用
+grep "wallet?.commitments" src/ → 0 命中
+Bookings 组件           → 只渲染 wallet?.reservations（:2806 / :2962 两处）
+```
+
+⇒ **结论成立**：`commitments` 是**类型里声明、屏幕上不存在**的字段。
+后果很具体：后端 `65e184d` 上 booking 201 CONFIRMED + `external_ref=mock-booking:…` 已亲测成立
+（我 `:8692` 与无署名块的隔离 DB 副本两条独立读数互证，可订的都是 `Nexus River Cruise` 一站），
+但**屏幕上永远不会出现"模拟承诺"**——仲裁 AR2 第 2 门（Wallet 真值门）在前端物理上过不了。
+
+```
+- id: ORD-0087
+  to: e345b9d6
+  priority: critical
+  if_head: 65e184d（或其后端 SHA）
+  blocks: 仲裁 AR2 第 2 门（Wallet 真值门：mock 承诺不得穿西装）
+  subject: 把 wallet.commitments 渲染出来，并按字段语义诚实标注
+  must:
+    1. Wallet/承诺卡新增 commitments 渲染点：`kind`、`level`、`status`、`monetary_value`
+       （**`monetary_value_status === "KNOWN"` 才显示金额；否则显示"价格未知"，不许显示 0**）。
+    2. **模拟标注**：`external_ref` 以 `mock-booking:` 开头 ⇒ 卡片必须出现"模拟承诺"字样
+       （zh/en 两臂都有），不许画成真实订单。
+    3. C3（`level=C3_Guaranteed`）与时间窗（`policy.scheduled_start_at/end_at`）要可见——
+       这是 replan 保 C4/C3 故事的前置，老师要在 replan 前后都看到它没被动过。
+    4. 判据读 `innerText`：建一笔模拟承诺后，卡片可见"模拟承诺"+ 金额；
+       `monetary_value_status != KNOWN` 的假数据代回去时必须显示"价格未知"（红门自证）。
+    5. 与 0082/0085/0086 同轮提交；production build + 真后端跑。
+  acceptance: 我在手机链路上 reset→prepare→booking→Wallet，看到"模拟承诺"+金额+时间窗，截图自存。
+  status: DISPATCHED@2026-09-21T05:3x+08
+  evidence: 待交（渲染点 diff + 红门自证 + 复跑条数）。
+```
+
+**给 `e345b9d6` 的队列更新（全部同写域，一轮提交）**：
+`0082`（hero 场景钟 + 两投影矛盾 + 红门共担）> `0085`（重叠带）> `0086`（拒绝句粘住）>
+`0087`（本单）+ 接 `prepare-scenario`/`start-scenario` 两端点。
+**B 的三个 HUMAN_BLOCKER 修复完成后，M2 可见验收与 AR2 第 2 门同时解锁**——这是当前通往
+"老师 3 分钟 Demo"最大的一坨剩余工作，全部在一双手里，请按队列顺序一口气做完再一起交。
+
 ### 🟥 (SESSION=494abfd7) E 车道第三块受理 @05:0x —— "拒绝句粘住"是真缺陷（ORD-0086 派 B）；顺带认领一条无署名块的量具读数
 
 **ORD-0086 → `e345b9d6`（同写域，与 0082/0085 同轮提交）**：E 用 CDP 注入 1.5s 往返延迟实测到
