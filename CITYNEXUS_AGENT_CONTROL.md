@@ -866,6 +866,36 @@ rebase/reset/clean 收尾 —— 那等于自己造一个死锁。
   `--list` 仍 **collected 66 / 1 file**，W3 重跑仍 **1 passed（1.1m）**，
   ⇒ 闭合结论不依赖那个被删的字段。门码今后以 `_qoder_tip_recheck_20260921\frontend\usergate\` 为准（与产物同树）。
 
+### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
+
+`STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
+
+- 环境按我自己 ORD-0061 的 runbook 走：**独立导出树 + 独立库** `_lane_dc19d662_tip2_db.sqlite3` + lane 槽位
+  :8438/:8478，**不共用预览库、不共用 Playwright 标签页**（我没走 MCP 共享浏览器，全程自起实例）。
+- **对照实测（同一句乱码城市，唯一区别是有没有先输过 Tokyo）**：
+
+  | 向导路径 | 提交的 `city_code` | `timezone` | `budget` |
+  | --- | --- | --- | --- |
+  | 直接填乱码（无上一个城市） | `CN-拉萨市不存在的写法XYZ` | `Asia/Shanghai` | `{amount_minor: 300000, currency: "CNY"}` |
+  | 先 Tokyo 再改乱码 | `JP-拉萨市不存在的写法XYZ` | `Asia/Tokyo` | `{amount_minor: 3000, currency: "JPY"}` |
+
+  两次我都**没碰过预算字段**，也没碰过时区/国家字段 —— 差异全部由产品自己按"上一个城市"推出来。
+- ⇒ **判由**：这不是"文案说错"，因为 **JP/JPY/Asia/Tokyo 已经写进 `POST /api/v1/journeys` 的请求体并落成行程**；
+  更重的一条你我都还没写进账本：**金额被换口径重算了 100 倍**（CNY 300000 分 = ¥3000 → JPY 3000）。
+  ⇒ 所以分类是 **TRUTH_DEFECT（根）+ HUMAN_MISLEADING（症状）**，且**先修症状无效**：
+  只改那句话，行程仍然以东京时区、日元口径、被缩小 100 倍的预算存在，后续 Today/预算/可行性都吃这份脏数据。
+- **修复点（给归属车道，我不动产品码）**：城市识别失败时必须把随识别结果派生的量一起处置 ——
+  `country/city_code 前缀`、`currency`、`timezone`、**以及由币种换算出来的 `budget/stay_budget` 金额**；
+  要么回到产品默认（CN/CNY/Asia/Shanghai）并明说是默认，要么让这一步**根本不让提交**（识别失败即阻断主操作）。
+  屏幕文案 `未识别 · 按 JP / 日元 / Asia/Tokyo 规划` 属于 ORD-0060 第 1/2 项里"复用上一次识别结果的残留示例"，
+  你那句"**标签不骗人了，口径还在骗**"我这轮独立复现成立。
+- **③ W8 重试结果**：在 `index-CEpKoGJA.js` 上仍 `v8-map-empty=1 / map canvases=0`，三条都报
+  `gate fixture`（不是产品红也不是产品绿）。⇒ 换检查点不解决它，缺的是**带落位地点的 fixture 行程**；
+  我上次给活动注入经纬度后 `/experience` 确实回带了坐标，但地图仍不起画布
+  ⇒ 说明 `MapPanel` 的 `noLocation` 条件不止"活动有坐标"，这条我记为**未验**并已排进下一项，不冒充判决。
+- 权威树当前 4 个脏项（`core/config.py`、`main.py`、`tests/conftest.py`、`test_qoder_simulation_mode.py`）
+  看名字是 ORD-0058 的 Simulation 地基在工作，**不是我写的**；我这侧只读树零写入。
+
 
 
 ### commander 亲测 @2026-09-20 23:4x（本机钟）—— 三件事：全量后端第一轮**红**（我保留原始结果）、红队那条"原因被丢弃"**在当前 tip 上已经修好**、插话排队实测
@@ -1214,6 +1244,17 @@ lists_tianjin=true、lists_xiamen=true、**claims_a_total=false**
 ```
 读数：`raw/preview_fbe6a00_walkthrough.json`；截图 `raw/preview_fbe6a00_wizard.png`。
 
+### 1a986a24 HJ-P1 第二轮·开工占位登记 @2026-09-21 01:1x（硬规矩 1）
+
+- **我认领的 Playwright 标签页指纹**：`window.name === "HJP1-MINE"`（412×915 / dpr 2，用 CDP **每页**模拟，
+  **没有**用 `browser_resize`，所以不动整窗、不影响别人的视口）。共享浏览器当前 `context.pages().length = 3`，
+  其中 index 0 与 index 1 不是我的，**我只操作自己那一页**。
+- **包名归属**：本轮全部读数归 `assets/index-CEpKoGJA.js`（我的文档加载时刻 17:12:50Z，已读 `script[src]` 确认）。
+- **我这一页当前挂着的行程**：`56eb15a9-728d-…`，屏幕写「新加坡之旅 · 9月26日 08:00 — 9月26日 20:00 · 1 位旅行者 · 天数未知」。
+  参数与我上一轮亲手创建的那趟逐项吻合（1 人 / 当天往返 / 新加坡），**但界面里没有任何列表能自证它属于我**——这条本身就是 H-B。
+- 本轮顺序：① 预算/天数新口径的用户可信度 → ② 空结果 vs 失败（ORD-0070 未修，我用真实点击量它）→ ③ 冷城市等待 + 刷新恢复；
+  顺带回收我上轮报的 F-1/F-2/F-3 是否真修了。
+- 只读不变：不改产品文件、不建分支、不推送、不开新隧道、不绕过 UI 调 API。
 
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
@@ -3132,6 +3173,37 @@ remotes    origin -> D:\moodle\CityNexus (本地);  GitHub 不是这棵树的 re
 因此本控制文件走独立分支 `commander/control`，避免与其 master 推送争用。
 
 ## CURRENT_PHASE
+
+### 🎯 阶段改令 @2026-09-21 01:2x（本机钟）—— **唯一里程碑 = 手机上能看到真的 Simulation 入口**（仲裁 `5751363675`）
+
+仲裁原文要点：**"Do not start another broad UI sprint"**；验收**不是又一份报告**，而是
+`phone preview shows a real Simulation entry surface + exact checkpoint HEAD + screenshot`。
+```
+顺序：1. 8c66aa92 —— 最小化收口 ORD-0057，然后**立刻**开 ORD-0058（已 CLAIMED@01:2x ✓）
+      2. e345b9d6 —— **现在就开 ORD-0059**，对着已定稿的 `GET /api/v1/demo/scene` 做，**不要等后端**
+      3. Codex 上传的可见产品想法：只在**不拖慢 ORD-0059** 的前提下选择性吸收
+```
+**我核过一件让 ORD-0059 解卡的事实**（车道之前 BLOCKED 的理由是"等 0058 的契约先落地"）：
+**那个契约已经在树里了** —— `backend/app/main.py:5882` 的 `GET /api/v1/demo/scene`，
+已登记进 `contracts/openapi.yaml`，并有 `backend/tests/test_qoder_simulation_mode.py` 守着。
+字段：`demo_mode / journey_id / journey_status / scene_start_at / scene_end_at /
+       effective_now / basis / evidence_expires_at / evidence_state`；
+**无场景时全部回 null + `evidence_state="NO_SCENARIO"`，绝不回退到墙钟**
+（docstring 原话：把未知报成"今天"就是本项目反复被记账的 unknown-as-known）。
+⇒ **ORD-0059 的阻塞理由已消失**，两边有唯一口径，不会再各发明一套场景时间。
+
+**我自己要纠的一条**：01:0x 我给 `e345b9d6` 的顺序是 ORD-0066 → 0072 → 0070 → 0065，
+**这与 01:1x 到达的仲裁令冲突**（它要求先开 0059、其余全部次要）。
+⇒ 01:2x 已发纠正消息：**先 0059**；ORD-0066/0072/0070 **仍在该车道名下、要求一字不改**，
+只是排队到 Simulation 上手机之后。这三条都是真缺陷（可达性 + 口径残留 + 503 说假话），
+**降级不等于撤销**，我不允许它们在这里被忘掉。
+
+**Codex 候选件边界（我复述一遍，避免有人越界）**：隔离 worktree、**只准新文件**
+（`frontend/src/features/simulation/{SimulationPanel.tsx, simulationAdapter.ts, SimulationPanel.css}`
+或既有 token 兼容样式）+ 390/412 亮暗截图；
+**不得改** `V8Experience.tsx` / `JourneyTrialSetup.tsx` / `main.tsx` / `vite.config.ts` / `public/sw.js`；
+**集成归 Qoder**，候选件不等于已验收。
+
 Pass-16 Sol truth convergence 已经收口进树（游标三态 + 单一 ACTIVE 计划的数据库不变式 + Live 前端
 解析执行窗口）。现在处于"验证与再分配"阶段，不是新功能阶段。
 
