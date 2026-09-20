@@ -242,6 +242,31 @@ NOT_APPLICABLE_ZERO_NIGHTS, NO_OFFERS_FROM_PROVIDER, ALL_CANDIDATES_REJECTED} +
 `test_qoder_stay_generation_phases`）都不在 SUITES 里，**矩阵分母不受影响**，`16 actionable + 1 equivalent`
 那套口径不必因为我重算。
 
+### e345b9d6 ORD-0043 @2026-09-20 22:2x → A4 在 `dddfd8b` 已跑：它的门 2 collected / 0 passed / 2 failed；8s 候选被实测否证（document P95=10.47s）；case B 不复现，我撤销一半旧口径
+
+提交 `012ff56`。证据 `review/ORD-0043-a4-dddfd8b.md`；harness `review/doc-fallback-delay.mjs`（跑完把
+`vite.config.ts` 字节还原，sha `42362e559017` 前后一致 OK）。
+- 两刀 delta 实测 `ahead_by=2`，只动 `vite.config.ts +5/-1` 与 `frontend/docs/SW_LIFECYCLE_ACCEPTANCE.md +1/-1`。
+- 它自带的生产门：**2 tests / 0 passed / 2 failed**；两条红分别红在"等 controller 换成 `/v10-sw.js`"
+  与"version reply timed out" ⇒ 正是本车道没 ship 的 A4 语义（`updateViaCache:"none"`、一次性安全重载、
+  legacy 缓存清理、版本握手），不是门自身接线错。
+- denylist 收窄核对：`/v8`、`/v8/hub`、`/v8/live`、`/v8/trips/1.5`、`/v8/map?z=3` 保留兜底；
+  `/api/*`、`/assets/*`、`/sw.js`、`/v10-sw.js`、`/manifest.webmanifest`、`/favicon.svg`、`*.css` 被拒。
+- **document 导航 vs API 两列分开**：公网入口 20 次 document GET → min 0.84 / p50 1.59 / p90 3.88 /
+  **p95 10.47** / max 20.93s，4 次 >3s、2 次 >8s；loopback 地板 p50 0.9ms/p95 21ms；
+  provider 侧 120.86s 一次（**不用于论证 HTML 超时**）。⇒ **8s 被实测否证，10s 才过 P95 规则**；
+  A4 文档用 3.6s 的"用户操作"论证 8s 属于混列。
+- 它验收的 4s 用例：8s 与 10s 两个预算下都 **PASS**（4s 延迟的 document 仍走网络，钢印可读）。
+  超预算回退用例（budget+2.5s）**两个预算都不复现**（浏览器仍拿到迟到的网络 document）⇒
+  **我公开收回 ORD-0036 (c) 的一半说法**：数值有实测依据，但该数值对真实导航的保护效果未被证明，
+  在 B 可复现之前不要把 10s 当护栏引用。后续归我车道。
+- **仍欠一步（要裁，不出两套）**：A4 的 dev 完全不注册 SW + recovery worker 替换，与已交付的
+  ORD-0036 三条 dev SW 节点、以及 `real-world-trip-operations-v9:139-142` /
+  `v13-authoritative-integrity:52-53` 两条等可控 SW 的门正面冲突。合流方案已写在 ORD-0044 evidence
+  第 (3) 点与本单 evidence 第 6 点，**点头后我再动 `main.tsx` / `public/sw.js`**。
+
+
+
 ### e345b9d6 ORD-0044 @2026-09-20 21:0x → 合法输入不再静默卡死：第 1 步指名缺项、422 回落本字段、审核页不说"-"；9 变异 9 杀
 
 提交 `26d5555` + `5feaa83` + `4516777` + `ca65483`（隔离树 `_qoder_ui_overnight_20260920`，未推送）。
@@ -1387,6 +1412,46 @@ Ctrl+滚轮  +150ms → zoom 9.3091   +400ms → 9.3196   持续到 +2600ms 不�
    前者归 HJ-P3 的 R1，后者归 ORD-0039 用户门。
 
 
+### commander 亲测 @2026-09-21 00:2x —— 红队 W3"后端 422、屏幕却说 Trip created."：**我没复现出来，但这句话确实在产品里** → 不定性，退回要证据
+
+红队把这条当 ORD-0039 的硬证据推上来。我按自己的规矩在**当前候选产物**（`576fbf6`，
+`index-Ch_N-3sz.js`，:4781 无鉴权本地路径）上独立复现两种 422，脚本 `raw/verify_false_success.cjs`，
+读数 `raw/false_success.json`，**只读渲染文字**：
+
+```
+empty-anchors   POST /api/v1/journeys 422 VALIDATION_ERROR
+                shellPresent = false
+                屏幕 alert   = 「这一步没有成功，行程还没有创建。 Request validation failed」
+                屏幕上出现过的"成功字样" = []            ← 没有任何 created 类文案
+over-window     POST /api/v1/journeys 422 V13_JOURNEY_DAYS_OUT_OF_BOUNDS
+                shellPresent = false
+                屏幕 alert   = 「这一步没有成功，行程还没有创建。 The trip is longer than …」
+                屏幕上出现过的"成功字样" = []
+```
+
+**但这句话不是凭空来的**，我在源码里找到了它：
+- `frontend/src/app/V8Experience.tsx:584` `? "行程已创建。告诉 AI 你想怎么玩，它会生成可选方案。"`
+- `:585` `: "Trip created. Tell the AI how you like to travel and it will build candidate plans."`
+- 另有 `frontend/src/i18n/LocaleContext.tsx:703` `"trial.createdLiveHint": "行程已创建。进入"城市探索"后…"`
+
+⇒ 它是**创建成功之后**的提示，不是失败态文案。所以两种可能都还开着，我没有资格现在定性：
+  (a) 红队那条断言命中的是**另一个 422**（比如 `/journeys` 已经 201 成功、
+      后续 `stay-options/generate` 或别的端点 422）⇒ 那"行程已创建"对**行程**是真话，
+      但对**方案生成**是假象 —— 这是真缺陷，只是不是它描述的那个形状；
+  (b) 它的 fixture 里有桩/残留状态造出了这个表面 ⇒ 那是**门自身失效**，不是产品缺陷
+      （它自己今晚已经主动撤回过三条同类误判，我倾向于先按 (b) 要求它自证）。
+
+**处置**：`verdict: 暂不立案，退回补证据`（写在 ORD-0039 名下）。要求红队补三样：
+1. **哪个端点返回的 422**（请求 URL + 状态码原文），以及同一次里 `/api/v1/journeys` 的状态码；
+2. **屏幕原文截图**（含 `#root` 的可见文字），不是断言消息；
+3. 复现路径是**向导**还是**它们自己的 fixture**；若是 fixture，给出该 fixture 桩了哪些端点。
+补齐后我立刻定性；补不齐就按 (b) 撤这条，**不许**留着它当"已知红"。
+
+**同时我顺手把 (a) 这个真实风险单独立案**（见 ORD-0065）：
+行程创建成功、但方案生成失败/为空时，屏幕有没有把"行程有了"和"方案没出来"分开说清楚。
+这条即使 W3 是假的也成立，而且比 W3 更贴近用户实际会撞到的东西。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -1551,6 +1616,33 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     边界：**不得**为了让符号好看而伪造汇率换算；**不得**把未知价格印成 0 或"免费"；
     不得削弱 provenance / `fact_quality`。断言一律读 `innerText`。
   status: DISPATCHED@2026-09-20 23:3x
+
+
+- id: ORD-0065
+  to: e345b9d6
+  priority: high
+  if_head: 576fbf6
+  order: |
+    **区分"行程已创建"与"方案没出来"这两件事。** 我在源码里看到
+    `V8Experience.tsx:584-585` 的提示是「行程已创建。告诉 AI 你想怎么玩，它会生成可选方案。」/
+    "Trip created. Tell the AI how you like to travel…"，它只反映**行程行存在**，
+    不反映后续 `stay-options/generate` 或 AI 规划是否成功。
+    已知实测事实（不必重测，直接用）：
+    - 冷城市首次 `stay-options/generate` 可耗时 ~115 秒并返回空（`e981b46` 后带 `outcome` 四类码）；
+    - AI 规划在预览上 **11 次调用全部 HTTP 200，屏幕说"没有生成可行方案"**（ORD-0062 在查成因）；
+    - 前端三个 `stay-options/generate` 调用点（`V8Experience.tsx:525`、`:572`、`HotelsPanel.tsx:64`）
+      **全部丢弃返回值**，后端新加的 `outcome` 等字段前端零消费（红队实测）。
+    要求：
+    1. 行程创建成功但方案/住宿生成失败或为空时，屏幕上必须**同时**说清两件事：
+       行程已经在（可继续），以及这次没出方案**以及为什么**（用后端 `outcome` 码，别自己猜）；
+    2. 不得用一句"行程已创建"覆盖后续失败，也不得把空结果画成"正在加载"；
+    3. 消费后端 `outcome`：`OPTIONS_FOUND` / `NOT_APPLICABLE_ZERO_NIGHTS` /
+       `NO_OFFERS_FROM_PROVIDER` / `ALL_CANDIDATES_REJECTED` 四种终态**文案必须可区分**；
+    4. 验收：断言读 `innerText`；给"后端返回 `NO_OFFERS_FROM_PROVIDER` 时屏幕不得出现
+       '正在为你寻找住宿'或空白"这类可杀死的门（点名节点 id）。
+    边界：不得伪造方案或把未知写成已知（provenance / `fact_quality` 冻结）；
+    不得为了让界面好看而隐藏失败；后端契约不动。
+  status: DISPATCHED@2026-09-21 00:2x
 
 
 - id: ORD-0001
@@ -4500,10 +4592,57 @@ tip 现 `bfe8d7e`（`5a33eaf..bfe8d7e` 只动 `INTEGRATION_REPORT.md` 与新增 
            现在那道 <44px 门实际是 `qoder-mobile-ui-overnight.spec.ts` —— 若要改名请走订单，不要顺手改，
            因为发布包清单（ORD-0032）会指空文件。
     与 ORD-0042 合流做，**不要出两套方案**。边界：不削弱冻结清单；不推送、不 force-push。
-  status: DISPATCHED@2026-09-20 17:0x，**18:0x 改目标 tip** —— 仲裁 5749041556 已把 `m3/a4-sw-lifecycle`
+  status: PARTIAL@2026-09-20 22:2x by e345b9d6（CLAIMED@21:5x；原 DISPATCHED@2026-09-20 17:0x，**18:0x 改目标 tip** —— 仲裁 5749041556 已把 `m3/a4-sw-lifecycle`
     从 `a6cfaca` 推到 **`dddfd8b936e1615897736cdc32b03dc7670b30ab`（ahead 8 / behind 0）**，
     新增 config 修正 `171d964`（denylist 收窄）+ docs `dddfd8b`。**以 `dddfd8b` 跑 ORD-0043，旧 `a6cfaca` 作废**；
-    我此前逐行核过的 6 文件内容仍成立，denylist 那一处正是按我在 5748852498 提的过宽问题改的。
+    我此前逐行核过的 6 文件内容仍成立，denylist 那一处正是按我在 5748852498 提的过宽问题改的。）
+  evidence: |
+    [e345b9d6 PARTIAL@22:2x] 证据 `review/ORD-0043-a4-dddfd8b.md`；harness `review/doc-fallback-delay.mjs`；
+    样本 `review/tunnel-latency-n20.txt`。提交 `012ff56`（隔离树，未推送）。
+    **1. 取回并 diff**：6 文件按 `dddfd8b` REST 取回 `review/a4-incoming-dddfd8b/`（`a4_fetch.py` 已参数化 sha/out）。
+    两刀 delta 实测（`a4_commits.py` compare）：`ahead_by=2`，只动
+    `frontend/vite.config.ts +5/-1`（`171d964`）与 `frontend/docs/SW_LIFECYCLE_ACCEPTANCE.md +1/-1`（`dddfd8b`）。
+    docs 的真实前缀是 `_tools/qoder-integration-20260919/frontend/docs/…`（第一次按 `docs/…` 取回 404，已纠正落地路径为
+    `frontend/docs/SW_LIFECYCLE_ACCEPTANCE.md`）。
+    **2. 跑它自带的生产专用门（先落三个"零冲突"新文件）**：`--list` **2 tests in 1 file**，
+    实跑 **0 passed / 2 failed**：
+    ① `old recovery worker upgrades to the generated production worker…` 20.4s 红在
+    `qoder-sw-lifecycle.spec.ts:83`（等 controller 变成 `/v10-sw.js`）——本树生产注册没有
+    `updateViaCache:"none"`、没有 controllerchange 一次性安全重载、没有 legacy 缓存清理 ⇒ 已被 `/sw.js`
+    占住的 scope 永远换不过来；
+    ② `recovery worker is version-queryable…` 5.2s 红在 "service worker version reply timed out"
+    ——本树 `public/sw.js` 没有 `CITYNEXUS_SW_GET_VERSION` 握手。
+    ⇒ 两条红精确命中 A4 独有的两处语义，不是门自己接错了线。
+    **3. denylist 收窄已核**：`/v8`、`/v8/hub`、`/v8/live`、`/v8/trips/1.5`、`/v8/map?z=3` **全部保留**导航兜底；
+    `/api/…`、`/assets/…`、`/sw.js`、`/v10-sw.js`、`/manifest.webmanifest`、`/favicon.svg`、`*.css` 被拒；
+    作废 tip 里的 `/\.[a-zA-Z0-9]+$/` 已不存在。
+    **4. 8 秒候选值的实测（两列分开，不混）**：
+    document 导航（对用户当前那条公网入口，20 次未鉴权 `GET /v8/live`，走满 DNS+TLS+隧道+鉴权反代）
+    **min 0.84 / p50 1.59 / p90 3.88 / p95 10.47 / max 20.93s；20 次里 4 次 >3s、2 次 >8s**；
+    同文档 loopback 地板 p50 0.9ms / p95 21ms ⇒ 尾巴在隧道腿，不在服务端。
+    API/provider 操作延迟**另列且不入此判**：后端道量到一次 stay search 120.86s。
+    A4 文档用"约 3.6 秒的合法用户操作"论证 8s，用的正是另一列 ⇒ 按裁决给的规则（实测 document P95 ≥ 8s 才退到 10s），
+    **P95=10.47s ⇒ 8s 低于十分之一的真实导航，10s 才是数据支持的值**。
+    **5. 它验收文档那条"4 秒延迟的 document 仍必须走网络"**：用打桩代理在生产构建上实测（每个 document 打上
+    "当时延迟毫秒数"的钢印，读 DOM 不读属性）：
+    | budget | A：4s 延迟 document | B：(budget+2.5s) 延迟 document |
+    |---|---|---|
+    | 8s  | **PASS**（收到 delay=4000 的新 document） | **不复现**（收到 delay=10500，即仍然走网络等到底） |
+    | 10s | **PASS**（delay=4000） | **不复现**（delay=12500） |
+    ⇒ A 正是 3s 时代那个"提前回退到旧壳"的缺陷，两个预算下都不回来；
+    **B 在两个预算下都没有触发**，代理日志显示每次重载确实发出了一次 document 网络请求并被浏览器采用。
+    我没有在两个候选机制（NetworkFirst 超时没武装 / navigation preload 把迟到的网络响应照常交付）之间挑一个就交差。
+    **自纠并撤销一半口径**：ORD-0036 (c) 我当时写的是"document 超时改成有实测依据的值"——
+    **数值本身有实测依据（P95），但这个数值对真实导航的保护效果没有被证明**；我不拿"生成出来的 worker 里
+    写了 networkTimeoutSeconds:10"当"行为成立"。这条后续回我车道：先让 B 可复现（或证明它不可能发生），
+    在此之前任何人都不要把 10s 当护栏引用。
+    **6. 还欠一步（要裁，我不出两套方案）**：A4 的 `main.tsx` 让 dev **完全不注册 SW** 并 unregister 全部，
+    `public/sw.js` 换成 recovery worker。字面并入会打死我 3 条 dev SW 节点，也打死账本已记的两条
+    （`real-world-trip-operations-v9:139-142`、`v13-authoritative-integrity:52-53`，它们都等 dev 有一个可控 SW）。
+    我建议的合流（已在 ORD-0044 evidence 写过）：dev 只注册 `/sw.js`（永不注册 `/v10-sw.js`、代码请求永不拿 HTML 顶替、
+    activate 永不删别人缓存）+ 生产取 A4 的四件事（`updateViaCache:"none"`、controllerchange 一次性安全重载、
+    legacy 缓存清理、版本握手）+ 三条 SW 验收迁进 A4 自带的生产工程 `playwright.sw.config.ts`。
+    **等这一条点头，我再动 `main.tsx` / `public/sw.js`**；不推送、不 force-push、不碰 `playwright.config.ts`（那是 `8c66aa92` 的文件）。
 
 - id: ORD-0044
   to: e345b9d6
