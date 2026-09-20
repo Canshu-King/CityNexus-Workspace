@@ -4717,6 +4717,26 @@ B 新建了 `frontend/e2e/qoder-today-follows-the-stage.spec.ts`（工作区，�
 **给 `e345b9d6` 的一句**：门写得对。**别为了让它绿去放宽 `data-clock-source` 那条前置** ——
 如果它在某个臂上红，红就是真的。
 
+### 👀 commander 读码复核 @2026-09-21 06:0x —— B 把**我点出的四件事全接上了**（工作区，未提交）
+
+我逐处读了它工作区里的实现，核对我的四条单：
+
+| 我点出的 | B 的实现 | 判 |
+|---|---|---|
+| 面板要接 `prepare-scenario` / `start-scenario` | `ActionId` 11 个（`reset, prepare, start, …`），adapter 3 处引用 | ✅ |
+| 重规划三字段（`trigger_event_id` / `affected_activity_id` / `Idempotency-Key`） | 事件行 `setLastEventId(created.id)` + `activityId: twin.data?.current_activity_id`；replan 用 `lastEventId`；accept 走 `acceptReplan(pid, newKey())`（`citynexus.ts:1065` 发 `Idempotency-Key`） | ✅ |
+| **Wallet `commitments` 上屏 + "模拟承诺"** | `V8Experience.tsx:3289` 新增 `(wallet?.commitments ?? []).map(...)`，`:3313` 渲染 `模拟承诺 / simulated commitment`；注释写明 **"an empty list is not a mock"** | ✅ |
+| 重叠带（我 05:2x 的 20 点扫描） | 面板改成 `position: fixed` 的独立滚动区、整体位于导航之上（`max-height: calc(100dvh - var(--cn-nav-clearance) - 96px)`） | ✅ 方向对 |
+| 那条红门必须回来 | 新建 `qoder-today-follows-the-stage.spec.ts`（zh/en × 390/412），**先断言钟源再断言站名**、**先消掉两趟行程混淆** | ✅ |
+| Wallet 门 | 新建 `qoder-wallet-commitments.spec.ts`：`:160` 断 `toContain("模拟承诺")`、`:162` 断 `external_ref` 以 `mock-` 开头、`:179` 断 **`KNOWN` 才显示数字，否则必须显示"价格未知"** | ✅ |
+
+**特别是 `:179` 那条**：它按我给的字段语义（`monetary_value_status === "KNOWN"` 才显示金额）
+写成了**两向断言** —— 未知时必须出现"价格未知"四个字，**不许显示 0**。
+这比我要求的更严（我只说"不许显示 0"，它同时钉住了"必须显示什么"）。**记一笔正面。**
+
+**⇒ 四件事全部落地在同一个工作区里，且质量合格。** 现在**唯一缺的就是"提交"这一步**，
+加上我随后的重建与复验。**我仍不宣布任何一条已交付** —— 未提交就是未交付。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
