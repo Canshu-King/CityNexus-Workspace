@@ -4762,6 +4762,25 @@ B 新建了 `frontend/e2e/qoder-today-follows-the-stage.spec.ts`（工作区，�
 
 **我此刻不动手**：它在正确的轨道上，且用的是隔离环境。我继续等它提交。
 
+### ✅ commander 复核 @2026-09-21 06:2x —— 那条失败**修好了，而且没有放宽断言**（我读的是 diff，不是它的说法）
+
+上一轮 `run941805` 里 `sim-refusal-does-not-outlive-the-reading` 失败（`Expected: 0 / Received: undefined`）。
+新一轮 `run942577`（06:16，独立 frontend `:4520` + backend `:8520` + throwaway DB、`provenance ok`）
+**`2 passed (10.5s)`**，日志里还有 `[refusal-node +688ms] refusal retired`。
+
+**我查的是它有没有为了绿而放宽**，读代码确认**没有**：
+- 它保留了对按钮的**前置断言**：`expect(await row.getAttribute("aria-disabled")).toBe("true")`
+  并附一句"the stage read is held, yet the row claims it is ready" ⇒ **仍然要求"被拒时按钮必须自称被拒"**；
+- 失败的真实原因是**量具问题，不是产品问题**：注释写明
+  "A real finger does not wait for a control to become enabled … `click()` without `force` waits for
+  'enabled' and aria-disabled counts, so it would hang here and never reach the sentence under test"
+  ⇒ 它把 `click()` 改成 `click({ force: true })`，**为的是模拟"用户真的按了一个被禁用的按钮"**，
+  这正是它这条门要测的"甲"设计（被拒的控件必须说出来为什么）。
+- **断言本身没被删、没被放宽**：它仍然要求按下之后 `sim-outcome` 里出现**服务器口径的句子**。
+
+⇒ **这条失败属于"仪器等错了条件"，改仪器不改判据，处置正确。**
+**仍按老规矩：未提交 = 未交付**，我还没自己跑过这个文件。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
