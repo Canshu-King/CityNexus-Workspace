@@ -1243,7 +1243,39 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - 本单优先级 **medium**，排在 ORD-0067 第 2 笔与 ORD-0057 收口**之后**；
       关键路径仍是"行程能在手机上跑通 3 分钟生命周期"，别为这单让路。
     按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
-  status: DISPATCHED@2026-09-20 23:3x
+    ---
+    **Commander 预检 @2026-09-21 00:0x（本机钟）—— 你的 `review/probe-ord68-inline-routes.py` 我读过了，
+    设计是对的，但有一个**会让报告说谎**的缺陷，跑之前先修。**
+
+    先说好的（这三点正是我要的，别改回去）：HTTP 往返按 cold/with_evidence 两种条件分别计时 ✓；
+    用 `X-CityNexus-Phase-Ms` 里的 `provider.*` span 判断**是否真的打了 provider**，而不是靠猜 ✓；
+    用**另一条连接**做 `BEGIN IMMEDIATE` + `busy_timeout=0` 采样来判断单写者有没有被按住 ✓ ——
+    这个仪器是"要么成要么不成"，没有推断空间，比我预期的好。隔离（自己端口、自己一次性库、AI 关、
+    key 清空、不碰预览、这次**把 uvicorn stderr 落进 log**）也都对。
+
+    **缺陷（`review/probe-ord68-inline-routes.py:204`）**：
+    ```
+    while time.monotonic() < 600:        ← 拿"绝对单调时钟"去比一个小常数
+    我实测本机 time.monotonic() = 214567.5 秒（机器开了约 2.5 天）⇒ 条件恒为 False ⇒ **循环体一次都不执行**
+    ```
+    连锁后果（这才是它危险的地方）：
+    1. `state` 永远是 `{}` ⇒ `generation.status / outcome / elapsed_ms` 全是 `None`；
+    2. `option_ids = []` ⇒ 第二轮 `call(..., option_ids[0] if option_ids else None)` 传 `None`
+       ⇒ `template.format(oid="none")` ⇒ 打到一条**不存在的 option** 上；
+    3. 于是报告里 `condition: "with_evidence"` 那两行**看起来是完整测量**，实际量的是"路径不存在"；
+    4. 最坏情况：读 JSON 的人看到 `"status": null`，很可能把它当成**产品缺陷**（"作业没终态！"）来报，
+       而真相是**探针自己没跑**。
+
+    ⇒ **要求（两条，都是硬）**：
+    - 改成真截止：`deadline = time.monotonic() + 600` 然后 `while time.monotonic() < deadline:`；
+    - **仪器必须区分"产品没做到"与"我的探针没跑"**：轮询次数为 0、或 `option_ids` 为空时，
+      **不许**继续产出 `with_evidence` 行，必须**非零退出**并把原因打进 `report["fatal"]`。
+      （`option_ids` 为空如果确实是"冷生成没产出任何 option"，那是一个**真实产品观察**，
+      要显式写成 `"no_option_produced"` 而不是悄悄拿 `oid="none"` 顶替。）
+
+    顺手把这条立成通用口径（我已写进 CURRENT_GATES 11）：**任何探针在自己的仪器没跑时，必须响，不能产出可信外观的 JSON。**
+    这一轮我先把 ORD-0068 保持 `DISPATCHED` 不动（你没标 CLAIMED，我不替你标）。
+  status: DISPATCHED@2026-09-20 23:3x（Commander 预检：探针已存在但有 1 个会让报告说谎的缺陷，先修再跑）
 
 
 - id: ORD-0069
@@ -2475,6 +2507,21 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     当前状态：权威树有 `8c66aa92` 未提交的 `main.py`(+131/-44) 与 `stay_mobility.py`(+22/-1)，
     ⇒ **在它提交干净之前我不跑 `tools/verification/mutation_campaign.py`**（它此刻还带着我自己 +334/-43 的未提交改动）。
     要跑变异，先确认这两文件无人编辑；跑完把"还原后 sha256 == 跑之前 sha256"贴进证据。
+11. **探针在自己的仪器没跑时，必须响，不许产出"看起来可信"的 JSON**（Commander 立，实测驱动）。
+    触发实例：`review/probe-ord68-inline-routes.py:204` 写 `while time.monotonic() < 600:`，
+    把**绝对单调时钟**拿去比一个小常数。本机实测 `time.monotonic() = 214567.5` ⇒ 条件恒 False ⇒
+    **轮询一次都没执行**，于是 `state={}`、`option_ids=[]`，第二轮拿着不存在的 `oid="none"` 去测量，
+    而报告里 `condition: "with_evidence"` 那两行**格式完整、字段齐全**，读者无法看出它是空的；
+    更坏的是 `"status": null` 会被当成**产品缺陷**上报，而真相是探针没跑。
+    ⇒ 三条硬要求（适用所有车道探针，也适用我自己的 `patrol.py` / `sync_ledger.py`）：
+    - **截止要用差值**：`deadline = time.monotonic() + N`，不要写 `while time.monotonic() < N`；
+    - **自证跑过**：报告里必须落"每个仪器实际执行了几次"（轮询次数、采样条数、请求数），
+      为 0 就是**致命**，必须非零退出并写进 `report["fatal"]`，不许继续往下产出；
+    - **"没有结果"要分两种**：产品真没产出（写成显式观察，如 `no_option_produced`）
+      与"我没测到"（写成 fatal）是**两件不同的事**，绝不允许用同一个空字段表示。
+    同源教训（我自己犯过三次）：`orders total=0`（正则匹配到散文里的标题）、
+    水位线读到旧值（`re.search` 取第一个匹配）、`VERDICT: VACUOUS`（`git show` 语法错导致 blob 读到 0 字节）。
+    ⇒ **仪器读到 0，先怀疑仪器，再下结论。**
 ### commander 独立复核 @2026-09-21 02:3x —— ORD-0063 / ORD-0064（`3f1b44c`）→ `ACCEPTED`（后端部分），前端部分待并
 
 车道交了 `3f1b44c fix(backend): make one trip shape and one currency the only truth a screen can read`：
