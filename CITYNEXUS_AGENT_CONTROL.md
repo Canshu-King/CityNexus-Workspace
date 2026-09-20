@@ -1159,6 +1159,63 @@ Error: [citynexus e2e] authoritative mode refuses to start:
 
 
 
+### commander 亲测 @2026-09-21 01:0x（本机钟）—— 预览已重建到 `fbe6a00`，我**自己当用户走了一遍**；这一走就走出一处源码级验收看不见的缺陷
+
+**① 检查点第 6 步完成，`preview HEAD == checkpoint HEAD` 是量出来的**
+```
+构建：vite build --outDir ../../_qoder_preview_20260920/dist --emptyOutDir  → RC=0 / 5.73s
+      新包 index-CEpKoGJA.js + index-DRmaR46I.css；PWA 生成 v10-sw.js
+本地 :4781 与 :4782 的 /v8/live 都返回 index-CEpKoGJA.js
+公网隧道 /v8/live → 200 + index-CEpKoGJA.js；/assets/index-CEpKoGJA.js → 200 text/javascript
+A4 恢复 worker /sw.js → 200 / 7178 B / 含 `citynexus-recovery-m3-a4-v1`（磁盘与线上一致）
+生成的 v10-sw.js 缓存名 = citynexus-pages-m3-a4-v1 与 citynexus-static-m3-a4-v1 ⇒ runtimeCacheVersion 真生效
+⇒ 预览 = 权威树 fbe6a00 的**生产构建**，不是 dev、不是旧 dist。
+```
+**运维事实一条**：`run/tunnel_url.txt` 里写的是**另一个已死主机**（`intake-matt-white-wearing`，curl=000），
+真正在跑的是 `unexpected-somerset-seekers-neural`（`tunnel.log` 00:45 重注册）。
+⇒ **那个文件不可信**，别再拿它当入口地址；我按 `tunnel.log` 核出了现值。归 ORD-0040 一起收。
+
+**② 我自己走出来的新缺陷 → 新开 ORD-0072（源码级验收没看见它）**
+在 390×844 触摸上下文里，我**先输 `Tokyo`、再把城市改成一句乱码**，屏幕上出现：
+```
+「没认出「拉萨市不存在的写法」：仍按 JP / 日元（JPY）/ Asia/Tokyo 规划。换个写法，或在"看支持的目的地"里挑一个。」
+```
+⇒ 这句话**自称了一个它自己都没查过的假设**：`JP / JPY / Asia/Tokyo` 全是**上一个城市（Tokyo）的残留**，
+不是识别失败后的默认口径（产品默认是 CN / CNY / Asia/Shanghai）。
+⇒ 对用户是实打实的：**它一边说"没认出这个目的地"，一边继续用日元和日本时区规划，还把这件事说成默认口径**。
+用户照这句话理解，理解到的是假信息。
+⇒ 分类 `HUMAN_MISLEADING` + `TRUTH_DEFECT`，**不是 POLISH**。
+⇒ 这正是我 ORD-0060 第 1/2 项里那句"**不得复用上一次识别结果的残留示例**"：
+车道把**标签**的残留修掉了（`identifiedCity` 以 `facts` 为门，我 00:1x 核过），
+但**隐藏的 country / currency / timezone 三个字段仍吃着上一次识别结果**。
+**标签不骗人了，口径还在骗。** ⇒ ORD-0060 的**源码级判定我维持**，**读屏级不通过，本单不关闭**。
+
+**③ ORD-0066 在真机上量到：要求的第 2 条仍未做（不是推测）**
+```
+留空抵达/离开 → [data-testid="trial-next"]：disabled=true ✓
+              提示「还需要填写：抵达地点、离开地点」✓，且该提示 role="status" ✓（**要求 1 真机成立**）
+              但 aria-disabled=null、aria-describedby=null、**focus_landed=false**
+⇒ 与我 00:1x 在 ORD-0066 修订里做的实验完全一致：属性加上也进不去焦点。
+⇒ 车道目前**甲/乙两条路都还没选**。
+```
+
+**④ 我自己一条断言写死了，当场撤回**
+第 1 步我断言 `says_tokyo`（期望屏幕出现"抵达**东京**"），实测是 `抵达Tokyo` ⇒ 判 false。
+**这不是产品缺陷**：用户输入的就是拉丁文 `Tokyo`，回显 `Tokyo` 是对的，
+`inferred` 行也正确显示"已自动设置：日本 · 日元 · 日本标准时间"。
+⇒ **是我的断言过窄**，撤回；真正该盯的判据是 `still_lied_about_xiamen=false` —— **核心缺陷确实修好了**。
+（记这条是为了以后不把"我的门红了"直接当成"产品坏了"：先分清是断言窄还是东西坏。）
+
+**⑤ 支持列表这一项真机通过**
+```
+[data-testid="trial-supported-cities"] 存在，展开 = 「看支持的目的地 厦门 北京 上海 天津 福州 广州 深圳 成都 杭州 东京 新加坡」
+lists_tianjin=true、lists_xiamen=true、**claims_a_total=false**
+⇒ 列名字、不自己发明"共 N 个城市"，我钉的边界在真机上成立。
+```
+读数：`raw/preview_fbe6a00_walkthrough.json`；截图 `raw/preview_fbe6a00_wizard.png`。
+
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
@@ -1871,6 +1928,55 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     - 优先级 high，但**排在 ORD-0057 剩余验收点之后**：先把已批准契约收干净，再动存储层。
     按 Amendment J §6 回报一行了。
   status: DISPATCHED@2026-09-21 00:4x
+
+
+- id: ORD-0072
+  to: e345b9d6
+  priority: high
+  if_head: fbe6a00
+  order: |
+    **城市识别失败时，界面说的"默认口径"其实是上一个城市的残留。标签不骗人了，口径还在骗。**
+
+    我在 `fbe6a00` 的生产构建预览上，390×844 触摸上下文，**按用户的手顺**量到的（读数
+    `raw/preview_fbe6a00_walkthrough.json`，截图 `raw/preview_fbe6a00_wizard.png`）：
+    ```
+    第 1 步 城市框输入 `Tokyo`        ⇒ 标签变「抵达Tokyo / 离开Tokyo」✓
+                                       「已自动设置：日本 · 日元 · 日本标准时间」✓
+    第 2 步 把城市改成乱码 `拉萨市不存在的写法` ⇒ 屏幕上出现：
+      「没认出「拉萨市不存在的写法」：仍按 **JP / 日元（JPY）/ Asia/Tokyo** 规划。
+        换个写法，或在"看支持的目的地"里挑一个。」
+    ```
+    ⇒ `JP / JPY / Asia/Tokyo` **不是识别失败后的默认口径**（产品默认是 `CN / CNY / Asia/Shanghai`），
+    它是**第 1 步那个城市的遗留值**。`applyCity()` 在识别失败时没有把 `countryCode/currency/timezone` 落回去，
+    于是那句"仍按 … 规划"引用的是脏状态。
+
+    **为什么这是真缺陷而不是显示小毛病**：
+    界面在**同时**做两件互相矛盾的事——告诉你"我没认出这个目的地"，又告诉你"我会按日本口径规划"，
+    并且把后者包装成"默认"。用户据此理解的是**假信息**：他以为系统退回中立口径，实际还在日元 + 东京时区里跑。
+    分类 = `HUMAN_MISLEADING` + `TRUTH_DEFECT`。**不许按 POLISH 排队。**
+
+    要求：
+    1. 识别失败时，要么**把三个字段落回产品真实默认**（CN/CNY/Asia/Shanghai）并照实说，
+       要么**保留上一城但明确说"仍沿用你上一次识别到的 东京"**——**两种都行，就是不许说"默认"而给残留**；
+       我倾向**前者**（用户改城市就是要换地方，沿用上一次的口径几乎肯定不是他想要的）。
+    2. 那句话里的每个值都必须**当次算出来**，不许引用可能陈旧的 draft 字段。
+    3. 保持 ORD-0060 已经做对的：不认识的城**不编城市名**（标签退回中性"抵达地点"）、
+       支持列表**不自己发明城市总数**。
+
+    验收（**必须按手顺测，不许只测一次冷输入**——冷输入下 `facts=null` 且没有前值，这个 bug 不出现，
+    这正是它躲过源码级验收的原因）：
+    - 门 A：`recognise then break` —— 先输一个能识别的城（断言口径 = 该城的），
+      再把城市改成不可识别串，断言屏幕那句"仍按 X 规划"里的 **X 等于产品真实默认**（或等于它明说的沿用值），
+      **不得等于上一个城市**；
+    - 门 B：断言读 `innerText`（不是 data 属性），并给出**杀得掉的证据**：
+      把 `applyCity` 的失败分支改回"不清字段"，门 A 必须红（点名节点 id）；
+    - 门 C：顺带确认 `trial-inferred` 那行在失败时**不再显示上一个城市的"已自动设置"**。
+
+    边界：不改后端、不动 `CITY_FACTS` 的支持范围（城市数由我钉）、不削弱冻结清单；
+    与 ORD-0060 同一文件同一族，**一起改一次过**，别分两轮构建。
+    本单**排在 ORD-0066 之后**（可达性那条是用户能不能听到；这条是用户听到的是不是真的——两条都要，先 0066）。
+    按 Amendment J §6 回报一行。
+  status: DISPATCHED@2026-09-21 01:0x
 
 
 - id: ORD-0001
