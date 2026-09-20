@@ -1990,6 +1990,15 @@ evidence: 全部字段/门/错误码取自 `f8d9dc2` 与 `146731d` 两份 `git s
 ⇒ **给 B/E 的口径**：演示台上 `422 REPLAN_TARGET_UNRESOLVED` 与 `422 MOBILITY_DATA_UNAVAILABLE` 是**产品的正确答案，不是缺陷**；断言要按这一族写，别把它们测成红。
 另：你给的 `:7148-7208` / `:4668-4682` 是 `f8d9dc2` 编号（你跑的是 `146731d`，新 tip 上是 `:7249-7309` / `:4765-4779`，我按符号逐条对过）。表文件路径不变。
 
+**第二轮增量 @03:0x（⑥⑦ + 两问 + Q2 口径已并入同一张表）**
+⑥ `POST /api/v1/journeys`（`main.py:2590`/新 `:2687`）**`budget` 必须是嵌套 `Money{amount_minor:int≥0, currency:str(3)}`**（`schemas.py:180`+`:12-14`），扁平数字被 Pydantic 422。⑦ 预订在 `PLANNED`+`SELECTED` 窗口内实到 **201 CONFIRMED / C3_Guaranteed / 12000 CNY / Known**，`external_ref` 构造点 `integrations/mock/commerce_providers.py:19`。两问：accept 因 C4 拒 = **409**（`main.py:9149-9152`，第二条 `:9432`，空集恒过 `:9119-9121`）；`/transactions` 缺头 422 有**两种**——`main.py:10501`（在 `journey_write_lock:10506` 之外）与服务层 `service_impl.py:507` 的 8..128 规则经 `main.py:10531-10533` 映射，两者 `detail` 串不同，面板要分开判。仲裁 Q2 口径已写成硬要求：保持 fail-closed + 面板「这趟没有可用的出行数据，所以不能重新安排」，**不得**写成「没有方案」、**不得**让按钮可点再吃 422。
+
+**⚠ 顺着⑦往深挖出一条会改 M4 判断的新事实（请转 `8c66aa92` 并让仲裁确认）**
+`derive_strength_rank`（`app/commerce/commitment_policy.py:23`）判 `anchored` 要**四条同时成立**（`:66-71`）：`provider_confirmed` ∧ `payment_succeeded` ∧ (`fixed_schedule` ∨ `user_locked`) ∧ **`not easily_replaceable`**。
+而 CAPTURE 路径把可替代性读成 `bool(policy.get("easily_replaceable", True))`（`service_impl.py:622`）——**默认可轻易替代** ⇒ 只走 `bookings → transactions(CAPTURE)` 时 `anchored` 恒 False、rank 封顶 3，承诺**停在 C3_Guaranteed**，`commitment.level` 不会变 `C4_Anchored`（写点 `:637`）。
+⇒ 你实测到的 ⑦「C3」不是偶然，是**第四条件缺失的必然**。所以 M4 的链条要补的不是"再多一步支付"，而是**让承诺策略带上 `fixed_schedule`/`user_locked` 且 `easily_replaceable=False`**（来自 `commitment.policy_json`：种子本来就带，或走"旅行者标记 must-go/locked"的既有入口）；**为过门手写字典与 ORD-0079 must 1 的禁令冲突**，我没动代码，等你裁决取哪条路。
+
+
 
 
 ### D 车道 ORD-0075 实调 @2026-09-21 02:1x（隔离 DB + 自起 :8581）→ **六步全 2xx，管道本来就走得通；M2 的"Now 变了"已量到**
@@ -2418,6 +2427,34 @@ Today 主屏下方写着 **`接下来 · 09:00 Old Town Gate · 下一站之后�
 `f56e9cb` 与 `2224945` 两笔 commit 我核过是真实存在的（`git ls-files` 里 `features/simulation/**` 与
 `lib/sceneClock.ts` 已入库）⇒ **`preview HEAD == checkpoint HEAD` 现在可以成立了**，
 我这一轮部署的就是 `f56e9cb` 的 build。
+
+### ✅ (SESSION=494abfd7) ORD-0078 验收：`12dd81a` 的新生命周期四跳我全部亲测通过 @04:2x —— M4 的后端前提达成
+
+detached 树 checkout 到 `12dd81a`、自有库 `_probe78.db`、`:8691`、解释器 3.12.14、`CITYNEXUS_DEMO_MODE=true`。
+`git log` 确认 `tests/conftest.py` 两个半（DEMO_MODE setdefault + 12 凭据 pop）**已随本笔落库**（grep 各 2 处命中）。
+
+| 跳 | 请求 | 实到 |
+|---|---|---|
+| 1 | `POST /demo/reset` | **200**；`simulation_advance` = `plans/generate 16.0ms → select 6.2ms`（**22.2ms，明确停在 SELECTED，不再 start**）|
+| — | `GET /demo/scene`（reset 后） | `journey_status=PLANNED`、`plan_version_id=55523d40…`、`basis=JOURNEY_START`、`effective_now=09:00` ⇒ **口径缺陷（5927 vs 5905）已修**：select 后、start 前 scene 就报非空 plan |
+| 2 | `POST /journeys/{id}/bookings`（选中巡游活动 `74f10240…`） | **201 CONFIRMED** + `commitment_id=78689656…` ⇒ **booking 门在演示台上过了** |
+| 3 | `POST /demo/start-scenario` | **200**：`{"status":"started","journey_status":"ACTIVE","current_activity_id":"3a58c470…","twin_present":true}` |
+| 4 | `GET /demo/scene`（start 后） | `journey_status=ACTIVE`、`basis=CURSOR` ⇒ M2/M3 的推进、事件、重规划全部解锁 |
+
+⇒ **仲裁裁的 Demo 顺序 `reset → Booking/Commitment → start-scenario → 推进/中断/replan` 在后端全部可走**，
+M4 不再被 PLANNED 门封死，33 条 ARRIVAL 族测试也不再被夹具打红（reset 的 advance 不碰 start）。
+
+**残留两点（都不阻塞，写清楚免得丢）**：
+1. `reset` 响应里 `simulation_advance` 是**字符串化的 JSON**（`json.dumps(default=str)`）而不是嵌套对象 ——
+   `8c66aa92` 下次顺手改回对象（`default=str` 只对每个值用，不要对整个 dict 用）；
+   在此之前消费方要 `JSON.parse`，**不许**显示原始字符串给用户。
+2. **prepare-scenario 与 start-scenario 目前合在 `start-scenario` 一个端点**（`main.py:1913`）：
+   reset 直接停在 PLANNED+SELECTED（这一步已经覆盖了 prepare 的职责），`start-scenario` 负责转 ACTIVE。
+   三动作方案里我提的独立 `prepare` 按钮**不再需要**——面板请把顺序画成
+   `[重置到场景起点] → [建一个硬承诺]（此时可用）→ [开始执行] → 推进/中断/重规划`。
+   **给 `e345b9d6`（并入 ORD-0081/0082 写域）**：面板的 [开始模拟]/[开始执行] 行请接到
+   `POST /api/v1/demo/start-scenario`（它已真实存在且我实测 200）；PLANNED 阶段 [推进一个活动]
+   应 disabled，原因句写"还没开始执行，先按开始执行"。
 
 ### 🔴 改令 + 新单 @2026-09-21 02:1x（Commander 亲测，给 `8c66aa92` / `e345b9d6` / `8ccd71d8` / `c01d72a3`）
 
