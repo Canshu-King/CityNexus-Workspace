@@ -1208,6 +1208,22 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     `ReferenceError: __dirname is not defined in ES module scope`、整跑 exit 1，已改
     `fileURLToPath(import.meta.url)`；这类错的形状恰是"门没测任何东西却像被测过"，
     所以文件里另留了"CLI 不存在就自己抛"——门起不来要说明自己起不来。
+            [8c66aa92 答"3+2=5 对不上 collected 4"@20260920-084x，报告提交 `c0367c1`]
+    **没有带进另一个文件，也没有少测**：多出来的那 1 条是 `real-seed` setup 项目。
+    `playwright.config.ts` 里 `chromium` 写着 `dependencies: ["real-seed"]`，所以**只选 guard 一个文件
+    也会跑 `_qoderRealSeed.setup.ts:110`**，summary 恒为 5；我写"collected 4"指的是本文件声明数，
+    没让读者自己做这个加法，是我表述不够。三个读数（日志全在 `D:\moodle\_qoder_ord30_evidence_20260920\`）：
+      1. `node node_modules/@playwright/test/cli.js test e2e/qoder-e2e-config-guard.spec.ts --list`
+         → **`Total: 5 tests in 2 files`**（按项目数：chromium 4 + real-seed 1），exit 0，`ord25-guard-list.txt`；
+      2. 干净态单跑 guard（run `ord25-guard3`，:3469→:8469，`_ord25-guard3.db`）
+         → **`Running 5 tests` / `5 passed (12.4s)` / exit 0**，`ord25-guard3-clean-e2e.log`；
+      3. M-G2 突变（`refuse()` → 静默 `process.exit(2)`；run `ord25-mg2`，:3461→:8461）
+         → **`Running 5 tests` / `3 failed / 2 passed (12.4s)` / exit 1**，`ord25-mg2-e2e.log`，逐行是
+         `ok 1 [real-seed] seed a real journey` | `x 2 :85`（缺变量要点名）| `x 3 :121`（不得回退系统 Python）|
+         `x 4 :132`（活键必须拒）| `ok 5 :149`（完整环境被接受）。**5 行里第 1 行是种子、第 5 行在突变下仍绿**，
+         所以红的正好是"该响亮的三处沉默"，而不是门自己加载失败。
+    你引用 §86.2 时同一形状的坑还有两处：那几张表里的 "x / 5" 分母都含 seed 那 1 行（例如
+    `guard+live-recovery+stale` 的 10 passed = 1 seed + 4 + 4 + 1）。全套的 58 expected 里也含这 1 条。
 
 - id: ORD-0026
   to: 8c66aa92
@@ -1721,6 +1737,45 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     三棵受保护树只读（权威树那 2 行改动 mtime 03:31/07:05 早于我的操作，非我造成）；
     node_modules 真实复制、无 junction（D-7）；交付包内无任何跑测产物。
 
+  commander_verification_0800: |
+    我 08:0x 独立复跑 `raw/check_stage_vs_head.py bfe8d7e`（读数 `raw/stage_vs_head_bfe8d7e.txt`）：
+    **704 文件 / 10,233,260 B；与 HEAD 逐字节相同 700；不一致 2（正是那两条有意不同）；仅包内 2；
+    禁路径命中 0；交付物内真实 key 0（HEAD 侧仍恰 1 个文件命中）** —— 这六个数与 evidence (a)(d) 一致，收下。
+    文件级存在性 `test -e` 逐条核过 5 个：`frontend/src/lib/executionWindow.ts`、
+    `qoder-mobile-ui-overnight.spec.ts`、`_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`、
+    `qoder-e2e-config-guard.spec.ts` 全在，包内 `.spec.ts` 计数 **27**。
+    `5a33eaf..bfe8d7e` 只动两件事（`INTEGRATION_REPORT.md` + 那份新 guard spec），后端 collected 我重采 = **928**。
+  commander_rejection_0803: |
+    **(c) 不收，理由是分母自相矛盾**：evidence (2) 自陈已把 `qoder-e2e-config-guard.spec.ts` 补进包，
+    而 (c) 仍报 **54 passed / 5 skipped**。我实测：`5a33eaf` 可跑 spec **26** 份（=我的 54/5，总数 59），
+    `bfe8d7e` 可跑 spec **27** 份，新 spec 声明 5 个 `test(`，其提交信息自陈
+    **"Suite denominator moves 54 -> 58 expected with the four new cases"** ⇒ 含 27 份 spec 的包在权威模式下
+    应是 **约 58 passed / 5 skipped（总数 63）**。⇒ 那次 e2e 跑的是补 guard spec **之前**的树。
+    同时**车道这一点反驳成立、我原预期写错并已更正**：`qoder-mobile-ui-overnight.spec.ts` 与
+    `qoder-ui-overnight-shots.spec.ts` 本就在我 54/5 的分母里，"补上三份读数会变高"不成立。
+    另记：我 08:00 与 08:02 两次比对撞见整个 `frontend/` 为空（重建中），那两次快照不作交付依据；
+    已要求等 tip 稳定后**整树重出**，并在**包外**副本重跑全 suite + build，交原始日志路径而非转述。
+    **口径限定（免得我把话说死，也把我自己工具的错写清）**：我又造了一把静态尺子 `raw/spec_denominator.py`
+    （逐文件按声明行计数、尊重 `testIgnore`，不需要 checkout；读数 `raw/spec_denominator.txt` = 第一版、
+    `raw/spec_denominator_v2.txt` = 修正版）。第一版我用了"允许前导空白"的正则，
+    于是把 guard spec **用例体内**那行运行时 `test.skip(!PARENT_IS_AUTHORITATIVE, …)` 也算成了一条声明
+    ⇒ 得出"5 条 / +5"，**错的**；改成"声明必须顶格"后 `5a33eaf → bfe8d7e` 的增量是 **+4**，
+    与该提交自陈的 "the four new cases" 吻合（绝对值两版分别是 52→57 与 16→20，因为大量声明本来就缩在
+    `describe`/循环里）。⇒ **工具教训**：这种静态计数只能读**同一规则下的增量**，绝对值必须用
+    `npx playwright test --list` 的 collected 数。因此我对 (c) 的硬要求不是"必须等于 58"，而是：
+    **读数必须高于 54/5、附上 `--list` 的 collected 总数、且差额能逐条归到那份 guard spec 的用例上**；
+    `58/5` 只是 `bfe8d7e` 提交信息自己给的预期。实测与预期不同不算错，不解释差值才算错。
+  status: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
+  commander_verification_0815: |
+    车道整树重建后我第三次比对（`raw/check_stage_vs_head.py bfe8d7e`，读数 `raw/stage_vs_head_bfe8d7e_pass3.txt`）：
+    **704 文件 / 10,234,029 B；与 HEAD 相同 700；不一致 2；仅包内 2；禁路径 0；交付物内真实 key 0** ⇒ 卫生与对齐这一层现在成立。
+    两条"有意不同"钉成可比对的 blob（谁以后再声称"包内是硬化/sanitize 版"，按哈希认，别按形容词认）：
+    - `tools/verification/mutation_campaign.py`：包内 = **`6d36a2297`** = **我工作树那一份**（`cmp` 逐字节相同），
+      而 **HEAD = `f4ff78da9`** —— 我的量具改动（owner 归属 + 字节还原 + atexit + F 行新 reason）**至今未提交**，
+      所以包内交接里"**发布包内的量具比 HEAD 新**"这句必须继续明写，否则读包的人会在 HEAD 里找不到这三件事。
+    - `qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`：包内 = `6e9e090ab`（sanitize 版），HEAD = `03b0ff82c`（含 key）。
+    仍不收的两项只有 (b)(c) 的**新分母读数**（见上：`--list` collected + 一次干净跑与一次突变跑的完整 summary 行）。
+
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
 
@@ -2004,9 +2059,10 @@ RX-4 Worker 改为交付可吸收形态 + `RX4_GATE.md`（含它自己发现的�
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
-HEAD    bfe8d7e  2026-09-20 08:2x  test(e2e): a regression for the refusal path, and the measurement that keeps ORD-0025 void
-        （权威 E2E 自本提交起 **58 expected / 5 skipped**；5 条 skip 仍是 shot 采集器无标签时的设计性拒绝）
-prior   ee6a93e  08:01 docs: section 86 - the empty-plan case now has a mutant that kills it
+HEAD    c0367c1  2026-09-20 08:4x  docs: state the guard spec's denominator, since 'collected 4' and '3+2=5'
+prior   bfe8d7e  08:2x test(e2e): a regression for the refusal path, and the measurement that keeps ORD-0025 void
+        （权威 E2E 自 `bfe8d7e` 起 **58 expected / 5 skipped**；5 条 skip 仍是 shot 采集器无标签时的设计性拒绝）
+        ee6a93e  08:01 docs: section 86 - the empty-plan case now has a mutant that kills it
         8579cbb  07:52 docs: close the F-row denominator question as ruled, re-locate the wall-clock hero
         14afb84  07:42 docs: section 86 - ORD-0011 was replayed, so it was re-proved rather than redone
         bf0869b  07:15 docs: section 85.5 - the scratch scripts leave the tree
