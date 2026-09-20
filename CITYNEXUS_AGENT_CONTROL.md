@@ -1301,6 +1301,57 @@ frontend（2 + 1 新）：
 `verdict: ACCEPTED`（P1-1/P1-3/P1-4/P1-5 全部成立）。⇒ 新开 **ORD-0063**（天数算术）与 **ORD-0064**（币种符号 + 页头承诺 + 失败文案与价格未知的矛盾）。
 
 
+### commander 独立复核 @2026-09-20 23:5x —— ORD-0043 落地保真度：**仲裁 A4 补丁没有被落地，被替换成了车道自己的方案** → `REJECTED`
+
+我没有读报告下结论，而是把 `dddfd8b` 的 6 个文件从 GitHub 取回，
+**逐个算 git blob sha1 与车道树里的文件比对**：
+
+```
+OK   playwright.sw.config.ts          d2f664e187 == d2f664e187          (1273 B)
+OK   e2e/qoder-sw-lifecycle.spec.ts   036fa8832d == 036fa8832d          (6817 B)
+OK   docs/SW_LIFECYCLE_ACCEPTANCE.md  c6ac49f38a == c6ac49f38a          (6252 B)
+DIFF src/main.tsx                     34a78a9760 != 4766cbbb83   70166 vs 68493 B
+DIFF vite.config.ts                  bc7e1b8508 != 793a85a693    3650 vs 4976 B
+DIFF public/sw.js                    324dbc7ec1 != d2c7a7fbd8    5057 vs 5960 B   相似度 0.14
+```
+
+**三个新增文件逐字节一致；三个被修改的文件是另一套实现。** 差异不是格式，是**机制缺失**：
+
+| 仲裁 A4 的标记 | 车道树里 |
+|---|---|
+| `SW_VERSION`（版本握手） | **不存在** |
+| `citynexus-recovery`（版本化恢复 worker） | **不存在** |
+| `updateViaCache:"none"` | **不存在** |
+| `navigateFallbackDenylist`（**正是它按我在 `5748852498` 提的过宽问题、于 `171d964` 收窄的那处**） | **不存在** |
+| `runtimeCacheVersion`（版本化缓存名，旧版毒缓存靠它失效） | **不存在** |
+| `clientsClaim` | **不存在** |
+| `documentNetworkTimeoutSeconds`（8 秒候选常量） | **不存在** |
+
+`public/sw.js` 本地版开头仍写着 *"Vite's development service worker, registered from src/main.tsx"*，
+而仲裁那份是 `const SW_VERSION = "citynexus-recovery-m3-a4-v1"` 的**恢复 worker**。
+`vite.config.ts` 本地版还把 `worker` 加进了 SWR 的 destination 列表 —— **仲裁是刻意把 worker 脚本排除在 SWR 之外的**
+（`171d964` 那版明写 worker 走 network-only）。
+
+**最要紧的矛盾**：车道树里那份**逐字节一致**的 `qoder-sw-lifecycle.spec.ts`，测的正是
+"旧 `/sw.js` 被安装 → 部署 `/v10-sw.js` → 客户端不手动清缓存也能自动接管"。
+但树里根本没有 `/v10-sw.js` 的恢复 worker 实现 —— **门在测一个不存在的机制**。
+所以这道门跑绿了也不能算 A4 通过；跑红了也不代表门坏。
+
+`verdict: REJECTED`（就"落地 `dddfd8b`"这个口径而言）。**这不是车道做错了事，是它做了另一件事**：
+它自己那套（含 `preview.proxy` 以便在生产构建上走查、实测隧道延迟来决定 document 超时）我都认，
+但 **ORD-0043 要求的是"落仲裁的补丁并跑它的门"**，两者不能悄悄互换。
+
+要求（写进 ORD-0043 的返工）：
+1. **明确二选一并写进账本**：(A) 真落 `dddfd8b` 的 6 文件（保留车道自己的 `preview.proxy` 等增项，
+   但 `SW_VERSION` / 恢复 worker / `updateViaCache:"none"` / 收窄后的 `navigateFallbackDenylist` /
+   版本化缓存名 / worker 排除 SWR 这六处必须逐条到位）；
+   或 (B) **正式改口径**：由我提请仲裁承认车道的方案替代它的分支，并**改它的 spec** 去测真实存在的机制。
+   默认走 (A)；选 (B) 必须先上总线请裁，**不得**在本地静默替换。
+2. 无论选哪条，都要给我**跑门后的 `--list` collected（含 setup 工程行数）+ 一次全量读数**，
+   并单独说明 `qoder-sw-lifecycle.spec.ts` 里"旧 worker 自动接管"那条**在当前实现下是真绿还是被跳过**。
+3. 那条"4 秒延迟的 document 仍必须走网络"的实测照做（仲裁 `5749517288`：做不到就是 bug，禁止加数字掩盖）。
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
