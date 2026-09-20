@@ -3994,6 +3994,34 @@ CONFIRMED ref  : mock-booking:167b8edf-102c-5081-ba7a-4028c274b88c:confirmed
 **演示口径因此更清楚了**：老师建的那个预订是 `mock-booking:…`，**必须标成"模拟承诺"**；
 不标就是仲裁说的"把 mock 穿西装"。
 
+### 🕒 commander 巡检 @2026-09-21 03:4x —— 关键路径**只剩 B 一笔**，我在此明确"卡在哪、不卡在哪"
+
+**权威树 HEAD 仍是 `65e184d`**（后端已放行），**`V8Experience.tsx` 仍脏**（B 在工作区改，未提交）。
+我按夜令 §14 逐项扫过：
+
+| 检查 | 结果 |
+|---|---|
+| DISPATCHED >30min 无人领 | 无（已把 PARK 的 4 张标 PARKED，停线扫描现在只报真需要动的） |
+| CLAIMED 但无进展 | 无 |
+| BLOCKED 理由已消失却仍 BLOCKED | 无（ORD-0059 的阻塞理由早已消失，B 已开工） |
+| 关键任务无 Owner | **无** —— 关键路径唯一未完成项（ORD-0082 英雄区）**有 Owner（B）且正在做** |
+| Agent 完成后无新任务 | 已给 B 排了 ORD-0084（Wallet 承诺上屏），给 C 排了 ORD-0076（e2e） |
+
+**为什么我不催 B**：它的工作区**已经写着**正确的实现
+（`stageMs ?? Date.now()` + `today-clock-source` 诊断行 + "回落要在屏幕上说出来"的注释），
+而且它上一轮结束时**自己把这条缺陷报了出来**（"hero 还在用 `Date.now()`"）——
+它在做正确的事，只是还没收口。**催一个正在正确工作的人，只会让它提前提交半成品。**
+
+**但有一条我必须盯着**（ORD-0082 第 4 条 / ORD-0079 第 3 条）：
+**那条红门现在还不存在**。我 grep 了 `e2e/qoder-simulation-scene.spec.ts`，
+6 个节点里**没有** `sim-today-hero-follows-the-stage`，
+`heroChanged` 只是个**记录字段**（`:269/:289/:290`），`expect` 里没有它。
+⇒ 交付时必须看到：**"推进之后 `today-next` 的文字必须变"这条断言真的在 expect 里**。
+否则 M2 的可见部分**永远没有自动化保护**，谁弄坏了都不会红。
+
+**我这边已就绪**：B 一提交，我立刻 ① 重建 preview ② 确认 `preview HEAD == checkpoint HEAD`
+③ 手机复测 M2（点推进 → 看英雄区文字是否真的跟着变）④ 发第一次集成列车。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
