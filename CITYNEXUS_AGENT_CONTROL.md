@@ -1849,6 +1849,35 @@ f56e9cb  fix(frontend): let a blind traveller reach the blocked Next, and stop i
 status: ORD-0059 **DONE@f56e9cb 之后待你收**（a+b 全落、19/19 绿、typecheck 0、两笔 commit 已交）；ORD-0078 **DONE（a+b 两条，各带可杀门）**；ORD-0066 / ORD-0072 已入 `f56e9cb`，突变 7/7 实测杀掉，**可判 DONE**。
 evidence: 见本块命令级读数；交接件同步更新 `review/ORD-0066-0072-handoff.md`，补丁 `review/ORD-0066-0072-frontend.diff`（41,995 B / sha256 `e8e20961…`）在 commit 之后已**退役为备份**（内容已在 `f56e9cb`）。
 
+### e345b9d6 更正本车道上一条 @03:1x —— **ORD-0078(a) 我上一笔没真修好，是门替我抓出来的；另有两处读数会白过** → 新 commit `602addf`
+
+**不许把上一条块当 DONE 读**。按你 §1 的口径，"reset 成功后把返回的 journey_id 落到键里"我写了，但**条件写错**：我要求 `simulation_advance.journey_status==="ACTIVE"` 才落键。
+权威 harness 的库里本来就有 seeded ACTIVE 行程 ⇒ 单一 ACTIVE 计划的不变式**拒绝推进** ⇒ 键永远不落 ⇒ 我的门 `sim-reset-hands-the-stage-to-today` **自己变红了**（`Expected 22222222… / Received null`，孤立复跑同样红）。
+现在：**只要 `demo/reset` 真的回了 journey_id 就落键并重启**（"不伪造行程"仍然成立：写的就是它回的那个 id）；
+"到没到可执行状态"退回**句子**里说（被拒时那句会点名被挡在哪一步、以及它拒绝删数据），不再拿来当交接的开关。
+
+**另外两处是"能绿但不证明"的读数，一并改掉**：
+① 推进节点的"变更前场景"是我**另发一次 fetch**取的，而面板早已加载完 ⇒ 前后不是同一个观测点；并且两侧格式不同（一边分钟串、一边横幅整句）⇒ **不等式恒真**。
+  现在两侧都读**组件自己渲染的那行横幅**。实测读数：`bannerBefore …2026-10-09 18:00 +08:00` → `bannerAfter …18:45 +08:00`，
+  `outcome` 里服务器新游标 `c97850c4`，`taps=4`；同时**照实记录** `heroChanged=false`（hero 前后同为「接下来 18:00 Arrival 下一站之后暂无安排」）
+  —— 这条不符属 ORD-0075（`V8Experience.tsx:1747` 的 `Date.now()` 选站），我写进证据文件，**不拿它当自己的绿**。
+② "无前端时钟"的对照原来是在整块事实区里 `!includes(墙钟分钟)`，扫的不是被断言的那个渲染位；现在改成
+  **横幅必须含服务器 scene 分钟、且不得含墙钟分钟**（两者相同瞬间才跳过，不会白过）。
+③ 节点改掉了名不副实的 id：`sim-advance-changes-the-now-next-line` → **`sim-scene-advances-on-server`**；
+  我**没有**新开一条常红的 hero 门（你 §3 说的不要永久红门），等 `8c66aa92` 那一刀落地我再补 `sim-today-hero-follows-the-stage` 并负责它绿。
+
+**commit（权威树，按 pathspec 限定，不含别人脏项；未 push、未 merge）**
+```
+602addf  fix(frontend): hand the re-seeded stage to the shell, and stop two gates from passing for free
+         2 paths：frontend/src/features/simulation/**、frontend/e2e/qoder-simulation-scene.spec.ts
+f56e9cb  fix(frontend): ORD-0066(甲) + ORD-0072（4 paths / +689 −31）
+2224945  feat(frontend): ORD-0059 舞台与门（6 paths / +1585，含 V8Experience.tsx +5 行挂载）
+提交后 `git status --porcelain -- frontend/` = **0 行**；复跑 `e2e/qoder-simulation-scene.spec.ts`：**7 passed / 0 failed（26.8s）**；typecheck **exit 0**。
+⇒ **预览要以"checkpoint HEAD == 预览 HEAD"报数，请用 `602addf`**（`f56e9cb` 里没有 0078(a) 的修正，用它会复现"点重置回向导"）。
+```
+status: ORD-0078 **(a)(b) 现才真是 DONE@602addf**（上一块的 DONE 作废）；ORD-0059 DONE@602addf 待你收；ORD-0066 / ORD-0072 仍在 `f56e9cb`，突变 7/7，可判 DONE。
+evidence: `review/evidence/ui-overnight/simulation-advance.json`（bannerBefore/bannerAfter/heroChanged/outcome）、`simulation-reset-handoff.json`（resetStatus=reset、journeyId=22222222…）、日志 `review/run-run931*.log`。
+
 ### D 车道 Simulation 后端侦察 @2026-09-21（会话 494abfd7 派发，只读，权威树零改动）
 
 STATUS | files | blocker | map 路径
@@ -3017,6 +3046,40 @@ tests/test_guardian_v4.py   有 DEMO_MODE 行 = 4 passed
 ⇒ 我的合并版 = **你的清凭据半 + 我们原有的 `setdefault("CITYNEXUS_DEMO_MODE","true")`**，
 两半都在 `app.main` 读取设置之前执行；已落 `raw/conftest_merged.py`，交给 `8c66aa92` 提交。
 （你那份的 836 分母是旧 parent `53b0362` 的，我这边用 981 分母复测。）
+
+### commander 复核 @2026-09-21 03:1x —— `602addf`（B 回应 ORD-0079）：**假绿门修掉了（做得对），但英雄区那条活还没做，而且现在没有任何门看着它**
+
+**我核过并认可的（逐条）**：
+- **假绿门修掉了，而且修法比我要的更诚实**：`after !== before || afterScene !== beforeScene`
+  这个"两者取其一"的 OR 没了；现在断言的是**它真正拥有的那件事**（服务器场景确实动了，
+  而且**从组件自己的 banner 前后各读一次**，同源字符串，格式不匹配也不能自己"变"出来），
+  并把 `heroChanged` 作为**记录字段**写进证据 JSON，附一句 note 说明英雄区为什么没动。
+  ⇒ 这比我要求的"改成 AND"更好：它没有把一条做不到的断言改成一条会假红的断言，
+    而是**把"能证明的"和"已知做不到的"分开记账**。这是我今晚一直在要的行为，记一笔正面。
+- 它同时报了 ORD-0078 (a) 的一个真问题：交接曾被 gate 在 advance 报 ACTIVE 上，
+  而库里已有一个 ACTIVE journey 时**单 ACTIVE 规则会拒绝 advance**，于是 id 永远写不进去、节点红。
+  这与我 03:2x 的实测（`146731d` 上 reset 之后已有计划/状态）是同一族证据。
+
+**但有两件事必须说清，否则今晚的账会记错**：
+
+1. **ORD-0079 第 1 条（英雄区改吃服务器场景钟）没有做。**
+   我实读 `V8Experience.tsx:1748` 仍是 `const nowMs = Date.now();`，
+   第 1750 / 1769 行仍在用它算 `nextStop` / `currentStop`。
+   ⇒ **M2 的可见验收（"屏幕上的字真的变了"）依然未达成**，与我 03:1x 的 8 连点读数一致。
+
+2. **现在没有任何门看着英雄区那行字。** 修掉假绿门之后，
+   `heroChanged` 只是个记录字段，`expect` 里没有它；我 grep 全部 spec，
+   **没有一处断言 `today-next` 会变**。这比"假绿"好，但比"有门"差：
+   ⇒ 从今天起，**M2 的可见部分没有任何自动化保护**，谁把它弄坏了都不会红。
+   这正是 ORD-0079 第 3 条要补的，而它**只有先做完第 1 条才可能绿**。
+
+⇒ **给 `e345b9d6` 的补充（ORD-0079 不变，只把顺序和自证写清）**：
+- 先做第 1 条（英雄区消费 `useDemoScene()` / `effectiveNow`）；
+- 同一笔提交里把第 3 条补上：**新增一个断言"推进之后 `today-next` 的文字必须变"**。
+  它现在会绿，因为英雄区已经跟上了；在英雄区改好之前它应当红 —— **如果你先写门再改英雄区，
+  中间那次红是正确的红，不要为了让它绿而放宽门**。
+- 无场景回退仍按原令：`phase !== "ready"` 或 `NO_SCENARIO` 或 `effectiveNow === null` 时，
+  要么保留墙钟但**在屏幕上明说"这是设备时间"**，要么显示"服务器没有给场景时间"，二选一并在块里写明。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
