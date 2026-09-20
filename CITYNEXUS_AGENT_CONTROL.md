@@ -156,6 +156,39 @@ CITYNEXUS_AGENT_CONTROL_ARCHIVE.md 487,246 B blob 30811a020310  PUT f5a3bf16  re
 外加"新发现的缺陷"与"需要它裁的点"不等下一批；**不许攒到回合结束才一次性汇报**。
 每条仍走"投递到总线 + `browser-use` 敲门"两步，缺一不算送达。
 
+### 23:1x 我自己的记账错误：**我写进账本的时间戳是错的**（已用外部时钟核对，别再照它排先后）
+
+事实与核对方式（不是回忆，是当场量的）：
+```
+GitHub /rate_limit 响应头 Date : Sun, 20 Sep 2026 15:15:18 GMT
+本机 date -u                   : Sun, 20 Sep 2026 15:15:18 GMT   ← 秒级相同
+本机 date（本地）              : 2026-09-20 23:15:19 +0800
+```
+⇒ **本机钟是准的**。而我今晚写进账本的一批时间戳标成了 `2026-09-21 00:0x ~ 02:3x`，
+比真实时间**超前约 2~3 小时**，日期都跨错了。
+
+硬证据（不是我自说自话，是文件 mtime 对不上我自己的标注）：
+`_qoder_recovery_20260919/raw/verify_1e942d2b.json` mtime = **09-20 22:22**，
+而引用它的那个块我标成 `@2026-09-21 01:4x`。
+
+受影响的（**全部是我 commander 自己写的块/状态行**，别人的块我没动、也不许别人替我改）：
+```
+:161  ### commander 亲测 @2026-09-21 00:0x（A5 地图交互复验）
+:182  ### commander 亲测 @2026-09-21 00:2x（W3 退回补证据）
+:222  ### ACCELERATION_MAP @2026-09-21 00:4x
+:452  ### commander 亲测 @2026-09-21 01:4x（预览重建到 1e942d2 + ORD-0066）
+:660  ORD-0065 status: DISPATCHED@2026-09-21 00:2x
+:686  ORD-0066 status: DISPATCHED@2026-09-21 01:4x
+:1820 ### commander 独立复核 @2026-09-21 02:3x（ORD-0063/0064 ACCEPTED）
+```
+**读法**：这些都发生在 **2026-09-20 的 22:0x~23:0x**（本机钟）。要判断先后，
+按它们在文件里的**顺序**和引用的产物 mtime，**不要按印出来的钟点**。
+（`aad2d1f2` 在 :347 已经被迫自己写"（本机钟 20:5x）"来消歧 —— 说明这个坑已经在咬人。）
+
+**新硬规则（对我自己）**：往账本写任何时间戳之前，**必须先跑一次 `date`**，照抄输出，
+不许凭"感觉现在几点了"填。理由：车道用时间戳判断 verdict 新旧与"该不该重读"，
+我写错钟点 = 让所有车道在错误的时间轴上做决策；跨日错标还会让人以为有 09-21 的新裁定。
+
 ## DELIVERIES（车道交付登记处 · 追加，不改别人的块）
 
 ### commander 亲测 @2026-09-21 00:0x —— A5 地图交互**在当前候选产物上复验通过**
@@ -489,6 +522,159 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
 
 
 
+### commander 亲测 @2026-09-20 23:1x（本机钟，`date` 实读）—— **W3 结案：`REFUTED`，不是产品缺陷**；红队自己的撤回没落进账本，我替它记
+
+**为什么由我来记**：`dc19d662` 在 22:1x 那轮里已经量出对自己不利的结论并说要"撤回旧结论、登记成交付"，
+但账本里**找不到**它的撤回（`grep w3_evidence` / `grep RETRACT` 命中 0，ORD-0039 名下仍是
+`PARTIAL@12:3x` + "W3/W5/W7 是门自身测量缺陷"）。它那一轮有一次 `Edit failed`，随后落到 `cold`。
+⇒ 结论：它的撤回**写盘失败**，只活在它的会话里。账本现在仍挂着一条**已被提出者自己否掉**的缺陷，
+谁读账本谁就会照着它排优先级。所以我按它留在磁盘上的原始产物自己读、自己判、自己记。
+
+**我读的是它写的产物，不是它的转述**（`_qoder_twin_audit_20260920/raw/w3_evidence.json`，mtime 09-20 22:17）：
+```
+页面自己发出的请求（api_calls_by_the_page）—— 12 条，4xx 数量 = 0
+  POST /api/v1/travelers                        -> 201
+  POST /api/v1/journeys                         -> 201     ← W3 断言的"后端 422"不在这里
+  POST /journeys/<id>/stay-options/generate     -> 200
+  GET  experience / replans / plans / wallet / twin / offline-snapshot / agent-policy / runtime-status×2 -> 全 200
+唯一的 422 = 产物里另一个字段 direct_api_9d，而它自己的 meta 写明：
+  "the direct POST above is the call my gate's seedJourney(9) makes; it is NOT the wizard submit"
+  body: V13_JOURNEY_DAYS_OUT_OF_BOUNDS, actual_days=10, max_days=7
+```
+⇒ **两个事件从来不是同一次请求**。W3 把"我的门直连 API 造 10 天行程被后端正确拒绝"
+和"向导提交成功后屏幕说行程已创建"拼成了一条因果，**产品没有说谎**。
+这也印证我 22:0x 的原始处置：我当时复现不出来，判 (b)「不定性、退回要证据」而没有直接立案 —— 现在证据支持 (b)。
+
+**我另外读源码补上了它没说清的机制**（`_qoder_integration_20260919` @ `3f1b44c`，
+`frontend/src/features/setup/JourneyTrialSetup.tsx`）：
+```
+:404  data-testid="trial-arrival"    value={draft.arrivalLocation}   ← 地点字段（label「抵达厦门」）
+:429  data-testid="trial-departure"  value={draft.departureLocation} ← 地点字段（label「离开厦门」）
+:455  data-testid="trial-start"      type="datetime-local" value={draft.startAt}
+:464  data-testid="trial-end"        type="datetime-local" value={draft.endAt}
+它的脚本往 arrival/departure 里填了 "2026-09-21" / "2026-09-30"（产物 form_fields 可查），
+而真正决定行程天数的是 start/end = 2026-09-21T10:00 → 2026-09-23T20:00（产物 wizard_dom 可查）= 2 天。
+```
+⇒ 那 10 天**根本没进日期字段**，是被当成"抵达地点/离开地点"的字符串填进去了。所以 `POST /journeys`
+返回 201 是**正确行为**（2 天行程合法），不是"7 天上限被绕过"。**天数守卫在 UI 路径上没有失效。**
+（顺带：这也说明 `arrivalLocation`/`departureLocation` 对内容零校验 —— 一个日期字符串能当"地点"存下去。
+这一条我**不立案为 W3 的替代品**，因为它属于 ORD-0060 第 2 项"只看非空、不看是否被识别"的同一族问题，
+归 `e345b9d6`，不新开单。）
+
+**判定**：`W3 = REFUTED / NOT_A_PRODUCT_DEFECT`。提出者已自行撤回，Commander 独立复核成立。
+**对账本的效果**：ORD-0039 名下"W3 后端 422、屏幕却说 Trip created."**立即失效**，
+任何车道不得再把它当活缺陷引用、不得据它排优先级；`KNOWN_FAILURES / OPEN` 里若还有它的残留，读到即视为已结。
+**对红队的要求**（它下次醒来读到这条时）：不必重做，只需把 `gate/w3_evidence.cjs` 的断言
+改成**只依据页面自己发出的请求**（它 22:1x 说已经这么改了，但改动没落账、我也没在权威树看到），
+落账时给出 `STATUS | HEAD | files | tests | blocker | evidence paths` 一行即可。
+**对我自己的教训**：车道说"我改了账本"不等于账本里有；**verdict 必须以账本里的字节为准**，
+读不到就是没送达 —— 这条和我 12:5x 那次"grep 证明不存在其实只是没匹配上措辞"是同一个毛病的两面。
+
+
+
+### commander 亲测 @2026-09-20 23:2x（本机钟）—— A4 现状钉死：**UI 树 6/6、权威树 0/6，是"待并"不是"已修"**；ORD-0063/0064 的前端半已落且我证了它杀得掉
+
+**① A4 的六个机制：我第一次量到"六条都在"，但只在 UI 车道那棵树里。**
+`_qoder_ui_overnight_20260920`（分支 `agent/ui-overnight-20260920`，tip `728b048`）：
+```
+1 SW_VERSION                 public/sw.js:1     "citynexus-recovery-m3-a4-v1"
+2 citynexus-recovery worker   public/sw.js:1-2   （整份文件已是 A4 恢复用 worker）
+3 updateViaCache:"none"       src/main.tsx:1735  ← 上次缺的就是这半，现在有了
+4 navigateFallbackDenylist    vite.config.ts:47
+5 runtimeCacheVersion         vite.config.ts:9 / :65 / :108
+6 clientsClaim                vite.config.ts:57
++ controllerchange 一次性重载  src/main.tsx:1720-1731（sessionStorage 记 transition，防重载循环）
++ DEV 清理                    src/main.tsx:1708-1715 unregisterProductionServiceWorkers()
+                              :1744-1753 DEV 只注册 /sw.js，并注销上次预览留下的 /v10-sw.js
+```
+我读了实现本体、不是只数关键字：DEV 分支先注销同源遗留的生产 worker 再注册 dev worker，
+生产分支 `register → update → ready → 清 legacy cache`，`controllerchange` 只在
+"已被控制的页面换到新 worker"时重载一次且用 sessionStorage 挡重复 —— 语义对。
+
+**但权威树 `_qoder_integration_20260919` 上这六条命中 0**，而且两边 `public/sw.js` 是**两个不同的文件**：
+```
+权威树 public/sw.js 首行： /* Vite's development service worker, registered from src/main.tsx.   （5960 B，mtime 15:59）
+UI 树  public/sw.js 首行： const SW_VERSION = "citynexus-recovery-m3-a4-v1";
+权威树 e2e/qoder-sw-lifecycle.spec.ts ：不存在
+```
+⇒ **按 CURRENT_GATES 8b 的口径，ORD-0043/A4 仍不是 DONE**：完成条件 = 6/6 机制在**权威树** + 定向 SW lifecycle gate
+对 exact HEAD 跑通。现在是"实现写完、门写完、都躺在待并分支上"。**"UI 树 6/6" 和 "权威树 0/6" 必须一起说**，
+只说前一半就是我 17:3x 犯过的"门在、机制 5/6 也叫 DONE"那个毛病的镜像版。
+
+**② 待并集我量了确切写集（这是给下一次集成列车的原料，不是印象）：**
+```
+git rev-list --count 3f1b44c..HEAD            = 11 笔
+git diff --name-only 3f1b44c...HEAD           = 45 个文件（15 frontend + 30 review 文档）
+其中 ^backend/ 路径                            = **0**
+```
+⇒ 与 `8c66aa92` 正在飞的 ORD-0057 后端切片（9 条脏项全在 backend/ + tools/ + handoff/）
+**写集零重叠** —— 正是 Amendment J §2 说的"non-overlapping"那一档，合并安全，不需要排队。
+待并的 11 笔里包含：A4 六机制（`047e748`）、A4 生产生命周期门（`012ff56`）、门在双 project 下保持诚实（`9f55b6f`）、
+主题选择（`0e21a4f`）、115 秒等待像"在等什么"（`74a38bf`）、空住宿由服务端给理由（`a51414f`）、
+Today 行程长度与预算币种（`728b048`）。
+
+**③ ORD-0063/0064 的前端半：`e345b9d6` 已落 `728b048`，而且它抓出了后端交上来的 diff 里一个真 bug。**
+不是两条车道各写一遍（我专门去查了这个风险）：它的提交信息明说"Applies the frontend half of 8c66aa92's
+ORD-0063 / ORD-0064(a) patch (review/ORD-0063-0064a-frontend.diff)"。它改了两处并说明了理由：
+```
+(a) 补丁里的 helper 叫 money，而 V8Experience.tsx 已把 money 用作 formatMinorMoney 的别名 ⇒ 改名 budgetMoney
+(b) 补丁无条件把 minor units 除以 100 —— 对零小数位货币是错的 ⇒ 改用共享指数
+    我独立核过 (b) 成立：src/lib/money.ts:1  ZERO_DECIMAL_CURRENCIES = {JPY, KRW, VND, IDR}
+                        :3  currencyExponent() -> 0 或 2       :7  currencyMinorFactor() = 10 ** exponent
+    ⇒ JPY 走 /1 才对；补丁的 /100 会把 1000 日元显示成 10。它那句"patch as delivered would not have
+      compiled here"我没去复现编译错误，但 (b) 这个数值缺陷我用它自己的 lib 证明了。
+```
+**这是 Amendment J §2 想要的行为**：拿到别人的 diff 不闷头 apply，发现契约不对就地改并写清为什么。
+
+**④ 我对它新加的门做了"杀得掉吗"的独立验证（不看它自述，直接对两个 blob 跑同一组正则）：**
+`e2e/qoder-trip-shape-and-budget.spec.ts`（192 行，3 个 test）里有一个源码守卫
+`no-client-side-day-or-currency-invention`，断言 V8Experience.tsx **不再出现** 5 个模式。
+断言"不存在"的门最容易空转，所以我拿 `728b048^` 与 `728b048` 两个版本的真实文件各跑一遍：
+```
+                              pre-fix(116289 chars)  post-fix(118035 chars)
+86400000 (ms-per-day)              True                 False
+BUDGET_DAILY_FLOOR_MINOR           True                 False
+zh 硬编码 ¥                        True                 False
+en 硬编码 ¥                        True                 False
+Math.round(.../24)                 False                False   ← 这条从来没匹配过，不是承重墙
+PRE-FIX offenders = 4   POST-FIX offenders = 0   ⇒ **KILLABLE**
+它抓到的原文（就是 ORD-0063/0064 点名的那两处缺陷）：
+  ? Math.max(1, Math.round((endMs - startMs) / 86_400_000) + 1)     ← 12 小时行程被算成 2 天
+  const BUDGET_DAILY_FLOOR_MINOR = 15_000; // CNY 150 per person per day  ← 拿 CNY 的地板判所有币种
+  ? `${safeDays} 天 · ${safePeople} 人 · 每人每天约 ¥${...}`
+  : `${safeDays} days · ... about ¥${...} per person per day`
+```
+证据落盘：`_qoder_recovery_20260919/raw/a4_ord63_guard_killability.txt`。
+**口径要诚实：是 4/5 模式承重，不是 5/5**；第 5 条是防御性写法（换一种方式重写同一个 bug 时才会响），
+现在匹配不到任何东西，我不把它算作证据。
+
+**⑤ 我自己这一轮的一次误报，立刻撤回（按"测量诚信"的规矩记下来）：**
+我第一次跑这个验证时用了 `git show <blob-sha>:path` —— **这是无效语法**（blob sha 不能当 revision 配路径），
+两个 blob 都读回 0 字符，于是我的脚本输出了 `VERDICT: VACUOUS`。
+**那个 VACUOUS 是我的命令失败造成的假象，不是门的性质**，已在同一轮内用 `728b048^` / `728b048` 重测推翻。
+教训和 12:5x 那次同源：**仪器读到 0，先怀疑仪器**。所以我给脚本加了硬保护 —— `git show` 非零退出就直接
+SystemExit 打出 stderr，不再让空 blob 流进结论。（这也是我为什么把 blob 字符数一并打印：116289 / 118035
+一眼就能看出这次读到了真东西。）
+
+**⑥ 裁定：现在不并，并的时机与顺序钉在这里。**
+我**没有**执行合并。理由是可量的、不是保守：权威树此刻有 **9 条脏项**（含两个未跟踪的新模块
+`stay_generation_operations.py` 738 行 / 其门 765 行），是 `8c66aa92` 正在飞的 ORD-0057 切片；
+在别人的未提交工作之上做 merge，一旦冲突就会把它的切片和合并缠在一起，而 ORD-0067 我已经**禁止**用
+rebase/reset/clean 收尾 —— 那等于自己造一个死锁。
+⇒ 检查点顺序（Amendment J §4/§5，带真数）：
+```
+1. 8c66aa92 按 ORD-0067 把 models.py 的行尾规范化与 33 行业务改动拆开提交（或还原行尾）
+2. 它把 ORD-0057 切片提交干净（权威树脏项归零）
+3. 我 merge agent/ui-overnight-20260920 (728b048) → 11 笔 / 45 文件 / 0 条 backend 路径，预期零冲突
+4. 合并后我立刻重测：权威树上 A4 六机制必须 6/6（现在 0/6），且 public/sw.js 首行变成 SW_VERSION 那句
+5. 定向门：e2e/qoder-sw-lifecycle.spec.ts + qoder-trip-shape-and-budget.spec.ts 对**合并后的 exact HEAD** 跑
+6. 过了才重build 单一手机预览，并记下 preview HEAD == checkpoint HEAD（仲裁 §8）
+7. 这时 ORD-0043/A4 才允许写 DONE
+```
+第 3 步我预期零冲突，但**预期不算证据**，合并后我会把 `git diff --name-only` 与冲突数贴出来。
+
+
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
 先把手上这一步收尾到自洽状态（不留半改文件、不留脏树）再接新单；做完改 `DONE@时间戳` 并在
@@ -524,6 +710,27 @@ trial-state +3、ui-overnight-shots +1）；全套权威 E2E **两次连跑**
     （那是另一件事，需要契约）；不得削弱冻结清单；断言一律读 `innerText` 渲染文字，不读 data 属性。
     **验收**：中文界面下输入东京时屏幕必须出现"抵达东京"（且不再出现"抵达厦门"）；
     输入未识别城市时屏幕必须有一句可读提示；两条都给杀得掉的证据（点名节点 id）。
+    ---
+    **Commander 行号刷新 @2026-09-20 23:1x（本机钟）—— 上面引的行号已漂移，别再照着找**
+    我在权威树 tip `3f1b44c` 上重新量过（`wc -l` = 787 行，原单是在文件还短 ~106 行时写的）：
+    ```
+    第 1 项 硬编码"厦门" —— 仍未修，现在的行号：
+      :402  <span>{zh ? "抵达厦门" : "Arrive at"}</span>
+      :427  <span>{zh ? "离开厦门" : "Depart from"}</span>
+      占位符 :387（"例如：厦门"）/ :407（厦门高崎国际机场）/ :432（厦门北站）
+      城市表 CITY_FACTS :104-127（13 个城市，含 :111 "天津"）；inferCityFacts :129
+      ⇒ 12/13 个受支持城市在中文界面上都被写成"厦门"。目的地字段本身是 :385 value={draft.cityName}，
+        而 :634 的 review-city 又原样显示用户输入的城市 —— 同一屏自相矛盾，这就是我说的"骗人"。
+    第 2 项 只看非空、不看是否被识别 —— 仍未修，现在的行号：
+      :311  const facts = inferCityFacts(draft.cityName);   ← 算出来了
+      :317-321 missingStep1 = [cityName.trim()?null:"目的地", arrivalLocation…, departureLocation…]
+      :322  const step1Ready = missingStep1.length === 0;    ← 但这里只用 .trim()，facts 从未参与门禁
+      隐藏字段现值在 :483 countryCode / :491 timezone / :499 currency（高级设置里可见但默认沿用上次）
+      ⇒ `facts` 已经算好却没人用，拉萨/西安/乱码照样能"下一步"。修法比原单更省：把
+        `facts ? null : <一句可读提示>` 加进 missingStep1 即可，不必新造状态。
+    第 3 项 城市清单不可见 —— 我这次没有复测，**不改动原判定**，仍按原单执行。
+    ```
+    刷新只改行号与"仍未修"的事实核对，**不改订单要求、不改验收口径、不改优先级**。
   status: DISPATCHED@2026-09-20 22:2x
 
 - id: ORD-0062
@@ -684,6 +891,48 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
     边界：不改判定语义（该禁还是禁）、不改文案（已经很好了）、不削弱冻结清单；
     `V8Experience.tsx` 已按 Amendment J §2 归你，可一并改。
   status: DISPATCHED@2026-09-21 01:4x
+
+
+- id: ORD-0067
+  to: 8c66aa92
+  priority: high
+  if_head: 3f1b44c
+  order: |
+    **你这一刀里 `backend/app/db/models.py` 被整体 CRLF→LF 翻了，别让 33 行真改动骑着 1022 行幻影进检查点。**
+    我量的数（不是猜的，Python 直接数字节，`git diff --numstat` 与 `--ignore-all-space` 对照）：
+    ```
+                            HEAD            工作树          naive +/-    真实 +/-
+    models.py            1022 CRLF/89 LF   0 CRLF/1144 LF   1055/1022     33/0
+    stay_mobility.py     1940 CRLF/0 LF    1961 CRLF/0 LF     22/1        22/1   ← 你这个文件纪律是好的
+    main.py              0/10309           0/10396           132/45     131/44
+    ```
+    ⇒ `models.py` 的**真实内容改动只有 +33/-0**，其余 1022 行全是行尾翻面。
+    照现状提交的后果：一个 1000+ 行文件被整体重写 —— blame 断代、别的车道 cherry-pick 每行都冲突、
+    评审者看不见那 33 行。这不是指控（HEAD 里它本来就是 CRLF/LF **混用** 1022+89，统一成 LF 方向没错），
+    错只在**夹带**：把一次全文件行尾规范化混进了 ORD-0057 的业务切片。
+
+    **两条都算修好，任选一条（我倾向 A）**：
+    - **A 拆两笔提交**：第一笔**只**是 `models.py` 的行尾规范化（`chore(models): normalize CRLF to LF, no semantic change`），
+      第二笔才是那 33 行业务改动 + 其余文件。这样第二笔的 diff 就是 33 行，谁都能读懂。
+    - **B 本切片内还原行尾**：把 `models.py` 的 CRLF 恢复成 HEAD 的样子（保留你的 33 行），
+      把"全仓行尾统一"留到我下一次检查点单独做（那时我会一次性对所有混用文件做，并单独记账）。
+
+    **验收（我亲测，不看你的转述）**：
+    1. 提交后我跑 `git show --numstat <sha> -- backend/app/db/models.py`，要求**真实改动 ≈ 33 行量级**，
+       不得出现 1000+ 行；
+    2. 我再数字节：若你选 A，规范化那一笔必须满足"内容 sha 去掉行尾后与 HEAD 一致"
+       （我会用 `git show HEAD:file | tr -d '\r'` 与 `git show <sha>:file | tr -d '\r'` 比 sha256，
+       **相等**才认"零语义变更"这句话）；
+    3. `pytest tests/test_qoder_stay_generation_operations.py` 我在权威树自己跑一遍。
+
+    **边界**：
+    - **不许**为了这事 `rebase` / `reset --hard` / `git clean` / 改 `.gitattributes` 全局口径（那是我要裁的事，不是本单）；
+    - **不许**碰 `tools/verification/mutation_campaign.py` —— 那 334/43 是**我自己的量具**、我 07:05 改的，
+      未提交是我的状态，不要替我提交、也不要"顺手修"；
+    - 其余 6 个文件的行尾**已经是对的**，别一起动。
+    - 本单**不改变** ORD-0057/0063/0064 的任何要求与优先级，只处理提交形状。
+    按 Amendment J §6 回报一行：`STATUS | HEAD | files | tests collected/passed/failed | blocker | evidence paths`。
+  status: DISPATCHED@2026-09-20 23:2x
 
 
 - id: ORD-0001
@@ -1650,6 +1899,50 @@ C4 承诺保护、数据库单 ACTIVE 计划不变式、陈旧游标 fail-closed
 
 
 ## CURRENT_HEAD（权威本地树）
+
+**Commander 刷新 @2026-09-20 23:1x（本机钟，`date` 实读；`git log --pretty='%h %ad' --date=format:'%m-%d %H:%M'`）**
+下面那段旧记录把 HEAD 写成 `576fbf6`，**已过期 8 个提交**；我不删它（留作口径演变证据），只在上面钉真值。
+```
+path    D:\moodle\_qoder_integration_20260919
+branch  integration/frontend-apple-pass1
+HEAD    3f1b44c  09-20 22:33  fix(backend): make one trip shape and one currency the only truth a screen can read
+        1e942d2  09-20 21:39  test(review): read the merged wizard on the authoritative production build   ← 当前手机预览就是这个检查点
+        38278de  09-20 21:15  Merge branch 'agent/ui-overnight-20260920' at ca65483
+        ca65483  09-20 18:56  test(frontend): freeze the gates on the envelope that actually crosses the wire
+        4516777  09-20 18:44  fix(frontend): say why the wizard blocks, and put each 422 on its own field
+        5feaa83  09-20 18:07  fix(frontend): a rejected request now names the field the backend named
+        26d5555  09-20 17:17  fix(frontend): a legal trip cannot stall silently at the wizard's last step
+        baf8c69  09-20 16:23  feat(frontend): keep the wizard's step and typed draft across a reload
+        576fbf6  09-20 21:2x  ← 旧记录里的 HEAD，现已是 3f1b44c 的祖先
+```
+
+### 脏文件归属（Commander 逐个量过，回答 `dc19d662` 22:1x 那句"权威树从 0 变 5 个脏文件，不是我动的"）
+**不是你动的，一条都不是。** 9 条脏项的归属与真实体量（`git diff --numstat` 对比 `--ignore-all-space`，
+外加 Python 直接数 `\r\n` / 裸 `\n`，不看 git 的转述）：
+```
+文件                                              HEAD CRLF/LF   工作树 CRLF/LF   naive +/-   真实 +/-   归属
+backend/app/db/models.py                            1022/89         0/1144       1055/1022    33/0     8c66aa92 在飞的切片 ⚠ 见下
+backend/app/integrations/stay_osm.py                  0/254          0/260          7/1         7/1     8c66aa92
+backend/app/main.py                                  0/10309        0/10396      132/45     131/44     8c66aa92
+backend/app/stay_mobility.py                         1940/0         1961/0        22/1        22/1     8c66aa92（CRLF 保住了 ✓）
+backend/db/schema.sql                                  0/923         0/955        32/0        32/0     8c66aa92
+qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch   0/7440        0/7440         1/1         1/1     8c66aa92
+tools/verification/mutation_campaign.py               0/315          0/606      339/48     334/43     **Commander 自己**（mtime 09-20 07:05:49，
+                                                                                                      我的量具，未提交；不是车道动的，也别替我提交）
+backend/app/stay_generation_operations.py            （新文件）      0/738         new         -       8c66aa92 = ORD-0057 异步作业模块
+backend/tests/test_qoder_stay_generation_operations.py（新文件）     0/765         new         -       8c66aa92 = ORD-0057 的门
+```
+**⚠ 唯一的真问题：`models.py` 被整体 CRLF→LF 翻了。**
+真实内容改动只有 **+33 行 / -0 行**，但 naive diff 报 **1055/1022** —— 那 **1022 行是行尾翻面造成的幻影**，
+不是代码。若照这个样子提交，等于把一个 1000+ 行的文件整体重写：
+blame 断代、跨车道 cherry-pick 每行都冲突、检查点里真正该被评审的 33 行被淹掉。
+注意 HEAD 版本的 `models.py` 本来就是**混用**（1022 CRLF + 89 LF），所以"统一成 LF"方向不算错，
+错在**把它夹在一个业务切片里顺手做**。裁定见 ORDERS 里我 23:1x 给 `8c66aa92` 的那条：**拆开提交**。
+（同一切片里 `stay_mobility.py` 是纯 CRLF 且保持纯 CRLF、其余文件是纯 LF 且保持纯 LF —— 说明车道有纪律，
+这一处是编辑器/工具偶发翻面，不是习惯问题。别把它当指控读。）
+
+---
+（以下为 21:2x 时的旧记录，保留不改）
 ```
 path    D:\moodle\_qoder_integration_20260919
 branch  integration/frontend-apple-pass1
