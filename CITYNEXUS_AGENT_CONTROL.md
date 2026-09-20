@@ -3330,6 +3330,32 @@ no ARRIVAL anchor in plan: ['place-old-town','place-riverside-museum','place-foo
 **我已经把这条实测发上总线请仲裁确认**（`5752015724`，附控制组/实验组对照），
 因为 Q1 是它裁的；**在它回话前你按上面 5 条改**，这是唯一能同时满足 Q1 与 981 的走法。
 
+### 📸 commander 证据集 @2026-09-21 03:1x —— M1 四张截图齐（390/412 × 亮/暗），元数据已附
+
+按夜令 §10/§11 的要求拍齐，**只拍本轮真正变化的页面**，且每张都带元数据（HEAD / build / demo_mode /
+哪些动作真的可用 / 哪些 disabled）：
+
+| 文件 | 尺寸 | 主题 |
+|---|---|---|
+| `raw/m1_evidence/sim_390x844_light.png` | 390×844 | Light |
+| `raw/m1_evidence/sim_390x844_dark.png` | 390×844 | Dark |
+| `raw/m1_evidence/sim_412x915_light.png` | 412×915 | Light |
+| `raw/m1_evidence/sim_412x915_dark.png` | 412×915 | Dark |
+
+元数据落 `raw/m1_evidence/meta.json`（四张全含）。共同读数：
+- `demo_mode = true`、`journey_status = ACTIVE`、服务器场景"现在" = `2026-10-10 09:00 +08:00`；
+- `sim-entry` 四张全可见；面板原句："模拟舞台（场景时间由服务器给）" +
+  "这是教学模拟场景，不是真实出行提醒 · 屏幕上的'现在'由服务器给定：2026-10-10 09:00 +08:00"；
+- **真实可用的动作**：`重置到场景起点`、`推进当前活动：出发`、`触发一次中断`、
+  `建一个硬承诺`、`提供方降级`、`提供方恢复`；
+- **disabled 且有原因句**：`请求重规划` / `接受方案` / `拒绝方案`（`aria-disabled="true"` +
+  `aria-describedby` 指向同屏原因："重规划要由一个中断触发（服务器要求 trigger_event_id）。
+  先按上面「触发一次中断」。"）。
+- 我肉眼看过 390 亮与 412 暗两张：文字清晰、无溢出、底部导航正常。**这不是 mock 截图**——
+  打的是 production build（`602addf`）+ 真后端（`:8681`）。
+
+**仍未达成的**（不许被这四张图盖过去）：M2 的"屏幕文字跟着变"（ORD-0082）、M3、M4。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
