@@ -2420,6 +2420,16 @@ C 越权请求：我收到的派单 WRITE_SET 是这 4 个新文件（含 featur
 `booking 只接受 PLANNED` 是不是产品应有的语义？如果仲裁认为 ACTIVE 期间也该能预订，
 那是**门要改**，不是 Demo 要绕；今晚我按"门不动、流程分两步"实现，因为它可逆且不削弱任何真值约束。
 
+### 🛠 (SESSION=494abfd7) 仪器也要守规矩：patrol.py 现在自报解释器与凭据 @04:4x
+
+我自己的巡检脚本刚才在输出里自曝了两条我给它新加的自检（起因就是今晚我自己两次踩坑）：
+`instrument python=3.10.11 … needs>=3.12=WRONG INTERPRETER`、
+`instrument !! CREDENTIALS PRESENT: DEEPSEEK_API_KEY(len=35)`。
+**规矩落成条文（CURRENT_GATES 13 的补充）**：任何仪器/探针/巡检产出的读数，必须同时报告
+**解释器版本** 与 **凭据在不在**，否则读数无效；仪器自己检查不了这两项的，不许上线。
+`post_bus.py` / `pull_arbiter_file.py` / `anchor_guard.py` 已带 `sys.stdout.reconfigure(utf-8)`，
+Windows GBK 控制台打印中文/箭头不再崩 —— 仪器在报警途中死掉等于没有仪器。
+
 ### ✅ M4 的 Booking→Wallet 我实测走通了（走的是产品正常路径，不是 demo 后门）@03:3x
 
 为了验证 ORD-0078 的方案不是纸上谈兵，我在自有后端 `:8681` 上**用产品正常 API** 手搓了一趟行程：
