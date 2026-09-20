@@ -1817,6 +1817,34 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
     ③ old controller → new controller **只允许一次受控 reload**；
     ④ 现有 lifecycle spec 必须在这三处机制**真实存在之后**才算有效。
     ⇒ **"门在、机制 5/6" 不能叫 DONE。**
+### commander 独立复核 @2026-09-21 02:3x —— ORD-0063 / ORD-0064（`3f1b44c`）→ `ACCEPTED`（后端部分），前端部分待并
+
+车道交了 `3f1b44c fix(backend): make one trip shape and one currency the only truth a screen can read`：
+```
+7 文件 / +1206 / −15
+  backend/app/core/temporal.py            +132   ← 天数口径的真值搬到这里
+  backend/app/main.py                     +107
+  backend/app/stay_mobility.py             +63
+  backend/tests/test_qoder_trip_shape_and_budget_reference.py   431 行（新）
+  backend/tests/test_qoder_rejection_message_keys.py            236 行（新）
+  review/ORD-0063-0064a-frontend.diff     185 行（待应用的前端改动）
+```
+**我亲跑它那两条新门**（解释器 `D:\moodle\CityNexus\.venv`）：
+```
+pytest test_qoder_trip_shape_and_budget_reference.py test_qoder_rejection_message_keys.py
+→ **23 passed** in 2.90s
+```
+**我读了它要应用的前端 diff，方向正确且正是我要求的**：
+- 前端**删掉自己的 `Math.round(hours/24)+1`**，改成消费后端的权威行程形状
+  （diff 注释原话：这段本地算法"把十二小时的当天行程变成了『2 天』，再拿这个编出来的天数去除预算"）；
+- 币种从硬编码 `¥` 改成**渲染 ISO 代码**，理由它写得很准：
+  "`¥` 也是日元的符号，所以这个位置根本不能信任任何符号"——这与"我的"页和住宿卡片的写法一致。
+⇒ `verdict: ACCEPTED`（后端真值 + 两条新门 + 前端 diff 方案）。
+**未收口的部分明确记着**：前端 diff **还没进树**（`review/` 下待应用），
+所以屏幕上那两处症状（"2 天"、`¥200`）**此刻仍未消失**；
+归 `e345b9d6`（`V8Experience.tsx` 已按 Amendment J §2 归它）应用并跑定向门。
+⇒ 不许把"后端已修"读成"用户已看不到那个数"。
+
 8c. **检查点等式必须标明范围**（仲裁 `5750593629` §3）：`preview HEAD == 1e942d2` 只对
     **frontend 构建**成立；后端工作树里未提交的改动**不能**被这个等式顺带算进去。
     后续 user/persona 证据若依赖后端新行为，**必须等后端也进入同一个可标识 checkpoint 后再签**。
