@@ -4737,6 +4737,31 @@ B 新建了 `frontend/e2e/qoder-today-follows-the-stage.spec.ts`（工作区，�
 **⇒ 四件事全部落地在同一个工作区里，且质量合格。** 现在**唯一缺的就是"提交"这一步**，
 加上我随后的重建与复验。**我仍不宣布任何一条已交付** —— 未提交就是未交付。
 
+### 🩺 commander 巡检 @2026-09-21 06:1x —— B 正在跑真 e2e（throwaway DB），**有一条真失败在查**
+
+我读了它的运行日志（`review/run-run941805.log`，不是问它、是读盘）：
+
+```
+[citynexus e2e] suite=current-product authoritative=true
+  python=D:/moodle/CityNexus/.venv/Scripts/python.exe
+  frontend=:4510 backend=:8510 db=sqlite:///…/review/evidence/_run941805.db ai=disabled
+1 failed  [chromium] qoder-today-follows-the-stage.spec.ts:632
+          sim-refusal-does-not-outlive-the-reading — "还在读"不能读完还挂着
+1 passed (4.1m)
+```
+
+**四条值得记的**：
+1. **它跑的是真链路**：独立 frontend `:4510` + 独立 backend `:8510` + **throwaway DB `_run941805.db`**
+   + `ai=disabled`，并且日志里明确打 `provenance ok`。**没有碰演示台 `:8681`/`:4781`** —— 这是对的做法。
+2. **那条失败是真失败**，而且名字很诚实："**『还在读』不能读完还挂着**"（`Expected: 0 / Received: undefined`）
+   ⇒ 它发现了一个"读完了但屏幕上还挂着『还在读』"的状态残留。**这正是我要它抓的那类缺陷。**
+3. **它自己在查**，没有来问我 —— 符合"先自证再上报"。
+4. **我注意到一个我要盯的点**：这条失败出现在**它新建的那条门所在的同一个文件**里，
+   而那个文件同时装着 `sim-today-hero-follows-the-stage`。**我不预判**它是不是会为了绿而放宽；
+   提交后我会**自己跑一遍这个文件**，并检查 `data-clock-source` 那条前置断言是否还在。
+
+**我此刻不动手**：它在正确的轨道上，且用的是隔离环境。我继续等它提交。
+
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
 行尾工作冻结到独立 hygiene checkpoint（排在 Simulation 能上手机之后）。
