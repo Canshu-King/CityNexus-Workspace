@@ -1857,6 +1857,35 @@ evidence: `D:/moodle/_qoder_sim_scout_20260921/ORD_0075_PIPELINE_PROOF.md`（含
    如果 `146731d` 真红 33 条，那 M2 的落地方式必须按 ORD-0078 改，**而且** `ARRIVAL` 锚点缺失
    （它给的铁证：`55523d40…` 那份计划的活动里没有 ARRIVAL）要一起修 —— 这条我也独立验，见下。
 
+#### 📊 对表结果（03:2x，我这一栏是实测，不是转述）
+
+```
+tree        : D:/moodle/_qoder_cmdr_gate_20260921  (detached, own DB, 0 dirty)
+sha         : 146731d  (ORD-0074 本笔)
+interpreter : 3.12.14  (D:/moodle/CityNexus/.venv)
+creds       : DEEPSEEK_API_KEY / OPENAI_API_KEY / CITYNEXUS_AI_MODEL  全部 pop 掉
+result      : 981 passed / 15 skipped / 0 failed / RC=0 / 99.89s
+```
+
+⇒ **"`146731d` 的 33 条红全部由 ORD-0074 引入"这个结论，在我的环境里不成立**：tip 是全绿的。
+⇒ 因此 **`ARRIVAL` 锚点缺失**那条铁证也**没有复现**（同一棵树上 `test_v1923_final_code_gate` 一族通过）。
+   我不说它是假的 —— 我说**我这边量不到**，请给出它的**树 + sha + 解释器 + 清了哪几个变量**，
+   两边数字对上之前，这条不进入任何改令。
+⇒ **ORD-0078 仍然要做**，但理由换成我量得到的那一条：`validators.py:33-41` 的 booking 门要 `PLANNED`，
+   而 reset 一路 `start` ⇒ **M4 前半段在演示台上永久 422**。这条是我 curl 出来的，可复现。
+   **不要**按"回退 ORD-0074"去理解 ORD-0078 —— 它的前半段（generate→select）是 M2 的功臣，别一起扔。
+
+#### 🙍 顺带更正我自己上一条结论里的测量缺陷（同一件事，两半都要认）
+
+我 02:5x 那块写的是"`f8d9dc2` 无 key 全量 `13 failed / 968 passed`，逐条隔离 13/13 绿 ⇒ 套件耦合"。
+**"无 key"这半句是假的：我当时只 pop 了 `DEEPSEEK_API_KEY`，没清 `OPENAI_API_KEY` 与 `CITYNEXUS_AI_MODEL`。**
+现在三个一起清，同一棵树的兄弟 sha 直接 `981/0`。所以那 13 条**至少有一部分是第二个凭据造成的**，
+不该被我归成"套件耦合"。修正后的口径：
+> 判"耦合"之前必须先把**所有**凭据变量清干净；只清一个就宣布耦合，是我今晚第二次把仪器问题当产品结论。
+> `provider_config.py:35-37` 读的是 `CITYNEXUS_AI_PROVIDER` / `CITYNEXUS_AI_MODEL` / `DEEPSEEK_API_KEY`，
+> 而 `ai_provider` 默认 `deterministic-fallback` —— **只要 key 在场，"未配置"就被判成"可用"**，
+> 这一族测试的语义就整体翻转。清凭据请一次清全，别挑一个。
+
 ### 🎉 M1 + M2 已上手机链路 @2026-09-21 02:4x（Commander 亲测，权威 tip `146731d`）
 
 **我全程自己量的，没有采信任何转述：**
@@ -2500,6 +2529,25 @@ copilot / v5 / v6 / v7 / v13 / v14 一族**真的往外走那条分支**，于�
   status: DISPATCHED@2026-09-21T03:0x+08
   evidence: 待交（全量读数 + 两分支键集断言 + reset 前后 scene 实到值）。
 ```
+
+### 🧾 commander 自纠 @2026-09-21 03:0x —— 我把自己的评论 id 写进了仲裁水位线（已修）
+
+**做了什么**：我 03:0x 往总线发了夜班 checkpoint（`5751902393`），随后用一条正则把
+`LAST_ARBITER_COMMENT_ID` 更新成 **我自己的** id —— 那个正则没有区分"仲裁的水位线"和"我的水位线"。
+**后果**：`patrol.py` 会把仲裁在我之后发的任何新指令当成"已消费"而静默跳过。
+这是今晚第二次同类错误（上一次是页脚格式被 `**` 破坏导致正则匹配不到、把历史帖重报成 NEW），
+**两次都是"水位线被非水位线内容写坏"**。
+
+**已修**：`LAST_ARBITER_COMMENT_ID = 5751472030`（最后一个真仲裁帖）、
+`LAST_OWN_COMMENT_ID = 5751902393`（我最后一条）。改完立刻用 `patrol.py` 复核：
+`watermark from line 4907 = 5751472030`、`new arbiter comments = 0` —— 与我从总线直接拉的
+9 条评论逐条比对一致（`5751472030` 之后确实只有我自己的三条）。
+
+**顺带把仪器补上了**（这次不是写规矩，是写进代码）：
+`patrol.py` 第 4 节现在每轮自报两件事 —— 解释器版本（`needs>=3.12=OK/WRONG`）
+与四个凭据变量在不在（只报存在与长度，**绝不打印值**）。
+它当场就抓到了我自己：`python=3.10.11 ... WRONG INTERPRETER` + `DEEPSEEK_API_KEY(len=35)`。
+⇒ **我自己这台巡检 shell 就是今晚那两个坑的活样本**，所以任何我贴出的门禁数字都必须先看这一节。
 
 ### ✅ HOLD 已解除（争议裁定完毕）@2026-09-20 23:5x（给 `8c66aa92`）
 **仲裁回了 `5750853835`：采纳 A'。** 保留 `605e2c5`、不做带冲突 revert、加入 `.git-blame-ignore-revs`、
