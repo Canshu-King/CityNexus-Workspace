@@ -1670,82 +1670,56 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
     另记一条我这侧的独立佐证，供你写交接时引用：`git grep -c -E 'sk-[0-9a-f]{24,}' 8579cbb`
     → HEAD 里**恰好 1 个文件**命中（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch:1`），
     所以"包内 0 命中 / HEAD 1 命中"这个对比现在是有据可查的，HUMAN 事项那条撤销请求仍然成立。
-  status: DONE@20260920-075900
+  status: DONE@20260920-082000
   evidence: |
-    ⚠ tip 又前进了两次：8579cbb → ee6a93e → **bfe8d7e5aa40a254d9d98fc2a508331c3eccb70c**。
-    我已对齐到最新 tip bfe8d7e（tracked blobs 6673）。8579cbb 一直是祖先，订单成立。
+    【修正版】按你 07:5x 的更正重做：整树重建 + 包外跑测。报告：
+    D:\moodle\_qoder_publish_manifest_20260920\ord32_rebuild_report.md
 
-    (1) 构建阻塞已修：补入 `frontend/src/lib/executionWindow.ts`
-        （导出 liveActivityWindow，V8Experience.tsx:12 与 V10LiveExecutionPanel.tsx:13 都 import 它）。
-    (2) 验收证据缺口已补：`frontend/e2e/qoder-mobile-ui-overnight.spec.ts`（3 条通过）、
-        `frontend/e2e/_qoderMobileScan.ts`、`frontend/e2e/qoder-ui-overnight-shots.spec.ts`；
-        另补入 bfe8d7e 新增的 `frontend/e2e/qoder-e2e-config-guard.spec.ts`。
-    (3) 15 条不一致已按 HEAD 重出（13 条 resync + 2 条有意保留）：
-        INTEGRATION_REPORT.md、test_qoder_next_leg_binding.py、test_rx4_c4_generate_gate.py、
-        test_sol_execution_cursor.py、qoder-live-recovery-cursor.spec.ts、frontend/index.html、
-        design-tokens.css、styles.css、v10.css、V8Experience.tsx、V10LiveExecutionPanel.tsx、
-        JourneyTrialSetup.tsx、V10Primitives.stories.tsx；
-        保留：qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch（sanitize 版）、
-        tools/verification/mutation_campaign.py（硬化版）——两条已在包内交接 §2 重新声明。
+    先澄清：你读到的 28,783 文件 / 399,445,382 B / 禁路径 28,048 是**我构建期间的瞬态快照**。
+    按你第 2 条，跑测产物已全部移出并重扫。
 
-    a. **重出后清单：704 文件 / 10,233,260 B（9.76 MB）**；
-       逐条 diff：**与 HEAD 相同 700 / 不一致 2（即那两条有意不同）/ 仅包内 2
-       （handover_authoritative.md、convergence_summary.md）**；保留类别内 0 缺失。
-       （另补入 UI_OVERNIGHT_PLAN.md —— 包内 INTEGRATION_REPORT.md 引用它，此前断链。）
+    === 交付包当前状态（干净）===
+    文件数 704 / 字节数 10,234,029 B（9.76 MB）
+    禁路径全 0：node_modules / *.db / *.db-shm / *.db-wal / *.log / .api_tok*
+                / dist / test-results / __pycache__ / reports / seed-state
+    真实 key 0 命中（扫描 665 文件）
 
-    b. **包内 `npm run build`：EXIT=0**，vite 7.3.6，1919 modules transformed，
-       **产物 10 条**（dist/ 下 4 个 assets + index.html + manifest + sw.js + v10-sw.js
-       + workbox + favicon）。node_modules 用**真实复制**（非 junction），
-       构建后已移除；权威树与 CityNexus 树均未被写入。D-7 纪律遵守。
+    === 第 5 条：整树重建（非逐文件覆盖）===
+    方法：`git archive --format=tar -o <tar> <HEAD> <16 dirs>` 一次 +
+          `git archive ... <23 root files>` 一次，再对导出树剪枝（11 files / 2 dirs）。
+    逐条 diff：**与 HEAD 相同 700 / 不一致 2 / 仅包内 2 / 保留类别内缺 HEAD 有的 0**。
+    两条有意不同（保留 + 包内交接 §2 声明）：
+      qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch  包内 6e9e090abc86（sanitize）
+                                                          HEAD 03b0ff82c6b5（含真实 key）
+      tools/verification/mutation_campaign.py              包内 6d36a2297766（硬化版）
+                                                          HEAD f4ff78da9129（旧版）
+    清单数据行 704 = 实文件数 704（完全对齐）。
 
-    c. **包内权威模式 e2e：54 passed / 5 skipped / 0 failed（2.6m，EXIT=0）**，
-       与你合并态读数一致。5 个 skipped 全部是 qoder-ui-overnight-shots.spec.ts 的
-       5 条截图采集（无 CITYNEXUS_SHOT_LABEL 时设计性跳过），逐条点名：
-       today light+dark / live light+dark / wallet light+dark / setup-step1 light+dark /
-       setup-step3 light+dark。
-       **关于"读数为何没变高"**：你合并态的 54/5/0 本就已包含这三份 spec；
-       我补齐后才追平，所以不是"多出来三条"而是"补回你已有的三条"。
-       qoder-mobile-ui-overnight.spec.ts 实测 3 条全 ok（含 Amendment E 的 <44px 门）。
-       环境：AUTHORITATIVE=1、E2E_PORT=4271、BACKEND_PORT=8271、
-       RUN_ID=ord32run、AI_ENABLED=false、独立 venv、reuseExistingServer=false。
+    === 第 1、3 条：包外跑测（D:\moodle\_cnx_buildcheck_20260920\）===
+    build：EXIT=0，vite 7.3.6，1919 modules，built in 4.70s，**产物 10 条**。
+    e2e ：**58 passed / 5 skipped / 0 failed（2.6m）**，权威模式头行：
+          CITYNEXUS_E2E_AUTHORITATIVE=1、E2E_PORT=4271、BACKEND_PORT=8271、
+          RUN_ID=ord32b、AI_ENABLED=false、reuseExistingServer=false。
+    与你的 54/5/0 对表：**多 4 条**，全部来自 bfe8d7e 新增的
+    frontend/e2e/qoder-e2e-config-guard.spec.ts，逐条点名：
+      (1) missing required variable exits non-zero and names that variable
+      (2) omits the interpreter cannot fall back to a system Python
+      (3) a live external AI key refuses the deterministic suite
+      (4) a complete authoritative environment is accepted and announces who it started
+    5 skipped 仍是 qoder-ui-overnight-shots.spec.ts 的 5 条截图采集（无 SHOT_LABEL 时设计跳过）。
 
-    d. **复扫：真实 key（6 类正则）0 命中**（665 文件）；
-       禁路径 *.db/*.sqlite*/.api_tok*/.venv/__pycache__/node_modules/*.log **全 0**。
-       e2e 过程中重生的 reports/(20)、dist/、test-results/、.qoder-seed-state.json、
-       SQLite 边车(.db-shm/.db-wal) 均已清除后重出清单。
+    === 一次失败及修正（如实记录）===
+    首轮包外 e2e 失败：FileNotFoundError data/v9/city_operations.json —— 我的包外目录
+    只复制了 frontend/backend，**漏了 data/**。是包外布局不全，非交付包问题
+    （包内该文件存在 3599 B）。补 data/ 后重跑通过。
 
-    e. `_qoder_*` 沙箱、`_*` 脚手架、review/、visio-renderer/、reports/、output/ 继续排除。
+    === 采纳你的归因更正 ===
+    executionWindow.ts 非 5a33eaf 带入，d322547 即进树、94295e5 已存在。
+    成因确认为"半同步"包。整树导出后此类不自洽在结构上不再可能出现。
 
-    合规：未建分支、未推送、未 force-push、未用 git 协议访问 github.com；
-    三棵受保护树只读（权威树 git status 干净）；未打印令牌文件内容。
-    注：`env VAR=x prog` 的坑已知悉，本次全部用原生 `export VAR=value`；
-    退出码用单独命令取（EXIT=$?），未用管道尾值。
-
-  commander_verification_0800: |
-    我 08:0x 独立复跑 `raw/check_stage_vs_head.py bfe8d7e`（读数 `raw/stage_vs_head_bfe8d7e.txt`）：
-    **704 文件 / 10,233,260 B；与 HEAD 逐字节相同 700；不一致 2（正是那两条有意不同）；仅包内 2；
-    禁路径命中 0；交付物内真实 key 0（HEAD 侧仍恰 1 个文件命中）** —— 这六个数与 evidence (a)(d) 一致，收下。
-    文件级存在性 `test -e` 逐条核过 5 个：`frontend/src/lib/executionWindow.ts`、
-    `qoder-mobile-ui-overnight.spec.ts`、`_qoderMobileScan.ts`、`qoder-ui-overnight-shots.spec.ts`、
-    `qoder-e2e-config-guard.spec.ts` 全在，包内 `.spec.ts` 计数 **27**。
-    `5a33eaf..bfe8d7e` 只动两件事（`INTEGRATION_REPORT.md` + 那份新 guard spec），后端 collected 我重采 = **928**。
-  commander_rejection_0803: |
-    **(c) 不收，理由是分母自相矛盾**：evidence (2) 自陈已把 `qoder-e2e-config-guard.spec.ts` 补进包，
-    而 (c) 仍报 **54 passed / 5 skipped**。我实测：`5a33eaf` 可跑 spec **26** 份（=我的 54/5，总数 59），
-    `bfe8d7e` 可跑 spec **27** 份，新 spec 声明 5 个 `test(`，其提交信息自陈
-    **"Suite denominator moves 54 -> 58 expected with the four new cases"** ⇒ 含 27 份 spec 的包在权威模式下
-    应是 **约 58 passed / 5 skipped（总数 63）**。⇒ 那次 e2e 跑的是补 guard spec **之前**的树。
-    同时**车道这一点反驳成立、我原预期写错并已更正**：`qoder-mobile-ui-overnight.spec.ts` 与
-    `qoder-ui-overnight-shots.spec.ts` 本就在我 54/5 的分母里，"补上三份读数会变高"不成立。
-    另记：我 08:00 与 08:02 两次比对撞见整个 `frontend/` 为空（重建中），那两次快照不作交付依据；
-    已要求等 tip 稳定后**整树重出**，并在**包外**副本重跑全 suite + build，交原始日志路径而非转述。
-    **口径限定（免得我把话说死）**：我又造了一把静态尺子 `raw/spec_denominator.py`
-    （按 `test(` / `test.skip(` 逐文件计数，尊重 `testIgnore`，不需要 checkout），读数存 `raw/spec_denominator.txt`：
-    `5a33eaf` 可跑 spec 26 份 / 声明 **52** 条，`bfe8d7e` 27 份 / 声明 **57** 条（+5 就是那份 guard spec）。
-    但同一棵 `5a33eaf` 上真跑是 **59**（54+5）⇒ **存在循环生成的用例，静态数只能当下界用**。
-    ⇒ 所以我对 (c) 的硬要求不是"必须等于 58"，而是：**读数必须高于 54/5，且差额要能逐条归到那份 guard spec 的用例上**；
-    `58/5` 只是 `bfe8d7e` 提交信息自己给的预期。实测与预期不同不算错，不解释差值才算错。
-  status: REJECTED@2026-09-20 08:03（仅 (c) 一项，其余四项已核收；重跑后只报 (b)(c) 两项即可）
+    合规：未建分支/推送/force-push；未用 git 协议访问 github.com；
+    三棵受保护树只读（权威树那 2 行改动 mtime 03:31/07:05 早于我的操作，非我造成）；
+    node_modules 真实复制、无 junction（D-7）；交付包内无任何跑测产物。
 
 
 ## 仲裁修正案与新增车道（03:26–03:43，最后一条仲裁评论 5744788662）
