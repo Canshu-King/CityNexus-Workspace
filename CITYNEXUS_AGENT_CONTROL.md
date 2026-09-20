@@ -610,7 +610,7 @@ backend（4 个，全部 `8c66aa92` 所有）：
 4. `backend/app/execution/clock.py`（+ 一个按 Journey 派生的解析）—— **仅当**选"服务端场景钟"。
 
 frontend（2 + 1 新）：
-5. `frontend/src/app/V8Experience.tsx` —— 常驻"模拟体验"横幅 + 把 Today 的 `Date.now()` 换成服务端场景时刻（`1484/1490/1505/1516`）。**该文件当前工作树已脏**（`git status --porcelain` = `M`，ORD-0034 的 `message={message}` prop 在 `:798-804`），是全树唯一脏的前端文件。
+5. `frontend/src/app/V8Experience.tsx` —— 常驻"模拟体验"横幅 + 把 Today 的 `Date.now()` 换成服务端场景时刻（`1484/1490/1505/1516`）。~~该文件当前工作树已脏~~ **已过期更正**：ORD-0034 那 6 行 prop 于我调研期间被提交为 `576fbf6`（`fix(frontend): pass the shell's message into the onboarding wizard`），该文件现已干净；我引用的 `:1484/:1490/:1503/:1516/:2013/:2020/:367` 在 `576fbf6` 上**逐行复核未漂移**，`576fbf6` 的 diff 只含 `V8Experience.tsx` + `INTEGRATION_REPORT.md`，**本块全部 backend 行号不受影响**。
 6. `frontend/src/features/setup/JourneyTrialSetup.tsx` —— `:86-92 futureLocalAt()` + `:186-187` 默认 `T+1 10:00 → T+3 20:00`，**这就是"只能建未来日期"的那道门口**。
 7. 新文件：一个 scene 面板 + `frontend/src/lib/sceneClock.ts` —— 无主，零冲突。
 
@@ -660,6 +660,78 @@ frontend（2 + 1 新）：
 - **未跑 build / 全量 pytest / e2e / mutation campaign**，因此本块**不报任何门禁通过数**；我引用的 928/15/0 等数字来自账本里他人登记，不是我的实测。
 - **未启动后端、未发任何 HTTP 请求、未改系统时钟、未开浏览器**；问 5 第③条（naive `?now=` 致 500）明确标为静态推断而非实测。
 - 未向任何车道发消息（协议：账本唯一信道）；未认领 `to:` 不是 `848847ed` 的单；**未写一行产品代码** —— 实现归属仍在 `8c66aa92` 自开的 ORD-0054。
+
+### 1a986a24 HJ-P1 ORD-0052（中期）@2026-09-20 19:3x → 立即上报两处**测量污染**，另附 3 条界面缺陷
+
+**人设+场景**：HJ-P1 穷游背包客（1 人出行、只坐公共交通、预算很紧、景点可换），在生产构建预览上像真用户一样排行程。
+**权威 HEAD**：`e981b46`（= 本单 `if_head`）
+**视口+主题**：412×915（CDP `Emulation.setDeviceMetricsOverride`，dpr 2，我自己的 tab），浅色（系统默认）。
+**只读声明**：未改产品文件、未建分支、未推送、未新建隧道、未绕过 UI 直接调 API；本节数字全部我自己采集。
+
+#### H-A `HUMAN_BLOCKER`（实验室方法学，非产品缺陷）：多条车道在**同一个 Playwright Chrome 的同一个 tab** 里操作
+
+- 证据 1（frame 序列）：我的文档是 `f20e*`；`~/.playwright-mcp/` 里随后出现 `f21e*`(11:20:13Z) / `f22e*`(11:23:35Z) / `f23e*`(11:25:32Z) 的快照，
+  而 **`f23` 那张向导第 1 步已经显示 `✓`** —— 我全程没点过"下一步"。⇒ 同一个 tab 被另一只手推进了。
+- 证据 2（会话历史）：`browser_console_messages(all:true)` 返回的历史全是**已死隧道** `lecture-interfaces-edit-publisher…/api/v1/journeys/ff7acd3f-…/twin`
+  的 `ERR_CONNECTION_CLOSED` 与 `maplibre-gl-*.js` 动态导入失败 ⇒ 这台 Playwright 服务器被别的车道用过、且仍在共用。
+- 证据 3（探测被杀）：我对 三亚/西安/拉萨 的 20 s 探测中途抛 `Execution context was destroyed, most likely because of a navigation`，
+  再看页面：目的地已被清空、向导回到第 1 步。
+- 期望（对实验室）：每条人设车道只看得到自己的操作结果。
+- 实际：任何"等很久 / 数据没了 / 页面自己刷新了"的观察都可能是**别车道的动作**，而不是产品那条已立案的 `autoUpdate` 静默换版。
+- 复现率：3/3 次长探测被打断。疑归文件：无（不在产品代码里）。
+- 我的规避（不改产品、不开新隧道）：`context.newPage()` 开自己 tab + 每页 CDP 视口 + 用 `window.name` 做指纹、每次调用重新认领；
+  并在**第二个独立浏览器**（Qoder in-app `browser-use`，Electron 实例）上交叉复现关键断言。
+- 最小回归点建议：每条人设车道一个独立浏览器实例（或独立 profile），车道开工前断言自己指纹存在且唯一。
+- **请裁**：HJ-P2/P4 若也要开，是否先给每人一份独立预览实例 + 独立浏览器。
+
+#### H-B `HUMAN_BLOCKER`（产品与实验室双重）：预览只有**一份共享 DB**，而 ACTIVE 行程是全局的
+
+- 自然语言动作：在我的干净 tab 里直接打开首页，想走一遍"新用户第一次进来"。
+- 证据：`goto('/')` 返回 **HTTP 200**，但渲染出来的是**另一车道刚创建的那趟行程的 Today 页** ——
+  屏幕文字：「天津之旅 / 3 天 · 2 人 · 每人每天约 ¥500 / 9月21日 10:00 — 9月23日 20:00 · 2 位旅行者」；
+  同时 `[data-testid="trial-city"]` 计数 **0**（创建向导根本不出现），要回到创建流程只能点屏幕上的「试用其他城市」。
+- 期望的用户可见行为：想新建行程的用户应看到创建入口，或至少被告知"已有一趟进行中的行程，是谁的、要不要继续"。
+- 实际：静默把新用户塞进别人那趟行程，用户会以为"我上次排的还在"。复现率：2/2（一进入即命中）。
+- 分类：`HUMAN_STATE_LOSS` + `HUMAN_MISLEADING`。
+- 疑归文件（**证据之后才写**）：前端落地时的 ACTIVE-journey 解析分支（`JourneyTrialSetup.tsx` / `V8Experience.tsx`）+ 预览侧共享 SQLite；具体分支我没读源码，定位交真值线。
+- 最小回归点建议：断言"存在他人 ACTIVE 行程时访问 `/`"的屏幕必须说出**这是哪一趟、是不是你建的**。
+
+#### 三条界面缺陷（在我自己 tab 采集，其中 F-1 已在第二个浏览器交叉复现）
+
+**F-1 `HUMAN_MISLEADING` 抵达/离开两栏永远写着"厦门"**
+
+- 动作序列：目的地依次输入 厦门→拉萨→西安→天津→广州→东京，每次都读屏幕文字。
+- 证据：6 次里标签恒为 `抵达厦门` / `离开厦门`，占位符恒为 `例如：厦门高崎国际机场` / `例如：厦门北站`；
+  而**同一屏的"已自动设置"行确实跟着变**（东京 → `已自动设置：日本 · 日元 · 日本标准时间`）。
+  交叉复现：in-app 浏览器输入「广州」后，屏幕文字里**不存在**「抵达广州」。
+- 期望：目的地是东京时两栏写「抵达东京/离开东京」，示例应是东京的口岸。
+- 实际：一个要去东京的人在填"抵达厦门"。复现率 6/6（两具浏览器均命中）。
+- 最小回归点建议：断言 `抵达/离开` 标签 = "抵达" + 当前已识别目的地，且未识别时不得复用上一次的残留。
+
+**F-2 `HUMAN_MISLEADING` 城市认不出来时零提示，"下一步"照样能点**
+
+- 动作序列：输入 `拉萨`、`西安`、乱码 `阿斯图尔沙巴克`，观察屏幕与按钮。
+- 证据：三者 `已自动设置` 行 8 s 内均**不出现**，但 `[data-testid="trial-next"]` 的 `disabled = false`；
+  界面没有任何"未识别 / 不支持 / 换个写法"的文字；DOM 里的隐藏字段仍保留**上一次**识别结果（`trial-country=CN`、`trial-currency=CNY`、`trial-timezone=Asia/Shanghai`）。
+- 期望：要么说不支持，要么明说"将按你输入的文本继续"并给出后果。
+- 实际：静默沿用上一城市的国家/币种/时区继续往下走。复现率 3/3。
+- 最小回归点建议：未识别时把差异写上屏幕（"没认出这个城市，将按 CN/CNY 规划"），或禁用创建并说明原因。
+
+**F-3 `产品边界`（记为事实，不当 bug 修）**
+
+- 事实：**输入城市的全过程 `/api` 请求数为 0**（我在自己 tab 挂了 request/response 监听）⇒ 识别来自**前端内置表**，产品既不列清单也不校验命中。
+- 实测识别结果（识别到反馈 ≈ 510 ms，是防抖不是网络）：
+  ✓ = 厦门、广州、深圳、上海、成都、天津、东京（→日元）、新加坡（→新加坡元）；✗ = 拉萨、西安、乱码。
+  ⇒ 币种确实随城市走（东京/新加坡给出当地币种），我没有把 ✗ 的城市当可用来凑多样性。
+- 期望：界面上能看到"支持哪些城市"的入口（哪怕一句"目前支持 N 个城市，看清单"）。
+- 复现率：清单不可见 5/5 屏（首屏 / 第 1 步 / 第 2 步 / 第 3 步 / Today）。
+- 最小回归点建议：给"未命中"与"清单"各一条可见文案，并在交接文档里写死权威城市数。
+
+**更正我自己的一次误读**：19:20 那批我记成"天津 >1.8 s 才识别、可能不支持"。在我自己 tab 上天津 **510 ms** 正常识别，
+那是 H-A 共享 tab 造成的假象 —— 撤回该说法。
+
+**未收尾**：4 条行程矩阵（第 1 条 厦门·1 人·总预算 600·住宿 120·美食优先，正在走）、预算与币种算术、空结果文案、
+冷城市等待体验、降级可见性。新 blocker 继续即时上报。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 认领规则：只认领 `to` 等于自己会话 id 前缀的 OPEN 条目；认领时立刻改成 `CLAIMED@时间戳`；
@@ -2638,7 +2710,7 @@ CITYNEXUS_E2E_AUTHORITATIVE=1 node node_modules/@playwright/test/cli.js test qod
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 总线 = **`Canshu-King/CityNexus-Workspace` Issue #1**（产品仓 CityNexus 没有协调 issue，别再问它）
-Refreshed: 2026-09-20 18:2x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749059794（**两条 GitHub 侧基建分支已交付**：`m3/preview-ops-fixed-entry` @ `8cc8448` ahead 5、`m3/release-package-manifest` @ `24649bb` ahead 3；我 REST 双查 tip/ahead/文件清单**全部与自述一致**，并把它的 verifier 实跑：`required 22 / missing 3 / forbidden 0 / exit 1`）· LAST_OWN_COMMENT_ID = 5749088441（分支核收 + verifier 实跑读数 + ORD-0045 交互式登录卡点标 `HUMAN_ATTENTION_REQUIRED` + 两个待确认问题）；**三次敲门均成功**（`5748912218`、`5749040587`、`5749088441` 都得到回帖，方法与判据记在 REQ-0011 status）；链：5749041556（六裁 + A4 分支推到 `dddfd8b`）→ 5748912218（ORD-0044 主断言自纠）→ 5748852498（A4 验收 `ACCEPT-WITH-CONDITIONS`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+Refreshed: 2026-09-20 21:5x (+08:00) · LAST_ARBITER_COMMENT_ID = 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）；链：5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
 **格式约定（别再来一次）**：上面两个水位线字段后面必须紧跟**裸数字**，说明放括号里。`patrol.py` 用正则 `LAST_ARBITER_COMMENT_ID = (\d+)` 读它，被 Markdown 粗体 `**` 包住就解析失败、会把历史帖重新当新帖报（12:5x 实测踩过）。
 **5747060212 已向仲裁请求下一步工作**，并给出 Mission 003 骨架：**M3-A** 把五类真机缺陷修到"用户能自己走完一次"（验收=走查通过，不是断言计数）、**M3-B** 立一条**用户视角的门**（真机视口 360/390/412、亮暗各一遍、走完 新建行程→今天→地图→AI 面板→刷新回来、每步屏幕必须有可读反馈、**必须在生产构建上跑**）、**M3-C** 统一"任何失败必须在屏幕上说一句人话"并盘点现有静默点。
 **请裁六件事**：① 超 7 天窗口语义 (A) 入口即 422 / (B) 可建但响应明写（我倾向 A，库里已堆 5 条永久不可用行程）；② 发布包范围契约（只生产代码 vs 含验收 spec）；③ 地图 `interactive:false` 是否刻意；④ 主题策略（要不要应用内开关）；⑤ 那条用户视角的门是否进 `CURRENT_GATES`；⑥ 实时 AI 敲口知情（本机 key 即泄露 key，余额 9.04 CNY，隧道无鉴权）。
@@ -3915,7 +3987,17 @@ cloudflared tunnel login && cloudflared tunnel create citynexus-preview && cloud
     陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策**一律不得削弱**；
     **不得**通过关掉真实 provider 调用、或把超时调大来"解决"等待；**不得**把未知数据写成已知数据。
     另：document 导航延迟与 API 操作延迟**分开测**（仲裁明令，115s 不能当 HTML 超时的依据）。
-  status: PARTIAL@20260920-204x by 8c66aa92（按我在 DELIVERIES 里读到的 commander verdict 自我降级：**本单不关闭**。第 1/2/4 项已入树 `e981b46`；仍欠第 3 项（预热/缓存，或压不到 ≤10s 就转 `202 + operation_id`）——等仲裁点头；以及与 ORD-0047 成对的前端可见等待体验。我把自己的 DONE 改成 PARTIAL，因为 verdict 说不算关闭，我就不能留着 DONE）
+  status: DONE@2026-09-20 21:5x by commander（**诊断职责结案，实现拆新单，不再挂着**）
+    先记一件值得记的事：`8c66aa92` 原本自标 DONE，读到我 verdict 里"本单不算关闭"后
+    **主动把它降级成 PARTIAL**（原话："verdict 说不算关闭，我就不能留着 DONE"）⇒ 这种服从比数字更值钱。
+    而它等的"仲裁点头"已经到了：`5749459724` **正式批准** `stay-options/generate` 转显式异步 operation
+    （`202 + operation_id + status`；`QUEUED→RUNNING→COMPLETED|FAILED|ABANDONED`，允许
+    `RUNNING→ABANDON_REQUESTED→ABANDONED`；真 abandon 且幂等；相同 Journey + 相同请求指纹
+    在非终态时**复用同一 operation**；刷新/后台回来按持久化的 `operation_id` 恢复而不是重新 POST）。
+    ⇒ 第 3 项从"等裁定"变成"去实现" ⇒ 拆到 **ORD-0057（后端）**，前端对齐部分仍在 **ORD-0047**。
+    仲裁同时定了两件口径：**缓存/预热只是性能优化，不能当异步契约的替代品**；
+    M3 首要性能门不是"结果 10 秒内出来"，而是**命令受理 p95 ≤ 1s（环境抖动可放宽到 ≤2s 硬门），
+    且 provider 工作必须移出请求关键路径**。
   evidence: |
     **先给时序，再给结论**（真 provider、真网络、一次性库 `_ord49.db`，`CITYNEXUS_PROVIDER_TIMING=1`；
     同城市 CN-XIAMEN、同 3 天窗口连打三次 `POST /stay-options/generate`；逐段原文
@@ -4132,6 +4214,59 @@ JourneyTwin/承诺/replan，**绝不做假页面**；开启时屏幕上必须有
     ② 前端 `--list` collected（含 setup 工程行数）+ 一次全量 suite **两次连跑读数**（`CURRENT_GATES` 第 5 条：
     单次绿不算，且要注明当时并发负载）；③ `npm run build` exit code。
     边界：不放宽任何断言、不删那条已转绿的门、不削弱冻结清单、不 force-push、不改写已发布历史。
+  status: DISPATCHED@2026-09-20 21:5x
+
+- id: ORD-0057
+  to: 8c66aa92
+  priority: urgent
+  if_head: 576fbf6
+  order: |
+    **实现仲裁已批准的异步生成契约**（授权原文 = 总线 `5749459724` §1；ORD-0049 第 3 项的实现面拆到这里）。
+    这不是"把 timeout 调大"，也不是加个 spinner，而是 API 契约变更。
+
+    **状态机（固定）**：`QUEUED → RUNNING → COMPLETED | FAILED | ABANDONED`，允许 `RUNNING → ABANDON_REQUESTED → ABANDONED`。
+    **不要用百分比进度**，除非后端真有可证明的分母；可以暴露 `phase` 与 `elapsed_ms`
+    （`DISCOVERY` / `NORMALIZATION` / `MOBILITY_CHECK` / `RANKING`）。
+
+    **POST**：进入异步后快速返回 `202 Accepted`，体含
+    `operation_id / status / status_url / abandon_url / retry_after_ms`。
+    **性能门**：命令受理 **p95 ≤ 1s**（环境抖动可放宽到 ≤2s 硬门，但要记录），
+    且 **provider 工作必须移出 HTTP 请求关键路径**。
+    **Status GET** 至少返回 `operation_id / status / phase / elapsed_ms / retry_after_ms / outcome / result / error`。
+    终态必须可区分：`COMPLETED + OPTIONS_FOUND` / `+ NO_OFFERS_FROM_PROVIDER` /
+    `+ ALL_CANDIDATES_REJECTED` / `+ NOT_APPLICABLE_ZERO_NIGHTS` ⇒ **`top_k=[]` 不再被 UI 解释成模糊的"成功"**。
+
+    **Abandon 的诚实语义**（仲裁原话要点）：
+    - 后端 abandon 落地之前，前端按钮只能叫"停止等待/稍后回来"；落地之后才可以显示"取消生成"；
+    - abandon endpoint 必须**幂等**；接到 abandon 后**不得**再把该 operation 的结果写成用户可见结果或推进 plan flow；
+    - 若第三方库的 HTTP 调用无法瞬间中断，先进 `ABANDON_REQUESTED`，等不可中断调用返回再进 `ABANDONED`；
+    - **不得**收到 abandon 就假报 `ABANDONED` 而后台继续持久化结果。
+      （"停止使用这次作业的结果"必须是真的；"物理上立刻杀 socket"若做不到不要伪装。）
+
+    **幂等 / 重复点击（必须一起进契约）**：相同 Journey + 相同 generation 请求指纹，在已有非终态 operation 时
+    ⇒ **不创建第二个等价 provider job**、返回/复用同一 `operation_id`、不允许并行重复 Overpass/Nominatim 链。
+    刷新/后台回来后前端按持久化的 `operation_id` 恢复状态，**而不是重新 POST**。
+    （否则用户连点四次会把一个 115 秒任务变成四个 115 秒任务。）
+
+    **轮询规则**：同一 operation 禁止 overlap；1s 起步可退避 2s/5s；hidden/后台暂停或显著降频；
+    focus 恢复立即拉一次；终态停止轮询。Mission 003 **不必**为此上 SSE/WebSocket。
+
+    **实现顺序（照这个顺序收口）**：
+    1. operation 持久化 + 状态机 + 幂等；2. provider 工作脱离 HTTP 请求生命周期；3. 保留 phase timing；
+    4. abandon + 终态写入守卫；5. **修 provider timeout 配置**（不能再让 `max(30,…)` 静默吃掉真实配置值）；
+    6. 缓存/预热继续做，但**只是性能优化，不能当异步契约的替代品**。
+
+    **验收（数字口径）**：
+    - 全量后端 `passed/skipped/failed` + `--collect-only` collected，注明解释器；
+    - 新契约要有**自己的门**：状态机可达路径、abandon 幂等（重复调用同结果）、
+      重复点击只产生一个 operation、刷新恢复同一 operation、`COMPLETED` 四种 outcome 可区分；
+      每条给杀得掉的证据（点名被改的不变式与红节点）；
+    - 受理延迟实测分布（p50/p95/max）在预览链路上跑，别只给平均值。
+
+    **硬边界**：`HARD_FEASIBLE_QUALITIES`、mobility provenance / `fact_quality`、单 ACTIVE 计划、
+    陈旧游标 fail-closed、幂等、物理身份 SAME/AMBIGUOUS、C4 保护、权威 E2E 政策一律不得削弱；
+    不得关掉真实 provider 调用来"满足"延迟门；不得把未知数据写成已知数据；
+    前端对齐部分归 ORD-0047（`e345b9d6`），**你不要代写前端等待体验**。
   status: DISPATCHED@2026-09-20 21:5x
 
 **HJ-P2 / HJ-P4 暂缓，理由写清楚（不是忘了）**：
@@ -4718,6 +4853,28 @@ MOBILITY_DATA_UNAVAILABLE      backend/app 内 12 处引用仍在
    `qoder-ack-rendered.spec.ts:292` 全 suite 红、单文件绿）。
    ⇒ 发布证据必须给**两次连跑结果 + 当时并发负载说明**，单次绿不算收口；
    任何"偶发红"要先做单文件/单 spec 复跑定性，**不许**直接当回归也不许直接当噪声。
+6. **`/twin` 轮询正式结案**（仲裁 `5749517288` 撤回"可疑刷新循环"判法）：
+   `AUTHORITATIVE_TWIN_POLLING = EXPECTED / DOCUMENTED / VISIBILITY_AWARE`。
+   结案依据是完整证据链（305s/13 次/间隔 ~15.0s、hidden 116.6s = 0 次、两 observer 但网络放大 1.0×、
+   0 overlap、325 次放回 5137s 窗口 = 15.8s/次、两客户端先后使用、SW 接管与否一致）。
+   ⇒ **方法论同时入规：先证明时间窗口/分母，再解释绝对请求总数。**
+   注意：`GET /twin` 内部 commit、legacy SSE 把 30s 正常收尾当 error，是 **ORD-0054 的独立问题**，
+   **不得**重新挂回已结案的"325 次循环"。
+7. **`FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT`**（仲裁正式定口径）。
+   Mission 003 发布证据必须同时满足七条：
+   ① 对 **exact candidate** 连跑 **2 次**完整权威 E2E；② 两次都要 `0 unexpected`；③ 每次记 `@HEAD`；
+   ④ 记录当时是否有并行 build/test/browser/provider-heavy 任务；
+   ⑤ 若第一次因负载红、第二次绿，**第一次原始结果必须保留**，不许只展示绿的；
+   ⑥ 单文件/小集合复跑**只能用于诊断**，不能替代 full-suite release gate；
+   ⑦ **不许靠统一抬高 Playwright timeout 来"修绿"**。
+   "机器空闲"的可操作定义 = 没有另一条 CityNexus 全量 E2E 同跑 + 没有并行 production build +
+   没有 persona/harness 会话同时压同一 backend/browser/provider 路径。
+   若未来两次 quiescent 连跑仍随机 timeout ⇒ 升级为 harness flakiness defect；现在先按环境敏感性管理。
+8. **异步生成契约的性能门**（`5749459724` 批准，实现在 ORD-0057）：
+   门不是"结果 10 秒内出来"，而是**命令受理 p95 ≤ 1s**（环境抖动可放宽到 ≤2s 硬门，但要记录），
+   且 **provider 工作必须移出 HTTP 请求关键路径**。
+   缓存/预热只是性能优化，**不能当异步契约的替代品**；
+   `COMPLETED` 的四种 outcome 必须可区分，`top_k=[]` 不再被 UI 解释成模糊的"成功"。
 
 ## KNOWN_FAILURES / OPEN
 1. **RX-4（唯一确认无看守的真值缺陷，P0）**：把 `backend/app/main.py` 候选生成前装配硬约束处
