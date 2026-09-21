@@ -2960,14 +2960,38 @@ status: ORD-0099 DONE（`d481464`，你已 ACCEPTED@14:5x）· ORD-0101 DONE（`
 evidence: `d481464` / `aee6c7a` · 5+4 gates · 5/5 + 4/4 mutants killed · 全量 1045/1020/15/10 ×2 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/{ord99,ord101}/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
-ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— ORD-0099/0101 交付块已补在 DELIVERIES，两条按你的验收记 DONE。现在**接单 ORD-0095-1**，按你切的那段做，不越 0095-2：
-① 四端点全部落成真路由（`GET /api/v1/destinations/capability?query=`、`POST /api/v1/catalog-hydrations`、`GET …/{operation_id}`、`POST …/{operation_id}/abandon`），词汇与必填字段照 arbiter v1（`capability` 三态无 UNKNOWN、coverage 六键三值、status/phase **双轴**、required 九件、响应码 200/202/422/503 **无 409**）；
-② 生命周期**复用** `StayGenerationOperation` 那套骨架（202 + 轮询 + abandon + `retry_after_ms` 阶梯 + `reconcile_interrupted_operations()`），**不新造第二套生命周期、不加第二个 status 字段**；
-③ 幂等在**持久层**：durable fingerprint 四段 + 唯一索引强制"同指纹非终态至多一条"，不靠进程内锁；
-④ 顺序 = 短读 → 放锁 → 网络 → 短写 → 释放，provider 网络**绝不跨 SQLite 写事务**；无 `progress` 字段；
-⑤ `GET /demo/scene` / `/plans` / `/twin` 形状**只增不改**，CNX-DEMO 与北京 fixture 行为不变；
-⑥ 只用**既有确定性来源**（fixture/已入库目录）出真值，不新接 live provider —— 那是 0095-2，等 B 的九问与 R1/R5。
-收口口径复述一遍以防我跑偏：**G1/G2/G3/G4/G6b/G7 六条一起绿 + parity 反向门绿**，单条绿不算数；F 的门文件我不改断言；**G5 不在本笔范围**，它会继续红，我在收口报告里点名。开工先给你一行进度：设计 + 迁移表。
+### 📐 (SESSION=494abfd7) §9 的 bound 现在有**实测常数**了（我自己复跑确认）：矩阵上限是 **cells ≤ 100**，不是"locations ≤ 100" @15:3x
+
+车道 B 的 ORD-0105（水合县的 mobility 矩阵）交回，我没有直接信，自己用裸 socket + 真 TLS 复跑：
+
+```
+POST https://valhalla1.openstreetmap.de/sources_to_targets   （costing=pedestrian，贡山中心点附近造点）
+N=10  → HTTP 200 | 1018 ms | 100 cells / 100 non-null
+N=11  → HTTP 400 | 1406 ms | {"error_code":150,"error":"Exceeded max locations: 100.000000"}
+```
+⇒ **规则是"格子数 ≤ 100"（10×10），而报错文案说的是 locations** —— 11 个源 + 11 个目标 = 22 locations < 100 却被拒，
+所以**任何按文案字面预检的客户端都会算错**（B 先指出，我复现确认）。
+
+**契约里从此有据**：一次矩阵最多 10 个点/边；瓦片数 = `⌈N/10⌉² × costing 数`，
+而 `runtime.py:216` 固定跑 **pedestrian + auto 两遍** ⇒ **N ≤ 20 就是 4 瓦片 × 2 = 8 次请求**（B 实测 ≈4.3 s；N=24 ≈9.6 s）。
+⇒ 任务书 §9 要的"bound 要有实测理由"，答案就是 **N ≤ 20**。
+
+**另外三条会改变设计的事实（都来自 B，其中两条我自己核过代码）**：
+1. **生产 venv 里 `routingpy` 与 `requests` 都没装** ⇒ `routingpy_adapter.py:90` 那条"可换 valhalla/graphhopper/OTP/OSRM"的路
+   **今天是死代码**（`build_routingpy_client` 直接抛 `routingpy is not installed`），`matrix_minutes()`（`:79`）不可达；
+   真正能跑的只有 `valhalla_http.py:29` 一家，且 **`CITYNEXUS_LIVE_VALHALLA_URL` 默认 None ⇒ `runtime.py:110/:207` 直接回落 mock**。
+   ⇒ 这与 R6（`CITYNEXUS_REAL_CITY_ENABLED` 默认 false）是**同一类问题**：**在线能力在出厂配置里是关的**，
+   所以"HYDRATABLE + 真矩阵"在评审环境里今天**永远走不到**。我把这条并入 R6 请仲裁一起裁。
+2. **没有任何限流头**（只有 `Server: nginx`，无 `Retry-After`、无 `X-RateLimit-*`）⇒ 退避与并发门**必须自己实现**；
+   两个并发矩阵互不污染（都 200/100 cells/0 null，只是慢的那条 +45% 延迟）⇒ 车道 C 的并发门可以按"自限流"设计。
+3. **矩阵 `time` 的单位是秒**（`1.763 km ↔ 1324` ⇒ 22.07 min 步行，自洽），生产代码 `/60.0` 是对的；
+   **但没有任何断言钉住单位** ⇒ 换一档返回毫秒的部署会**静默把所有时长压小 1000 倍**。
+   我已把这条转给车道 F 写门（B 自己建议的，我采纳）。
+
+**还有一条我不许任何人"帮忙"的**：provider 不可达时代码已经答对了——逐腿 `MOBILITY_DATA_UNAVAILABLE:{from}|{to}`
++ coverage 投影 `legs_hard_eligible / legs_total`（docstring 明说"reported, not judged"），
+而**直线距离（haversine）在现有代码里只用于 `distance_m`/邻近判断，从不变成旅行时间**。
+⇒ **谁都不许把直线距离折算成旅行分钟来"让小县城能出方案"**（这正是 R5 我请仲裁裁的东西：要的是把 PARTIAL **上报成产品态**，不是造假证据）。
 
 ### 🎯 (SESSION=494abfd7) 用户"北京 AI 0 方案"的根因**定案**（车道 A 找到，我自己复验）—— 开 ORD-0107 / ORD-0108 @15:2x
 
@@ -3931,6 +3955,27 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
     附"现有用户面文案与真值的偏差清单"，并给车道 C 一个"只增不改"的实现位置建议 + 反例。
     并入项：AI 面板路径与直接规划路径为什么不同源。只读，写集仅 _qoder_anywhere_scout_20260921/**。
   status: ACCEPTED@2026-09-21T15:2x+08 by 494abfd7（我在 351dd31 干净副本复验：PlanWithAiSheet.tsx:355-362 的"取服务器顺序前 8 条 + ids<2 就根本不发 plans/generate"与 services.py:1349-1352 的 place_ids 分叉全部命中 ⇒ 用户"北京 AI 0 方案"根因定案；另交付 6 条文案偏差清单、两个反例、一处 UNKNOWN 自标）
+
+- id: ORD-0105
+  to: c01d72a3
+  priority: critical
+  if_head: 351dd31
+  order: |
+    量"水合出来的县能不能算 mobility 矩阵、多贵"：可接引擎清单+本机可达性（标出口分母）、
+    真实坐标集矩阵耗时/成功率/限流头/可否批量、不可达时能给什么真值、并发是否互相干扰。
+  status: ACCEPTED@2026-09-21T15:3x+08 by 494abfd7（我自己复跑确认：N=10 → 200 / 100 cells / 1018ms；N=11 → 400 error_code=150
+    "Exceeded max locations: 100.000000" ⇒ 规则是 **cells ≤ 100**，文案的 locations 是陷阱；§9 bound 定为 **N ≤ 20**（4 瓦片 × pedestrian+auto 两 costing ≈4.3s）。
+    另三条：routingpy/requests 未装 ⇒ 那条路是死代码；valhalla 只在 CITYNEXUS_LIVE_VALHALLA_URL 设了才生效（默认 mock）；无限流头 ⇒ 自限流；
+    time 单位是秒但无断言钉住）
+
+ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— ORD-0099/0101 交付块已补在 DELIVERIES，两条按你的验收记 DONE。现在**接单 ORD-0095-1**，按你切的那段做，不越 0095-2：
+① 四端点全部落成真路由（`GET /api/v1/destinations/capability?query=`、`POST /api/v1/catalog-hydrations`、`GET …/{operation_id}`、`POST …/{operation_id}/abandon`），词汇与必填字段照 arbiter v1（`capability` 三态无 UNKNOWN、coverage 六键三值、status/phase **双轴**、required 九件、响应码 200/202/422/503 **无 409**）；
+② 生命周期**复用** `StayGenerationOperation` 那套骨架（202 + 轮询 + abandon + `retry_after_ms` 阶梯 + `reconcile_interrupted_operations()`），**不新造第二套生命周期、不加第二个 status 字段**；
+③ 幂等在**持久层**：durable fingerprint 四段 + 唯一索引强制"同指纹非终态至多一条"，不靠进程内锁；
+④ 顺序 = 短读 → 放锁 → 网络 → 短写 → 释放，provider 网络**绝不跨 SQLite 写事务**；无 `progress` 字段；
+⑤ `GET /demo/scene` / `/plans` / `/twin` 形状**只增不改**，CNX-DEMO 与北京 fixture 行为不变；
+⑥ 只用**既有确定性来源**（fixture/已入库目录）出真值，不新接 live provider —— 那是 0095-2，等 B 的九问与 R1/R5。
+收口口径复述一遍以防我跑偏：**G1/G2/G3/G4/G6b/G7 六条一起绿 + parity 反向门绿**，单条绿不算数；F 的门文件我不改断言；**G5 不在本笔范围**，它会继续红，我在收口报告里点名。开工先给你一行进度：设计 + 迁移表。
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
