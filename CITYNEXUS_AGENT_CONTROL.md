@@ -3354,6 +3354,37 @@ status: ORD-0095-1 PARTIAL（`fed1861` 半件已提交；六条收口门 + parit
 evidence: `fed1861` · 16 门（14 绿 / 2 合跑红）· F 门 11 绿 2 红（G5 + g9b）· `D:/moodle/_qoder_ord30_evidence_20260920/ord95/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📥 (SESSION=494abfd7) 仲裁一口气回了 **7 条**（R1~R8 全部冻结）+ 用户的硬令（恢复 Harness/EAC、重启四个人类测试代理）—— 新单 ORD-0118~0124 @17:4x
+
+**总线水位线**：`LAST_ARBITER_COMMENT_ID` 现在推进到 **5758293014**（17:28）。我按 sha 拉回并落盘了两份契约文件：
+- `raw/contracts_anywhere_v1.openapi.yaml`（**18,070 字符**，blob `6aa65eabf321`，tip `e49dfb1d`）——仲裁自己写的 OpenAPI；
+- `raw/docs_anywhere_provider_policy.md`（**11,466 字符**，blob `4e72be699154`，tip `8f10885029d5`，**仅新增 1 文件 +246/-0**）。
+
+**已冻结的裁定（我逐条读过，与我的 v0.2 差异以它为准）**
+- **R1 批准**：生产默认 resolver 改成 **PhotonGeocoder**；Nominatim 只作**显式配置才启用**的兜底，不得隐式兜底；
+  `real_city.py:1125` 不得把内部 `journey.city_code` 当自然语言地名；异常类名不得透给用户；
+  **"Nominatim 不可达"是出口相关运行事实，不许写成全球真理**（这条我同意，B 已按分母写）。
+  ⇒ **我此前压在 ORD-0099 里的"不许换默认解析器"现在解除**：换默认已被批准，但要照 R6 的 profile 方式做，不改全局默认值语义。
+- **R2 批准**（结构/运行分层）；**R3 批准 (a)**：`is_current` 是**投影**、不入库、不单独更新 ⇒ 车道 C 的实现正是这个形状，**关闭**；
+  **R4 批准**：`coordinate_system=WGS84` + provenance 里 `source_coordinate_system`，转换只有一个归属边界，Amap payload 不冻结。
+- **R5 = (b)**：城市级 mobility `PARTIAL` **不得自动阻塞规划**；正常可提交计划的**每条实际使用的腿必须 100% 有合格证据**；
+  只凑得出部分可达段时，结果必须是 **PARTIAL / NON_SELECTABLE preview**，不得 `hard_constraints_passed=true`、不得 SELECT/ACTIVE/accept/建承诺；
+  缺口逐段结构化（`from_place_id/to_place_id/reason_code/evidence_state/provider observations`）；
+  **`details=null` 从此判为契约缺陷**；冷城市**不需要先算完整 N² 矩阵**。
+- **R6**：代码默认仍 `false/None`；**review/demo profile 显式** `CITYNEXUS_REAL_CITY_ENABLED=true` + live Valhalla URL；
+  启动日志/运行状态要能看见"online discovery enabled"与 provider status；**live 失败不得静默回退 mock 冒充 live**；
+  CNX-DEMO / 北京 golden 不因 profile 被偷偷改成 live。
+- **R7 升格为硬契约**：AI 规划与直接规划必须进**同一个 deterministic planner/feasibility core**；`place_ids` 只能是 allow-list；
+  同一 normalized input 下**不允许** direct 有候选而 AI=0；**parity 门必须拿用户今天那句北京原话做固定回归**；
+  前端 `slice(0,8)` 与"<2 就静默不发请求"**必须删除/改成具名 BLOCKED**。
+- **次序认可**：0114 → 0115 → 才定 readiness 阈值。
+- **R8 批准**：允许 4 分钟级冷水合，但**不许把用户绑在前台等**——受理 ≤1s、durable 可查、刷新/重开复用同一 nonterminal operation、
+  显示 phase/elapsed/provider status、**不做假百分比**；完成后**只推进能力，不自动改 Journey、不自动生成/选择/启动计划**，给"去规划"动作；
+  评审环境**可以预水合一次**，但必须诚实标 warm/READY 并另留 cold-path 证据；**v1 不定 60s SLA**。
+
+**用户经仲裁转达的硬令（我照办，不重解释）**：Harness/EAC **不等于** Human Journey Lab，不许归档/合并/替代；
+要把真正的 Harness/EAC 线从本地盘挖回来并**跑通一次可执行 smoke**；四个人类测试代理**立刻全部重启**。
+
 ### 🧭 (SESSION=494abfd7) ORD-0095-1（半）我亲手量了：能力端点**活了**、水合操作**202 受理 3ms**，但揪出两条真缺陷 @17:25
 
 在干净 detached 副本 `_qoder_cmdr_ref_20260921 @ fed1861`（凭据全清、3.12.14）：
@@ -3403,6 +3434,20 @@ POST /catalog-hydrations {"query":"贡山独龙族怒族自治县"}
 
 **顺带**：车道 D 的 `7e2185a`（AI 面板说清"是哪一种没有"+ 给一个下一步）我看到了，`g5` 仍红是因为**后端 `run.outcome` 还没填**——
 那条属 C；D 的前端半件我等你落账本再一起核。
+
+**ORD-0095-1 的 capability 修正已交：`766932f`**（账本行尾我这次读到 CRLF=0 / LF=10148，按 LF 只加我这一段，别人的一行没动）
+
+**你点的"capability 没读现有目录"：我按你的口径把能修的都修了，但那条机制我复现不出来——两边读数都摆出来，别让你我各修一个不同的东西**（树 `766932f`、自有库 `_qoder_cap_repro.db`、TestClient、3.12.14、四把凭据清空）：
+
+- 你量到：`?query=CN-BEIJING` ⇒ 六轴全 MISSING、`candidate_count` 全 0，而 `/places?city_code=CN-BEIJING` 有 8 行。
+- 我复跑同一条请求：`attractions=READY(4) / food=READY(3) / nightlife=PARTIAL(1) / lodging=MISSING(0) / mobility=READY(56) / booking=READY(2)`，`destination_resolution=catalog`，`capability=HYDRATABLE`。⇒ **"评估器只读新表、没读 `places"` 这一条没复现出来**（`coverage_detail` 读的就是 `places` + `city_services` + mobility fixture 三处）。
+- 我找到一件**能让你的读数成立、而当时根本无法被说出口**的事：`readiness-v1` 的分类桶按 category 字符串匹配，**任何不在桶里的 category 对六个意图都不贡献** ⇒ "有 8 行但字符串我没认" 与 "真的什么都没有" 对外是**同一个形状**（六次 MISSING）。修两半：**①** 把发现/种子路径真会写的字符串补进桶（`tourist_attraction` / `guest_house` / `fast_food` / 中文标签等）；**②** 新增 `unclassified_categories`，把"有货但我没归类"如实报出来（**报 ≠ 计入**：未分类仍抬不起任何意图）。
+- §7 的来源标注落到轴上：`coverage_detail[*].source_kinds` 每轴自报来源类，place 与 service 行共用同一条判定（`mock-city ⇒ GOLDEN_FIXTURE`，未识别 provider 一律按**最弱**可信类报、绝不升成 `REMOTE_PROVIDER`；空轴是 `[]`，不是编一个 `OK`）。
+- **门加了两条**（在你点的那条之上）：① `CN-BEIJING` 的 `attractions.candidate_count > 0` 且 `capability != UNAVAILABLE` 且 `provenance.source_kinds == ["GOLDEN_FIXTURE"]`、`lodging.source_kinds == []`；② 塞一条 policy 不认的 category ⇒ 该轴仍 MISSING，但 `unclassified_categories == {"pet_grooming": 1}`（专防"下一个假 MISSING"再长得像空目录）。
+- 本轮同一条命令的合跑读数：**31 passed / 3 failed**。三条红 = **G5**（不在 0095-1 收口清单，按你拆分继续红）+ **我自己那 2 条 abandon 门**（隔离各自绿、合跑红会**在两条之间轮换** ⇒ 是作业生命周期竞态，不是某条断言太严；下一步钉 `_MAX_WORKERS=2` 的池与"abandon 落在 `read_operation`/`mark` 之间"那个窗口。这条没收，我不改口径也不放宽。）
+
+**请你回我一个信息**：你那台是 uvicorn 还是 TestClient、哪个 sha、哪个库、query 串原文（`CN-BEIJING` 还是 `北京`/别的拼法）。`unclassified_categories` 已经能把当时看不见的东西显出来——若你的现场是 category 字符串不同，这版直接把"假 MISSING"变成"看得见的名下无货"；若不是，我按你那台的形状再查，不拿我这边绿当结论。
+**未预录县那条记下了**：今天 `UNAVAILABLE + NO_CANONICAL_IDENTITY` 是诚实的（解析器没接线），0095-2 接线后必须转 `HYDRATABLE`；我这侧已有门盯着这条（`TRANSIENT_REASONS` 不得配 UNAVAILABLE + "解析器到不了仍是可重试"那条门），你探针复验若对不上，以你的读数为准。
 
 ACK: 8c66aa92 back @2026-09-21 17:1x（本机钟 `date`=17:16:35 +0800）—— ORD-0111 / ORD-0112 收到，队列按你排的走：**0111 先做**（8 站 8/7/6 就停手这条我核过：`_generic_compose_variants` 的 `range(min(3, len(ordered) - 1))` 就是你说的阶梯上限），
 然后 **0112**（abort ⇒ 后续写 500：我自己起 uvicorn + 自有库 + 自有端口，绝不碰 `:8661/:8662` 与预览台；复现不出我就把分母写全，不猜一个修了交你），
@@ -4929,6 +4974,92 @@ CLAIMED: ORD-0113 by dc19d662（车道 E · 只读 · 本机钟 `date`=17:01 · 
     量"一个从未预录的县，冷水合到底多久、能拿到多少真货"（§20 点名的 cold/warm latency 两个数字）。
   status: ACCEPTED@2026-09-21T17:1x+08 by 494abfd7（冷趟 238.3/245.3s、7/10 类目被自家 12s 超时掐掉、只剩 8-10 候选 4-6 有名；
     warm==cold 因为 TTL 只写不读；radius 被 :716 硬夹 5000m；nightlife 无 tag 分支。它撤回的一条 ORD-0092 踩坑说法我核过，撤回成立）
+
+- id: ORD-0124
+  to: e345b9d6
+  priority: medium
+  if_head: 4922f6f
+  order: |
+    UI OSS Donor 铺路（仲裁调研，**排在 0100 残项①/0107/0104 之后**，不许为它牺牲真值门）：
+    主 donor `stvlynn/OpenTrip`（Apache-2.0，栈与 we 重合：React19/Vite/MapLibre/TanStack Query/Lucide），
+    只借**交互结构与组件模式**（MobilePlannerHeader / MobileStopDetailSheet / MobileTabBar / ScheduleBoard /
+    DayPills / StopCard / TripMapView / PlaceSearch / ReservationsBoard / BudgetBoard / MobileAgentSheet）；
+    第二 `clawnify/OpenTripPlanner`（MIT，卡片/pill/筛选面板，**不搬它的 Leaflet**）、
+    第三 `shusingh/michi-planner`（MIT，map-first + 多步表单，适合 Journey Setup）、
+    第四 `Serkanbyx/travel-planner`（MIT，dnd-kit 日程卡，我们已有 dnd-kit/RHF/zod）。
+    **AGPL 系（Prot10/MyTripPlanner、andre-lmarinho/turistar）只看不搬代码**。
+    领域真值一律留给我们自己的 JourneyTwin/PlanVersion/Event/ReplanProposal/Commitment/Simulation——
+    **借皮不借脑**。先交一页"逐块移植清单 + 每块的门怎么改"，我批了再动代码。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
+
+- id: ORD-0123
+  to: 8ccd71d8
+  priority: high
+  if_head: 4922f6f
+  order: |
+    契约对齐：把仲裁的 `contracts/anywhere_v1.openapi.yaml`（我落盘 `raw/contracts_anywhere_v1.openapi.yaml`）
+    与我们草案 `contracts/openapi-anywhere-draft.yaml` 逐字段对差，**冲突以仲裁为准**，差集写进账本；
+    并为 R5 补门：`MOBILITY_DATA_UNAVAILABLE` 的 gap schema（from/to/reason_code/evidence_state/observations）、
+    PARTIAL 结果必须 NON_SELECTABLE（不得 hard_constraints_passed=true / 不得 SELECT/ACTIVE/accept/建承诺）、
+    `details=null` 直接判红。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
+
+- id: ORD-0122
+  to: 8c66aa92
+  priority: high
+  if_head: 4922f6f
+  order: |
+    R6 落地：新增/复用**显式 review/demo profile**，其中 `CITYNEXUS_REAL_CITY_ENABLED=true` + live Valhalla URL；
+    **代码默认保持 false/None**；启动日志与运行状态面要能看见"online discovery enabled"与 Photon/Overpass provider status；
+    live 失败**不得静默回退 mock 冒充 live**；CNX-DEMO / 北京 golden 不因 profile 变成 live。
+    另按 R1：默认 resolver 换成 PhotonGeocoder（Nominatim 只在显式配置下作兜底，且记录 resolver provenance）。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
+
+- id: ORD-0121
+  to: 8c66aa92
+  priority: P0-critical
+  if_head: 4922f6f
+  order: |
+    R7 落地：AI 规划与直接规划**共用同一个 deterministic planner/feasibility core**，`place_ids` 只当 allow-list，
+    不得再走另一套 composer 语义（`services.py:1349-1352` 那条分支是本次病灶）。
+    与 ORD-0111（排程阶梯 + 时刻感知 + 结构化 dropped）合并实现；parity 门用**用户北京那句原话**做固定回归。
+    验收：同一 normalized input 下 direct 与 AI 的 feasibility 结果、拒绝原因码、可提交性分类**必须一致**。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7（与 0111 同批做）
+
+- id: ORD-0120
+  to: 1a986a24
+  priority: critical
+  if_head: 4922f6f
+  order: |
+    HUMAN-JOURNEY-LAB 重启（用户硬令 B）：P1=1a986a24、P3=aad2d1f2 先唤醒；P2（承诺密集型）与 P4（偏好密集型）
+    由 Commander 新建会话补上。规则：可见 UI 优先、用当前预览真包、**不许用 API 抄近路造成功**、行为要像真人
+    （返回/编辑/刷新/切后台/双击/重试），按 HUMAN_BLOCKER / HUMAN_MISLEADING / HUMAN_RECOVERY_GAP / HUMAN_LATENCY /
+    HUMAN_STATE_LOSS / HUMAN_ACCESSIBILITY / TRUTH_DEFECT / POLISH 分类；原代理复验确认修复。
+    **不等"完美前置"**：能力缺失或不可用本身就是产品发现。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
+
+- id: ORD-0119
+  to: d291c9dc
+  priority: critical
+  if_head: 4922f6f
+  order: |
+    HARNESS-REVIVAL-001（用户硬令 A）：在**本地盘**做取证式搜索（至少 `D:\moodle\`、`D:\moodle\CityNexus-Tools\`、
+    `D:\moodle\CityNexus\`、`D:\moodle\CityNexus-WorkBuddy\`、用户 Qoder 数据目录），把 V18→V18.2→V18.3→V19→V19.1→
+    V19.2 realphone/Xiaomi 的 zip 与目录**打开、解出、索引**，找出可执行入口、运行/模型/provider 依赖、老分支/worktree、
+    最后可用状态；恢复到**隔离 workspace/branch**（不与权威生产写域重叠），并**跑一次真实 smoke**。
+    交付 `HARNESS_REVIVAL_REPORT.md`：产物路径清单、时间线、入口、依赖、今天还能跑什么、被环境漂移弄坏什么、
+    哪些旧结论已集成/作废、哪些仍有效、smoke 证据、新会话 id、隔离树路径、下一个自主实验。
+    **只有 zip 名字不算恢复**；缺 launcher 就从脚本/配置/handoff 重建，**不许改成 Human Journey Lab**。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
+
+- id: ORD-0118
+  to: 8ccd71d8
+  priority: P0-critical
+  if_head: 4922f6f
+  order: |
+    定位"默认套件里到底哪一个测试节点在打 live provider"（g8a 现在红）。给 文件::用例名 + 它碰的 URL + 抓到的栈；
+    由 C 去 stub。**绝对不许** skip/deselect 让 g8a 变绿。
+  status: DISPATCHED@2026-09-21T17:4x+08 by 494abfd7
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
@@ -10138,7 +10269,7 @@ pytest test_qoder_trip_shape_and_budget_reference.py test_qoder_rejection_messag
 
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
-Refreshed: 2026-09-21 15:0x (+08:00，`date` 实读) · LAST_ARBITER_COMMENT_ID = 5755303414（**本轮消费一条**：`5755303414` **多城市战略裁定**——停止"一城一份 JSON"主路线；建 DestinationCapability 三态（READY/HYDRATABLE/UNAVAILABLE）驱动前端城市选择；Catalog Hydration 状态机（>1s 走异步 operation 模式，网络调用不跨 SQLite 长写事务，reset/seed 禁隐式 hydration，已建北京行程原地复活）；AgentOutcome Contract（status/reason_code/user_summary/recommended_action，DeepSeek 只解释不润色失败）；七条硬门（capability truth / existing-journey recovery / hydration 幂等并发 / category coverage / AI no-op visibility / provenance / no manual-city treadmill）；GitHub 借用清单（PlacesRecommendation 的 Photon/Overpass/cache 可借、OSMnx 先 spike、pyrosm 放 offline lane、routingpy 走既有 abstraction 禁 N² 手工矩阵、floating-ui 仅当 0090 自研过不了门才引入）；实施顺序：先收 0090/0088、确认北京旧行程无需重建，再 spike、再单 writer 实现；明确不做：不动 frozen 真值门、不重写北京 golden、不引入 AI consensus、不同时接四套 routing engine。我的落地块见 ORDERS 顶部「🟢 仲裁新指示落地」）· 前一条 5752000196（**本轮消费三条**：`5751363675` 阶段改令（唯一里程碑=手机上能看到真的 Simulation 入口，别再开宽 UI 冲刺，验收要 preview+exact HEAD+截图 而不是报告）；`5751385585` **答我的 503 请裁**：**现在保持"1 秒内具名 503"**，等 ORD-0071 真正释放长写锁后再改成"有界排队、队列满或存储仍忙才 503"，理由是在"单次生成可独占 SQLite 约 115 秒"的物理条件下直接排队**只是把阻塞重新藏回受理线程并违背受理延迟契约**（与我给它的建议一致）；`5751423990` 六车道并行拓扑 + 所有权硬规则 + 25~30 分钟一行状态 + 45~60 分钟一列集成火车 + M1/M2/M3/M4 分级 + 今晚 PARK 清单；`5751472030` DeepSeek 升级为受约束决策层的四层架构与 L0-L4 权限分级（**只进设计与 Scout，不抢 Simulation 关键路径**））· 前一条 5750989801（**本轮不新增裁定，八点全部确认接收**：① A' 已执行口径成立（完整 40 位 sha / 不改 git config / 正反对照验收成立）；② **ORD-0057 新真阻塞成立** —— 7 条隔离全绿可作为环境敏感性**实证**，唯一隔离仍红的是 OpenAPI 漂移，`runtime==contract` 精确门**不许放宽**；③ "刷新恢复同一 operation" 改为 `implemented / contract-registration pending / real-device revalidation pending`，**不能拿延迟探针替它签字**；④ **ORD-0060 源码级 ACCEPTED 的证据形状认可**（不再硬编码厦门、未识别城市说清 fallback、支持列表不发明总数），读屏级仍等 merge 后 exact preview；⑤ **CURRENT_GATES 11 接受为通用仪器规则**，ORD-0068 的 monotonic bug 定性为 **probe defect**，不得产出看似完整的产品结论；⑥ ORD-0057 的悬空证据路径必须按"要么真落盘、要么写明未产出"修；⑦ 我的 mutation 判据自纠被接收：主人断言用 `expected ⊆ killed`，实质 10/10，但报告必须诚实写"主批 9/10 + A9 单独复跑"，**不许包装成一次性 10/10**；⑧ **关键路径顺序维持我 §7，不因本轮新发现改序**；全仓 EOL hygiene 继续冻结到 Simulation 之后，届时等我交 `.gitattributes` canonical 规则草案再裁）· 前一条 5750593629（**批准 Simulation TTL 方向：改 seed 数据、不动两道陈旧证据门**，并给六条护栏；接受复用图抽查，把「Wallet 绿灯来自 route stub，不得计作真实能力」定为硬事实；ORD-0056 判 **MERGE-PENDING 不是 DONE**，须以权威生产构建读屏收口；ORD-0055 补字段映射规矩：`loc` 定字段、`message_key`/`type` 定文案、禁止拿英文 `msg` 做脆弱匹配） · 前一条 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5756598890（**09-21 15:0x 我发的 CHECKPOINT #3：三条车道单我用干净副本亲验、车道 B 九问结论、用户 14:31 三个真机缺陷、请裁 R5/R6/R7**）· 上一条 5756076750（CHECKPOINT #2）· 再上一条 5755884465（**09-21 13:36 我发的 ANYWHERE 发车 checkpoint，local/remote sha1 双向 match**）· 历史值 5752035827（**注：总线 5752064381 不是我发的**，是车道代我转述；我本人最后一条 = **5752417262**，04:2x 夜班 checkpoint）（**A' 已执行 + 隔离诊断 + ORD-0060 源码级 ACCEPTED**：8 条红逐条单独跑 ⇒ **7 条隔离全绿（8.24s vs 全量 179s）= 环境敏感性被证实**、**1 条隔离仍红 = 真缺陷**（`contracts/openapi.yaml` 里 `stay-generations` 命中 **0**、代码有 4 个新表面 ⇒ ORD-0057 实现了仲裁批准的契约却未公布，运行时与契约已漂移；派为 ORD-0057 阻塞项 A 并**禁止放宽该断言**）；正面记录 `main.py:2578` 的 `GET /stay-generations` 就是"刷新恢复同一 operation"的真实现 ⇒ 该验收点由"未证"降为"已实现、待登记+待真机复验"；ORD-0060 三处 :488/:517 不再硬编码厦门、:468 说出被静默沿用的口径、:472 支持列表且**不发明城市数**，三笔杀证 hits=1/applied=True/exit=1/点名节点在红里/还原 sha256 相同（读屏级留待合并后新构建预览；车道未写自己的 DONE 我不代写）；新立 CURRENT_GATES 11（探针自身仪器没跑必须响），触发=ORD-0068 探针 `while time.monotonic() < 600` 恒假（实测 214567.5）⇒ 轮询 0 次、`with_evidence` 空但有格式、`status:null` 会被误报成产品缺陷；**给自己的守卫做了杀测**（`--ledger` 指两份改动副本 ⇒ 两个 FATAL 都 RC=1，真账本 RC=0/total=20），并当场拓出自己刚写的 ORD-0069 漏 `status:` 行（已补）与"管道吞退出码"老坑；另报车道三处引用不存在的产物（`ord57/` 空目录）；**同时撤回我自己的错判**：用 `killed==expected` 卡突变误报"5/10 有主人断言"，正确判据 `expected ⊆ killed` ⇒ **实质 10/10 成立**，A9 主批 `rc=2` 是收集错非存活、车道已单独复跑杀掉）· 前一条 5750846652（**EOL 对账与改判申请**：你裁 B 时 A 已落地（605e2c5 23:29 / 你 23:31:59Z），字面 B = 带冲突 revert = 第二次 1022 行 blob 重写；你的四条口径三条已满足（业务笔 33/0、去 \r 后 sha256 相等、规范化独立一笔）；blame 断代在下单前即全额沉没（605e2c5^ 上 1111/1111 行归于 bulk-import 基线 380e6ff，全历史仅 3 笔碰过该文件）；提案 **A'** = 保留 + `.git-blame-ignore-revs`（我不得改 git config，只能逐次 `--ignore-revs-file`）+ 冻结到你那 4 前置 6 步骤的 hygiene checkpoint；另报全量后端第一轮红 7/965/1err（机器不空闲、我截掉 traceback 是我量具错、quiescent 重跑、红轮按 7⑤ 保留）、红队"具名原因没上屏"系跑在 13:4x 旧导出树（当前 tip 的 message 链已存在，裁定复测不重做）、插话长回合内排队非实时打断（停手类改走 ORDERS 顶部 HOLD））· 前一条 5750738151（**W3 结案 `REFUTED`**（页面 12 条请求零 4xx、`POST /journeys`=201，唯一 422 是红队自己 `seedJourney(9)` 的直连；机制=日期被填进**地点**字段，真天数来自 `trial-start/end`=2 天）+ **ORD-0063/0064 前端半核收**（`728b048`，含它抓出补丁 `/100` 对 JPY 错、我用 `src/lib/money.ts` 独立核实；源码守卫我证 **KILLABLE 4/5 承重**）+ **A4 判「UI 树 6/6 / 权威树 0/6 = MERGE-PENDING 不是 DONE」**（待并 11 笔 / 45 文件 / **0 条 backend 路径**，并答 §2：无空闲非重叠后端切片，故不开第二写手）+ **请裁 `models.py` 行尾夹带**（ORD-0067，真实 +33/-0 却报 1055/1022；A 拆两笔 / B 还原，另问全仓行尾统一要不要独立检查点）+ **主动报我自己的时间戳记账错误**（标成 09-21 00:0x~02:3x，实际 09-20 22:0x~23:0x，用 GitHub `Date` 头核对）与一次当场撤回的 `VACUOUS` 误报（无效 `git show <blob>:path` 语法所致））· 前一条 5749610916（异步契约落成 ORD-0057 + 复用图验收 + TTL 请裁 + ORD-0055/0056 两条新缺陷）；链：5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）→ 5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+Refreshed: 2026-09-21 15:0x (+08:00，`date` 实读) · LAST_ARBITER_COMMENT_ID = 5758293014（**本轮消费七条**：`5755926137` R1~R4 裁定 + 契约两文件；`5756101603` R1 快批 + **R5 冻结 (b)**；`5756624742` R5 重申 + **R6 profile 显式开网** + **R7 升格硬契约**；`5756779593` R6/R7 确认 + 前端 slice(0,8) 必须删；`5758127465` **UI OSS Donor 调研**（OpenTrip 主 donor 等四个 + AGPL 只看不搬）；`5758219735` **次序认可 + R8 批准**（4 分钟冷趟允许但必须可离开、完成后不自动改 Journey、v1 不定 60s SLA）+ 新文件 `docs/anywhere_provider_policy.md @8f108850`；`5758293014` **用户硬令**：恢复真 Harness/EAC（本地取证 + 可执行 smoke）并立刻重启四个人类测试代理，Harness ≠ Human Journey Lab。落盘：`raw/contracts_anywhere_v1.openapi.yaml`(18,070 字符 blob 6aa65eab) + `raw/docs_anywhere_provider_policy.md`(11,466 字符 blob 4e72be69)。我的执行见 ORDERS 顶部「📥 仲裁一口气回了 7 条」块与 ORD-0118~0124）· 上一条 5755303414（**曾消费一条**：`5755303414` **多城市战略裁定**——停止"一城一份 JSON"主路线；建 DestinationCapability 三态（READY/HYDRATABLE/UNAVAILABLE）驱动前端城市选择；Catalog Hydration 状态机（>1s 走异步 operation 模式，网络调用不跨 SQLite 长写事务，reset/seed 禁隐式 hydration，已建北京行程原地复活）；AgentOutcome Contract（status/reason_code/user_summary/recommended_action，DeepSeek 只解释不润色失败）；七条硬门（capability truth / existing-journey recovery / hydration 幂等并发 / category coverage / AI no-op visibility / provenance / no manual-city treadmill）；GitHub 借用清单（PlacesRecommendation 的 Photon/Overpass/cache 可借、OSMnx 先 spike、pyrosm 放 offline lane、routingpy 走既有 abstraction 禁 N² 手工矩阵、floating-ui 仅当 0090 自研过不了门才引入）；实施顺序：先收 0090/0088、确认北京旧行程无需重建，再 spike、再单 writer 实现；明确不做：不动 frozen 真值门、不重写北京 golden、不引入 AI consensus、不同时接四套 routing engine。我的落地块见 ORDERS 顶部「🟢 仲裁新指示落地」）· 前一条 5752000196（**本轮消费三条**：`5751363675` 阶段改令（唯一里程碑=手机上能看到真的 Simulation 入口，别再开宽 UI 冲刺，验收要 preview+exact HEAD+截图 而不是报告）；`5751385585` **答我的 503 请裁**：**现在保持"1 秒内具名 503"**，等 ORD-0071 真正释放长写锁后再改成"有界排队、队列满或存储仍忙才 503"，理由是在"单次生成可独占 SQLite 约 115 秒"的物理条件下直接排队**只是把阻塞重新藏回受理线程并违背受理延迟契约**（与我给它的建议一致）；`5751423990` 六车道并行拓扑 + 所有权硬规则 + 25~30 分钟一行状态 + 45~60 分钟一列集成火车 + M1/M2/M3/M4 分级 + 今晚 PARK 清单；`5751472030` DeepSeek 升级为受约束决策层的四层架构与 L0-L4 权限分级（**只进设计与 Scout，不抢 Simulation 关键路径**））· 前一条 5750989801（**本轮不新增裁定，八点全部确认接收**：① A' 已执行口径成立（完整 40 位 sha / 不改 git config / 正反对照验收成立）；② **ORD-0057 新真阻塞成立** —— 7 条隔离全绿可作为环境敏感性**实证**，唯一隔离仍红的是 OpenAPI 漂移，`runtime==contract` 精确门**不许放宽**；③ "刷新恢复同一 operation" 改为 `implemented / contract-registration pending / real-device revalidation pending`，**不能拿延迟探针替它签字**；④ **ORD-0060 源码级 ACCEPTED 的证据形状认可**（不再硬编码厦门、未识别城市说清 fallback、支持列表不发明总数），读屏级仍等 merge 后 exact preview；⑤ **CURRENT_GATES 11 接受为通用仪器规则**，ORD-0068 的 monotonic bug 定性为 **probe defect**，不得产出看似完整的产品结论；⑥ ORD-0057 的悬空证据路径必须按"要么真落盘、要么写明未产出"修；⑦ 我的 mutation 判据自纠被接收：主人断言用 `expected ⊆ killed`，实质 10/10，但报告必须诚实写"主批 9/10 + A9 单独复跑"，**不许包装成一次性 10/10**；⑧ **关键路径顺序维持我 §7，不因本轮新发现改序**；全仓 EOL hygiene 继续冻结到 Simulation 之后，届时等我交 `.gitattributes` canonical 规则草案再裁）· 前一条 5750593629（**批准 Simulation TTL 方向：改 seed 数据、不动两道陈旧证据门**，并给六条护栏；接受复用图抽查，把「Wallet 绿灯来自 route stub，不得计作真实能力」定为硬事实；ORD-0056 判 **MERGE-PENDING 不是 DONE**，须以权威生产构建读屏收口；ORD-0055 补字段映射规矩：`loc` 定字段、`message_key`/`type` 定文案、禁止拿英文 `msg` 做脆弱匹配） · 前一条 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5758135645（**09-21 17:1x 我发的 CHECKPOINT #5**）· 历史值 5756598890（**09-21 15:0x 我发的 CHECKPOINT #3：三条车道单我用干净副本亲验、车道 B 九问结论、用户 14:31 三个真机缺陷、请裁 R5/R6/R7**）· 上一条 5756076750（CHECKPOINT #2）· 再上一条 5755884465（**09-21 13:36 我发的 ANYWHERE 发车 checkpoint，local/remote sha1 双向 match**）· 历史值 5752035827（**注：总线 5752064381 不是我发的**，是车道代我转述；我本人最后一条 = **5752417262**，04:2x 夜班 checkpoint）（**A' 已执行 + 隔离诊断 + ORD-0060 源码级 ACCEPTED**：8 条红逐条单独跑 ⇒ **7 条隔离全绿（8.24s vs 全量 179s）= 环境敏感性被证实**、**1 条隔离仍红 = 真缺陷**（`contracts/openapi.yaml` 里 `stay-generations` 命中 **0**、代码有 4 个新表面 ⇒ ORD-0057 实现了仲裁批准的契约却未公布，运行时与契约已漂移；派为 ORD-0057 阻塞项 A 并**禁止放宽该断言**）；正面记录 `main.py:2578` 的 `GET /stay-generations` 就是"刷新恢复同一 operation"的真实现 ⇒ 该验收点由"未证"降为"已实现、待登记+待真机复验"；ORD-0060 三处 :488/:517 不再硬编码厦门、:468 说出被静默沿用的口径、:472 支持列表且**不发明城市数**，三笔杀证 hits=1/applied=True/exit=1/点名节点在红里/还原 sha256 相同（读屏级留待合并后新构建预览；车道未写自己的 DONE 我不代写）；新立 CURRENT_GATES 11（探针自身仪器没跑必须响），触发=ORD-0068 探针 `while time.monotonic() < 600` 恒假（实测 214567.5）⇒ 轮询 0 次、`with_evidence` 空但有格式、`status:null` 会被误报成产品缺陷；**给自己的守卫做了杀测**（`--ledger` 指两份改动副本 ⇒ 两个 FATAL 都 RC=1，真账本 RC=0/total=20），并当场拓出自己刚写的 ORD-0069 漏 `status:` 行（已补）与"管道吞退出码"老坑；另报车道三处引用不存在的产物（`ord57/` 空目录）；**同时撤回我自己的错判**：用 `killed==expected` 卡突变误报"5/10 有主人断言"，正确判据 `expected ⊆ killed` ⇒ **实质 10/10 成立**，A9 主批 `rc=2` 是收集错非存活、车道已单独复跑杀掉）· 前一条 5750846652（**EOL 对账与改判申请**：你裁 B 时 A 已落地（605e2c5 23:29 / 你 23:31:59Z），字面 B = 带冲突 revert = 第二次 1022 行 blob 重写；你的四条口径三条已满足（业务笔 33/0、去 \r 后 sha256 相等、规范化独立一笔）；blame 断代在下单前即全额沉没（605e2c5^ 上 1111/1111 行归于 bulk-import 基线 380e6ff，全历史仅 3 笔碰过该文件）；提案 **A'** = 保留 + `.git-blame-ignore-revs`（我不得改 git config，只能逐次 `--ignore-revs-file`）+ 冻结到你那 4 前置 6 步骤的 hygiene checkpoint；另报全量后端第一轮红 7/965/1err（机器不空闲、我截掉 traceback 是我量具错、quiescent 重跑、红轮按 7⑤ 保留）、红队"具名原因没上屏"系跑在 13:4x 旧导出树（当前 tip 的 message 链已存在，裁定复测不重做）、插话长回合内排队非实时打断（停手类改走 ORDERS 顶部 HOLD））· 前一条 5750738151（**W3 结案 `REFUTED`**（页面 12 条请求零 4xx、`POST /journeys`=201，唯一 422 是红队自己 `seedJourney(9)` 的直连；机制=日期被填进**地点**字段，真天数来自 `trial-start/end`=2 天）+ **ORD-0063/0064 前端半核收**（`728b048`，含它抓出补丁 `/100` 对 JPY 错、我用 `src/lib/money.ts` 独立核实；源码守卫我证 **KILLABLE 4/5 承重**）+ **A4 判「UI 树 6/6 / 权威树 0/6 = MERGE-PENDING 不是 DONE」**（待并 11 笔 / 45 文件 / **0 条 backend 路径**，并答 §2：无空闲非重叠后端切片，故不开第二写手）+ **请裁 `models.py` 行尾夹带**（ORD-0067，真实 +33/-0 却报 1055/1022；A 拆两笔 / B 还原，另问全仓行尾统一要不要独立检查点）+ **主动报我自己的时间戳记账错误**（标成 09-21 00:0x~02:3x，实际 09-20 22:0x~23:0x，用 GitHub `Date` 头核对）与一次当场撤回的 `VACUOUS` 误报（无效 `git show <blob>:path` 语法所致））· 前一条 5749610916（异步契约落成 ORD-0057 + 复用图验收 + TTL 请裁 + ORD-0055/0056 两条新缺陷）；链：5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）→ 5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
 
 **补一条我自己量的（不采信转述）**：车道 C 的 4 个突变我在**自己的干净副本** `_qoder_cmdr_ref_20260921 @21a09e8`
 把它的 driver 复制一份、`TREE` 改指我这副本后重跑 ⇒ **`restored=true`、4/4 KILLED、RC=0**
