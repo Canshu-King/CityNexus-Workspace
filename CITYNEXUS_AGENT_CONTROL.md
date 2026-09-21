@@ -2535,6 +2535,43 @@ evidence: `qoder-reset-from-wizard.spec.ts` 三臂 wizard/stale/live **5.9 / 5.9
 
 **另报一条不属我写域、按规矩不改动**的红：`e2e/qoder-map-interaction.spec.ts:90 drag-moves-camera + ctrl-wheel-zooms`（本轮全量两条红之一，`review/run-run957555.log` 第 829 行；红句 `centre unchanged after a real pointer drag …; gestures are switched off`）。我这轮对 `MapPanel.tsx` 的改动实测 **24 added / 0 removed**（只导出 `tripHasNoCoordinates` 与一个回调），归属 `8c66aa92`。
 
+### ✅ (SESSION=8c66aa92) ORD-0089 交付：北京目录已灌进去，但**光加数据不够**——默认规划路径原来只会画演示城市那一张图 @05:3x
+
+**两条原因，只有一条是数据**（我从代码里把它量出来才敢这么说）：
+1. 目录里只有一个城市（`CNX-DEMO` 8 地点 / 3 服务）⇒ 北京 `GET /places` 回 0；
+2. **`_templates()` 是写死的 CNX-DEMO 地点 id 清单**，而无锚点的排程器遇到第一个解析不了的 id 就 `return None` ⇒ **就算北京地点全灌进去，默认路径也永远画不出那一天的行程**（只有显式带 `place_ids` 那条路能走）。这第二条不修，第一条白做。
+
+**数据侧（全部只做加法，我逐条证明过 CNX-DEMO 一个字节都没动）**：
+- `places.json` +8 个真实北京地点：故宫博物院 / 天安门广场 / 颐和园 / 南锣鼓巷 / 前门大栅栏 / 全聚德（前门店）/ 护国寺小吃 / 后海酒吧街，真实经纬度、公开时段与价格、`provider_key=mock-city`；
+- `city_services.json` +5（地铁枢纽 / 游客服务 / 共享单车 / 故宫**分时门票** bookable / 全聚德**订桌** tradable），并在 `wp04_commerce_catalog.json` 补上这两笔对应的冻结目录条目（票 ¥60、时段 09:00–11:00 与 13:30–15:30；烤鸭半只 ¥198）——**如实说明**：这跟演示城市一样是"目录里就那一个时段"，不是随便哪天都能订；
+- `mobility_matrix.json` +56 条**两两显式分钟数**（8×7 全覆盖，一条都不靠 `default_minutes`）。分钟数不是手敲的，是按真实坐标用一个规则算的：**≤1.5 km 按 4.5 km/h 步行；否则按 30 km/h 地铁 + 8 分钟进出站；向上取整到 5 分钟**——写在数据写手脚本的 docstring 里，任何人都能重算任意一条。
+- 写手脚本在树外（`_qoder_ord30_evidence_20260920/ord89/ord89_data.py`），它跑完会自己证明：原 8/3/9 条逐项等于改前、`default_minutes` 未变、无 CRLF。
+
+**代码侧**：`services.py` 增加 `_catalogue_templates()`——**没有**任何城市的专属清单，全部从该城目录自己的 `open/close/duration` 推：开门早的先排、id 定序（可复现）、后一站最早只能在"前一站结束 + 那条腿的**已冻结分钟数**"之后开始、**塞不进自己关门时间的站点直接丢掉**（不硬塞）。演示城市照旧：三张模板照样全解析，捕获顺序一字未改。
+
+**一条旧门被合法纠正（不是放宽）**：`test_fixture_default_is_documented_as_a_constant` 原来断言矩阵**恰好 9 条**——那是"单城市夹具"的耦合，第二个城市一加就红。我改成**逐条钉住那 9 条 demo 腿的 key 与 value**，并拒绝任何其它非北京腿出现：每条腿更强，而且不再关心目录里有几个城市。
+
+**5 条门 + 变异 3/3**（`tests/test_qoder_beijing_catalogue.py`、`review/mutate_ord89.py` → `.../ord89/kill-evidence.json`）：
+真数据+全腿显式 / 默认路径 ≥2 候选（含"每站落在自己营业时段内""第二腿 travel>0""三张行程顺序互不相同"）/ 演示城市仍按冻结模板出 3 张 / **没目录的城市仍按名字被拒**（防"候选凭空冒出来"）/ 排程器打包门。
+**M2 一开始活了**：真北京数据集里没有任何场馆会被排到超时，所以端到端门看不见那个突变——它是**空转突变**不是通过的门。我没有假装打死它，而是另建一条"喂一套确实会超时的目录"的门来归属它，改归属后 3/3 killed，两个被改文件事后 SHA-256 复原 `restored: true`。
+
+**真 HTTP 读数**（自有端口 + 自有库 `_ord89-live.db`，非 TestClient）：`POST /demo/reset` 200 → `GET /places?city_code=CN-BEIJING` **8** → 建北京行程 201 → `POST /plans/generate` **201，3 个候选**（8/8/7 站，总价 ¥490 / ¥490 / ¥450，预算 ¥1500）→ `select` **200**。读数落盘 `.../ord89/live-readings.json`。
+
+**门禁数字（四件事）**：树 `_qoder_integration_20260919` @ **`1180a16`**（我提之前 HEAD 已被前端车推到 `1874a41`，我按当前树复跑）· 解释器 `.venv` **3.12.14** · 凭据 **不在**（四把 key 进程内 pop，`CITYNEXUS_AI_ENABLED=false`）：
+- 正面 5 文件（含 0089 五门 + 0079 门 + 模拟舞台 + 契约 + 0057 门）= **50 passed / 0 failed**（18.62s）
+- 目录相关回归 5 文件（`wp01_wp03`、`rx2_mock_hard_laundering`、`v18_2_agent_productization`、`agent_alternatives_v3`、`agent_runtime_gate`）= **57 passed / 0 failed**（4.75s）
+- 出行/重规划面（`mobility_truth_contract` 含我改过的那条、`mobility_replan_endpoint`、`live_replans_endpoint`、`final_consumer_truth_blockers`、`activity_identity_contract`）= **38 passed / 0 failed**（2.15s）
+- 判定性全量没跑（规则：先举牌）。`frontend/**` 一行没动；`CNX-DEMO` 数据行一字没改（被门钉住）；`tools/verification/mutation_campaign.py` 与别人的 handoff patch / e2e provenance 未提交项我一条都没 add。
+
+**⚠️ 要更正我上口转给你、你也回给用户的那句"北京那趟 `2cf892e1` 不用重建"**：**今天做不到**。地点行只在 `seed_demo()` 里入库，而 `seed_demo()` 只有 `POST /api/v1/demo/reset` 会调，reset 会删 journeys——所以"重建一次行程"或"重灌一次目录"必须选一个。请裁：
+① 照现在这样（要 reset 一次 → 那趟行程需重画，用户手机上就是"再来一遍向导"）；
+② 给我一单加一个**幂等 upsert 的 `ensure_city_catalog(session)`**，让 `plans/generate` 在目录缺该城时先补库（不开新端点、不改 reset 的"只 seed"语义、不动别的写域）——这样北京那趟真能原地复活。我等你裁再动，不猜。
+
+**给 `e345b9d6`（ORD-0088 的一条判据今天变了）**：北京**已经有** 8 个地点，所以"只列后端真有数据的城市"请按 `GET /places?city_code=` 实测来列，**别把北京标成"暂无数据"**；上海/广州等仍是空的，创建前警告照旧要。价格字段是嵌套 `total_cost:{amount_minor,currency}`（我第一版断言按平铺读，被自己的门打红了，已改）。
+
+status: ORD-0089 DONE（含一条待你裁的"能否原地复活那趟北京行程"）
+evidence: `1180a16` · 5 gates · 3/3 mutants killed · 50/57/38 passed · `D:/moodle/_qoder_ord30_evidence_20260920/ord89/`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -3015,7 +3052,24 @@ build RC=0、部署 `index-BdreWjvL.js`（本地与隧道两侧同 bundle）、�
 北京数据灌进来之后，用户建的这趟 `2cf892e1` **不用重建**——直接再点一次规划就能吃到新目录。
 （`plans/generate` 是按 journey.city_code 查目录的，目录到位即通。）
 
-### 🌅 (SESSION=494abfd7) 收线 @07:1x —— MORNING_CHECKPOINT 已上总线，车道转入待命
+### 🎈 (SESSION=494abfd7) ORD-0090 → `e345b9d6` @11:5x —— 用户当面改令：模拟舞台改成**悬浮窗**（优先于 0088 剩余部分）
+
+用户原话："延时舞台系统我也用不明白，你改成悬浮窗形式，点一下会展开，里面有各种功能，但是别把屏幕挡住"。
+现在那个占 Today 一大块的 `<details>` 面板对用户来说**太占屏、不会展开、找不到功能**——这是可用性缺陷，不是偏好。
+
+要求（全部实测判据）：
+1. 收起态 = 一个**悬浮球**：≥44×44、半透明、圆角，贴屏幕右下、位于底部导航**上方**，随滚动保持悬浮；
+   球上允许一个极小的状态点（进行中/无场景两色），**不许**显示长文本。
+2. 点球展开**悬浮窗**：宽 ≤ 屏宽−24px、高 ≤ 60% 视口、内部自滚动；内容 = 现面板全部功能
+   （场景一行摘要 + 九动作 + 结果行），一个不少。
+3. 点球/点窗外/ESC 均收起；展开与收起态**都不得**遮挡或拦截底部导航（`elementFromPoint` 验证导航中心命中导航自身）。
+4. Light/Dark × 390/412 四组合正常；断言读 `innerText`；zh/en 两臂。
+5. 挂载点从 Today 的文档流里**摘出来**（改为 shell 级悬浮层），Today 恢复纯内容页。
+6. 写域照旧（`features/simulation/**` + 挂载点），typecheck + production build 双 RC=0，提交报 sha。
+7. 验收 = 我重建预览后**请用户当面验**（用户是判据，不是我的截图）。
+
+优先级：**高于 0088 剩余部分**（用户当场提的体验问题）；与 0089（北京数据）并行不冲突。
+0088 已知撞号问题（账本已有另一条 0088）以本条为准：**这张叫 ORD-0090**。
 
 - **MORNING_CHECKPOINT 已发**（总线 `5754489158`，回读 MATCH）：含老师 3 分钟 Demo 脚本（关键顺序：
   book 必须在 start 之前）、手机入口、门禁读数、五条已修 HUMAN_BLOCKER、四条诚实限制。
