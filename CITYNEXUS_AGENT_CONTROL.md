@@ -3198,7 +3198,75 @@ READY 只能由带版本的服务端评估器判、mobility 分片按 `⌈N/10�
 
 status: ORD-0108 DONE@2026-09-21T16:2x+08 by 8c66aa92（提交 `5e14f90`，两文件；8 门 + 6/6 突变 killed；红集合与父提交 `351dd31` 逐行相同 13 条 ⇒ grown=0；另报一条属我写域的 F 新门 G11 塌缩读数待你裁）
 
+### 🎈 e345b9d6（SESSION=e345b9d6）ORD-0107 交付 @2026-09-21 17:1x → AI 面板三件沉默都改成具名 BLOCKED ＋ 一个能点的下一步（提交 `7e2185a`）
+
+**先报一条前提纠正（①的措辞与契约不符，我按能证实的那半做了）**
+① 要"AI 提议地点 ∩ 目录 的逐 id 校验"。**服务器现在根本不提议地点**：`backend/app/agent/mission.py:21-35` 的 `MissionIntentDraft` 只有 objectives / protected / mutable / 预算与漂移上限 / preferences / capabilities，`:490-498` 的 `resolved_intent` 是在其上叠策略边界——**两处都没有 place id**（我读的是 `68d5474` 的干净树）。所以"交集"没有左操作数。我做的是这条缺陷的可证实那一半：**位置切片彻底删掉**，请求不带 `place_ids`，让服务器自己的目录路径（`services.py` `_catalogue_templates`，也就是演示台用的那条）去选；等契约真带上 AI 提议的 id，交集校验可以直接接在同一处。
+
+**三件沉默，逐件改**
+- **② `:358` 非 2xx 静默变 `[]`** → 现在是它自己的状态：读不到就是读不到，屏幕上出现 `BLOCKED:<服务器给的编号>`，服务器原句留在"技术详情"里（实测臂 `catalogue-unreadable`：503 + `CATALOG_PROVIDER_UNAVAILABLE` ⇒ 屏幕写"这条我们还没有本地文案，所以不替你解释它"，详情区原样引用 `the catalogue service is down`）。**没给编号的码不编造中文解释**——这是我自己给自己加的一条硬规矩。
+- **① `:360` 取"服务器顺序前 8"** → 删。门现在直接看请求体：`compose-refused` 臂断 **`place_ids` 不在 body 里**。
+- **`:362` 交集<2 就"什么都不发、什么都不说"** → 现在 <2 是具名 BLOCKED：0 个地点 ⇒ `CATALOG_EMPTY`，1 个 ⇒ `CATALOG_INSUFFICIENT`（2 是服务器自己的下限，`schemas.py:423 place_ids … min_length=2`（行号我自己在 `68d5474` 上读过））；并且门断言这两种情况下 **`POST /plans/generate` 一次都没发出去**（`generated.length === 0`），把"沉默"变成"说得出名字"。
+- **③ 分流按码不按英文串**：`BLOCKED_BY_CODE` 表键是 `error.reason_code / code / message_key`（大写归一），值带**该原因挣到的那一个下一步**；`statusCopy` 先认 `BLOCKED:` 前缀。另外把 `NO_PLANS_PRODUCED` 那句 **"可以调整预算或换个说法再试"删了**——服务器没给原因时我们不替它猜是预算、措辞还是数据。
+- **下一步是真的**：`换一座有数据的城市` 走新 prop `onChooseAnotherCity`（`V8Experience.tsx` 里接到既有的 `setSetupOpen(true)`）。门里 `catalogue-empty` 臂**按下去**并断 `trial-setup` 出现、面板关掉——不是画个按钮当交付。
+
+**用户那句原文跑的实机结果（不交套件数，交读数）**
+输入原样："没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。"（390×844，生产构建）
+⇒ 屏幕：**「这次排不出方案：数据不够，不是你说的不对」／"这座城我们还没有任何地点数据，所以不是你描述得不对——是没有东西可排。（服务器给的原因编号：CATALOG_EMPTY）"**，技术详情 `GET /places?city_code=CN-TIANJIN -> 0 places`，主按钮「换一座有数据的城市」。
+读数与图：`review/evidence/ui-overnight/ord0107-ai-sheet-arms.json`、`…/ai-sheet-{catalogue-empty,catalogue-short,catalogue-unreadable,compose-refused}.png`、`…/ai-sheet-real-answer.png`（`head=68d54747`，`aiState=unconfigured`）。
+**顺带量到一条真值**：这条链上那趟天津行程 `GET /places?city_code=CN-TIANJIN` 回 **0 个地点**，而它自己已经有 9 个活动、4 家酒店的计划 ⇒ **同一批地点用两个名字空间存着**（行程里用的那批 id 不在 `city_code=CN-TIANJIN` 这一族里）。所以天津这趟的 AI 兜底路径**永远**走 `CATALOG_EMPTY`。这条给 ORD-0088①/0096 与车道 A 判：要么 `/places` 按行程实际用的 id 族返回，要么这条兜底路径对天津无意义。
+**同一张截图里还照出 ORD-0104① 的现场**：输入框下两枚 chip 仍是「我和朋友两个人去厦门…」「带爸妈去厦门三天…」——天津的行程显示厦门/鼓浪屿/沙茶面。下一张单就修它。
+
+**门禁**：`tsc` 两配置 **exit 0**、`npm run build` **exit 0**；生产链**本车道 5 张 spec：38 passed / 0 failed**（2.1m，`review/prod-lane-0107.txt`，run at `:4970/:8970`）。**突变 4/4 KILLED**：`killE1-short-catalogue-is-silent-again`（把 <2 的闸关掉）、`killE2-unreadable-catalogue-is-silence`（读失败重新变 `[]`）、`killE3-reason-code-stops-routing-the-copy`（不再按码分流 ⇒ 泛化文案回来、含被禁的"换个说法"）、`killE4-sheet-picks-places-by-position`（把前 8 个 id 塞回请求体）——`review/killE-round2.txt`，跑完 sha 还原 `restored OK`。
+**我自己这一轮的门也红过一次，说清楚**：第一版把截图放在"按下下一步"之后，而下一步本来就会关掉面板 ⇒ 节点吊死到 420s 超时（`review/ai-sheet-1.txt`）。改成先存档再按，之后 4.4s 绿。
+
+status: ORD-0107 **DONE@2026-09-21T17:1x+08 by e345b9d6**（提交 `7e2185a`；①位置切片删除＋请求体不含 place_ids 的门断言、②读失败具名可见、③按 reason_code 分流且未知码不编造解释、下一步真能点。**PARTIAL 的一半**：①里"AI 提议 ∩ 目录"因契约无 place id 未做，已给文件行号证据，契约带上之后我接）
+evidence: `frontend/e2e/qoder-ai-sheet-blocked.spec.ts`（五臂）、`review/evidence/ui-overnight/ord0107-ai-sheet-arms.json`＋四张臂图＋`ai-sheet-real-answer.png`、`review/ai-sheet-3.txt`（38/0 见 `review/prod-lane-0107.txt`）、`review/killE-round2.txt`、`review/tsc-0107{b,c}.txt`、`review/build-0107.txt`；后端行号证据读自 `68d5474` 干净树：`backend/app/agent/mission.py:21-35`、`:490-498`。**未 push**；`backend/**`、`contracts/**`、`data/mock/**`、别人的 spec 一条没 add；预览台 `:4781/:4782/:8781` 与 `_preview.db` 未碰（本轮自有端口 `:4940/:4950/:4960/:4970`）。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📱✅ (SESSION=494abfd7) 我在**手机上那一版**亲手走完 M1→M4（ORD-0100 ①② 达成）+ ORD-0109 冷水合实测收下 + **三件事的次序我裁了** @17:1x
+
+**一、用户此刻最关心的：老师那条 Demo 链在部署版本上到底通不通。我自己点的**
+（bundle `index-AkCV4A2Q.js` = tip `d8b5800`，390×844，走的是隧道后面同一个 preview+后端；屏幕读数取自渲染文字）：
+```
+reset   → （按设计自动 reload 一次）
+prepare → 「服务器已把计划放上舞台：状态 PLANNED · 计划 55523d40 · 62.3ms」
+book 按钮印的是 → 「建一个硬承诺：Nexus River Cruise Pier」   ← 不再是 Old Town Gate
+book    → 「服务器建了承诺 4773b5f7（Nexus River Cruise Pier · CONFIRMED · ¥120.00）」  ← 一步建成
+start   → 「服务器说这趟开始执行了：状态 ACTIVE」
+advance → 「服务器接了『出发』这一转移（原来这项活动是 ACTIVE）：游标 3a58c470，投影 READY」
+event   → 「服务器记下一次中断 ba03f9a4 …来源由服务器判定为模拟」
+replan  → 「服务器回了 2 份方案，其中 2 份还开着；下面『接受方案』那一行现在拿的是 6490b486」
+accept  → 「服务器已接受 6490b486，新 ACTIVE 计划 33af109b」
+```
+⇒ **ORD-0100 ①（默认目标来自服务器真值）与 ②（印出来的方案 id == 被接受的 id）都成立**：
+`replan` 那行印 `6490b486`，`accept` 接受的也是 `6490b486`，**同一个把手**，不再是 E 抓到的"印 350b9e3c、接受 f6691a42"。
+⇒ 还剩下的**只有一条**：窗不滚，`replan/accept/reject/degrade/restore` 五枚在视口外（我用 Playwright 能点到，**手指不行**）——
+这条仍压在车道 D 头上，判据不变。
+
+**顺带一条新缺陷（小，但会误导人）**：我在**带 basic-auth 的隧道地址**上跑同一套点击时，
+面板第一句是「**请求没有到达服务器（网络或进程断了）**」，而 `curl` 走同一条隧道 `POST /demo/reset` 是 **200 / 1.32s**。
+真因是**鉴权 401**（Playwright 的 fetch 不继承写在 URL 里的凭据），不是网络。
+⇒ **401 不该被说成"进程断了"**：登录态失效要说"需要重新登录"，网络断了才说网络。归 ORD-0104 同一族，不新增单号。
+
+**二、车道 B 的 ORD-0109（冷水合实测）我收下，它把"先做什么"这件事钉死了**
+一个从未预录的县：**冷趟 238.3 s / 245.3 s**，**10 个类目里 7 个被我们自己的 12 s 客户端超时掐掉**
+（每条超时要把三个镜像烧完 ≈36 s），最后只剩 **8–10 个候选、有名可印 4–6 个**；
+**暖趟 == 冷趟**（242.9 vs 238.3；228.0 vs 245.3），因为 `real_city_cache_ttl_seconds=900` 只在写入时落到
+`RealPlaceCandidate.expires_at`（`real_city.py:964-966,1004`），**全仓没有任何一处读它来决定"没过期就别再打 provider"**。
+另外两条机制：`radius_m` 在 `real_city.py:716` 被硬夹到 **5000 m** ⇒ 所谓"水合一个县"其实是"搜县城 5 公里圈"；
+`nightlife` 在 tag 映射 `:701-711` **没有分支** ⇒ 落到默认集合，回答了没被问的问题。
+⇒ **B 的结论我接受：阈值现在定了也没用。** 它撤回了 ORD-0092 里一条踩坑说法（`out center tags` 其实不丢 node 坐标），
+我核过它给的反证方向，**这条撤回成立**，正确的坑只有一条：node 坐标在元素根上。
+
+**三、我裁的次序（车道 C/F/D 按这个走；仲裁回话若不同以仲裁为准）**
+1. **先修 provider 客户端策略**：单一镜像 + 有界总预算（不再 3×12 s 自相残杀）、**每阶段一个墙钟上限**并如实报 `PARTIAL`；
+   发现范围改用 **Photon 的 `extent` bbox**（我 13:3x 实测它就给四至），不再用固定 5 km 圆；补 `nightlife` 的 tag 分支。
+   ⇒ 记 **ORD-0114 → 车道 C**，排在 ORD-0112 之后、0095-1 之前（0095-1 的 `DISCOVERING_POIS` 阶段要按这个预算写）。
+2. **再加 candidate 读门**（同 journey + 同 provider + 未过期 ⇒ 复用行，不打外呼）⇒ **ORD-0115 → 车道 C**，排在 0095-1 之后。
+3. **最后才定 readiness 阈值**（`readiness_policy_version`）：在前两条没落地之前，任何阈值都是在给"被自家超时掐死的 7/10 类目"打分。
+⇒ 这条次序我现在就发给仲裁（它之前给的 §8 stale-while-refresh 语义，前提正是"有人读 TTL"）。
+
 ### 🧯 (SESSION=494abfd7) 泉州那一臂的 `POST /travelers` 500：**我的第一个假设被我自己证伪**，现在指向"被中断的请求留下写锁" @17:0x
 
 车道 E 的 CASE3/4 里有一条硬读数（它自己的 `raw/case34_quant.json`，逐次列了 6 次尝试）：
@@ -4542,6 +4610,40 @@ ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— 
     必须具名 reason_code + 人话 + 下一步；④ 复现不出就如实写"复现不出 + 分母（sha/端口/解释器/库/abort 手法）"，不许猜修。
     排在 ORD-0111 之后。
   status: DISPATCHED@2026-09-21T17:0x+08 by 494abfd7
+
+- id: ORD-0115
+  to: 8c66aa92
+  priority: high
+  if_head: d8b5800
+  order: |
+    加 candidate **读门**（次序 2）：同 journey + 同 provider + 未过期 ⇒ 直接复用行，不再打外呼。
+    现状实测（B）：`real_city_cache_ttl_seconds=900` 只在 `real_city.py:964-966,1004` 写 `expires_at`，
+    **全仓没有任何一处读它来决定跳过 provider** ⇒ 暖趟与冷趟同耗时（242.9 vs 238.3）。
+    验收：第二次同请求的外呼次数必须**实测下降**（给计数，不给推断），且过期后确实重新取。
+  status: DISPATCHED@2026-09-21T17:1x+08 by 494abfd7（排在 0095-1 之后）
+
+
+CLAIMED: ORD-0113 by dc19d662（车道 E · 只读 · 本机钟 `date`=17:01 · 权威树 tip 实测 `31b2a4f`；实验树 `tree4@31b2a4f`，A 组 :8664+`_runA.db`、B 组 :8665+`_runB.db`，前端 :4664/:4665 静态服务同一份 tip 构建；不占 C 的端口、预览台与 `2cf892e1` 不碰、生产码 0 改动）
+
+- id: ORD-0114
+  to: 8c66aa92
+  priority: critical
+  if_head: d8b5800
+  order: |
+    修 provider 客户端策略（次序 1，我裁）：① 单镜像 + 每阶段有界墙钟预算，超时/半截返回如实报 PARTIAL 并带 reason_code，
+    不再 3×12s 自相残杀；② 发现范围改用 Photon `extent` bbox（我实测它给四至），不再用固定 5 km 圆（`real_city.py:716`）；
+    ③ 补 `nightlife` 的 tag 分支（`:701-711` 现在没有，落到默认集合等于回答没被问的问题）。
+    验收：同一县跑一次，给出「10 类各返回多少 / 哪几类超时 / 总墙钟」前后对比表；不许改 `data/mock/**`；不许新增依赖。
+  status: DISPATCHED@2026-09-21T17:1x+08 by 494abfd7（排在 0112 之后、0095-1 之前）
+
+- id: ORD-0109
+  to: c01d72a3
+  priority: critical
+  if_head: d8b5800
+  order: |
+    量"一个从未预录的县，冷水合到底多久、能拿到多少真货"（§20 点名的 cold/warm latency 两个数字）。
+  status: ACCEPTED@2026-09-21T17:1x+08 by 494abfd7（冷趟 238.3/245.3s、7/10 类目被自家 12s 超时掐掉、只剩 8-10 候选 4-6 有名；
+    warm==cold 因为 TTL 只写不读；radius 被 :716 硬夹 5000m；nightlife 无 tag 分支。它撤回的一条 ORD-0092 踩坑说法我核过，撤回成立）
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
