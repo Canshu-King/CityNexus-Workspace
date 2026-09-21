@@ -2841,6 +2841,10 @@ status: ORD-0097 已由 Commander ACCEPTED@14:2x（路 a 认可）· ORD-0098 DO
 evidence: `21a09e8` / `ad2f3d3` · 5 gates · 4/4 mutants killed · 349 consumer passed · 全量 1036/1011/15/10 ×3 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/ord97/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+
+CLAIMED: ORD-0103 by dc19d662（车道 E · 只读定性 · 本机钟 14:5x · 权威树 tip 实测 `aee6c7a`；我在**两棵树**上各跑一遍同一份脚本做对照：`tree@4c8c911`（用户截图那一版，:8661 + `_run1.db`）与 `tree2@aee6c7a`（当前 tip，:8662 + `_run2.db`），前端 :4661 服务 tip 生产构建 · 写集仅 `D:/moodle/_qoder_redteam_anywhere_20260921/`）
+：需求文案**逐字**用用户那句，不换措辞；预览库与用户那趟 `2cf892e1` 不碰；生产码 0 改动。
+
 ### ✅ (SESSION=494abfd7) ORD-0099 验收通过（我自己的干净副本 `d481464`）@14:5x
 
 `git checkout d481464` 的 detached 副本、`CityNexus/.venv` 3.12.14、四把 provider 凭据清空：
@@ -2856,7 +2860,7 @@ evidence: `21a09e8` / `ad2f3d3` · 5 gates · 4/4 mutants killed · 349 consumer
 **顺带记车道 F 一笔**：它把 §17E「网络不得跨写事务」和 §17D「并发不饿死规划」写成了两条**现在就红**的门——
 这正是"门先于实现"该有的样子，也是我给 C 的 0095-1 收口标准（六条一起绿，单条绿不算数）。
 
-status: ORD-0099 **ACCEPTED**（我复跑，非转述）。C 的下一张是 ORD-0101（目录空起真名，只增不改 message）。
+**结论：ORD-0099 ACCEPTED**（我复跑，非转述）。顺带：这行原本以 status: 开头，违反我自己刚立的『正文别用 status: 开头行』规矩，就地改形。C 的下一张是 ORD-0101（目录空起真名，只增不改 message）。
 
 ### 📱 (SESSION=494abfd7) 用户真机 14:31 截图：北京 AI 仍出 0 方案 + 换任何城市都印"厦门"那两句 + 地图手势抢触摸 —— 开 ORD-0103 / ORD-0104
 
@@ -3605,7 +3609,7 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
     ③ 悬浮窗内部滚动（E 实测 390×844 落定态 `scrollHeight==clientHeight==1193`、无 `overflow:auto` 后代、
        11 枚按钮只有 2 枚手指可达）。判据：`max-scroll>0` + 11 枚按钮逐个 `elementFromPoint` 命中自身 + **真滚轮手势**验证。
     验收：390/412 × 亮/暗 四组合，亲手从「重置」走到「钱包里有承诺」，交截图与读数，不交绿灯套件数。
-  status: DISPATCHED@2026-09-21T13:5x+08 by 494abfd7（优先级高于 ORD-0096）
+  status: QUEUED-ALIVE@2026-09-21T14:5x+08 by 494abfd7（我读了该会话现场：runtimeState=running、queuedTurnCount=5，它正在跑 ORD-0090 残项的 typecheck/build 与两轮链；巡检的 STALL 是"没写 CLAIMED"的记账噪声，不是停线。它自己还抓出一条空断言并改了——这条我等它落账本再核）
 
 - id: ORD-0101
   to: 8c66aa92
