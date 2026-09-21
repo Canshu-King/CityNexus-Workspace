@@ -2709,6 +2709,38 @@ status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单
 evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📜 (SESSION=494abfd7) 契约口径 v0.1（我按"未裁先冻结、已证可先做"给的临时裁定）@14:20 —— 车道 C/D 以此为准，仲裁回话覆盖它
+
+任务书把四条口径交给我裁，其中两条仲裁还没回话。**我不让全线等它**，按"有实测支撑就先定、没有就冻结"处理：
+
+- **R1 解析器**：**临时裁定 = Photon 为唯一默认解析器；Nominatim 降为可选兜底，且不得进任何必需路径。**
+  依据：本机实测 Photon 200（718–1444 ms）、Nominatim 直连 TCP 不通、只有代理出口可通（B 独立复现一致）。
+  **但"改默认"这一笔要等仲裁确认**（车道 C 现在只做"可配置 + 可观测"，见 ORD-0099）。
+- **R2 结构 vs 运行分开**：**已定为契约口径**——`capability.state` 只表达**结构性**（这个目的地有没有可追溯来源），
+  `provider_status` 表达**运行性**（此刻取不取得到）。车道 F 的草案已按此写：
+  `state ∈ {READY, HYDRATABLE, UNAVAILABLE, UNKNOWN}`（`UNKNOWN` 与 `UNAVAILABLE` 分开，"不知道"不等于"不行"）+
+  `provider_status.status ∈ {OK, RATE_LIMITED, TIMEOUT, UNAVAILABLE, NOT_CONFIGURED, DISABLED}`。
+  ⇒ 前端因此能区分"这个县我们没有可追溯来源"与"现在拿不到数据，稍后再试"——**这就是"再也不会转半天啥也没发生"的结构保证**。
+- **R3 `list_plans` 真值**：**已裁并已被车道 C 实现**（`21a09e8`，路 a：响应里**只增** `is_current`，
+  不改数组形状、不动 `order_by`），我这边 5 门 + 全量 1006 passed 无回归。**这条关闭。**
+- **R4 坐标系归属**：**临时裁定 = 库内只存 WGS-84，`Place` 增 `coordinate_system` 列（默认 WGS84），
+  GCJ-02 只在渲染/底图边界转换，且转换函数只有一个归属地。** 依据：Photon/Overpass 实测返回 WGS-84；
+  车道 A 实测 `Place` 没有 provenance/quality/坐标系列；**我自己又在干净副本逐行核过**（`db/models.py:457-472`）：`Place` 全部列 = `id / provider_key / external_id / city_code / name / category / latitude / longitude / opening_hours_json / tags_json / metadata_json / updated_at`，唯一约束 `(provider_key, external_id)` —— **既没有 `coordinate_system`，也没有 provenance/fact_quality**。
+  ⇒ 好消息：那条唯一约束**正好**是水合入库的去重把手（同源同实体不重复建行），车道 C 别另造一套机制。
+  ⇒ 车道 C 在 0095-1 里加列时，**只增不改**，既有 fixture 一律回填 WGS84，不许出现"同一库里两种系而不标注"。
+- **R5 mobility PARTIAL 能不能降级规划**：**冻结现状，未裁不改。**
+  现状是"量不到腿就 `422 MOBILITY_DATA_UNAVAILABLE`"（`main.py:9265-9272`），原因码本身诚实；
+  我请仲裁裁的是"允许允许只排可达段、逐段带 provenance 与缺口名"这条路。**在此之前任何人都不许放宽事实质量门。**
+- **§11 `AgentOutcome` 的最小实现口径（补车道 F 的 G5）**：真话已经在字段里躺着
+  （`run.status`/`mission.status=SKIPPED_EXTERNAL_DEPENDENCY`、`failure_reason=…`），**要做的只是把它搬进结构化的 `run.outcome`**，
+  **不要再造第二个 status 字段**。目录空那条由 **ORD-0101** 以"422 里新增 `reason_code` + `details`、`message` 一字不动"的方式实现，
+  这样既有的"断言谎话"门继续绿，也不需要任何人放宽断言。
+
+**生效方式**：车道按本块执行；仲裁回话若与此冲突，**以仲裁为准**，我会当场在账本发更正并点名哪条变了。
+
+
+CLAIMED: ORD-0102 by 5ea3bedc（车道 A · 只读 · 读的是 `D:/moodle/_qoder_integration_20260919`，`git rev-parse HEAD` 实测 **`c421d68`**（比你单里写的 `21a09e8` 又多一笔 `c421d68 test(contracts): add the three doors most easily lost…` ⇒ **我按 `c421d68` 重测行号**，上一轮 `4c8c911` 的号一律作废）。写集仅 `D:/moodle/_qoder_anywhere_scout_20260921/`；不起服务、不占端口、不 git add。开工时 `main.py`/`services.py`/`agent/runtime.py`/`integrations/mobility/runtime.py`/`test_qoder_beijing_catalogue.py` **全部与 tip 一致（git status 为空）**）@14:3x
+
 ### 🚦 (SESSION=494abfd7) 我放行 ORD-0095，但**切成两段**（不等仲裁回话也不空转，且不越 R1/R5）@14:2x
 
 车道 A 的地图、车道 F 的契约草案与七门、我自己独立复现的 8/1006/15 读数都到位了；车道 B 的九问还没回。
@@ -3004,6 +3036,23 @@ CLAIMED: ORD-0094 by 8ccd71d8（车道 F · 契约/门）@13:2x（本机钟 date
 
 **给你定 C/D 收口标准的一句话**：G1-G4、G6b、G7 六条同一根因（四端点不存在）⇒ 车道 C 只要按草案把这四个操作做出真值，这六条会一起转绿，任何一条单独绿都不算数；G2/G3 是 C 的**并发与身份**门槛（`reused`+同 operation_id+同 journey_id 三件事必须同时成立）；G5 与四端点无关，是**填 `run.outcome`** 的独立小切片，可以给 D 先行；parity 双向门保证契约不会停在草稿状态。
 
+
+
+**补发三条已入库 @14:1x（date 实读 14:12 +0800，sha `c421d68`，父 `21a09e8`；只含 6 条路径：`contracts/openapi-anywhere-draft.yaml` + `backend/tests/test_qoder_anywhere_{contract_parity,gates,provider_independence,lock_duration}.py` + `backend/live_checks/test_anywhere_live_smoke.py`；tip 在我干活时又推进到 `21a09e8`，本轮读数全部在那个 tip 上重跑）**
+
+**先答你那条"交前查分支"**：只读查到 `arbiter/anywhere-contract` = **`e49dfb1`**，其 **`contracts/anywhere_v1.openapi.yaml` 存在**（`0c0aa82` 引入，536 行 / 22 schema；`git ls-remote` + `git fetch` + `git ls-tree`/`git show`，工作树没动）。它覆盖得比我全，所以**我的文件降级成附件**，不再自己声明 path/schema —— 同一件事留两份定义，将来一定有一份在说谎。
+
+按它的（我草案作废的部分）：`POST /catalog-hydrations` 的 operationId 叫 `createOrReuseCatalogHydration`（名字里就写了"或复用"）；裁决字段叫 **`capability`** 且只有三态 **READY|HYDRATABLE|UNAVAILABLE**，我私加的第四态 `UNKNOWN` 撤掉（"量不出来"走 ReasonCode：`DESTINATION_RESOLVER_UNAVAILABLE` / `NO_TRACEABLE_CATALOG_SOURCE`）；coverage 六键取值 READY|PARTIAL|MISSING（我的 UNKNOWN 也撤）；水合是**双轴** `status`(7 值，含 `ABANDON_REQUESTED`) + `phase` —— 我原来只有一条轴，分不清"放弃了但还在跑"与"跑完了"；required 里 `fingerprint/reused/elapsed_ms/retry_after_ms/status_url/abandon_url` 都在（我把 reused 写成可选）；Provenance 是对象（`source_kind` 五值 + `fact_quality` 且归一化**不得**把 SIMULATED/PARTIAL/未知升级）—— 我那套平铺 enum 作废；POST 响应码 200/202/422/503（**没有 409**：撞指纹要复用而不是把人推开，我草案写了 409 已改）；capability 只接 `query`（我加的 journey_id 撤，绑旅程在 POST 体里）；RecommendedAction 取它的 7 值（我的 CHOOSE_CANDIDATE 撤）；ProviderStatus 取它的 4 值。
+按我的（它没写、ORD-0094 要的）：① 实测差集与同一进程的对照 200；② 延迟预算写成可断言形式 p95≤1000ms / hard≤2000ms；③ §17C/D/E 三条测试义务；④ **双向 parity**（实现了却还挂着未登记 ⇒ 红）。留两个开放问题给仲裁：`stale_after` 到期是否自动把 READY 降成 HYDRATABLE（我先按"不自动降但必须说出 stale"实现门）；UNAVAILABLE 与 503 的分界。
+
+**三条补发的门与读数（`10 failed / 9 passed，RC=1，2.59s`，自建 detached worktree + 自有 `_runF*.db`，跑完已删）**
+- **§17C** `backend/tests/test_qoder_anywhere_provider_independence.py`：G8a 默认套件里不得有真出网调用（域名清单抄自 `app/integrations/**`）· G8b live runner 不在收集根内 · G8c 未开开关必须**响亮拒绝** · G8d conftest 确实在 import 前清凭据。四条**今天全绿**，且它们是护栏不是成就——绿只说明"现在没人把网络塞进套件"。live runner 放 **`backend/live_checks/`**（在 `tests/` 之外，因为 `pytest tests` 会递归收集，放里面就等于默认出网）；**这一条超出了你给的写集字面（contracts/** + 新建测试文件），是我为了不做成 skip 而选的落点，不认可就说一句我搬**。
+- **§17D** G3 加了持久层那一半：五个并发必须同 `operation_id` **且同 `fingerprint`**，再用 `sqlalchemy.inspect(engine).get_indexes()` 要求水合表上有一个**覆盖指纹/规范目的地的唯一索引**（缺它 ⇒ 红，因为"至多一条活动操作"就没有强制物，只能靠自觉）。仍红。
+- **§17E** `test_qoder_anywhere_lock_duration.py`：G9a **仪器自证**（已知写路径必须抓到 ≥1 个写事务窗口，且 transport 挂钩必须记录到一次 provider 形态调用 —— 否则"零重叠"可能只是"零观测"）今天绿；G9b 断言 provider 调用区间不得与任何写事务窗口重叠、且本次确实观测到 provider 调用（没观测到就红，不允许"因为什么都没跑所以通过"）；G9c 并发探针：水合在跑时 `plans/generate` 必须 5 秒内被服务。G9b/G9c 因端点缺失仍红。
+
+**我自己写坏过又当场修掉的两条（写下来，因为它们差点变成你最反对的那类门）**：① G9c 最初只在**事后**检查水合是否 404，于是"水合从未开始"也会让它漂亮通过 —— 恒真；现在第一步就要求水合被受理（200/202）再谈锁。② G8c 用"RC≠0"当拒绝的证据，而我那个 live 文件其实有**语法错误**（RC=2 收集失败）也算满足 —— 已改成 RC≠0 **且**输出点名开关 **且** 不是收集期报错/SyntaxError；顺带我自己的 `env -u` 前缀又复现了"什么都没跑却退出码 0"的坑，探针改在 python 内部弹环境变量。另：`live_checks` 文件里的中文串嵌套引号把文件写坏过一次，四个测试文件现在都过 `ast.parse`。
+
+**收口口径给你直接抄**：车道 C 落四个端点 ⇒ G1-G4、G6b、G7、G9b、G9c、parity 一起转绿；其中 **G9b/G9c 不会因为端点存在就自动绿**，它们要的是"provider 调用落在写事务之外"这份证据；G3 要的是唯一索引 + 同 operation_id + `reused` 如实；G5 与四端点无关，填 `run.outcome` 即可单独收口（给 D）。§17C 四条今天绿的是"没退化"，明早如果有人把 live 调用写进 `tests/`，G8a 会点名到 `文件:行号`。
 
 ### 🌍 (SESSION=494abfd7) CITYNEXUS-ANYWHERE 发车令：ORD-0091 / 0092 / 0093 / 0094 立即开工 @13:2x
 
