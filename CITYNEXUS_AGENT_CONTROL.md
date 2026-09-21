@@ -3354,6 +3354,56 @@ status: ORD-0095-1 PARTIAL（`fed1861` 半件已提交；六条收口门 + parit
 evidence: `fed1861` · 16 门（14 绿 / 2 合跑红）· F 门 11 绿 2 红（G5 + g9b）· `D:/moodle/_qoder_ord30_evidence_20260920/ord95/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 🧭 (SESSION=494abfd7) ORD-0095-1（半）我亲手量了：能力端点**活了**、水合操作**202 受理 3ms**，但揪出两条真缺陷 @17:25
+
+在干净 detached 副本 `_qoder_cmdr_ref_20260921 @ fed1861`（凭据全清、3.12.14）：
+
+**门禁面**
+- ANYWHERE 门集合：`4 failed / 15 passed / 3.67s`；全量 **`7 failed, 1062 passed, 15 skipped / 97.87s`**
+  （上一轮基线 `aee6c7a` 是 13 failed / 1020 passed）⇒ **六条主门 G1/G2/G3/G4/G6b/G7 + parity 一起转绿了**，
+  而且**七条红全部是 ANYWHERE 门文件自己**，既有测试零回归。
+- 剩下的七条红各有归属：`g5`（AI no-op 的 `run.outcome`）、`g9b`（网络不得在写事务内）、
+  `g10/g11`（坐标完整性、六种 provider 形状不得塌缩成一个码）⇒ **车道 C 的 ORD-0114**；
+  `g13d/g14b`（距离要能活过换镜像、单请求不得超 100 格）⇒ **矩阵分片，C 的 0095-2 前置**；
+  `g8a`（**默认套件里不得含 live provider 调用**）⇒ **这条我要单独喊停，见下**。
+
+**接口面（我自己打的，屏幕第一次有了"系统知道自己支持到什么程度"）**
+```
+GET /destinations/capability?query=CN-BEIJING
+ → capability=HYDRATABLE  reason_code=COVERAGE_INCOMPLETE  recommended_action=START_HYDRATION
+   coverage 六轴全 MISSING，coverage_detail 每轴 candidate_count=0, min_ready=3/2, readiness_policy_version=readiness-v1
+GET /destinations/capability?query=贡山独龙族怒族自治县
+ → capability=UNAVAILABLE  reason_code=NO_CANONICAL_IDENTITY  recommended_action=CHOOSE_ANOTHER_DESTINATION
+   canonical_destination_id=unresolved:aeb41cef3b84ddbb
+POST /catalog-hydrations {"query":"贡山独龙族怒族自治县"}
+ → 202  operation_id=7469ee07…  fingerprint=5a40b77a…  reused=false  status/phase=QUEUED
+   elapsed_ms=3  retry_after_ms=1000  catalog_schema_version=catalog-v1
+   readiness_policy_version=readiness-v1  provider_policy_version=provider-v1
+```
+⇒ **契约形状是真的**：受理 3 ms（远好于 ≤1s 要求）、指纹四段齐、`reused` 有、无 `progress` 假百分比。
+⇒ 未预录县现在报 `UNAVAILABLE + NO_CANONICAL_IDENTITY`，**这是诚实的**（解析器还没接线，属 0095-2/R1），
+   但注意：**它不该是 UNAVAILABLE**——按仲裁 R1"解析器不可达是运行性失败"，**没有解析器**与**解析器此刻不通**是两件事，
+   等 0095-2 接线后这条必须变 `HYDRATABLE`；届时我会用同一支探针复验。
+
+**🔴 缺陷一（真值，必须现在修，归 ORD-0095-1 的没收口部分）：北京被算成"零候选"**
+`CN-BEIJING` 的 `candidate_count` 全是 **0**，而**库里北京有 8 个真实地点**（`data/mock/places.json`，
+`GET /places?city_code=CN-BEIJING` 实测返回 8 条，E 的 ORD-0103 也量过同一件事）。
+⇒ 评估器**没有读现有目录**（很可能只读 `RealPlaceCandidate` 那一张新表），于是"有 golden fixture 的城市"被报成"什么都没有"。
+⇒ 后果很具体：**任务书 §13/G2 要的"北京旧行程原地可规划"会被这个假 MISSING 遮住**——
+   前端一旦改吃 capability，北京会显示"需要水合"，而它其实早就 READY。
+⇒ 车道 C：**capability 的 coverage 必须把既有 golden/mock 目录算进输入**（fixture 来源照 §7 的 provenance 规则标 FIXTURE，
+   不许与 OSM_FETCHED 混），并加一条门：`CN-BEIJING` 的 `attractions.candidate_count > 0` 且 `capability != UNAVAILABLE`。
+
+**🔴 缺陷二（警报，先定位再修，归车道 F）：`g8a 默认套件不得含 live provider 调用` 现在是红的**
+这条门在 `aee6c7a` 之前不存在，今天 F 加上后**第一次跑就红** ⇒ 说明**默认套件里现在真有一处会打外呼**
+（最可能是 0095-1 新加的 capability/hydration 路径在测试里没被 stub 住）。
+⇒ 这不是"红着等修"的小事：**它会让下一次网络抖动变成全仓假红**，也会让 CI 在没网的机器上不可复现。
+⇒ 请车道 F 给出**具体是哪一个测试节点**在打外呼（用你的计数 client 或 `--tb=short` 抓栈），
+   然后由车道 C 把它 stub 掉；**不许**用 skip/deselect 让 g8a 变绿。
+
+**顺带**：车道 D 的 `7e2185a`（AI 面板说清"是哪一种没有"+ 给一个下一步）我看到了，`g5` 仍红是因为**后端 `run.outcome` 还没填**——
+那条属 C；D 的前端半件我等你落账本再一起核。
+
 ACK: 8c66aa92 back @2026-09-21 17:1x（本机钟 `date`=17:16:35 +0800）—— ORD-0111 / ORD-0112 收到，队列按你排的走：**0111 先做**（8 站 8/7/6 就停手这条我核过：`_generic_compose_variants` 的 `range(min(3, len(ordered) - 1))` 就是你说的阶梯上限），
 然后 **0112**（abort ⇒ 后续写 500：我自己起 uvicorn + 自有库 + 自有端口，绝不碰 `:8661/:8662` 与预览台；复现不出我就把分母写全，不猜一个修了交你），
 最后回 **0095-1** 收口（先把我自己那 2 条合跑红治掉，再按你对 g9b/§17C 的裁定走）。
@@ -4181,6 +4231,50 @@ CLAIMED: ORD-0106 by 8ccd71d8（车道 F · 契约/门）@14:5x（本机钟 date
 
 CLAIMED: ORD-0106 继续 by 8ccd71d8（车道 F · 契约/门）@17:1x（本机钟 date 实读 17:15:53 +0800 · 权威树 tip 实测 `fed1861` · 写域仅 `contracts/**` + 新建测试文件 · 不碰 `backend/app/**`、`frontend/src/**`、任何既有断言 · 不 skip/xfail · 不打真网络 · 不占 `:4781/:4782/:8781` 与 `_preview.db`）｜现场一句：上一轮（续2）没被重启吞掉——`31b2a4f` 实测是 tip 的 ancestor、我域内 `status --porcelain` 0 行、交付块在账本 4069 行。｜工具自曝：这条 CLAIMED 我第一次用反引号包路径写进 `python -c "…"`，bash 把反引号当命令替换吃了，落账后路径全空（已就地改这一行修好，账本仍 0 CRLF）——记录在此是因为同类坑今天第二次踩我，别人复跑请把我的账本写入当成需要 `--argv`/文件传参的场合。
 
+### SESSION=8ccd71d8 · ORD-0106 继续 交付 @2026-09-21 17:2x（date 实读 17:27:29 +0800）
+
+`DONE（三枚发现层门 + 两个契约字段 + 全套复跑）| 一笔提交 4922f6f（父 tip fed1861，未 push）| 只含 2 条路径：backend/tests/test_qoder_anywhere_discovery_truth.py（新，407 行）、contracts/openapi-anywhere-draft.yaml（+85/-1，纯增补 .2 → .3）| 假 provider、零出网、无 skip/xfail、未碰 backend/app、frontend/src、任何既有断言`
+
+**先答第 0 问**：上一轮三枚门（矩阵单位 / cells≤100 分片 / haversine 不当旅行时间）**已交**，不是"进行中"——提交 `31b2a4f`（父 `68d5474`）、交付块在账本 **4069 行**、§9 上界 `N ≤ 20` 在附件 `x-matrix-bound`。本轮开工前实测：`31b2a4f` 是 tip `fed1861` 的 ancestor、我写域 `status --porcelain` **0 行** ⇒ 重启没吞东西。唯一丢过一次的是我自己：这条 CLAIMED 第一次写的时候用反引号包路径塞进 `python -c "..."`，被 bash 当命令替换吃掉（已就地改那一行修好，账本仍 0 CRLF）。
+
+**1) 三枚新门（`test_qoder_anywhere_discovery_truth.py`，7 道判据）**
+
+| 门 | 判据 | 今天 | 实测读数 |
+| --- | --- | --- | --- |
+| G16a 仪器自证 | 冷趟必须看到 ≥1 次外呼，否则"0 次"什么也不是 | 绿 | 冷趟 2 次，path 全部归因得到 |
+| **G16b TTL 必须有人读** | 同 journey + 同 provider + `expires_at` 未过期 ⇒ 第二次外呼 **0 次**，且候选不得变少 | **红** | 落库 1 行且未过期；暖趟**仍然 2 次**（`/search` + `/interpreter`）—— 与 B 的 242.9 s vs 238.3 s 同向 |
+| G16c 反向半边 | 过期之后必须回到 provider（否则缓存=永久快照） | 绿（但绿在"没人读 TTL"上） | 把 `expires_at` 改到过去 ⇒ 2 次外呼。与 G16b **必须一起交**才算读了 TTL |
+| **G17a 范围配得上地方** | 发出去的几何必须 ≥ 请求的 extent，或改用行政区多边形/bbox | **红** | 传 `radius_m=12000` ⇒ 发出 `around:5000`（`real_city.py:716` 的 `min(radius_m, 5000)`） |
+| G17b 两个尺度两种问法 | 12 km 与 3 km 两块地方不得问出同一句话 | 绿（**绿得没有资格**） | 3 km 时夹在 5000 以下不动 ⇒ 恰好不同。两条合看才算 G17 过 —— 已写进附件 |
+| **G18a 夜生活 ≠ 咖啡馆** | nightlife 必须有自己的 tag 分支，否则明确 MISSING | **红** | 发出去的正是默认集合 `"amenity"~"cafe\|restaurant\|library\|arts_centre\|theatre"`（`:701-711` 无分支） |
+| **G18b 六分类逐条不塌缩** | 六个覆盖分类各自有分支、且不得两分类共用同一句查询 | **红** | 分母摆明：**6 类里 3 类**塌到默认集合（`nightlife / mobility / booking`），`attractions / food / lodging` 有分支 |
+
+三条门今天**全红**（G16 红在暖趟、G17 红在 12 km 被夹、G18 红在三类塌缩），我没有为它们写任何"能过"的版本：假 provider 只提供响应，不提供结论。
+
+**2) 两个契约字段（附件 `x-server-truth-fields`）**：`provider_budget`（阶段 × {calls, ms}：resolver / category_search / fallback_geocode / matrix，matrix 的界引到 `x-matrix-bound`；越界必须停在该阶段并点名 reason_code；命中未过期缓存 ⇒ 该阶段记 **0 次**）与 `discovery_area`（source + geometry + 本次实际发出的范围；只能退化成圆时必须说出半径配不配得上目的地；**不得静默 `min(radius_m, 5000)`**；前端不得拿它"扩大搜索范围"）。`readiness_policy_version` 已定，这里只是登记。三个字段都写明是**服务端真值、不是前端参数**，理由同一条：缺省时用默认值冒充有来源，就是 ORD-0101/0106 那一族谎话的共同形状。留痕：`.2 → .3` 纯增补，未改任何已定枚举、未删既有键、`paths` 仍为 `{}`。
+
+**3) 全套复跑（worktree `_qoder_f_o106c_20260921` @ `fed1861`，own `_runFE.db`，解释器 3.12.14，AI/provider key 全 unset，不起端口）**
+
+discovery_truth **4 failed / 3 passed** ｜ matrix_truth 2 / 9 ｜ provider_truth 2 / 2 ｜ provider_independence 1 / 3 ｜ lock_duration 1 / 2 ｜ gates 1 / 7 ｜ contract_parity 0 / 4 ⇒ **合计 11 failed / 30 passed，RC=1，7.91s**（日志 `D:/moodle/_qoder_f_run/gates_o106c_fed1861.log`）。
+
+比 `68d5474`（15 / 19）好转，原因是车道 C 的 **ORD-0095-1 落了半套**：G1/G2/G3/G4/G6b/G7/G9c/G12 与 parity 四条转绿。仍红的老账只剩 **G10**（规范化产物里 node 坐标仍缺）、**G11**（`{'PROVIDER_BAD_RESPONSE': ['5xx 服务器错误','结构非法']}`，6 形状 ⇒ 5 码，未变）、**G5**（`run.outcome` 仍 None）、**G9b**（锁时长）。
+
+**⚠ 当场报一条：我的 §17C 护栏 G8a 咬到了车道 C 的新文件。**
+
+`backend/tests/test_qoder_catalog_hydration.py:388` 有
+
+> `httpx.get("https://photon.komoot.io/api/?q=instrument-selftest", timeout=1.0)`
+
+我知道它的意图（spy 先 `raise AssertionError` 才 `return original(...)`，所以那一行**实际不出网**），但 §17C 禁的是**默认套件里出现对 provider 域名的调用形状**，不是禁"这行今天碰巧没出去"：它的安全性挂在 spy 的语句顺序上（谁把 `original` 提到前面、或 httpx 的 `get` 换了传输路径、或 monkeypatch 被收窄，默认套件立刻每次都对公共 resolver 真发一次请求 —— 在我们这台机器上就是又一轮 phantom 红）。**门不放宽。**最小改法（同一个坑我在 `351dd31` 自己踩过并这样修的）：自证改用非 provider 主机名（例如 `http://instrument-selftest.local/`），仍断言 spy 的 `seen` 里记到了那个主机名，另外单独断言"产品若去问 `LIVE_HOSTS` 就必须抛" —— 仪器的两半都不少，字面量不留在套件里。这条判据可复跑：`pytest tests/test_qoder_anywhere_provider_independence.py -k g8a`（0.09s 内稳定红，两次实测同一行号）。
+
+**给后端的收口清单（本轮新增，都带门名与根因行号）**：① 读 `RealPlaceCandidate.expires_at` 决定要不要出网（G16b，读侧；反向半边 G16c 已在等它）；② 用已解析目的地的 extent 取代 `:716` 的 5000 硬夹（G17a，依赖车道 C 的 ORD-0114）；③ 给 nightlife / mobility / booking 各自补 tag 分支，补不出来就报 MISSING（G18b）。三条都不在车道 F 写域，我一个字节没碰。
+
+**账本字节层的一条现场（不是我的改动，但我撞上了）**：17:15 我落那条 CLAIMED 时实测整文件 **0 CRLF**；17:27 要落这一块时实测 **10054 行 / 10054 个 CRLF —— 整文件已被人换成 CRLF**（我这轮只写了 git 里的两条路径与 `_qoder_f_run/` 下的日志，没碰账本）。我的写入脚本本来带一条「整文件必须 0 CRLF 才写」的护栏，这次是它把我挡下了 —— 我认为它该挡，因为 Commander 的口径是「只准 LF、只准追加、不要整文件重写」，而当时两条无法同时满足。处置：**按当前文件的实际形状（CRLF）落这一块，不做任何整文件规范化**，以免我在「追加」的名义下重排别人 10054 行。请 Commander 定一句：要不要单开一笔 ledger hygiene 提交（全仓 EOL 规则你已经冻结到 Simulation 之后，这条不该由车道 F 顺手做）。我的旧块内容核对过仍在（`4186` 行起，文字与我写的一致），只是行尾被换了。
+
+status: `DONE`（ORD-0106 继续 交付）
+evidence: `4922f6f`（父 `fed1861`，未 push）+ `D:/moodle/_qoder_f_run/gates_o106c_fed1861.log`。未碰 `:4781/:4782/:8781` 与 `_preview.db`；报告内只有 RC 与 passed/failed 数字，无任何 key 前缀。
+
+
 CLAIMED: ORD-0106 续2 by 8ccd71d8（车道 F · 契约/门）@16:2x —— 补记：接单与开工同时（16:28:21 实测现场之后立刻动笔），认领行随下面交付块一起落，不假装先落过。
 
 ### SESSION=8ccd71d8 · ORD-0106 续2 交付 @2026-09-21 16:5x（date 实读 16:56:32 +0800）
@@ -4564,7 +4658,7 @@ DELIVERED: ORD-0109 | 报告 `ORD_0109_COLD_HYDRATION.md` | 数据 `q109_hydrati
     **等 ORD-0091/0092 证据回来由我出定稿契约后才开工**——现在不要动 `backend/app/**`。
     已知设计前提（Commander 实测）：解析主路只能用 Photon（Nominatim 本机不通）、Overpass 单端点、
     网络调用绝不跨 SQLite 写事务、reset/seed 禁止隐式触发真实城市 hydration。
-  status: RELEASED-SEGMENTED@2026-09-21T14:2x+08 by 494abfd7（0095-1 现在就做：四端点真值 + 复用 StayGenerationOperation 骨架 + 持久层幂等指纹 + 网络不跨写事务；验收=G1/G2/G3/G4/G6b/G7 六条一起绿。0095-2 等 B 的九问与仲裁 R1/R5，不得提前改默认 provider。排在 0099→0101 之后）
+  status: PARTIAL@2026-09-21T17:2x+08 by 494abfd7（fed1861 我亲手量：G1/G2/G3/G4/G6b/G7 + parity 已绿，全量 7 failed / 1062 passed / 15 skipped，七条红全是 ANYWHERE 门文件自身 ⇒ 零回归；capability 与 202 受理 3ms 形状为真。两条没收口：① 北京被算成 candidate_count=0（库里实有 8 个地点）⇒ 评估器没读现有目录，会遮住 §13/G2；② g8a 默认套件含 live 外呼 ⇒ 必须先定位）
 
 - id: ORD-0096
   to: e345b9d6
