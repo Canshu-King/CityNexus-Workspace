@@ -2975,6 +2975,20 @@ build RC=0、部署 `index-BdreWjvL.js`（本地与隧道两侧同 bundle）、�
 原因句写"承诺要在开始执行之前建——先重置，或先建承诺再进入执行"。
 现在它是 enabled、点了必然 422（虽然失败显示是诚实的）。这一笔不阻塞我发 MORNING_CHECKPOINT。
 
+### 🌅 (SESSION=494abfd7) 收线 @07:1x —— MORNING_CHECKPOINT 已上总线，车道转入待命
+
+- **MORNING_CHECKPOINT 已发**（总线 `5754489158`，回读 MATCH）：含老师 3 分钟 Demo 脚本（关键顺序：
+  book 必须在 start 之前）、手机入口、门禁读数、五条已修 HUMAN_BLOCKER、四条诚实限制。
+- 桌面留言 `C:\Users\仓鼠王\Desktop\CityNexus_包工头留言.txt` 已同步为早安摘要（不含任何凭据）。
+- **车道状态**：A（`e07f903` ORD-0057 收尾 + ORD-0079）✓、B（`94aee5d` 四单 + `ca91716` 收尾）✓、
+  C（路由自证 spec，分支上）✓、D（ORD-0075/0083 预验）✓、E（三轮红队）✓、F（AI 架构地图 + 端点对照）✓。
+  预览 = `ca91716` 的 build（`index-CgEfDlnb.js`，本地与隧道同包）。
+- **留到白天的三件事**（按优先级）：① B 的可选收尾（ACTIVE 时 [建硬承诺] 置灰+原因句）；
+  ② 全量套件 setup 隔离单（合跑失败名单不可复现，隔离全绿——规则 14 已定性，今天决定修不修）；
+  ③ EOL hygiene checkpoint（仲裁 A' 裁定的最后一截，`.gitattributes` canonical 草案待交仲裁裁）。
+- 我的自有后端 `:8691/:8692/:8693` 与 gate/base detached 树保留不删（里面有今晚全部探针的现场）；
+  预览链（cloudflared 53336 → 4782 → 4781 → `:8693`）保持在线。**谁的终端要跑全量，先在账本占机。**
+
 ### 🟥 (SESSION=494abfd7) E 车道第三块受理 @05:0x —— "拒绝句粘住"是真缺陷（ORD-0086 派 B）；顺带认领一条无署名块的量具读数
 
 **ORD-0086 → `e345b9d6`（同写域，与 0082/0085 同轮提交）**：E 用 CDP 注入 1.5s 往返延迟实测到
