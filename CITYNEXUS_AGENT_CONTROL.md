@@ -2708,7 +2708,97 @@ evidence: `1180a16` · 5 gates · 3/3 mutants killed · 50/57/38 passed · `D:/m
 status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单）**已交付**＝`ce94ffa`（球/窗/四路关闭/几何与命中门重写）＋ `4c8c911`（离底部固定件实测留白 + 跟 document 变更重测）。①-⑦ 逐条有实测；三处自造回归与两处遮挡由自家门当场抓住并修掉。**DONE（待 Commander 追认"折叠态可见声明"口径 + 用户真机当面验）**
 evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
 
+### ✅ (SESSION=8c66aa92) ORD-0097 交付补账（你已 ACCEPTED）+ ORD-0098 **不是"被吸收"，是揪到根因并修好了** @14:3x
+
+**ORD-0097｜选了路 a：响应里只增 `is_current`（`21a09e8`）**
+- `GET /api/v1/journeys/{id}/plans` 的顶层响应是**数组**。加 `current_plan_version_id` 信封必然把数组变成对象 ⇒ 对所有既有消费方（一半是 B 的前端写域）是破坏性改动，与本单"只碰 backend 与新增测试"冲突，所以我明确放弃 b 并留了这条理由。
+- `is_current` = `journey.active_plan_version_id` 的投影，**不从 status 推、不从顺序推、不从 version_no 推**；列表端点由已经载好 journey 的调用方把指针传进去 ⇒ 这次读**不多花一次查询**（`plan_schema` 另给了 sentinel，显式 `None` 表示"确知没有指针"，与"没传"可区分）。
+- 没加状态过滤、没改 `order_by`、没删任何已返回条目、没碰冻结清单、没碰 CNX-DEMO 数据形状。契约同步了两处：operation 描述 + 共享 `PlanVersion` schema（写清"位置/version_no/status 都不是那个事实"）。
+
+**写"把指针挪一下"这条门时当场撞出第二个真缺陷（同单内已修）**：未 `start` 的 PLANNED 行程调 `POST /plans/{id}/select` 回 **409 "the plan being replaced is no longer the ACTIVE plan"**。那个 retire 守卫假定指针必指向执行中的计划；而 prepare 之后指针指向 SELECTED 行，同一事务里前面几行已把它降成 REJECTED，于是 guarded UPDATE 命中 0 行、把合法请求拒了——这正是"列表看得见但点不动"的一种真身。修法＝把守卫限定在它要防的情形，**rowcount 检查一字未放宽**，并把游标重指一起收进该分支（没 start 过的行程必须保持 `current_activity_id=None`，这是 0078 的舞台契约）。两面都有门：切 SELECTED 不造游标；切 ACTIVE 仍须 SUPERSEDED + 游标重指到新计划。
+
+**5 条门 + 突变 4/4 killed**（`tests/test_qoder_current_plan_is_named.py`、`review/mutate_ord97.py` → `.../ord97/kill-evidence.json`；两个被改文件事后 SHA-256 复原 `restored: true`）：
+M1 每行都自称当前 / M2 端点选举数组最后一条 / M3 `is_current` 从 status 推导 / M4 守卫重新不限作用域。
+另外"当前"在两个可达状态里**位置相反**（prepare+再生一次 → 当前是 6 条里的第 1 条；改选另一条 → 当前是最后一条），所以任何"下标/最新/状态"捷径都必死——这是门的设计，不是巧合。
+消费方实测：49 个碰 plans/select 的文件合跑 **349 passed / 0 failed**（56.78s）。
+
+---
+
+**ORD-0098｜定性＝根因找到并已修（`ad2f3d3`）**，不是你留的"今晚不动它"。
+
+**① "不可复现"到底是真随机还是负载？** 两者都不是插件：**本机没装 pytest-randomly/xdist，两次收集顺序逐字节相同（1 029 节点）**，结果却 `9 failed` → `56 failed`。**同一棵 `21a09e8` 上现在有三份读数**：你 14:2x 的干净副本 **8 failed / 1006 passed / 15 skipped @90.66s**、我 run1 **9 failed / 1005**、我 run2 **56 failed / 958**。三份收集顺序完全一致 ⇒ 这是**时序/锁竞争**，不是顺序随机，也不是谁的树不一样；你那份是抽到了没踩到级联的那一次。
+
+**② 共享状态里哪一个？给行号。** `backend/tests/test_qoder_stay_generation_operations.py:136` 的 autouse 排空门 `_no_worker_outlives_its_test`：它的 docstring 自己写着"provider 补丁被撤掉之后还在跑的 worker 会去打真实网络"，**但它没有声明对 `monkeypatch` 的依赖** —— autouse 无依赖者先 setup ⇒ 最后 teardown ⇒ 它排空的时候 `monkeypatch` 早已把 provider 假件撤了。于是那条仍在跑的冷链每个不可达主机烧 12 秒，而且**独占 SQLite 单写者**，后面每个模块开局就 `database is locked`。
+决定性对照（同一对文件、同一顺序）：`stay_generation_operations` + `trip_shape_and_budget_reference` 在 `924461e`（我 ORD-0057 那笔 restage 修复**之前**）= **38 passed / 13.77s**；在 `21a09e8`（之后）= **31 failed / 8 passed / 62s + teardown ERROR "operations still open"**。
+⇒ 一条**必须如实说的因果**：加重耦合的不是 0097，是我 0057 的修复本身——修前"被抢占的提交"会发出**幻影 202**（无行、worker 立刻空转退出），修后它**要么真落库并真跑、要么具名 503**；真跑的链多了，一个没隔离好的套件就会互相踩写锁。**"我改完全量更红了"不等于"我改错了"**：先隔离，再归属。
+
+**③ 能修就修（测试隔离），没加 skip / 没加 `--deselect` / 没放宽超预算。** 改法＝让该 fixture 显式请求 `monkeypatch`（参数不使用，请求本身就是排序），使"排空"发生在假件仍在位时；真超时则先把遗留 job `abandon`（作业不再写库）再照旧 raise——断言不软化。
+修后连跑三次**逐字相同**：`10 failed / 1011 passed / 15 skipped / 0 error`，用时从 155s/151s 掉到 ~90s（12 秒级真实网络等待全部消失）。
+
+**隔离 / 合跑两栏（同一树 `ad2f3d3`）**
+| 文件 | 隔离单跑 | 全量合跑 |
+|---|---|---|
+| `test_qoder_stay_generation_operations.py` | 26 passed | 0 failed |
+| `test_qoder_stay_generation_phases.py` | 7 passed | 0 failed |
+| `test_qoder_trip_shape_and_budget_reference.py` | 13 passed | 0 failed |
+| `test_rx1_cross_journey_trigger_gate.py` / `rx4_c4_generate_gate.py` / `rx4_c4_protection_surface_gate.py` | 2 / 8 / 3 passed | 0 failed |
+| `test_qoder_anywhere_contract_parity.py` | **1 failed** | **1 failed** |
+| `test_qoder_anywhere_gates.py` | **7 failed** | **7 failed** |
+| `test_qoder_anywhere_lock_duration.py` | **2 failed** | **2 failed** |
+
+**全量数字（四件事齐全）**：树 `D:\moodle\_qoder_ord97_wt`（我自己的 detached worktree，不碰共享树、不碰别人编辑现场）@ **`ad2f3d3`**（同一树另在 `21a09e8` 跑过两次，数字已在上面）· 解释器 `D:\moodle\CityNexus\.venv` **3.12.14**（裸 `python` 是 3.10.11，会假报 `StrEnum`，按你点名的坑避开）· 凭据 **不在**：进程内 pop 掉 `DEEPSEEK_API_KEY / OPENAI_API_KEY / CITYNEXUS_AI_MODEL / CITYNEXUS_AI_API_KEY`（另加 HERMES 两把），`CITYNEXUS_AI_ENABLED=false` · 未用 `--timeout`（本机无 pytest-timeout）。
+**collected 1036 / passed 1011 / skipped 15 / failed 10 / error 0**，连跑三次一致。读数与日志：`D:/moodle/_qoder_ord30_evidence_20260920/ord97/{full-run.json,full-run-after.json,full-run-1.log,full-run-2.log}`，runner `full_run.py`（先 `--collect-only` 数 collected，再跑）。
+
+**剩下 10 条红的归属（不是我的、也不是耦合）**：`test_qoder_anywhere_*` = 车道 C 在 `be834d4`(13:50) 与 `c421d68`(14:12) **先写的门后写的代码**，断言 ANYWHERE 四个操作可达；实测全部**路由级 404**（`GET /destinations/capability`、`POST/GET /catalog-hydrations[/{id}]`、`.../abandon`），门里自己写着"这条红是车道 C 的收口条件，不许用 skip 绕开"。⇒ **后果请你知道并裁**：ORD-0095 还 HELD（你让我先不动 `backend/app/**` 里城市目录相关代码），所以**只要 0095 不放行，全量就到不了 0 failed**。我建议照它现在这样留着当命名收口条件（它比 skip 值钱），但那是 C 的文件，我不替她改、也不去放宽。
+
+**两件收尾杂务**：① 我建了两棵 detached worktree —— `_qoder_ord97_wt`（现指 `ad2f3d3`）与 `_qoder_ord98_wt`（对照用，指 `924461e`），**都没有删除**：`worktree remove --force` 会顺着 junction 走进 node_modules（记忆里 D-7 那次踩过），要清由你定；② ORD-0068 我仍在 PARK（要求 1/3 未测，理由与预计写在 ACK 里）——顺带说一句：今天这个隔离修复会让 0068 的探针读数干净得多，那 37 条"锁读数"里至少有一部分本来就是没排空的 worker 在打真实网络。
+
+status: ORD-0097 已由 Commander ACCEPTED@14:2x（路 a 认可）· ORD-0098 DONE（根因定位 + 隔离修复 + 三栏数字）
+evidence: `21a09e8` / `ad2f3d3` · 5 gates · 4/4 mutants killed · 349 consumer passed · 全量 1036/1011/15/10 ×3 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/ord97/`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📱 (SESSION=494abfd7) 用户真机 14:31 截图：北京 AI 仍出 0 方案 + 换任何城市都印"厦门"那两句 + 地图手势抢触摸 —— 开 ORD-0103 / ORD-0104
+
+用户在自己手机上拍的现场（390 宽，`index-CKaJ5xEh.js` @`4c8c911`），三件事，我先说**已经变好的那半件**：
+AI 这次**没有默默消失**——屏幕上留了标题「没有生成可行方案」+ 正文「用户的需求已理解，但这次没能排出可行方案。
+你的行程没有被改动…」+ 第二段是 AI 自己的推理摘要（"将美食体验和特色景点游览设为受保护意图，费用、损失和行程漂移未指定，按0处理"）
+⇒ **ORD-0088② 那条"no-op 必须上屏"在真机上生效了**，这是用户今早"啥也没看见"的直接对照。
+
+但**北京仍然 0 方案**，而且**原因说的是"你的需求没排出来"，这句仍然可能是错的归因**（用户只说"特色美食 + 特色景点"，
+没有任何硬性约束，按 §11 应该报的是**目录/证据**类原因，不是"约束不满足"）——这正是车道 A 钉到的那条谎：
+`services.py:1538 → :1544-1545` 抛 `No feasible plan candidates satisfy the journey constraints`。
+
+**新事实（我自己 grep 到的，行号在 `4c8c911`）**：AI 面板走的是 `POST /journeys/{id}/agent/commands`
+（`PlanWithAiSheet.tsx:293`）之后**再** `GET /plans`（`:329`）→ `places`（`:354`）→ `plans/generate`（`:363`）
+⇒ 它**最终也吃 `plans/generate`**，而车道 A 已证明北京 `plans/generate` 能出候选（ORD-0089 交付 3 个候选 ¥450-490）。
+⇒ 所以**AI 路径与直接规划路径不同源**，中间那跳（agent 选的 `place_ids` → `_generic_compose_variants`，`services.py:1322-1325`）
+   才是 0 的现场。**这一跳今天没有人量过**，我不猜，派单去量。
+
+**ORD-0103 → 车道 E `dc19d662`（只读，先定性再修）**：在**你自己的库**里建 `CN-BEIJING` 行程（不碰预览库/用户那趟 `2cf892e1`），
+用用户截图里那句原文当需求："没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。"
+逐跳抓请求与响应：`POST /agent/commands` → `GET /plans` → `GET /places` → `POST /plans/generate`，
+**回答"0 是在哪一跳发生的"**：agent 有没有回 `place_ids`？回的是哪些 id？这些 id 在 `places` 表里存在吗（北京只有 8 个 fixture 地点）？
+`_generic_compose_variants` 拿到它们为什么排不出？给一条最小复现（curl 序列 + sha + 树路径）。
+**不许改生产码，不许为了让它成功而换措辞**——用户这句话就是验收输入。
+
+**ORD-0104 → 车道 D `e345b9d6`（前端两件事，与 ORD-0100 同写域，排在它后面）**：
+① **换城市还印"厦门"那两句**：`frontend/src/features/planning/PlanWithAiSheet.tsx:37-45` 的 `EXAMPLES` 是**写死的两条厦门文案**
+  （`zh: "我和朋友两个人去厦门…鼓浪屿、环岛路…沙茶面和海鲜"`、`zh: "带爸妈去厦门三天…"`），`:483` 拿它当 placeholder、`:488` 渲染成两条快捷 chip
+  ⇒ 用户去北京、去任何城市，看到的都是厦门的例子。修法：**例子必须跟着目的地走**；
+  拿不到真目的地时**宁可不显示例子**，也**不许**把"厦门/鼓浪屿/沙茶面"这种具体事实塞进别的城市的界面里
+  （这是本项目一贯的"不许编造事实"口径，`JourneyTrialSetup.tsx:415-416` 的 ORD-0060 #1 就是同一族前科）。
+② **地图手势**：用户原话"滑都滑不动，滑得用力一点，又会滑到旁边的 trips 或者 copilot"。
+  面板上那句"两指拖动或缩放地图 · 单指仍然滚动页面"是**承诺**，现在**没兑现**。
+  判据（390×844，落定态，真手势，不许用 `scrollIntoView` 之类的程序化滚动糊弄）：
+  在地图区域**左/中/右三个采样点**各做一次正常速度的单指上滑 ⇒ (a) 页面必须滚动 >60px；
+  (b) 期间**不得**触发底部导航切换、**不得**打开 Copilot 或任何抽屉（断言"没有新弹层 + 路由/tab 未变"）；
+  (c) 两指缩放仍在地图内生效且不吞页面滚动。Light/Dark 各一遍，zh/en 各一遍。
+  这条与 ORD-0085 的重叠带是同一族，但**判据不同**：0085 量的是静态矩形相交，这条量的是**手势归谁**。
+
+**给车道 A（ORD-0102）补一条并入**：你那张 reason_code 产生点清单里，请把
+**"AI 路径（agent/commands → plans/generate）"与"直接规划路径"为什么不同源**也写进去（`services.py:1322-1325` 那条 `place_ids` 分支），
+用户这次的 0 方案就落在这条分叉上。
+
 ### 📜 仲裁契约已到（我按 sha 拉回并核对）—— **契约口径 v0.2，v0.1 的两处枚举我现在更正** @14:2x
 
 **来源与落盘（可复核）**：分支 `arbiter/anywhere-contract` @ commit `e49dfb1d745f`（作者时间 `2026-09-21T05:41:49Z` = 本机 13:41，
@@ -3116,6 +3206,26 @@ CLAIMED: ORD-0094 by 8ccd71d8（车道 F · 契约/门）@13:2x（本机钟 date
 
 **收口口径给你直接抄**：车道 C 落四个端点 ⇒ G1-G4、G6b、G7、G9b、G9c、parity 一起转绿；其中 **G9b/G9c 不会因为端点存在就自动绿**，它们要的是"provider 调用落在写事务之外"这份证据；G3 要的是唯一索引 + 同 operation_id + `reused` 如实；G5 与四端点无关，填 `run.outcome` 即可单独收口（给 D）。§17C 四条今天绿的是"没退化"，明早如果有人把 live 调用写进 `tests/`，G8a 会点名到 `文件:行号`。
 
+
+**契约重写留痕（补 ①）@2026-09-21 14:2x（date 实读 14:26:27 +0800 · 本轮新 sha `9283195`，父 `ad2f3d3`，只含 3 文件 +66/−7；上一条 `c421d68` 才是那次重写，父 `21a09e8`）** —— 你说得对，重写契约必须留痕；也收到你对 `:8652` 那次的撤回。
+
+**改了什么（可复算）**：`git show --numstat c421d68 -- contracts/openapi-anywhere-draft.yaml` = **+99 / −454，476 行 → 121 行**（现在 123）。同笔还改了 parity 的一条测试：**`test_draft_contract_lists_exactly_the_four_target_operations` 删掉，换成 `test_annex_declares_no_operations_of_its_own`** —— 期望从"草案登记四个操作"**反转**成"附件不得再登记任何 path，且必须写明真值源 branch/file/introduced-by 并把四个被门操作连同实测读数登记在 `x-differential-evidence`"。反转的理由就是这条留痕要防的事：两份定义迟早有一份说谎。
+
+**删掉的口径 → 按仲裁哪一条**（左边是我原来写的，右边是 v1/v0.2 的）：
+1. 四条 `paths` + 13 个 schema（`DestinationCapabilityResponse` / `CatalogHydration` / `PlaceProvenance` …）整块删 → 仲裁 `contracts/anywhere_v1.openapi.yaml`（`0c0aa82`）已含 22 schema，且它的 `Provenance` 是对象带 `source_kind`+`fact_quality`，比我的强。
+2. 字段名 `state` → **`capability`**；我加的第四态 `UNKNOWN` 删 → **R2**（三值，缺观测由 `provider_status` 的**缺席**表达）。
+3. coverage 取值里的 `UNKNOWN` 删 → v0.2「每维 `READY|PARTIAL|MISSING`，可带候选数但**数量不得单独把目的地举成 READY**」。
+4. `ReasonCode` 从我列的 20 值收成它的 9 值、`RecommendedAction` 收成 7 值（我的 `CHOOSE_CANDIDATE` 删）、`ProviderStatus` 收成 4 值 → v1 枚举。
+5. 我把水合写成**单轴 phase**、`reused` 写成可选 → 改成双轴 `status`(7 值含 `ABANDON_REQUESTED`) + `phase`，`fingerprint/reused/elapsed_ms/retry_after_ms/status_url/abandon_url` 转 required。
+6. 我给 capability 加了 `journey_id` 参数、POST 撞指纹回 **409** → 都删：参数只 `query`；**响应码 200/202/422/503 没有 409**（撞指纹要复用，不是把人推开）。
+7. 我上一轮写的两个"开放问题"**不是开放了**：`stale ⇒ HYDRATABLE`（v0.2 的 HYDRATABLE 定义含 missing/**stale**/incomplete）、`UNAVAILABLE` 是结构性判定而解析器故障回 `DESTINATION_RESOLVER_UNAVAILABLE` 且可重试（**R1**）—— 我按"待裁"实现的口径已作废并改成按它。另记 **R3**（`is_current` 只能是 per-plan 派生投影，持久真值仍是 `journey.active_plan_version_id`）给 A/C，别再各写一份。
+8. 保留在附件里的（v1 没有、ORD-0094 要）：实测差集与同进程对照 200；延迟预算 p95≤1000ms/hard≤2000ms 写成可断言形式；§17C/D/E 测试义务；双向 parity（含你点要留的那条反向门）。
+9. **指纹四段已写进附件**，车道 C 照它建唯一索引：`canonical_destination_id + catalog_schema_version + readiness_policy_version + provider_policy_version`（v0.2 说"至少"这四段）。
+
+**因此改了期望值的门**（都在 `c421d68`+`9283195`）：G1 用 `capability`、三值、加 provider_status 四值校验 + "UNAVAILABLE 不得配瞬时 reason_code"(R1) + "READY 必须带 `readiness_policy_version`"；G2 加双轴与 required 字段清单；G3 去掉 409 容忍、加指纹四段存在性、持久唯一索引；G4 加"候选数不得单独举 READY"+策略版本；G6a 从"我草案的词表"改成"附件是否如实抄了仲裁词表"（仍然只是形状守卫，行为归 G6b）；G7 换字段名。
+
+**读数（新 tip `ad2f3d3` 上重跑，不是 `21a09e8` 那份）**：**10 failed / 9 passed，RC=1，3.40s**；解释器 3.12.14、无 pytest-timeout 故未加 `--timeout`、provider 凭据清空、报告不含 key 前缀；自建 detached 副本跑完已移除（留一个 git 不再登记的空壳目录，句柄占用，下次清理）。**一句要说白**：这轮往 G1/G3/G4 加的 v0.2 判定全部排在端点前置之后，所以红绿计数与上轮**一字未变**——计数没变不等于门没变，它们要等 C 落地才开始真判；别拿"数一样"当成"没动契约"。另外我自己在这轮里又写坏过一次：G4 那句候选数规则我先写成了 `assert X if 条件 else True` 的恒真形状，同笔删掉并在这里记下（不是我抓别人的那个标准，是对自己用同一把尺）。
+
 ### 🌍 (SESSION=494abfd7) CITYNEXUS-ANYWHERE 发车令：ORD-0091 / 0092 / 0093 / 0094 立即开工 @13:2x
 
 **只读四条现在就动，写集两条（0095 后端 / 0096 前端）等 A+B 证据。** 任务书全文已归档在
@@ -3200,6 +3310,49 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
 3. **出口是环境相关的**：以上全部是 `uFi-8A2E`（NAT 出口 `117.61.176.21`）这一条链路的数；换 TUTE 校园网（历史上 Ruijie TLS-MITM + 无认证即无出口）或 RNDIS  tether，结论要重跑 —— 复跑命令：`cd D:/moodle/_qoder_spike_20260921 && D:/moodle/CityNexus/.venv/Scripts/python.exe q0_reachability.py`（再跑 `q0b_disambiguate.py` 分辨"我路径错"与"服务不通"）。原始响应：`_qoder_spike_20260921/raw/`、`q0_reachability.json`、`q0b_disambiguation.json`。
 
 状态：**Q0 已答（DONE）**，①~⑨ 继续按序实测，不用等你回话我就往下走；卡住超 10 分钟我发 BLOCKED + 卡点。
+
+#### (SESSION=c01d72a3) ORD-0092 交付 @15:1x —— 九问全部实测回答；**结论：裸 httpx 就够，不要引 OSMnx；冷发现必须异步+读 slot 退避；READY 门不能只看 POI 数**
+
+全文：`D:/moodle/_qoder_spike_20260921/ORD_0092_PROVIDER_MEASUREMENT.md`（每问都带 实测数字 + 可复跑命令 + 原始响应落盘路径）。写集只有 `_qoder_spike_20260921/**`：**未改生产码、未 commit/push、未动 `data/mock/**`**、未占 `:4781/:4782/:8781/:8481/:8681`；osmnx 只进本目录独立 venv。统一分母：`WLAN`/Intel AX201/SSID `uFi-8A2E`/`192.168.1.200` → 出口 `117.61.176.21`，**所有直连读数都显式绕开了开着系统代理的 Clash**。
+
+| 问 | 实测答案（数字） |
+|---|---|
+| ① 解析 | **6/6 第一候选即目标行政主体**（云南贡山自治县全称与简称同指 `R2729765`、新疆 `R2748432`、四川 `R2167812`、西藏 `R2745048`、河北 `R5658710`）。但 **`score` 六查全为 `None`** ⇒ 不能靠分数排序，只能靠 `osm_type`+层级；歧义真实存在（裸查 `Gongshan` 回 3 个不同主体）；`name` 会带藏文并列（`巴青县 སྦྲ་ཆེན་རྫོང།`）⇒ 展示要 `name:zh` 优先 |
+| ② 分类 | 贡山逐类真值：`HOTEL 20 / ATTRACTION 9 / HERITAGE 7 / TRANSPORT_HUB 2 / MUSEUM 1 / BAR 0 / ENTERTAINMENT 0`；塔县 `PARK 7 / RESTAURANT 2 / CAFE 1`。要素样本：贡山 108（有名 81）、塔县 255（有名 74，**其中 `natural=peak` 183 个＝72%**）。**九类都有真实 tag 实例，唯 BAR 实测 0** |
+| ③ 耗时 | Photon 718–1444ms；Overpass 单类 1.3–32s、一框多类 43.4s（kumi）/144.3s（主镜像）。**`/api/status` 自报 `Rate limit: 2`、`2 slots`，而它自己答了 21.7s**；13 语句合并 2 次都 504（`request_read_and_idx::timeout. The server is probably too busy`）；逐类 20 发 **8 发撞 `rate_limited`** ⇒ 一个县冷发现实测 1–3 分钟且必然撞限流 |
+| ④ 净值 | 贡山 81/108＝75%；塔县 74/255＝**29%**。判据：`name` 非空且带 8 个类目 key 之一 ⇒ **数量会把"一堆山峰"判成供给丰富** |
+| ⑤ 够不够 | 同 bbox 同镜像：**裸 httpx 37 行 vs osmnx 32 行，产物 24/24 完全相同**（`only_httpx=0/only_osmnx=0`）⇒ 只省 5 行。我这侧 5 个踩坑，**其中 3 个静默丢数据或抛异常**：`out center tags` 的 verbosity **不吃 node 坐标**（第一版 11 行、差的 13 行全是 node、**无任何报错**）；node 坐标在元素根 `lat/lon`；命名 bbox set 三镜像全 400；自编中心导致"200 但 0 要素"的假空结果；429 与 timeout 都以 `<?xml` 开头不能靠首部区分 |
+| ⑥ 依赖成本 | osmnx 2.1.1 装成功（Py3.12.14，`import` 0.52s）；**新增 17 个发行版**、venv 248.5 MB；扣掉我们已有 numpy/pandas/shapely **净增 118.2 MB（现有 .venv 366 MB 的 +32%）**，大头 pyogrio 67.9 + pyproj 26.3 + networkx 14.9，osmnx 本体仅 0.7 MB。我们 .venv 实缺 geopandas/pyproj/networkx/requests/rtree。安装耗时 **≈1.7 分钟（派生自 site-packages mtime 区间，非秒表，如实标注）** |
+| ⑦ 矩阵 | 能算：`routingpy_adapter.py:79 matrix_minutes(place_ids)`、`valhalla_http.py:155/161`；**但入参是 place_id 不是坐标**（内部 `_point(place_id)`→`Point.routingpy():13` 才出 `[lon,lat]`）⇒ 前置是"发现的点必须先落 `places` 行"。另实测 `places` 列里**没有 CRS 字段** |
+| ⑧ 坐标系 | 域内默认 WGS84（`models.py:811/891/929`），**GCJ-02 换算已在入站适配器、写库之前**（`amap.py:52/90/96/148-149`）⇒ 不需要新增转换点。定标实测：库值 vs Photon WGS-84 差 535m / 1409m / 126m ⇒ 北京 fixture **不是系统性 GCJ 偏移**（正负都有、相差 11×），是手抄近似值。真正缺的是 **`places` 没有 `coordinate_crs` 可写** ⇒ OSM(WGS84) 与 Amap(GCJ02) 一旦同源共存就不可区分，而 `matrix_minutes` 只读 `latitude/longitude`。**这条必须 C 在建 Place 前解决，不能事后猜系** |
+| ⑨ 故障表现 | 真打桩（`:8593` 接管三 个 provider URL + 真端点 `real-city/discover mode=live`）：**八例全 200**，`provider_status` 全 `REPLAY_FALLBACK`、`provenance:"REPLAY"`、候选仍是 `openstreetmap-replay`。`fallback_reason` **装的是异常类名**：429 与 500 **塌成同一个 `HTTPStatusError`**、超时 `ReadTimeout`、重置 `RemoteProtocolError`、非法结构 `RuntimeError` ⇒ 不泄漏堆栈（§14 满足）、**但没有稳定产品码（§14 未满足）**，且界面分不清"实时失败"与"本来有数据"。默认 `CITYNEXUS_REAL_CITY_ENABLED=false` 时八例 ≤29ms 且 `fallback_reason=REAL_CITY_DISABLED`（**证明默认配置下根本不出网**）。**未验证的一半要说清**：我用合成桩**没能拿到 `LIVE_PROVIDER` 成功态**（连"正常有数据"也回退），原因我未继续挖，不当结论 |
+
+**推荐（都挂数）**：① **不引 OSMnx**（5 行 vs 118 MB + 把 TCP 不通的 Nominatim 变成必需）；把它的两个教训写成门：node/way/relation 三类都必须带坐标、429 与 5xx 必须不同码。② 冷发现**必须异步 + 读 `/api/status` slot 退避**（1.2s 间隔仍 8/20 撞限流）。③ **READY 按分类覆盖度判**，不按 POI 数（塔县 72% 是山峰、BAR=0）。
+
+**我自己撤回两处**：`/api/v1/search` 与 `/api/v1/` 的 404 是我猜路径（真前缀 `/api/`，服务器自己的 404 体写着）；Overpass 第一次的 504 是我发了非法语句（`[out:json];out;`），换合法查询即 200。另外"北京 fixture 没有坐标"是我平铺取键之错（坐标在 `location` 里）。三条都不是产品缺陷。
+
+DELIVERED: ORD-0092 | 报告 `_qoder_spike_20260921/ORD_0092_PROVIDER_MEASUREMENT.md` | 原始数据 `raw/`＋`q0_reachability.json`＋`q1234_results.json`＋`q2b_results.json`＋`q5_compare.json`＋`q9_provider_failure.json` | 无 blocker（Amap 与 pyrosm 按令未测：一个要 key、一个不阻塞） | 我的 `:8591/:8592/:8593` 实到 0 监听，进程已收
+
+#### (SESSION=c01d72a3) ORD-0092 Round 0 复跑 @14:5x —— 你的读数我逐条复现，**四条要你改**（含我自己上一条也要改）
+
+复跑：每探针 **5 次**，裸 socket + 系统根证书校验 + 绕开系统代理，≥1.2s 间隔，约 45 次外呼；原文 36 个文件落 `_qoder_spike_20260921/round0/`，汇总 `round0_variance.json`，全文 **`ORD_0092_ROUND0_VARIANCE.md`**。命令：`cd D:/moodle/_qoder_spike_20260921 && D:/moodle/CityNexus/.venv/Scripts/python.exe round0_rerun.py`
+
+**复现了的（放心用）**：Photon 200 ×5（min 699 / **median 924** / max 1887 ms，你那个 943ms 正落在中间）；第一条恒 `city/R2729765`、`countrycode=CN` ×5；`?lang=zh` → **400 ×5，文案逐字相同**（`Language is not supported. Supported are: default, de, en, fr`）；默认中文 `贡山县` ×5、`lang=en` → `Gongshan` ×3；Nominatim **TCP 超时 5/5**（8007–8059 ms）。
+
+**要你改的四条**
+1. **`admin_level=6` 不是 Photon 给的。** Photon 属性里**没有这个键**：25/25 条 feature 全 None，实见键只有 `country,countrycode,county,extent,extra,name,osm_id,osm_key,osm_type,osm_value,state,type`。那是 OSM 关系自己的 tag，只能从 Overpass `rel(id)` 拿。⇒ 任何"用 Photon 判行政级别"的想法作废。
+2. **Overpass `GET` 拼 URL 不是必然 400。** 我 GET（百分号编码）拿到 **200**：P4 组 3/5 为 200、2/5 为 504，另单发一次 **200 / 1585.8 ms**。同一串查询**不编码**时连发不出去（客户端就报 `InvalidURL: URL can't contain control characters`，`[` `]` `;` 是控制位）⇒ **机制是编码，不是方法**。写成"GET 不行"会让后面的人绕远路。
+3. **Nominatim 的"不可达"要降级为"不可判定机制"：DNS 在漂。** 5 次解析得 `199.59.149.203` ×4、`104.244.43.136` ×1（**两个都是美国段，且逐次变**），都不是你量到的 `185.60.219.36`；对照 `photon.komoot.io` 恒 `116.202.51.114`、`overpass-api.de` 恒 `{162.55.144.139, 65.109.112.52}`。⇒ 本机解析器 `192.168.1.1` 对这个名字给了可疑答案。**"结论稳（不通）、机制不可归因"**；**我自己上一条 Q0 里那句"TCP 不通所以不可达"也一并降级**，同样按"目的地本身就变"处理。规矩：provider 读数**必须带解析到的 IP**。
+4. **Overpass 耗时是双峰的，"1443 ms" 不能当基线。** POST 200 ×3 实测 **23 072 / 24 837 / 27 029 ms**，另有 **2/5 是 504**；小查询才 0.9–2.8 s。你museum那次的 1443ms 落在小查询档。
+   另：我的北京 bbox `(39.7,116.1,40.2,116.7)` 内 `tourism=museum` 三次全同 **nodes=66 / ways=109 / total=175**、`osm_base 06:27:34Z→06:29:36Z`；你的是 `nodes=41 total=41`（**ways=0**）⇒ 你多半只查了 `node[...]`。**请把你的原查询串给我复算**，这条现在挂"待归因"，不判你对也不判我对。
+   镜像说法也精化一下：`kumi.systems` **1/3 成功（~30 s）**、`private.coffee` **0/3（30.4 s 全超时）**、主端点 2/3 ⇒ 不是"只有单端点"，是"**主端点 + ≥30 s 级慢镜像兜底，429/504 必然发生**"。
+
+**修订版 Q①（6/6 命中，但地基要换）**：命中没问题，**但 `extent` 齐全度在 50%–100% 之间漂** —— 贡山简称 5/5、全称 2/4、塔县 4/5、平武 2/4、崇礼 1/2、巴青 **1/5** ⇒ **凡是拿 Photon 的 extent 当发现框，会间歇性拿到空框**。可靠路（实测）：Photon 取 `osm_type=R+osm_id` → **Overpass `rel(id);out bb;`**，我这把 **200 / 4379 ms**。
+
+**Q⑧ 实证**：两入口对同一县的边界 **四个数值逐位相等（差 0 m，同 WGS-84）**；但 **Photon `extent` 的排列是 `[minLon, maxLat, maxLon, minLat]`**（第 2 位是较大纬度）⇒ 按常规 `[S,W,N,E]`/`[W,S,E,N]` 解会得到**不报错的错框**，这条要测试钉死。GCJ-02 换算**存在但在死路径**：`amap.py:90/96` 定义、`:101/113/141/175-176` 调用，全在模块内；模块外只有 `main.py:192` 的 `amap_status`/`provider_for_region` 进 `/providers/v9`（实到 `NOT_CONFIGURED` 且如实带 `coordinate_crs`），**`AmapPoiProvider/AmapMobilityProvider/AmapTrafficProvider` 全仓含测试无任何构造点** ⇒ 发现/规划路径当前到不了换算代码。真正缺的还是那条结构洞：**`places` 表没有 CRS 列**（`PRAGMA` 实读只有 `latitude/longitude`），而 `mobility_facts`/`journey_legs`/`accommodation_offer_snapshots` 有 `crs DEFAULT 'WGS84'` ⇒ OSM 与 Amap 同写 `places` 后**不可区分**，建表时必须补。
+
+**三条硬后果**：① HYDRATABLE 的边界来自 `rel → out bb`，不是 Photon extent；② 每个 provider 读数带解析 IP；③ 超时/耗时按双峰建模（Photon ~1 s；Overpass 小 0.9–2.8 s、真实多类 22–35 s 且 40% 504），§6 异步+可恢复+缓存是必需，超时上限不能按秒设。
+边界照旧：未改生产码、未 commit、未动 `data/mock/**`、未占预览台与 `:8481/:8681`；本轮全部写集在 `_qoder_spike_20260921/**`。
 
 
 
@@ -3308,7 +3461,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     `list_plans` 泄漏即 ORD-0097）中**哪一个**是耦合源，给行号证据；③ 能修就修（测试隔离），
     不能修就在账本写清"为什么今晚不动它"，**不许加 skip 或 --deselect**。
     这条**排在 ORD-0097 之后**，若 0097 之后合跑已经稳定，直接报"被 0097 吸收"并给出两次连跑数字即可关单。
-  status: ACKED@2026-09-21T13:3x+08 by 8c66aa92（它已声明排在 0097 之后；0097 之后若合跑稳定，按"被 0097 吸收"+两次连跑数字关单）
+  status: DONE@2026-09-21T14:3x+08 by 8c66aa92 —— **不是"被 0097 吸收"，是揪到根因并修好了**（`ad2f3d3`）：①同一棵树三份读数（你 8 / 我 run1 9 / 我 run2 56）且收集顺序逐字节相同 ⇒ 是负载/锁时序，不是随机顺序；②根因＝`backend/tests/test_qoder_stay_generation_operations.py:136` 的 autouse 排空门未声明 `monkeypatch` 依赖 ⇒ 它在假件被撤之后才排空 ⇒ 冷链去打真实网络并独占 SQLite 单写者，后面模块全 `database is locked`；决定性对照：同一对文件在 `924461e` **38 passed/13.77s**、在 `21a09e8` **31 failed/62s** ⇒ 暴露者是 0057 的 restage 修复（幻影 202 变成真跑的链），不是 0097；③已修：fixture 请求 `monkeypatch` 让排空发生在假件仍在位时，超时则先 abandon 遗留 job 再照旧 raise（**无 skip、无 --deselect、未放宽预算、未改断言口径**）；修后 `ad2f3d3` 连跑三次逐字相同：**collected 1036 / passed 1011 / skipped 15 / failed 10**（~90s，原来 155/151s），且 10 条红**隔离单跑同样红**——全是车道 C 先写的 ANYWHERE 收口门（`be834d4`/`c421d68`，4 个路由级 404）。⇒ 请你裁的一件事：ORD-0095 还 HELD，所以只要 C 的门留着，全量就到不了 0 failed；我建议按原样保留当命名收口条件，但那是 C 的文件，我没碰、也不会替她放宽。
 
 - id: ORD-0099
   to: 8c66aa92
@@ -3360,6 +3513,33 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
     若"不改 message"会让屏幕继续说错话，把两难写进账本由我请仲裁裁，**不许自己改既有断言**。
     排在你手上 ORD-0099 之后；报告要绑 sha。
   status: DISPATCHED@2026-09-21T14:2x+08 by 494abfd7
+
+- id: ORD-0104
+  to: e345b9d6
+  priority: high
+  if_head: 4c8c911
+  order: |
+    前端两件事（排在 ORD-0100 之后，同写域 `frontend/src/**`）：
+    ① `PlanWithAiSheet.tsx:37-45` 的 `EXAMPLES` 是写死的两条厦门文案（`:483` placeholder、`:488` 快捷 chip）
+       ⇒ 换任何城市都显示厦门/鼓浪屿/沙茶面。例子必须跟目的地走；拿不到真目的地就**不显示例子**，
+       严禁把别的具体事实塞进当前城市界面（同 ORD-0060 #1 前科）。
+    ② 地图手势（用户原话：滑不动，用力滑就滑到 trips/copilot）：390×844 落定态 + **真手势**，
+       地图左/中/右三点单指上滑 ⇒ 页面滚动 >60px、期间不切导航/不开 Copilot/不开抽屉、两指缩放仍生效；
+       Light/Dark × zh/en 四组合。与 ORD-0085 同族但判据不同：那条量静态矩形相交，这条量**手势归属**。
+  status: DISPATCHED@2026-09-21T14:3x+08 by 494abfd7
+
+- id: ORD-0103
+  to: dc19d662
+  priority: P0-critical
+  if_head: 4c8c911
+  order: |
+    用户真机 14:31 现场：北京 + 需求原文「没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。」
+    → AI 面板报「没有生成可行方案」。**回答"0 是在哪一跳发生的"**：在自己的库建 CN-BEIJING 行程（不碰预览库/用户 2cf892e1），
+    逐跳抓 `POST /journeys/{id}/agent/commands` → `GET /plans` → `GET /places` → `POST /plans/generate`，
+    查 agent 是否回 `place_ids`、回的 id 在 places 表里是否存在（北京只有 8 个 fixture 地点）、
+    `_generic_compose_variants`（`services.py:1322-1325`）为何排不出。给最小复现（curl 序列 + sha + 树路径）。
+    不许改生产码；不许换措辞求成；用户这句话就是验收输入。
+  status: DISPATCHED@2026-09-21T14:3x+08 by 494abfd7
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
