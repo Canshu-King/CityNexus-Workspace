@@ -2960,6 +2960,41 @@ status: ORD-0099 DONE（`d481464`，你已 ACCEPTED@14:5x）· ORD-0101 DONE（`
 evidence: `d481464` / `aee6c7a` · 5+4 gates · 5/5 + 4/4 mutants killed · 全量 1045/1020/15/10 ×2 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/{ord99,ord101}/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 🔴 (SESSION=494abfd7) 我自己在**已部署的新包**上量：ORD-0090 残项 ① 没修好——悬浮窗仍然没有内部滚动，11 枚动作只有 2 枚点得到 @15:2x
+
+车道 D 交了 `143d904`（commit 时间 15:12，构建 15:11），我重建并部署到预览台，
+然后用 **390×844 真浏览器打隧道**（bundle 实测 `/assets/index-CQzKCcgn.js`，与 `143d904` 同一份）量：
+
+```
+panel:  y=237  height=1149  scrollHeight=1148  clientHeight=1148
+        overflowY=visible  position=static  maxScroll=0
+        scrollableDescendants=[]          ← 整个面板里没有任何可滚容器
+buttons（elementFromPoint 命中判定）：
+  sim-action-reset    y=581  在视口内  hitSelf=true
+  sim-action-prepare  y=633  在视口内  hitSelf=true
+  sim-action-book     y=708  在视口内  hitSelf=FALSE   ← 在视口内却被盖住
+  sim-action-start    y=783  在视口内  hitSelf=FALSE   ← 同上
+  advance/event/replan/accept/reject/degrade/restore   全部 y>844 在视口外
+```
+⇒ **11 枚动作按钮里只有 2 枚手指点得到**，与车道 E 在 `4c8c911` 上量到的形状**一模一样**（那条是 2/11）。
+⇒ 我 12:5x 标的那个 ⚠（"窗高 1185 > 视口×0.72，内部应自滚——待 B 复核"）**不是我的量具错**：
+   这次我量的节点就是 `[data-testid="sim-panel"]` 本身，`scrollHeight == clientHeight` 且没有 `overflow:auto/scroll` 后代。
+   D 在 ACK 里猜"Commander 可能测的是滚动容器里的内容盒"——**这条猜测被实测否掉**。
+
+**已修好的两件我给分**（在同一份新包上确认代码在）：
+② ESC 改成**文档级监听**（原来挂在 wrapper 的 `onKeyDown` 上，焦点掉到 `body` 就失效——这个根因写得对）；
+③ ACTIVE 阶段 [建一个硬承诺] **置灰 + 一句人话原因**，而且它是**先量后写**的：
+   `review/booking-when-active.json` 记录"同样六个活动问两遍：PLANNED 时巡游站 201、其余五个各自具名拒绝；
+   start 之后**六个全部** `422 booking requires a PLANNED Journey`" ⇒ 拒绝句从"偶发"升级成"这是关于行程的规则"。
+
+**退回的那一件 = ORD-0090 残项 ①**，判据我原样保留，不降级：
+`sim-panel` 必须有**可用的内部滚动**（`maxScroll > 0`）且**11 枚动作逐个 `elementFromPoint` 命中自身**（滚动后可达），
+并且要用**真滚轮手势**复验（Playwright 会自动滚，手指不会——这条 E 与 D 都栽过一次）；
+`book`/`start` 那两枚"在视口内却点不到"要单独说明被谁盖住。
+**不许**用"把窗口做小/删掉动作/减少按钮"来让门变绿。
+
+（读数落盘：`raw/panel_after_143d904.json`。预览台已部署新包，旧包备份在 `dist_bak_1247/`。）
+
 ### 📐 (SESSION=494abfd7) §9 的 bound 现在有**实测常数**了（我自己复跑确认）：矩阵上限是 **cells ≤ 100**，不是"locations ≤ 100" @15:3x
 
 车道 B 的 ORD-0105（水合县的 mobility 矩阵）交回，我没有直接信，自己用裸 socket + 真 TLS 复跑：
@@ -3976,6 +4011,15 @@ ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— 
 ⑤ `GET /demo/scene` / `/plans` / `/twin` 形状**只增不改**，CNX-DEMO 与北京 fixture 行为不变；
 ⑥ 只用**既有确定性来源**（fixture/已入库目录）出真值，不新接 live provider —— 那是 0095-2，等 B 的九问与 R1/R5。
 收口口径复述一遍以防我跑偏：**G1/G2/G3/G4/G6b/G7 六条一起绿 + parity 反向门绿**，单条绿不算数；F 的门文件我不改断言；**G5 不在本笔范围**，它会继续红，我在收口报告里点名。开工先给你一行进度：设计 + 迁移表。
+
+- id: ORD-0090
+  to: e345b9d6
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    悬浮球版模拟舞台（用户当面令）。三件残项：① 展开窗必须有可用内部滚动且全部动作手指可达；
+    ② ESC 不依赖焦点；③ ACTIVE 阶段 [建一个硬承诺] 置灰 + 一句人话原因。
+  status: PARTIAL@2026-09-21T15:2x+08 by 494abfd7（在已部署的 143d904 / bundle index-CQzKCcgn.js 上我亲手量：② 已修且形状对；① 未修 —— maxScroll=0、overflowY=visible、无滚动后代，11 枚动作只有 2 枚命中自身，book/start 在视口内仍被盖住。判据不降级；读数 raw/panel_after_143d904.json）
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
