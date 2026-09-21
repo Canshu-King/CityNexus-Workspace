@@ -2709,6 +2709,34 @@ status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单
 evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 🚦 (SESSION=494abfd7) 我放行 ORD-0095，但**切成两段**（不等仲裁回话也不空转，且不越 R1/R5）@14:2x
+
+车道 A 的地图、车道 F 的契约草案与七门、我自己独立复现的 8/1006/15 读数都到位了；车道 B 的九问还没回。
+**按"某条任务卡住不许全线等它"的夜令**，我不把 C 关在 B 后面空转，但也不让它先写需要 B 证据的部分。
+
+**ORD-0095 拆两段，第一段现在就能接（排在 0099 → 0101 之后）**：
+- **0095-1（现在就做，不需要 B）**：把 `contracts/openapi-anywhere-draft.yaml` 的四个操作落成**真端点**，
+  数据面只吃**已有的确定性来源**（golden fixture / mock provider），把 `DestinationCapability` 的
+  `state` 与六分类 `coverage` 从**已有目录真值**算出来；hydration 操作复用 `StayGenerationOperation` 那张表
+  （`models.py:1114/1132/1133/1134/1139/1143` + 显式迁移表 + 202/轮询/abandon 四件套 + 退避阶梯），
+  **不新造生命周期**；幂等指纹落**持久唯一索引**（`canonical_destination + catalog_schema_version + provider policy/version`）；
+  **provider 网络调用不得跨越 SQLite 写事务**（短读→放锁→网络→短写，写成结构而不是习惯）。
+  验收就是车道 F 的门：**G1、G2、G3、G4、G6b、G7 六条一起转绿，任何一条单独绿都不算数**；
+  parity 门（都实现了还挂着 `draft-unimplemented` ⇒ 红）也要一起绿。
+- **0095-2（等 B 的九问，别提前动）**：把真 provider（Photon 解析 + Overpass 分类发现）接成默认路径、
+  定 shortlist 的 bound、定 mobility 矩阵的算法与冷/热延迟预算。**R1（默认解析器=Photon）与 R5（mobility PARTIAL 能不能降级规划）
+  我已请仲裁裁，未回之前这一段不放**——尤其不许偷偷改默认 provider（`provider_config.py:35-37` 那种"环境里有值就翻转"的教训在案）。
+- **给 0095-1 的一条硬约束（我实测的）**：`GET /api/v1/demo/scene`、`/plans`、`/twin` 的现有形状**只增不改**；
+  演示台 `CNX-DEMO` 与北京 golden fixture 的行为不得因为新端点而变；`plans/generate` 那条"目录空被报成约束不满足"的链
+  由 **ORD-0101 单独修**，别混进这一笔。
+
+**车道 D 的 ORD-0096 继续 HELD**：它要吃的 `capability` 响应形状在 0095-1 落地前不存在，提前改只会再硬编码一次
+（现状实测：`JourneyTrialSetup.tsx:164-169` 的 `SUPPORTED_CITIES` 仍是前端表；`real_city.py:486-488` 与
+`RealCityDiscoveryPanel.tsx:83` 是逐字相同的两份白名单）。D 现在的手上事是 **ORD-0100（P0）**。
+
+**明早给老师的口径先钉死（我会写进 MORNING_CHECKPOINT）**：多城市真数据（HYDRATABLE）**今天不承诺可演示**；
+可演示的是 `CNX-DEMO` 全链 + 北京 golden 目录 + "失败会说实话"这条正在收紧的链路。
+
 ### ✅ (SESSION=494abfd7) ORD-0094（车道 F）与 ORD-0097（车道 C）我用自己的干净副本验收通过 @14:2x + 新开 ORD-0101（把"目录空"起真名）
 
 **我这轮的读数（不是我转述车道）**：我自己另开了干净 detached 副本 `D:/moodle/_qoder_cmdr_ref_20260921`，
@@ -3125,7 +3153,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     **等 ORD-0091/0092 证据回来由我出定稿契约后才开工**——现在不要动 `backend/app/**`。
     已知设计前提（Commander 实测）：解析主路只能用 Photon（Nominatim 本机不通）、Overpass 单端点、
     网络调用绝不跨 SQLite 写事务、reset/seed 禁止隐式触发真实城市 hydration。
-  status: HELD@2026-09-21T13:3x+08 by 494abfd7（等 A/B；预计 14:3x 前不放行）
+  status: RELEASED-SEGMENTED@2026-09-21T14:2x+08 by 494abfd7（0095-1 现在就做：四端点真值 + 复用 StayGenerationOperation 骨架 + 持久层幂等指纹 + 网络不跨写事务；验收=G1/G2/G3/G4/G6b/G7 六条一起绿。0095-2 等 B 的九问与仲裁 R1/R5，不得提前改默认 provider。排在 0099→0101 之后）
 
 - id: ORD-0096
   to: e345b9d6
@@ -3169,7 +3197,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     `list_plans` 泄漏即 ORD-0097）中**哪一个**是耦合源，给行号证据；③ 能修就修（测试隔离），
     不能修就在账本写清"为什么今晚不动它"，**不许加 skip 或 --deselect**。
     这条**排在 ORD-0097 之后**，若 0097 之后合跑已经稳定，直接报"被 0097 吸收"并给出两次连跑数字即可关单。
-  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7
+  status: ACKED@2026-09-21T13:3x+08 by 8c66aa92（它已声明排在 0097 之后；0097 之后若合跑稳定，按"被 0097 吸收"+两次连跑数字关单）
 
 - id: ORD-0099
   to: 8c66aa92
