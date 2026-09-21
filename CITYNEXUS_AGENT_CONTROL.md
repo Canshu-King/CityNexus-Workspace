@@ -2572,7 +2572,147 @@ evidence: `qoder-reset-from-wizard.spec.ts` 三臂 wizard/stale/live **5.9 / 5.9
 status: ORD-0089 DONE（含一条待你裁的"能否原地复活那趟北京行程"）
 evidence: `1180a16` · 5 gates · 3/3 mutants killed · 50/57/38 passed · `D:/moodle/_qoder_ord30_evidence_20260920/ord89/`
 
+### e345b9d6（SESSION=e345b9d6）悬浮窗版模拟舞台（用户当面改法）交付 @2026-09-21 12:4x → **两笔提交 `ce94ffa` + `4c8c911`；生产链 33/0；新增 6 个突变体 6/6 被杀（其中一个第一版活了，原因写在下面）**
+
+**先说编号**：账本里 `- id: ORD-0088` 已被 hero 那张占用（3793 行，note 里写"编号更正（第二次）…现定为 ORD-0088"），我 09:3x 的交付块也按那个号引用过。这次的新单（城市可得性）与它同号，所以本块与后续引用一律写"悬浮窗单/城市可得性单"，不用裸号，避免再造一次歧义。
+
+**用户会看到什么（我自己看过截图，不是只信门）**
+- 平时 Today 上**只有一个 48px 圆球**：半透明、圆角、绿点=舞台上有场景 / 灰点=暂无场景，右侧、**在底部导航与 Copilot 药丸之上**，不遮地图不遮卡片（`review/evidence/ui-overnight/stage-float-390-dark-closed.png`）。
+- 点一下展开小窗：第一行是"教学模拟舞台 · 屏幕上的“现在”由服务器给定：<服务器那一分钟>"，里面装**原来那 11 行动作 + 结果行**（一个没删），窗口宽 ≤ `100vw-24px`、高 ≤ 60vh、**内部自己滚**（`stage-float-390-light-open.png`）。
+- 四种收法：再点球 / 窗内「收起舞台」/ ESC / 点窗外。
+
+**逐条对要求（①-⑦）**
+| 要求 | 实测 |
+|---|---|
+| ① ≥44px 球、贴右下但在导航上方、滚动时保持悬浮 | 球 48×48（`boundingBox` 断言 width/height ≥44）；三个滚动姿势（middle/bottom/top）下球 rect **x/y 位移 <1px**（`scrollEverywhere` 走所有可滚盒，不吃"window.scrollTo 是空操作"那个坑） |
+| ② 点开成小窗、装下全部功能 | 窗口 rect 断言 `width ≤ 视口-24`、`height ≤ 0.6×844`；展开后 `sim-action-*` 行数 ≥9（实际 11），**逐行**在窗口内滚到位后中心命中自身 |
+| ③ 再点/窗外/ESC 收起 | 三种都各有一条 `expect.poll(count)===0` 断言，全绿 |
+| ④ 不遮底部导航、不拦截其点击 | 球与窗的 rect 与 `.v8-mobile-nav`、`.cn-copilot-dock` **均不重叠**；窗口展开时**五个导航项逐个 `elementFromPoint(中心)` 命中自己**（`navClickable` 全 ok） |
+| ⑤ 亮暗 × 390/412 | 四臂各跑一遍几何+逐行命中，另加 8 张视口截图（4 臂 × open/closed） |
+| ⑥ 球上只放极小状态点 | 断言 `ball.innerText.trim().length ≤ 2`；两态色由 `data-state` 承载（STAGE_LIVE / NO_STAGE / CHECKING / UNREADABLE） |
+| ⑦ innerText + elementFromPoint、zh/en | 声明句读 `innerText`（窗口第一行）与 `aria-label`（球），命中判定用 `elementFromPoint`；en 臂单独跑一遍（含 ESC） |
+
+**三处我自己造出来、被门当场抓住的回归**（都写进 commit message）
+1. `data-testid="sim-window"` **早就被占用**（ORD-0059 起它是"场景日期区间"那一行）⇒ Playwright strict mode 拒绝二选一："resolved to 2 elements"。控件改名 `sim-pop`/`.cn-sim-pop*`，日期行保持原名。**一个 testid 在一个面上有两个含义就是 bug**，不是症状。
+2. 窗口在 390 视口实测 **392px**：padding/border 算在声明宽度之外 ⇒ 显式 `box-sizing: border-box`。
+3. **portal 把层叠搬走了**：暗色内容组（`design-tokens.css:534`）与 AA 描边（`:666`）都以 `.v8-page` 为作用域，球出去后按钮变成"暗底白卡 + `#d9ddea` 描边 = 1.36:1"，**对比门红了一条过了几周的面**。修法是让窗口自己声明是页面级表面（`class="v8-page cn-sim-pop"`），而不是在组件里逐条重抄覆盖——下一条被 portal 出去的面还会撞同一堵墙。
+
+**还有两处遮挡是全量跑揪出来的**（第一版球用抄来的 `124px+安全区` 定位）：向导上球压住 sticky 主 CTA **12–16px**；球停在 Copilot 药丸静止带里 ⇒ 药丸为它让位后**再也不回来**（`a yielded pill is not a ghost control` 红）。第二笔提交 `4c8c911` 改成**量**出来的：读 `.v8-mobile-nav`/`.cn-copilot-dock`/`.trial-sticky-cta` 的最高上沿，停在上方 12px；只听 window 事件不够（CTA 比球**后挂载**、之后无滚动无 resize ⇒ 顽固剩 8px），所以同时跟 document 变更，防抖与药丸自己一致（220ms）。复跑：`qoder-mobile-ui-overnight` **4/4 绿**、`qoder-dock-geometry` 回绿。
+
+**门禁数字**：`tsc` 两个 config **exit 0**；`npm run build` 成功；生产构建链四张 spec **33 passed / 0 failed（1.6m，run965723，`:4645/:8645`，`provenance ok`）**；开发链全量 **收集 150 → 141 passed / 1 failed / 8 skipped（7.7m，`review/run-run965822.log`）**。唯一那条红是 `predictive-real-city-v6.spec.ts:86`，**不属我写域、也不是我造成的**，三个读数都给了：合跑红（`run965843`）、隔离**绿**（run966396，`review/predictive-round-b.txt`，2 passed）、隔离**红**（run966415，`review/predictive-round-c.txt`）⇒ 定性为**该 spec 自身在已提交 tip 上的不确定性**；机制上与我无关：那张 spec 全文没有 `sim-*`/`cn-sim` 引用，也不挂 `/v8/live` 上的舞台，我这轮只改了球与窗口自己的作用域选择器。红句：`getByTestId('live-journey-current')` **element(s) not found**（期望 "Old Town Gate"）——它上一轮的红是 `GET /experience` 500（同一族的锁/时序敏感），两条一起归该 spec 作者与 `8c66aa92` 判，我不碰、也不为了让它绿去放宽任何断言。
+
+**突变（牙）**：新增 6 个，各打一条承诺 —— `killD1` 自己展开 / `killD2` 停进导航带 / `killD3` 无 ESC / `killD4` 无点窗外 / `killD5` 球上放长句 / `killD6` 窗口体不能滚 ⇒ **6/6 KILLED**。**`killD6` 第一版活了**：我的逐行断言用 `scrollIntoViewIfNeeded`，浏览器对 `overflow:hidden` 的盒子照样给它滚 ⇒ 补了真手势断言（滚轮悬在窗口上 `mouse.wheel(0,320)`，窗口体 `scrollTop` 必须 >0），复跑才 KILLED。这正是我在 ORD-0085 记过的老教训（"程序化滚动治不了手指"）在我自己新门上的复发。累计 **21 个：19 KILLED / 2 SURVIVED**（`killA2`＝转发是腰带不是承重；`killA6`＝只关投影读也仍跟场景走，回落量的还是服务器那一分钟）。
+
+**一处需要你追认的口径变化**：ORD-0085 原句"不点开也要能读到那行人话声明"与用户当面令"球上不许有长文本"冲突。我按用户令做：声明移进**球的 `aria-label`** 与**窗口第一行**，门两路都还逐字断言（含"不含 `demo_mode`"、含服务器那一分钟），zh/en 各一遍。**"屏幕上有一行可见中文声明"这一条在折叠态确实不再成立**，请追认或另裁。
+
+**占机与卫生**：本轮用 `:4611-:4651 / :8611-:8651` + 各自 `_run*.db`/`_kill*.db`，`CITYNEXUS_AI_ENABLED=false` 且 pop 两把 key，`provenance ok` 每条都在日志里；未碰预览台 `:4781/:4782/:8781` 与 `_preview.db`；**未 push**。两笔提交只含 `frontend/src/features/simulation/*`、`frontend/e2e/{_qoderStageEntry,qoder-today-follows-the-stage,qoder-simulation-scene,qoder-reset-from-wizard,qoder-wallet-commitments}.spec.ts`、`review/{ord0082_0087_kill_drivers,rename_sim_pop,retarget_stage_ball}.py`；`backend/**`、`contracts/openapi.yaml`、`qoder-handoff/**`、`reports/**` 一条没 add。
+
+status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单）**已交付**＝`ce94ffa`（球/窗/四路关闭/几何与命中门重写）＋ `4c8c911`（离底部固定件实测留白 + 跟 document 变更重测）。①-⑦ 逐条有实测；三处自造回归与两处遮挡由自家门当场抓住并修掉。**DONE（待 Commander 追认"折叠态可见声明"口径 + 用户真机当面验）**
+evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📡 (SESSION=494abfd7) 第 0 问我先替 B 量了一遍：本机**能**出网到 Photon/Overpass，**Nominatim 不通** @13:3x
+
+车道 B 还没起来，我先用裸 socket + 真实 TLS 校验量了一次（出口：本机 `192.168.1.200`，未走代理，
+证书用系统根校验通过 ⇒ 这两条链路**没有被中间设备替换证书**）。数字都是墙钟实测，不是推断：
+
+| 目标 | 结果 | 实测 |
+|---|---|---|
+| `photon.komoot.io`（解析"贡山独龙族怒族自治县"） | **200 OK** | IP `116.202.51.114`，TCP 578 ms，整请求 **943 ms**，1290 B；返回 `R/2729765`「贡山县」`admin_level=6`、点 `98.6672235, 27.7443567`、`extent` 四至、`countrycode=CN` |
+| `overpass-api.de/api/interpreter`（北京 bbox 内 `tourism=museum` count） | **200 OK** | IP `162.55.144.139`，**1443 ms**，`nodes=41 / ways=0 / relations=0 / total=41`，`timestamp_osm_base=2026-09-21T05:23:05Z` |
+| `nominatim.openstreetmap.org` | **不通** | TCP `connect` 8 s 超时（IP `185.60.219.36`）⇒ 这台机器上**别把 Nominatim 当解析主路** |
+| Overpass 备用镜像 `overpass.kumi.systems` / `overpass.private.coffee` | **recv_timeout 25 s** | ⇒ 只有 `overpass-api.de` 一个可用端点，**单点** |
+
+**五条立刻可用的工程结论（给 B/C/D，仲裁可复核）**：
+1. **地名解析主路 = Photon，不是 Nominatim**。Photon 还顺手给了 `admin_level` 和 `extent`（县界四至），
+   这正是 §3 destination resolution 与 §9 mobility 候选集所需的 bbox——省掉我们自己算行政区边界。
+2. **Photon 不支持 `lang=zh`**：`?lang=zh` 直接 400 `Language is not supported. Supported are: default, de, en, fr`。
+   要中文名就用**不带 lang**（实测返回「贡山县」「云南省」「中国」）；`lang=en` 会把地名换写成 `Gongshan / Nujiang / Yunnan Province`，
+   但 POI 的 `name` 仍是当地文字。**我们的目录不许出现"英文界面就换成转写名"**，这条要进门禁。
+3. **Overpass 必须 POST + 百分号编码**：把查询串直接拼进 GET 的 URL 得到 **400 Bad Request**（Apache 层就拒了），
+   改成 `POST data=<urlencoded>` 才 200。**任何车道写 provider 客户端前先按这条来**，别把 400 当成"网络不通"。
+4. **单点 + 有限流风险 ⇒ "失败要诚实"不是可选项**：只有一个可用 Overpass 端点、备用镜像在本机不可达，
+   那么 429/超时/半截返回一定会发生；hydration 状态机在这些情形**必须**显式 `FAILED/UNAVAILABLE + reason_code`，
+   **绝不允许**留下"看起来 READY 其实目录是空的"。这正好是任务书 §14 与 capability truth gate 的现实依据。
+5. 附带一条坐标系证据：Photon/Overpass 返回的都是 **WGS-84**（`extent` 与点一致），
+   而我们界面里若接国内底图/Amap 是 **GCJ-02** ⇒ 转换只能有一个归属地，必须在**入库前**定死，不许留到前端。
+
+**给车道 B（`c01d72a3`）**：以上不用重做，直接接着往下走九问；但**你要复跑并落盘原始响应**（我给的是探针，不是证据包），
+并把"我这两个 200 是不是稳定"复测 ≥3 次给方差。若你复现不出同样的读数，**以你的为准并当场纠正我**——我在账本里写过的错数字一向当场撤回。
+**给车道 C（`8c66aa92`）**：等你 ORD-0095 开工时，这五条是你的 provider 层设计前提；尤其第 4 条决定"UNAVAILABLE 怎么表达"。
+
+
+CLAIMED: ORD-0093 by dc19d662（车道 E · 红队/真实用户 · 本机钟 `date`=13:23 +0800 · 写集仅 `D:/moodle/_qoder_redteam_anywhere_20260921/`，端口只占 :8661/:4661 + 自有 `_run*.db`；预览 `:4781/:4782/:8781` 与 `_preview.db` 只读不占不杀 · 权威树 tip 实测 `_qoder_integration_20260919` @`4c8c911`）
+：先跑 CASE1（CNX-DEMO M1–M4 回归），完戒单独报一次再开 CASE2。
+
+CLAIMED: ORD-0091 by 5ea3bedc（车道 A · 架构侦察 · 只读 · HEAD 实测 `4c8c911` · 写集仅 `D:/moodle/_qoder_anywhere_scout_20260921/`）@13:3x
+
+CLAIMED: ORD-0094 by 8ccd71d8（车道 F · 契约/门）@13:2x（本机钟 date=13:23:28 +0800 · 权威树 HEAD 实测 `4c8c911` · 写集仅 `contracts/**` + 新建测试文件 · 自占 :8652-8660 与各自 `_run*.db`，不碰预览台）
+
+### 🌍 (SESSION=494abfd7) CITYNEXUS-ANYWHERE 发车令：ORD-0091 / 0092 / 0093 / 0094 立即开工 @13:2x
+
+**只读四条现在就动，写集两条（0095 后端 / 0096 前端）等 A+B 证据。** 任务书全文已归档在
+`_qoder_recovery_20260919/raw/arbiter_mission_anywhere.md`（仲裁原文，25 KB，含 §0~§20），下面只写各车道**可判分的验收**。
+通用硬约束（违反即作废）：① 不削弱任何既有真值门、不加 `skip`、不改既有断言让它变绿；② 不编造地点、不把 LLM 当事实来源；
+③ provider 网络调用绝不跨 SQLite 写事务；④ CNX-DEMO 数据与 M1–M4 手机链路保持原样；⑤ 预览台 `:4781/:4782/:8781` 与
+`_preview.db` 谁都不许占；⑥ 每笔完成动作**先提交再在账本发块**，块首带 `SESSION=<自己前8位>`，未提交=未交付。
+
+**ORD-0091 → 车道 A `5ea3bedc`（架构侦察，只读）**
+写集：只允许新建/写 `_qoder_anywhere_scout_20260921/**`。**不开服务器、不占端口、不改生产码。**
+交付一份地图，每条结论必须带 `文件:行号`，且行号是当前权威树 `4c8c911` 上实测得到的（引用前先 `git rev-parse HEAD` 写明）：
+1. `city_code` 从哪里来、有几条赋值路径（向导/行程/AI/种子），每条形成长短链；
+2. 地点与目录抽象现状：`MockCityDataProvider`、`places.json` 读取路径、`ensure_city_catalog`（我裁的方案②）现在做了什么、
+   `city_services` 与 `places` 的关系；
+3. planning 入口链路：`journeys/{id}/plans/generate` 到目录查询到候选评分，把"目录空/不足"在哪一步短路标出来；
+4. routing abstraction 现状：能吃什么、不能吃什么、`SYNTHETIC_DEFAULT` 与 `EXPLICIT_FROZEN_FIXTURE` 从哪来；
+5. provenance 数据结构现状（哪个字段能区分 fixture / fetched / simulated，哪些地方在撒谎）；
+6. provider 超时、重试、缓存设施（有无、在哪、可复用度）；
+7. 既有异步 operation 模式（stay-generation 一族）的状态字段、轮询端点、abandon 语义——这是水合状态机要复用的骨架；
+8. AI run / outcome 现状：`AgentOutcome` 的 `reason_code` 现在有没有落点，哪一段吞掉了 no-op；
+9. `TARGET` 设计：`DestinationCapability`（READY/HYDRATABLE/UNAVAILABLE + 分类覆盖度）与 `CatalogHydration` 状态机怎么落在上述文件上；
+10. **最小迁移步**：有序列表，每步给出"改哪个文件、加什么端点、什么门先红"。
+判据：我随机抽 5 条 `文件:行号` 复验，任一不存在或对不上 ⇒ 整单退回。目标 60 分钟内交。
+
+**ORD-0092 → 车道 B `c01d72a3`（外部 provider 实测，只读+隔离实验）**
+写集：只允许 `_qoder_spike_20260921/**`（脚本、原始响应 JSON、测量表）。任务书 §16 里那四个仓库**只借机制，不许进依赖**。
+**第 0 问先答（本机有出网历史限制，不许假设能通）**：这台机器能否解析并 HTTPS 到达
+`photon.komoot.io`、`overpass-api.de/api/interpreter`、`nominatim.openstreetmap.org`——各自给 DNS 结果、TCP 是否建连、
+TLS 是否被中间设备干预、HTTP 状态、墙钟耗时、以及**绑定在哪张网卡上量的**。全失败也是有效结论，如实报。
+通了才继续 §九问，每条要**实测数字 + 一个可复跑命令 + 原始响应落盘路径**：
+① Photon 对"从未预录的县/区"的解析命中率与歧义度（≥3 个不同省的真实县名，含一个自治县）；
+② Overpass 同地的分类返回：各分类（任务书 §5 的 9 类）拿到多少要素、实际出现的 OSM tag 清单；
+③ 冷发现端到端耗时（含限流等待），④ 有用 POI 数量（去掉 tag 噪声后的净值）；
+⑤ 裸 `httpx`+Overpass 与 `osmnx` 各自要写多少行才拿到同样产物（**用代码行数与踩坑次数论证，不用主观印象**）；
+⑥ `osmnx` 在 Windows/Py3.12 的依赖成本：新环境安装耗时、新增包数、体积；
+⑦ 现有 routing abstraction 能否直接为发现的 WGS-84 坐标算矩阵，需要什么前置；
+⑧ 坐标参考系：Photon/Overpass 给什么系，我们库里存什么系，`GCJ-02` 转换在哪一步必须发生（不许留到最后）；
+⑨ provider 离线/慢/429/返回不全时，我们**当前代码**会表现成什么（这条要在隔离树里真打桩，不许推理）。
+礼貌约束：≤1 req/s、带可辨识 User-Agent、结果全部落盘复用、失败退避；**不发任何需要 key 的请求、不写任何 key 进仓库/账本/报告**。
+
+**ORD-0093 → 车道 E `dc19d662`（红队/真实用户，只读）**
+写集：只写证据目录（截图、`review/**` 日志、`_qoder_redteam_anywhere_20260921/**`）。可占 `:8661-8670 / :4661-4670` + 各自 `_run*.db`，
+`CITYNEXUS_AI_ENABLED=false` 且清全部 provider 凭据（`DEEPSEEK_API_KEY/OPENAI_API_KEY/CITYNEXUS_AI_MODEL/CITYNEXUS_AI_API_KEY`）。
+按任务书 §18 跑**四个真实用例**，每个都要 390×844 截图 + 逐步网络读数 + 人话结论（不许"符合预期"）：
+CASE1 `CNX-DEMO`（回归）：M1–M4 全链是否仍与昨晚验收一致；任一环节退化 ⇒ 立刻在账本顶部标 `🔴 阻塞` 并 @我，其它用例先停。
+CASE2 `CN-BEIJING`（golden fixture）：现存的北京旅程 `2cf892e1` **不删除、不重建**，`plans/generate` 是否 ≥2 候选、provenance 是否仍如实标 fixture。
+CASE3 **必须是一个从未预录的小县城**（任务书硬要求；建议：贡山独龙族怒族自治县 / 塔什库尔干塔吉克自治县 / 崇礼区三选一）。
+CASE4 一个中等城市（如 泉州、芜湖），验证"没有手工 JSON 的城市"的现行为。
+CASE3/4 现在**大概率是坏**的——我们要的是精确的坏法：点了什么、请求是什么、状态码是什么、界面停在哪、文案哪一句在撒谎、
+用户是否被留在"转了半天啥也没发生"的状态。**每例给一份最小复现（curl 或 UI 步序 + 树 sha）**。不许改生产码、不许顺手修。
+
+**ORD-0094 → 车道 F `8ccd71d8`（契约/门/文档）**
+写集：`contracts/**` 与**新建**的测试文件；**不许改** `backend/app/**`、`frontend/src/**`、既有测试断言。可占 `:8652-8660 / :4652-4660`。
+交付：① OpenAPI parity——把 §车道 C 目标契约的四个端点写进契约草案，并逐条量"契约里有、实现里没有"的差集（现在必然全是缺）；
+② 任务书 §5 的**七条硬门**各写一个 focused test 骨架：capability truth / existing-journey recovery / hydration idempotency+concurrency /
+category coverage / AI no-op visibility / provenance 可区分 / no manual-city treadmill。**允许红，但每条红必须写明：文件、用例名、期望、实际**；
+③ 附一份"这些门今天凭什么通不过"的两行判定，便于我据此定 C/D 的收口标准。
+**绝对不许**：为了让门变绿而放宽断言、加 skip、或把断言写成恒真（ vacuous 门比没有门更糟，这条我有前科记录在案）。
+
+**机器号/单号纪律**：本批 0091~0094 我已在账本开号，谁也别另起新号；后续 C/D 用 0095/0096。
+每条车道**开工先在账本回一行 `CLAIMED`，完成回 `DELIVERED` + sha/路径**，我要按行车验。
+
+`CLAIMED: ORD-0092 by SESSION=c01d72a3 @2026-09-21T13:23+08（date 实读 13:23:11+0800）` —— 写集只 `_qoder_spike_20260921/**`；**第 0 问先单独发一次结论**（出网结论会改全任务路线），随后按 ①~⑨ 逐问给"实测数字 + 可复跑命令 + 原始响应落盘路径"。已核到开工时的出口事实：**默认路由在 WLAN，下一跳 `192.168.1.1`，系统 DNS 也只有 `192.168.1.1`**（不是 campus 的 `10.12.255.254`/`10.20.255.254`），RNDIS 网卡此刻未连接 ⇒ 本轮所有读数都走这个 NAT 出口，我会在结论里按接口名写死分母。
+
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
@@ -2595,6 +2735,67 @@ build RC=0、bundle `index-CKaJ5xEh.js` **本地与隧道两侧一致**（previe
 停止"一城一份 JSON"；DestinationCapability 三态 + Catalog Hydration + AgentOutcome Contract 为新主路线；
 我已开始 spike（PlacesRecommendation 的 Overpass/category-map/cache-key 机制文件已按 sha 拉到
 `raw/spike_placesrec/`，只借机制不引依赖）；七条硬门随 spike 设计稿一起开号。
+
+---
+
+## 🌍 MISSION: CITYNEXUS-ANYWHERE（Universal City Capability & Catalog Hydration v1）@13:0x
+
+仲裁给的任务书全文在 `raw/arbiter_mission_anywhere.md`；用户已当面确认"不怕难，开工"。
+**一句话目标**：用户输入一个**从未预录**的县/区/市，系统必须给出三种诚实结果之一
+（READY 直接规划 / HYDRATABLE 可见地准备数据后规划 / UNAVAILABLE 明说为什么不行），
+**永远不再**"转半天然后啥也没发生"。从此**禁止**把"一城一份 places.json + 手填 N² 交通矩阵"当扩展主路。
+
+**开工前的控制面快照（§0 要求，实测非回忆）**：
+```
+authoritative HEAD : 4c8c911  (gate/base detached 副本分别在 1874a41 / f8d9dc2)
+backend/app dirty  : 0 行（后端车道已交完 1180a16/924461e 一线）
+dirty tracked      : qoder-handoff/*.patch, reports/e2e-provenance/authoritative.json,
+                     tools/verification/mutation_campaign.py  ← 全部非生产路径
+active writers     : e345b9d6 = 0082/0084/0088 CLAIMED（frontend 写域）
+                     8c66aa92 = 0068 CLAIMED（backend 写域）
+ORD 已用最大号     : 0090 → 本任务从 0091 起
+```
+
+### 车道与写集（六条并行，零重叠）
+
+| 车道 | 会话 | 写集 | 本任务单号 | 职责 |
+|---|---|---|---|---|
+| **A 架构侦察**（只读） | `5ea3bedc` | 只写 `_qoder_anywhere_scout_20260921/` | **ORD-0091** | 画出 city_code 从哪来、place/catalog 抽象、`MockCityDataProvider`、`ensure_city_catalog` 现状、planning 入口、routing adapter、provenance 结构、provider 超时/缓存设施、AI run/outcome 契约、OpenAPI 面、stay-generation 的异步 operation 模式。交付 `CURRENT → TARGET → 最小迁移步` |
+| **B 外部 provider spike**（只读+隔离实验） | `c01d72a3` | 只写 `_qoder_spike_20260921/` | **ORD-0092** | 实测九问（见下）。**先量这台机器能不能出网到 Photon/Overpass**（本机网络有历史限制）。不许为"它很强"就引入 OSMnx，只按依赖成本证据推荐 |
+| **C 后端实现**（唯一 backend 写手） | `8c66aa92` | `backend/app/**`、`data/**` | **ORD-0095（等 A/B 证据后开工）** | 实现 DestinationCapability + Catalog Hydration 状态机 + 归一化 provider 抽象 + 幂等并发 + 分类覆盖度 |
+| **D 前端产品流** | `e345b9d6` | `frontend/src/**` | **ORD-0096（契约稳了就开工）** | 干掉前端硬编码城市表，改为吃后端能力；水合过程可见、可刷新恢复；AI no-op 上屏 |
+| **E 红队/真实用户**（只读） | `dc19d662` | 只写证据目录 | **ORD-0093** | 按 §18 跑四个真实用例（含**必须一个小县城**）+ provider 离线/慢/稀疏/并发/刷新中断；只开缺陷带复现，不改生产码 |
+| **F 契约/测试/文档** | `8ccd71d8` | `contracts/**`、新测试文件 | **ORD-0094** | OpenAPI parity + 七条硬门的 focused test 骨架（先写门，允许红）；**不许放宽任何既有门** |
+
+### 全车道硬约束（任务书原文，违反即作废）
+不许削弱任何既有真值门；不许编造地点；**不许把 LLM 当事实来源**；
+**provider 网络调用绝不跨 SQLite 写事务**（stay-generation 115 秒独占的教训不许重演）；
+不许为了变绿改断言或加 skip；CNX-DEMO 与 Simulation M1–M4 保持原样；北京保留为 deterministic golden fixture。
+
+### 车道 B 必须回答的九问（每条要实测数字，不许"应该可以"）
+1. Photon/Nominatim 能否可靠解析任意县/区？2. Overpass 对没见过的县能否返回有用分类？
+3. 一次冷发现耗时多少？4. 返回多少有用 POI？5. 实际存在哪些 OSM tag？
+6. 裸 httpx+Overpass 够不够，还是 OSMnx 能显著减少自写代码？7. OSMnx 在 Windows/Py3.12 的依赖成本？
+8. 现有 routing abstraction 能否为发现的坐标算矩阵？9. provider 离线/慢/限流/不全时行为？
+
+### 车道 C 的目标契约（细节以任务书为准，A/B 回来后我再按实测定稿）
+`GET /api/v1/destinations/capability?query=` · `POST /api/v1/catalog-hydrations` ·
+`GET /api/v1/catalog-hydrations/{id}` · `POST …/{id}/abandon`；
+状态机 `QUEUED→RESOLVING_DESTINATION→DISCOVERING_POIS→NORMALIZING→BUILDING_MOBILITY→PERSISTING→COMPLETED`
+（终态另有 `FAILED/UNAVAILABLE/ABANDONED`），**无假百分比**，暴露 phase/elapsed/retry_after/provider status/reason_code；
+受理 p95≤1s、硬上限≤2s；幂等指纹 = 规范目的地+catalog schema 版本+provider 策略，**持久层去重**不是进程内锁；
+ mobility 走既有 routing abstraction，先归一化→去重→确定性 shortlist→**只对受限候选集**算矩阵（bound 要有实测理由）。
+
+### 车道 D 的 DeepSeek 边界（任务书 §10，一字不让）
+允许：对**已验证**地点做语义标注/偏好匹配/排序辅助/解释/`user_summary` 文案。
+输入必须带合法 place id 白名单，输出**逐个 id 校验**，编出来的 id 一律丢弃不落库；
+禁止编造坐标/是否存在/营业时间/票价/预订号/路线时长；**禁止把 SIMULATED/PARTIAL 升成 LIVE**。
+
+### 我的执行节奏
+① 现在：A/B/E/F 四条只读车道立刻开工（不抢写集），C/D 等 A/B 证据；
+② 每 30 分钟一巡检，收齐 A/B 后我出**定稿契约**再放 C/D；
+③ 每 45~60 分钟向总线发 checkpoint 并在仲裁窗口敲门；
+④ 明早老师 Demo 的 M1–M4 链路**不受本任务影响**——它已经是既成事实，本任务只加东西不拆它。
 
 ### 🟢 (SESSION=494abfd7) 仲裁新指示落地 @12:2x（总线 `5755303414`）—— 战略转向：停止"一城一份 JSON"，改为 DestinationCapability 能力契约
 
