@@ -2647,6 +2647,31 @@ CLAIMED: ORD-0093 by dc19d662（车道 E · 红队/真实用户 · 本机钟 `da
 
 CLAIMED: ORD-0091 by 5ea3bedc（车道 A · 架构侦察 · 只读 · HEAD 实测 `4c8c911` · 写集仅 `D:/moodle/_qoder_anywhere_scout_20260921/`）@13:3x
 
+### 🗺 (SESSION=5ea3bedc) ORD-0091 车道 A 架构侦察 交付 @13:5x（只读，权威树零写入）
+
+STATUS | files | blocker | 路径
+`DONE`（十条全覆盖；1–8 MEASURED 带行号，9–10 设计+有序迁移步）| 新增 `D:/moodle/_qoder_anywhere_scout_20260921/MAP.md`（未改 backend/app、frontend/src、contracts、data、任何测试；未 git add/commit/push；未起服务、未占端口）| 无 | `D:/moodle/_qoder_anywhere_scout_20260921/MAP.md`
+
+`git rev-parse HEAD` 实测 = **`4c8c911d3b8800b7dd21404de1e8b3033fb3e087`**，开工时 `git status --porcelain backend/app` **为空** ⇒ 行号即权威树本体。**已按你的抽查方式自验 5 条**（`services.py:1418` / `services.py:1544` / `models.py:1143` / `main.py:2776` / `runtime.py:589`）全部命中。
+
+**🔴 两个"不存在"，先给 B/E/0095 省一小时**
+1. **`ensure_city_catalog` 在 `4c8c911` 里不存在**（全仓 py/ts/tsx/json/md grep 0 命中，`ensure/prepare/hydrate/seed/build_city`+`catalog_*` 近义名亦 0）。它是账本 `:3316` 裁的方案②，且 `:2776` 已被你升级为 Catalog Hydration。⇒ 第 2 问"它现在做了什么"的答案是**还没被写出来**；现役实现是 `MockCityDataProvider`（`providers.py:13`，全 `app/` 只被 `services.py:210` 实例化一次，**在 `seed_demo` 内**，def `:167`）——名为 provider 抽象，实为 seed 数据源。
+2. **`AgentOutcome` 这个类型不存在**（全仓 0 命中），真身是 `AgentRun.outcome` **自由文本列**（`models.py:241`/`:251`）。
+
+**四条主链路结论（详见 MAP）**
+- **city_code**：5 条形成长短链（最短 2 跳：`V8Experience.tsx:657` 硬编码 `"CN-TIANJIN"` → `main.py:2640` 原样入列）。`schemas.py:176` 只有 `min_length=1`，**任意字符串都能成为一座城市**；消费侧靠 `amap.py:57-59` 的 `startswith("CN-")` 和**两份镜像硬编码白名单**（`real_city.py:486-488` 与 `RealCityDiscoveryPanel.tsx:83`，两种语言、必漂）。**没有 capability 端点**。
+- **目录抽象**：`Place`（`models.py:457`）**没有 source/provenance/quality 列**，真值全靠自由字符串 `provider_key`（实测在用 4 套值）；`CityService.place_id`（`:480`）是可选外键 ⇒ **services 挂在 places 之下**，水合时地点只有一个落点。`_templates()`（`services.py:564`）写死 CNX-DEMO 的 place id。
+- **plans/generate 短路点（第 3 问核心）**：`main.py:4437` → `services.py:1292` → `:1313-1322` 查目录 → `:1328-1332` 只留能解析的 fixture 模板 → `:1418` 落 `_catalogue_templates`（`:620`，空判在 **`:649-650 return []`**）→ `:1538 if not created:` → **`:1544` 抛 `No feasible plan candidates…`** → `main.py:4454-4465` 原样透出 422。⇒ **目录为空不会早退，它一路走到最后、被报成"约束不满足"**。这就是 §11 要 `CATALOG_EMPTY/CATALOG_INSUFFICIENT` 的真因。
+- **异步 operation 骨架（第 7 问，水合直接复用）**：`StayGenerationOperation`（`models.py:1114`：`fingerprint:1132` 幂等、`status:1133` 默认 QUEUED、`phase:1134`、**`outcome:1139`**、**`abandon_requested_at:1143`**）+ **显式迁移表**（`stay_generation_operations.py:55 TERMINAL_STATUSES`、`:64 ABANDON_REQUESTED→{ABANDONED,FAILED}`、`:67 ABANDONED→∅`）+ abandon 语义（`:95/:100/:106` 进程内旗标、`:485/:512` 持久侧、`:16` 写明"在飞调用返回后才落 ABANDONED 且结果不落库"）+ 四件套 HTTP（`main.py:2776` **202** / `:2819` / `:2831` / `:2846`，URL 约定 `status_urls:167-169`）+ **现成退避阶梯 `:180-187`**（终态0/1000/2000/5000）。水合**不要新造生命周期**。
+- 附带：routing 只吃 `place_id`、只有点对点 `directions`（`routingpy_adapter.py:47/:55`）⇒ **裸 WGS-84 坐标不能直接进**，且 N² 请求（直接答 B 的⑦前置）；provenance 三值枚举 + `HARD_FEASIBLE_QUALITIES`（`provider_snapshots.py:13-18`）**移动侧是干净的，地点侧没有**；缓存只有一套可复用（`config.py:76-77` 900s TTL + `real_city.py:890/:934/:1229`）；跨 provider 通用重试器 **UNKNOWN（未找到）**。
+
+**一条可验证的预测（给 0095 定次序）**：一旦给"目录空"真名字，**`backend/tests/test_qoder_beijing_catalogue.py:225-229` 先红** —— 它用 `CN-SHANGHAI`（无目录城）断言 `"No feasible plan candidates" in body["error"]["message"]`，断言的正是那句谎话。正确处置是改断言去指真因，**不是放宽它**（硬约束①）。
+
+**第 10 问最小迁移步（有序，全文在 MAP）**：① 给目录空真名（`services.py:1418`+`:1538`）→ ② 加 `GET /destinations/capability`（挨 `main.py:4396`）→ ③ 建 `catalog_hydration_operations` 抄 §7 那张表（202+status_url+abandon_url）→ ④ **让计划用上新地点不需要写新代码**：`_catalogue_templates` 与 places 查询之间没有城名白名单，**Place 行一落库 `plans/generate` 自动能规划那座城**（MEASURED 的好消息）→ ⑤ mobility 停手写 N² → ⑥ `run.outcome` 结构化（`models.py:241` + `runtime.py:587-589`，可与①并行、风险最低）。
+
+status: `DONE`（ORD-0091 交付，车道 A 收工）
+evidence: 全部行号取自 `4c8c911` 的 `backend/app/**` 本体（逐条读原文，非转述；开工时该目录 git 干净）。零写入证明：本块与 MAP 是本次唯二产出，均在 `_qoder_anywhere_scout_20260921/`；未起服务未占端口，`:4781/:4782/:8781` 与 `_preview.db` 未碰。
+
 CLAIMED: ORD-0094 by 8ccd71d8（车道 F · 契约/门）@13:2x（本机钟 date=13:23:28 +0800 · 权威树 HEAD 实测 `4c8c911` · 写集仅 `contracts/**` + 新建测试文件 · 自占 :8652-8660 与各自 `_run*.db`，不碰预览台）
 
 ### 🌍 (SESSION=494abfd7) CITYNEXUS-ANYWHERE 发车令：ORD-0091 / 0092 / 0093 / 0094 立即开工 @13:2x
@@ -2713,6 +2738,135 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
 
 `CLAIMED: ORD-0092 by SESSION=c01d72a3 @2026-09-21T13:23+08（date 实读 13:23:11+0800）` —— 写集只 `_qoder_spike_20260921/**`；**第 0 问先单独发一次结论**（出网结论会改全任务路线），随后按 ①~⑨ 逐问给"实测数字 + 可复跑命令 + 原始响应落盘路径"。已核到开工时的出口事实：**默认路由在 WLAN，下一跳 `192.168.1.1`，系统 DNS 也只有 `192.168.1.1`**（不是 campus 的 `10.12.255.254`/`10.20.255.254`），RNDIS 网卡此刻未连接 ⇒ 本轮所有读数都走这个 NAT 出口，我会在结论里按接口名写死分母。
 
+#### (SESSION=c01d72a3) ORD-0092 **第 0 问结论** @13:3x —— Photon 与 Overpass 通、**Nominatim 在这张网卡上不通（TCP 就没建起来）**，且这条链路**没有 TLS 中间设备**
+
+**量在哪个出口（先钉分母，全部直连读数都禁用了代理）**：`WLAN` = Intel(R) Wi-Fi 6 AX201 160MHz（ifIndex 9，163 Mbps，RSSI -25），SSID **`uFi-8A2E`**，本机地址 `192.168.1.200`，网关与 DNS 都是 `192.168.1.1`，公网出口 `117.61.176.21`（`ifconfig.me`，**未过代理**）。校园网 TUTE **不在用**；RNDIS 网卡与 Sangfor VNIC 均 `Disconnected`。Windows 系统代理 `ProxyEnable=0x1` 且 `127.0.0.1:7897` 在听 ⇒ 每条直连读数都用 `ProxyHandler({})` 显式绕开它，代理路径另测并单独标出口。
+
+| host | DNS | TCP:443 | TLS 链校验 | HTTP | 墙钟 |
+|---|---|---|---|---|---|
+| `photon.komoot.io` | ok `30.9ms` → `116.202.51.114` | ok `171.7ms` | **VALIDATED** `518ms`，issuer=`Let's Encrypt / YR1` | `/` **200**；`/api/?q=` **200** | `1445.7ms` / 单查 `718–1444ms` |
+| `overpass-api.de` | ok `0.5ms`(缓存) → `162.55.144.139`,`65.109.112.52` | ok `185.8ms` | **VALIDATED** `373.7ms`，issuer=`Let's Encrypt / YE2` | `/api/interpreter` **200**、`/api/status` **200** | `1349.9ms` / `1740.8ms` |
+| `nominatim.openstreetmap.org` | ok `36.5ms` → `185.60.219.36` | **FAIL**（SYN 无应答，`6001.4ms` 超时；第二次 HTTP 层 `15073.5ms` 同样超时，`WinError 10060`） | 无握手可判 | 直连 **无状态码**；**经 `127.0.0.1:7897` 则 200 / `2275.9ms`**（那是另一个出口，不是本机这张网卡） | — |
+
+**TLS 是否被中间设备干预：这条链路没有。** 两家都通过默认证书链校验拿到真 Let's Encrypt 签发者；本机历史上那个 `CN=ruijie` 自签 CA 的网关 MITM 在 `uFi-8A2E` 这个出口上**不出现**。诚实标注分母：Nominatim 根本没完成握手，所以"它有没有被干预"这一问题对 Nominatim **不可判定**，我不外推。
+
+**我自己两处误读，当场撤回**：① `/api/v1/search` 与 `/api/v1/` 都 404 —— 服务器自己的响应体写着 `Endpoint GET /api/v1/search not found`，Photon 公共实例的 API 前缀是 **`/api/`**（它的首页文档里就印着），我第一版猜错了路径，不是服务不通；② 第一次 Overpass 的 **504** 是我发的 `data=[out:json];out;` 本身不是合法语句，换成一个极小 bbox 查询就 **200 / 535 B / 1.35s** ⇒ Overpass 是通的，那条 504 不算 provider 故障。
+
+**对任务路线的三条影响（要你现在知道，趁还有时间）**
+1. **冷发现不必落到 UNAVAILABLE**：Photon（地理编码）+ Overpass（分类要素）两家都真通 ⇒ 对没预录的城市，我们**有**一条可跑的在线发现路，不需要把结论降级成"只能离线"。
+2. **Nominatim 不能进任何必需路径**：它在这台机器的默认出口上 TCP 不通，只有走 Clash 代理节点才通。若设计里有"reverse geocode 兜底"，那个兜底在**校园网/手机 AP 这类直接出口上会静默失败**，必须按 §14 明确标成 provider 不可用而不是空结果。
+3. **出口是环境相关的**：以上全部是 `uFi-8A2E`（NAT 出口 `117.61.176.21`）这一条链路的数；换 TUTE 校园网（历史上 Ruijie TLS-MITM + 无认证即无出口）或 RNDIS  tether，结论要重跑 —— 复跑命令：`cd D:/moodle/_qoder_spike_20260921 && D:/moodle/CityNexus/.venv/Scripts/python.exe q0_reachability.py`（再跑 `q0b_disambiguate.py` 分辨"我路径错"与"服务不通"）。原始响应：`_qoder_spike_20260921/raw/`、`q0_reachability.json`、`q0b_disambiguation.json`。
+
+状态：**Q0 已答（DONE）**，①~⑨ 继续按序实测，不用等你回话我就往下走；卡住超 10 分钟我发 BLOCKED + 卡点。
+
+
+
+**读单须知（避免上次字母撞名）**：本任务的 A~F 六条车道**以会话前 8 位为准**，与昨晚 Simulation 的 A~F 会话**不是同一批人**；
+本任务的写集与昨晚不同，任何车道不许按字母猜人。
+
+- id: ORD-0091
+  to: 5ea3bedc
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    车道 A 架构侦察（只读）。全文见本段上方「🌍 CITYNEXUS-ANYWHERE 发车令」块 +
+    `raw/arbiter_mission_anywhere.md` §1 LANE A。写集只有 `_qoder_anywhere_scout_20260921/**`；
+    不改生产码、不 commit、不开服务器。交付 MAP.md：city_code 来源 / 目录与地点抽象 /
+    plans/generate 短路点 / routing abstraction / provenance / provider 超时缓存设施 /
+    既有异步 operation 骨架 / AI outcome 落点 / TARGET 设计 / 最小迁移步。每条带 `文件:行号`。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（会话已 opening；我随机抽 5 条行号复验，对不上整单退回）
+
+- id: ORD-0092
+  to: c01d72a3
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    车道 B 外部 provider 实测。第 0 问（出网性） Commander 已先量并落账本（`### 📡 …第 0 问我先替 B 量了`）：
+    Photon 200/943ms、`lang=zh` 400、Overpass POST 200/1443ms（GET 拼串 400）、Nominatim TCP 超时、
+    备用 Overpass 镜像 25s recv_timeout（单端点）。B 须复跑 ≥5 次给方差并落盘原始响应，复现不出就当场纠正 Commander。
+    随后答任务书九问，每条要数字+可复跑命令+落盘路径；≤1 req/s；不引入依赖；不带 key。
+    写集只有 `_qoder_spike_20260921/**`。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（会话 running，等 round0 复跑证据）
+
+- id: ORD-0093
+  to: dc19d662
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    车道 E 红队/真实用户（只读）。按任务书 §18 跑四例：CASE1 CNX-DEMO 的 M1–M4 回归（退化就 🔴 阻塞并 @我，
+    其余先停）；CASE2 CN-BEIJING 现存旅程 `2cf892e1` 不删不重建直接 generate，看 ≥2 候选与 provenance 诚实；
+    CASE3 **必须**一个从未预录的小县城（贡山/塔什库尔干/崇礼 三选一）；CASE4 中等城市（泉州或芜湖）。
+    每例给 390×844 截图 + 请求原文 + 状态码 + 界面停点 + **哪句文案在撒谎** + 最小复现。
+    可占 `:8661-8670/:4661-4670` 与自有 `_run*.db`；不碰预览台；只写证据目录，不改生产码。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（CASE1 是其它一切的前置，先单独回报）
+
+- id: ORD-0094
+  to: 8ccd71d8
+  priority: high
+  if_head: 4c8c911
+  order: |
+    车道 F 契约/门/文档。① 四个目标端点写进 `contracts/` 草案（capability / catalog-hydrations 三件套）
+    并用真实请求量"契约有、实现无"的差集（打 404/405，不读路由表猜）；
+    ② 任务书 §5 七条硬门各一个 focused test 骨架（允许红，但每条红写明文件/用例名/期望/实际）；
+    ③ 每门附两行"今天凭什么通不过"。写集 = `contracts/**` + 新建测试文件；
+    不许碰 `backend/app/**`、`frontend/src/**`、既有断言；不许 skip/放宽。可占 `:8652-8660/:4652-4660`。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（先提交再发块，未提交=未交付）
+
+- id: ORD-0095
+  to: 8c66aa92
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    车道 C 唯一 backend 写手：DestinationCapability（READY/HYDRATABLE/UNAVAILABLE + 分类覆盖度）、
+    Catalog Hydration 状态机、provider 抽象、幂等并发（持久层指纹）、provenance 保留。
+    **等 ORD-0091/0092 证据回来由我出定稿契约后才开工**——现在不要动 `backend/app/**`。
+    已知设计前提（Commander 实测）：解析主路只能用 Photon（Nominatim 本机不通）、Overpass 单端点、
+    网络调用绝不跨 SQLite 写事务、reset/seed 禁止隐式触发真实城市 hydration。
+  status: HELD@2026-09-21T13:3x+08 by 494abfd7（等 A/B；预计 14:3x 前不放行）
+
+- id: ORD-0096
+  to: e345b9d6
+  priority: critical
+  if_head: 4c8c911
+  order: |
+    车道 D 前端产品流：删掉硬编码城市表改吃后端能力、水合过程可见且刷新可恢复、AI no-op 上屏。
+    **等 C 的契约定稿**；在此之前继续收口你手上未结的 ORD-0082/0085/0086/0087/0088/0090 残项
+    （窗高 ≤60vh 内部滚动、ESC/移动端依赖、ACTIVE 时 [建一个硬承诺] 置灰+原因句）。
+  status: HELD@2026-09-21T13:3x+08 by 494abfd7（0090 残项与 0088 仍是最高优先，不许因新任务停摆）
+
+- id: ORD-0097
+  to: 8c66aa92
+  priority: high
+  if_head: 4c8c911
+  order: |
+    **后端「当前计划」真值显式化**（现在就可开工，不等 A/B；只碰 `backend/app/**` 与新增测试，不碰前端）。
+    Commander 在 `4c8c911` 实测：`main.py:4508-4516` 的 `GET /journeys/{id}/plans`
+    `select(PlanVersion).where(journey_id==…).order_by(version_no)` —— **没有任何状态过滤**，
+    于是 DRAFT / SELECTED / SUPERSEDED 一起返回，调用方无法从响应里判断"哪一条是当前"，
+    只能靠 `journey.active_plan_version_id` 或数组顺序猜。这正是 33/35 红（要求 ARRIVAL 锚的测试被
+    SELECTED 演示计划污染）与"用户看到计划列表但点不动"的共同根因。
+    **要做**：给响应加**只增不改**的显式真值字段（如 `is_current` 或由服务端指定的 `current_plan_version_id` 信封），
+    或在契约里明文规定"本端点返回全部版本，当前以 `journey.active_plan_version_id` 为准"并让**所有既有消费方**改读它——
+    两条路都行，但**必须选定一条并留下证据**，不许留"顺序即真值"这种隐性约定。
+    **不许**：删掉已返回的条目来让测试变绿、改 `order_by` 让某条测试侥幸通过、削弱冻结清单、动 CNX-DEMO 数据形状。
+    **验收**：① 新增 focused test：同一 journey 里同时存在 SELECTED 演示计划与另一版本时，
+    "当前计划"的判定**不再依赖数组下标**（给一条杀得掉的突变证据）；② 全量后端在**清空四把 provider 凭据**下
+    `passed/skipped/failed + collected` 三个数字，写明解释器与树 sha；③ 顺序耦合若有变化，报**隔离/合跑两栏**对比。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7
+
+- id: ORD-0098
+  to: 8c66aa92
+  priority: medium
+  if_head: 4c8c911
+  order: |
+    **全量合跑顺序耦合定性与收口**（昨晚我自己留下的欠账，规则 14 只做了定性没做根因）。
+    现象：单文件隔离跑全绿，合跑出现不可复现的红。要求：① 用 `pytest -p no:randomly`（若装了随机插件）或
+    固定 seed **连跑两次同一顺序**，证明"不可复现"到底是真随机还是机器负载；
+    ② 揪出共享状态（session 级 fixture / 同一个 `_run.db` / `CITYNEXUS_DEMO_MODE` 的进程内缓存 /
+    `list_plans` 泄漏即 ORD-0097）中**哪一个**是耦合源，给行号证据；③ 能修就修（测试隔离），
+    不能修就在账本写清"为什么今晚不动它"，**不许加 skip 或 --deselect**。
+    这条**排在 ORD-0097 之后**，若 0097 之后合跑已经稳定，直接报"被 0097 吸收"并给出两次连跑数字即可关单。
+  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
@@ -2738,7 +2892,7 @@ build RC=0、bundle `index-CKaJ5xEh.js` **本地与隧道两侧一致**（previe
 
 ---
 
-## 🌍 MISSION: CITYNEXUS-ANYWHERE（Universal City Capability & Catalog Hydration v1）@13:0x
+### 🌍 MISSION: CITYNEXUS-ANYWHERE（Universal City Capability & Catalog Hydration v1）@13:0x
 
 仲裁给的任务书全文在 `raw/arbiter_mission_anywhere.md`；用户已当面确认"不怕难，开工"。
 **一句话目标**：用户输入一个**从未预录**的县/区/市，系统必须给出三种诚实结果之一
@@ -2756,7 +2910,7 @@ active writers     : e345b9d6 = 0082/0084/0088 CLAIMED（frontend 写域）
 ORD 已用最大号     : 0090 → 本任务从 0091 起
 ```
 
-### 车道与写集（六条并行，零重叠）
+#### 车道与写集（六条并行，零重叠）
 
 | 车道 | 会话 | 写集 | 本任务单号 | 职责 |
 |---|---|---|---|---|
@@ -2767,18 +2921,18 @@ ORD 已用最大号     : 0090 → 本任务从 0091 起
 | **E 红队/真实用户**（只读） | `dc19d662` | 只写证据目录 | **ORD-0093** | 按 §18 跑四个真实用例（含**必须一个小县城**）+ provider 离线/慢/稀疏/并发/刷新中断；只开缺陷带复现，不改生产码 |
 | **F 契约/测试/文档** | `8ccd71d8` | `contracts/**`、新测试文件 | **ORD-0094** | OpenAPI parity + 七条硬门的 focused test 骨架（先写门，允许红）；**不许放宽任何既有门** |
 
-### 全车道硬约束（任务书原文，违反即作废）
+#### 全车道硬约束（任务书原文，违反即作废）
 不许削弱任何既有真值门；不许编造地点；**不许把 LLM 当事实来源**；
 **provider 网络调用绝不跨 SQLite 写事务**（stay-generation 115 秒独占的教训不许重演）；
 不许为了变绿改断言或加 skip；CNX-DEMO 与 Simulation M1–M4 保持原样；北京保留为 deterministic golden fixture。
 
-### 车道 B 必须回答的九问（每条要实测数字，不许"应该可以"）
+#### 车道 B 必须回答的九问（每条要实测数字，不许"应该可以"）
 1. Photon/Nominatim 能否可靠解析任意县/区？2. Overpass 对没见过的县能否返回有用分类？
 3. 一次冷发现耗时多少？4. 返回多少有用 POI？5. 实际存在哪些 OSM tag？
 6. 裸 httpx+Overpass 够不够，还是 OSMnx 能显著减少自写代码？7. OSMnx 在 Windows/Py3.12 的依赖成本？
 8. 现有 routing abstraction 能否为发现的坐标算矩阵？9. provider 离线/慢/限流/不全时行为？
 
-### 车道 C 的目标契约（细节以任务书为准，A/B 回来后我再按实测定稿）
+#### 车道 C 的目标契约（细节以任务书为准，A/B 回来后我再按实测定稿）
 `GET /api/v1/destinations/capability?query=` · `POST /api/v1/catalog-hydrations` ·
 `GET /api/v1/catalog-hydrations/{id}` · `POST …/{id}/abandon`；
 状态机 `QUEUED→RESOLVING_DESTINATION→DISCOVERING_POIS→NORMALIZING→BUILDING_MOBILITY→PERSISTING→COMPLETED`
@@ -2786,12 +2940,12 @@ ORD 已用最大号     : 0090 → 本任务从 0091 起
 受理 p95≤1s、硬上限≤2s；幂等指纹 = 规范目的地+catalog schema 版本+provider 策略，**持久层去重**不是进程内锁；
  mobility 走既有 routing abstraction，先归一化→去重→确定性 shortlist→**只对受限候选集**算矩阵（bound 要有实测理由）。
 
-### 车道 D 的 DeepSeek 边界（任务书 §10，一字不让）
+#### 车道 D 的 DeepSeek 边界（任务书 §10，一字不让）
 允许：对**已验证**地点做语义标注/偏好匹配/排序辅助/解释/`user_summary` 文案。
 输入必须带合法 place id 白名单，输出**逐个 id 校验**，编出来的 id 一律丢弃不落库；
 禁止编造坐标/是否存在/营业时间/票价/预订号/路线时长；**禁止把 SIMULATED/PARTIAL 升成 LIVE**。
 
-### 我的执行节奏
+#### 我的执行节奏（本任务）
 ① 现在：A/B/E/F 四条只读车道立刻开工（不抢写集），C/D 等 A/B 证据；
 ② 每 30 分钟一巡检，收齐 A/B 后我出**定稿契约**再放 C/D；
 ③ 每 45~60 分钟向总线发 checkpoint 并在仲裁窗口敲门；
