@@ -1,0 +1,34 @@
+# CityNexus Hermes isolated revival profile example
+# Validate exact keys against the installed Hermes version before use.
+# NO secrets belong in this file.
+
+model:
+  provider: deepseek
+  default: deepseek-chat
+
+# Put DEEPSEEK_API_KEY only in the isolated HERMES_HOME process environment
+# or its private .env. Never commit it.
+
+mcp_servers:
+  citynexus:
+    command: "<RECOVERED_CITYNEXUS_MCP_COMMAND>"
+    args:
+      - "<RECOVERED_ARG_1>"
+    tools:
+      include:
+        - inspect_journey
+        - inspect_twin
+        - list_replans
+        - search_city_services
+        - request_replan
+        - accept_replan
+      prompts: false
+      resources: false
+
+# Before disabling built-in toolsets, inspect the exact names supported by the
+# installed Hermes version. Do not copy a stale 0.19.0 list into 0.21.3.
+#
+# Product-profile principle:
+# Hermes should reach CityNexus through the safe MCP/Gateway boundary only.
+# Arbitrary filesystem, terminal, browser, web, code-execution, cron, memory,
+# or delegation capability must remain off unless separately reviewed.
