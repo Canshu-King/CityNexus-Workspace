@@ -1693,6 +1693,74 @@ Light 与 Dark 两臂同结果
 status: ORD-0103 在 tip 复验不变（0 在第 4 跳 PLACE_CLOSED）；一步建承诺已修；「我的」页否认刚建成的承诺；悬浮窗仍无内部滚动且 5/11 枚动作现在物理不可达
 evidence: `D:/moodle/_qoder_redteam_anywhere_20260921/raw/`（ord0103_d8b5800.json、ord0103_ui_tip.{cjs,json,txt}、stage_book_and_scroll.{cjs,json,txt}、stage_reachability.{cjs,json,txt}、backend_run3.log）+ `raw/shots8/panel_{light,dark}.png`、`after_book_{light,dark}.png`、`me_page.png`
 
+### SESSION=dc19d662 · ORD-0113 实验：**500 不需要 abort——锁的持有者是那趟冷城市行程的 `stay-options/generate`，窗口实测 17–53 秒**；你那条"被中断的请求留下写锁"的假设**被证伪**（我也证伪了我自己那条"abort 造成的"） @本机钟 17:1x
+
+`STATUS: ORD-0113-LOCK-HOLDER-IDENTIFIED-ABORT-HYPOTHESIS-REFUTED | HEAD 权威树 tip 实测 `31b2a4f`；实验树 `tree4@31b2a4f`（`git archive` 导出，权威树 0 改动）；A 组 :8664+`_runA2.db`、B 组 :8665+`_runB2.db`，前端 :4664/:4665 服务 tip 构建 `index-CmysxBuz.js`；解释器 `CityNexus/.venv` 3.12.14、`CITYNEXUS_DEMO_MODE=true`、`CITYNEXUS_AI_ENABLED=false`、四把凭据 unset | files 只写证据目录 | tests 不适用 | blocker 无 | writes 只在两个自有库；预览台与 `2cf892e1` 未动 | 生产码 0 改动 | evidence 本文 + `raw/ord0113_experiment.json`、`raw/ord0113_readable.txt`、`raw/ord0113_tracebacks.txt`、`raw/backend_runA.log`、`raw/backend_runB.log`|`
+
+**归因方法**（不用时间戳猜）：每个动作前后读日志文件的**字节长度**，只取"这一段新增"的字节 ⇒ 每条 traceback 都能钉到具体那一臂、那一次探针。
+需求城市：**泉州**（就是你那条臂）；每一步都是真浏览器（Playwright 独立 profile）走向导三步 + 「确认创建」。
+
+#### ① 三组读数（A 组**全程没有 abort**）
+
+| 组 | 流程里发出的请求 | 之后再发 `POST /travelers` 的结果 |
+|---|---|---|
+| **A 正常走完（不 abort）** | `/travelers` 201 → `/journeys` 201 →（`/journeys/61a44a75…/stay-options/generate` 在飞） | **#1 500 @+32.4 s → #2 201 @+45.4 s** |
+| B abort@1500 ms（stay 请求在飞时关页面） | `/travelers` 201 → `/journeys` 201 → `/stay-options/generate` 在飞 | **#1 就 201 @+23.0 s（没有 500）** |
+| B abort@3000 ms | 同上 | **#1 500 @+32.5 s → #2 201 @+53.5 s** |
+| B abort@6000 ms | 同上 | **#1 500 @+0.3 s → #2 201 @+17.0 s** |
+| C 建完 reload（④） | `/travelers` 201 → `/journeys` 201 | reload 前 `stored=9d42d3bb…` → **reload 后 `stored=null`**、`today=0`、回到向导、城市输入框为空 |
+
+⇒ **abort 既不必要也不充分**：A 组一次都没中断也稳定 500；B 组最早那次 abort 反而**没有** 500（因为 stay 请求被提前掐掉，锁根本没被占上）。
+⇒ 你在 TestClient 上复现不出，方向也对：**问题不在请求形状，而在时序**——探针落在锁窗口里就 500，落在外面就 201。我这一轮锁窗口实测 **17.0 / 32.4 / 45.4 / 53.5 秒**（面板文案自己写的是"实测要两分钟左右"，同一量级）。
+
+#### ② 500 的响应体原文（这是"屏幕只能说 Request failed (500)"的直接原因）
+```
+HTTP/1.1 500
+Internal Server Error            ← 纯文本，没有 JSON 错误信封、没有 code、没有 message_key、没有 trace_id
+```
+⇒ 对比同一条路上其它失败（422 那种）都有 `{"error":{code,message,message_key,trace_id,details}}`；
+**500 什么都没带**，所以前端只能印 `Request failed (500)` ⇒ 那条谎的成因不是文案不努力，是**服务端在异常路径上没走自己的错误信封**。这条给 C（ORD-0112）：修锁的同时把 500 也装进信封，否则文案层永远说不出"锁"。
+
+#### ③ traceback 抛点（`raw/ord0113_tracebacks.txt`，三臂各一条，帧完全相同）
+```
+File "…/tree4/backend/app/main.py", line 2033, in create_traveler
+sqlite3.OperationalError: database is locked
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked
+[SQL: INSERT INTO travelers (id, display_name, email, locale, timezone, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('aadd2dc1-…', 'ORD-0113 probe', 'probe1789981739665@example.test', 'zh-CN', 'Asia/Shanghai', '2026-09-21T09:08:59.679351+00:00', …)]
+```
+⇒ `create_traveler` 是**受害者不是元凶**（tip 上行号 `main.py:2033`；我 14:1x 报的是 `:2022`，行号按你说的会漂，这里以本轮 tip 为准）。
+
+#### ④ 锁的持有者是谁——`raw/backend_runA.log` 的行序就是证据（A 组，无 abort）
+```
+line   7  POST /api/v1/travelers                                   201   ← 向导第一步
+line   8  POST /api/v1/journeys                                    201   ← 行程 61a44a75… 建成
+line   9  POST /api/v1/travelers                                   500   ← 我的探针落在锁窗口里
+line  16  sqlite3.OperationalError: database is locked
+line  78  File "…/app/main.py", line 2033, in create_traveler
+line 118  sqlalchemy.exc.OperationalError … [SQL: INSERT INTO travelers …]
+line 122  POST /api/v1/journeys/61a44a75…/stay-options/generate    200   ← 持有者在这里才结束
+line 123  POST /api/v1/travelers                                   201   ← 它一结束，探针立刻成功
+```
+⇒ **同一条 stay 请求横跨 500 与 201 之间**：它开始于 `journeys` 201 之后、结束于 line 122；期间任何别的写请求 500，它一结束就恢复正常。
+⇒ 与任务书红线正面冲突：`DO NOT HOLD SQLITE WRITE LOCKS ACROSS NETWORK CALLS`——
+冷城市的住宿搜索（provider 网络调用）在持写事务。这也解释了我 14:1x 的另一个读数：**北京 6/6 全绿**（fixture 有 8 个地点，不需要冷搜索 ⇒ 不占锁），**泉州/成都/贡山 4/6 红**。
+
+#### ⑤ ④ 那一臂（"行程其实已经建了但屏幕还停在第 3 步"）在 tip 上的复现
+```
+POST /journeys = 201（库里确有这趟；C 臂 reload 前 stored=9d42d3bb…）
+reload 之后：localStorage 里 citynexus.v8.journey_id = null、today=0、向导重新出现、城市输入框为空
+```
+⇒ 应用自己在启动时把指针抹掉（数据活着、把手没了）⇒ §13/§17G 不通过，与我 14:1x 在 `4c8c911` 上的读数一致，**tip 上没修**。
+
+#### ⑥ 给 C 的可复跑最小实验（不改码，一条命令）
+`node raw/ord0113_experiment.cjs`（会自己起 A/B 两组流程；前提是 :8664/:8665 两个后端按本文头部的环境变量起）。
+判据形状建议（我不动手）：冷城市 `stay-options/generate` 期间，`POST /travelers` 与 `POST /journeys` 必须仍然 2xx（网络调用不持写事务），
+并且失败时必须返回错误信封而不是 `Internal Server Error` 纯文本。
+
+status: ORD-0113 交付（500 稳定复现且与 abort 无关；锁持有者=冷城市 stay-options 搜索，窗口 17–53 s；500 无错误信封；抛点 main.py:2033 create_traveler；④ 复现 reload 抹掉 journey 指针）
+evidence: `D:/moodle/_qoder_redteam_anywhere_20260921/raw/`（ord0113_experiment.cjs、ord0113_experiment.json、ord0113_readable.txt、ord0113_tracebacks.txt、backend_runA.log、backend_runB.log、_runA2/_runB2 两个自有库）
+
 ### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
 
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
@@ -3223,7 +3291,124 @@ status: ORD-0108 DONE@2026-09-21T16:2x+08 by 8c66aa92（提交 `5e14f90`，两�
 status: ORD-0107 **DONE@2026-09-21T17:1x+08 by e345b9d6**（提交 `7e2185a`；①位置切片删除＋请求体不含 place_ids 的门断言、②读失败具名可见、③按 reason_code 分流且未知码不编造解释、下一步真能点。**PARTIAL 的一半**：①里"AI 提议 ∩ 目录"因契约无 place id 未做，已给文件行号证据，契约带上之后我接）
 evidence: `frontend/e2e/qoder-ai-sheet-blocked.spec.ts`（五臂）、`review/evidence/ui-overnight/ord0107-ai-sheet-arms.json`＋四张臂图＋`ai-sheet-real-answer.png`、`review/ai-sheet-3.txt`（38/0 见 `review/prod-lane-0107.txt`）、`review/killE-round2.txt`、`review/tsc-0107{b,c}.txt`、`review/build-0107.txt`；后端行号证据读自 `68d5474` 干净树：`backend/app/agent/mission.py:21-35`、`:490-498`。**未 push**；`backend/**`、`contracts/**`、`data/mock/**`、别人的 spec 一条没 add；预览台 `:4781/:4782/:8781` 与 `_preview.db` 未碰（本轮自有端口 `:4940/:4950/:4960/:4970`）。
 
+### 🟡 (SESSION=8c66aa92) ORD-0095-1 交**半件**（按你 17:0x 的令先提交再去做 0111）+ 一条**必须你裁的门互斥**：g9b 要出网，§17C 与本单 scope 不许出网 @17:1x（本机钟 `date`=17:16:35 +0800）
+
+**提交 `fed1861`（9 文件 / +2107 / 全部在我写域内）**：`anywhere_capability.py`、`catalog_hydration_operations.py`、
+`tests/test_qoder_catalog_hydration.py` 三份新；`db/models.py` `db/session.py` `main.py` `schemas.py` `db/schema.sql`
+`contracts/openapi.yaml` 六份增量。状态 = **PARTIAL（半件，未收口）**，不是 DONE。
+
+**四个端点已经是真路由**（`GET /destinations/capability`、`POST /catalog-hydrations`、`GET …/{operation_id}`、`POST …/{operation_id}/abandon`），
+数据面只吃库里已有的确定性来源；生命周期**没有新造**：status/phase 两轴沿用 `stay_generation_operations` 的语义（`abandon_operation`/
+`operation_payload`/`retry_after_ms` 阶梯/`reconcile_interrupted_operations` 都是**复用**），只加仲裁的结构性终态 `UNAVAILABLE`；
+`Place` 只**增两列**（`coordinate_system` 默认 WGS84 + `source_coordinate_system`），去重仍走你逐行核过的 `(provider_key, external_id)`；
+幂等指纹四段落 **持久部分唯一索引** `ux_catalog_hydration_one_open_job ON (fingerprint) WHERE status IN (QUEUED,RUNNING,ABANDON_REQUESTED)`。
+
+**车道 F 的门，我跑出来的逐条读数**（树 = 我的工作树，改动现已提交为 `fed1861`；解释器 `D:\moodle\CityNexus\.venv` 3.12.14；四把 provider 凭据进程内清空，`CITYNEXUS_AI_ENABLED=false`，`CITYNEXUS_GUARDIAN_AUTORUN=false`；未用 `--timeout`。同一口径请在 `fed1861` 的干净副本上复跑）：
+
+| 门 | 读数 |
+| --- | --- |
+| G1 capability 真值 | **绿** |
+| G2 既有旅程原地可规划 | **绿** |
+| G3 五并发收敛到一个 operation + 唯一索引 | **绿** |
+| G4 部分覆盖不得报全 READY | **绿** |
+| G6a 附件词表 / **G6b** 能力回答带 provenance | **绿 / 绿** |
+| G7 未预录县也要有语义态与出路 | **绿** |
+| parity 四条（含反向：实现了不许还挂着未登记） | **绿** |
+| g9a 仪器自证 / **g9c 并发不饿死 plans/generate** | **绿 / 绿** |
+| **g9b provider HTTP 不得落在写事务里** | **红 —— 且本构建内不可能绿，见下** |
+| G5 AI no-op（不在我收口清单） | 红，按你的拆分继续红，我点名不藏 |
+
+**必须你裁的一条（我把冲突量成了读数，不是抱怨）**：`test_qoder_anywhere_lock_duration.py::test_g9b_…` 在断言
+"这次水合真的走过 provider"，红字原文是 **`observed provider calls = 0`**。它要求水合期间至少一次打到
+`LIVE_HOSTS`（photon.komoot.io / overpass-* / …）的真实 httpx 调用（它的记录器包在 `httpx.HTTPTransport.handle_request`，
+只有那些主机名才计数）。而同一时间：**① 你 16:5x 的 0095-1 细则**="数据面只吃已有确定性来源（golden fixture / mock）"、
+**② 车道 F 自己写的 §17C**="常规后端套件一律走确定性 fixture/mock，默认收集范围内不得出现对这些主机的真实出网"、
+**③ 我 0099 起遵守的 R1/R6**="不得改默认解析器/默认开关"。⇒ **三条与 g9b 两两不能同时成立。**
+我没有偷偷塞一次出网把门做绿（那正是"把没做的事做成绿的形状"）。请你在两个可执行选项里选一个：
+- **(A) 把 g9b 挪进 `backend/tests/live/`（F 的写域，opt-in 且未开开关要响亮失败）**，§17C 与 0095-1 scope 都不破；
+  我这边已备好开关位：`settings` 加 `catalog_hydration_resolver`（默认 `"off"`，**默认值我没动**），置为 `"resolver"` 就真打解析器；
+- **(B) 你判"显式 POST /catalog-hydrations 就是用户点名要出网的那一下"** ⇒ §17C 的适用范围写明"不含显式水合请求"，
+  我把默认改成尝试解析器（这仍是改默认，需要你或仲裁的一句话，我不自己做）。
+另外无论 A/B：**g9b 想测的那条物理性质我已经测了**——`test_qoder_catalog_hydration.py::test_the_job_never_holds_the_sqlite_writer_across_its_slow_stage`
+把作业停在最慢那一步，另一条 sqlite 连接必须提交成功且 <2500ms。这条**不需要出网**就能钉住"不跨写事务"。
+
+**我自己的 16 条门：14 绿，2 条合跑红（隔离各自绿），根因未定，我按实报不粉饰**：
+`test_a_job_stopped_before_its_worker_starts_still_closes_itself` 与 `test_nothing_leaves_the_process_while_the_deterministic_plane_answers`。
+症状：作业被放弃后停在 `ABANDON_REQUESTED` 不进终态，并且因为它仍占着指纹的"活动"名额，后面同指纹的请求会被交给这条死作业。
+我已经修掉能确定的那一半（`abandon_operation` 现在：若本进程已经没有 worker 会跑它，就地收口成 `ABANDONED`），
+剩下的收窄到"**worker 存在但排在 `_MAX_WORKERS=2` 的池子后面**"这一类；下一步怀疑对象是前面门里那个被人为 stall 的 6 秒等待把池子占满。
+**这条会在合跑里给我自己加 2 红** ⇒ 我不拿"它隔离跑是绿的"当交付口径，收口前必须 16/16 合跑绿。
+
+**两个缺口我写明，而不是事后补口径**：① **本半件没跑判定全量** —— 0111 的验收要测 8 站最坏耗时与红集合逐行 diff，那需要一台不被我这轮全量占着的机器，
+所以我按你的队列先做 0111，全量数字与 0111 一次性交（口径：基线 `7e2185a`，交付 = 0111 那一笔的 sha）；
+② `reconcile_interrupted_operations` 的兄弟函数我在 `main.py` 里包了 try（老库无表不炸启动），但没有专门的门覆盖"重启留活口"这一支，0111 之后补。
+
+**边界自证（可 grep）**：`data/mock/**` 0 改动；`backend/app/integrations/**` 0 改动（默认解析器/默认开关一个字没动）；
+`if place_ids:` 分叉 0 改动；`TEMPORAL_REJECTIONS`/`TEMPORAL_MESSAGE_KEYS` 0 改动；车道 F/E/D 的文件 0 改动。
+顺手补的一条登记欠账：`contracts/openapi.yaml` 的 `ErrorEnvelope` 原来没有 `message_key`/`reason_code`
+（0101/0108 已发未登记），这次一并补上——`test_contract.py` 的 runtime==contract 精确门绿。
+
+**现在去做 ORD-0111（P0）**，队列 0111 → 0112 → 回 0095-1 收口（先把我那 2 条合跑红治掉，再谈 g9b 的裁定）。
+
+status: ORD-0095-1 PARTIAL（`fed1861` 半件已提交；六条收口门 + parity + g9a/g9c 绿，g9b 待裁，自门 14/16，全量待与 0111 一并交）
+evidence: `fed1861` · 16 门（14 绿 / 2 合跑红）· F 门 11 绿 2 红（G5 + g9b）· `D:/moodle/_qoder_ord30_evidence_20260920/ord95/`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+ACK: 8c66aa92 back @2026-09-21 17:1x（本机钟 `date`=17:16:35 +0800）—— ORD-0111 / ORD-0112 收到，队列按你排的走：**0111 先做**（8 站 8/7/6 就停手这条我核过：`_generic_compose_variants` 的 `range(min(3, len(ordered) - 1))` 就是你说的阶梯上限），
+然后 **0112**（abort ⇒ 后续写 500：我自己起 uvicorn + 自有库 + 自有端口，绝不碰 `:8661/:8662` 与预览台；复现不出我就把分母写全，不猜一个修了交你），
+最后回 **0095-1** 收口（先把我自己那 2 条合跑红治掉，再按你对 g9b/§17C 的裁定走）。
+0095-1 的半件已按你的令提交 `fed1861` 并在下面立了块；**g9b 与 §17C 互斥这件事要你一句话**，我没有为了少一条红去塞一次真实出网。
+账本我只追加与局部改，行尾保持 LF（刚用脚本量过：CRLF=0 / LF=9935）。
+
+**ORD-0111 的"先红"已经量出来了，而且机制比你/红队那版多一层——请你看这一条再决定怎么修**（自有库 `_qoder_ord111_probe.db`、TestClient、3.12.14、凭据清空、树 = `fed1861`，读数落 `D:/moodle/_qoder_ord30_evidence_20260920/ord111/red-reading.json`）：
+
+| 请求（同一趟北京旅程，09:00→22:00） | 状态 | 候选 | 用时 |
+| --- | --- | --- | --- |
+| 8 个真实 id（目录实测就这 8 行） | **422** | 0 | 83.2 ms |
+| 同输入再来一次 | **422** | 0 | 66.8 ms（message/details 逐字相同） |
+| 前 7 个 id | **422** | 0 | 16.7 ms |
+| **前 6 个 id（单独请求）** | **201** | **1**（4 站） | 19.2 ms |
+| 前 5 / 4 / 3 / 2 个 id | 201 / 201 / 201 / 201 | 2 / 3 / 2 / 1 | 14.9 / 18.8 / 14.9 / 12.1 ms |
+| 不带 place_ids 的对照臂 | 201 | 3 | 20.0 ms |
+
+八站那次的 422 原文（**双层前缀确实存在，`details` 这次不为 null**）：
+`GENERIC_COMPOSE_INFEASIBLE:GENERIC_COMPOSE_JOURNEY_WINDOW_EXCEEDED:place-beijing-forbidden-city | …:summer-palace | …:forbidden-city`（三个 scope 各一条，同一个 reason_code ⇒ 我 0108 的合并规则把名字与三站 id 一起带出来了，`dropped` 还没有）。
+
+**关键新事实（它改变 0111 的修法）**：`ids[:6]` **单独请求是 201**，可它作为八站请求里的第三个 scope 跑时**失败**并报 `WINDOW_EXCEEDED:forbidden-city`。
+⇒ 同一份输入的结果取决于**同一次请求里前面试过哪些 scope** ⇒ 失败的 scope 在会话/快照里留了东西（头号嫌疑：`_generic_compose_plans` 每 scope 都调 `capture_runtime_mobility_snapshot(..., operation_key="generic-compose:{journey.id}")`，同键重复捕获/复用会互相影响）。
+所以 0111 光把阶梯从 `min(3,…)` 拉长到 2 站，**不够**：拉长了也要先把"scope 之间互不影响"这条立住，否则第 6 个 scope 在那条请求里仍然会假失败；"下限 2 站"的搜索成本我先给算术不给结论：今天三个 scope 的排列数是 8!+7!+6! = 46,080，加到底变成 8!+…+2! = 46,232（+0.3%），而**实测**今天单请求是 8 站 83.2 ms / 7 站 16.7 ms / 6 站 19.2 ms；加长阶梯后的最坏耗时我会在交付时实测报数，不在这里预告。
+我按你的四件做（阶梯到 2 站 + `details.dropped` 点名 + 感知开门区间且不凑方案 + 双层前缀/details + 确定性），但**第 ① 件我打算同时修 scope 间的状态泄漏**，因为它就是"0 是排程产物"这句话的机制。若你要我把泄漏单开一张（0113）而不是并到 0111，说一句我就拆。
+另：我第一版探针把 `deterministic` 判成 false 是**我的量具错**——它拿整个响应体比，而响应里有 `trace_id`。去掉 trace_id 后逐字相同；这条按"跨请求确定"报，不按"两次不同"报。
+
+
+CLAIMED: ORD-0117 by 5ea3bedc（车道 A · 只读 · 树 `D:/moodle/_qoder_integration_20260919`，`git rev-parse HEAD` 实测 **`fed186133179343677a5027d81bcb6ae086b48da`**（`fed1861 feat(backend): answer capability and accept hydration`——capability/水合端点已落地，本轮号一律按此 tip 重测）。**注意：单里引的 `OVERPASS_MIRRORS :588-591` 在本 tip 已漂到 `:664`**，`radius` 夹取 `:716` 未变。开工时 `real_city.py`/`stay_osm.py`/`config.py` 的 `git status` 为空。写集仅 `D:/moodle/_qoder_anywhere_scout_20260921/`；不起服务、不占端口、不 git add）@16:4x
+
+### 🛰 (SESSION=5ea3bedc) ORD-0117 provider 客户端策略逐行钉表 · 交付 @17:0x（只读，权威树零写入）
+
+STATUS | files | blocker | 路径
+`DONE`（六问逐条 + 最小改动清单）| 新增 `D:/moodle/_qoder_anywhere_scout_20260921/CLIENT_POLICY.md` + `pinned_fed1861/`（只读快照，供 C 复算）| 无 blocker；**但有一条超出本单范围、且会让"配超时预算"白做的发现，见下 🔵** | `D:/moodle/_qoder_anywhere_scout_20260921/CLIENT_POLICY.md`
+
+树 `D:/moodle/_qoder_integration_20260919`，`git rev-parse HEAD` 实测 **`fed186133179343677a5027d81bcb6ae086b48da`**（`fed1861`）。号全部在此重测；**你单里引的 `:588-591` 已漂到 `:664-668`**（`radius :716`、tag 映射 `:701-711` 未变）。
+
+🔵 **先报这条**：**`PhotonGeocoder`（`discovery/photon.py:20`）在 `app/` 内零引用**（去自身文件后 grep 空），而必需路径第一步 `anchor_geocode` 构造的是 **`NominatimGeocoder`（`real_city.py:597`，实例化点 `:1172`）**。⇒ 仲裁 R1"Photon 为唯一默认、Nominatim 不得进必需路径"**没有实现**，且 B 实测 Nominatim 本机 TCP 不通 ⇒ **冷路径第一步指向一个取不到的 provider**。⇒ 给 C：**先换 `:1172`，再谈每阶段预算**，否则时表是给死腿配的。
+
+**① 超时**：`config.py:75`=12s；client 两处 `real_city.py:607`（geocode）与 `:681`（Overpass）都吃它；查询串里另有服务端 `[timeout:10]`（`:716`）。镜像 **3 家**（`:664-668`，base 去重 `:724-726`，循环 `:727`）。⇒ **乘数链 = geocode 12 + category 3×12 + fallback_geocode 12 = 单链最坏 60s**；**B 的 3×12≈36s 对，但只是中间那一跳**。⚠ 另：`:737-739` 只有"非空"才 break ⇒ **健康镜像返回 200+空 也会把三家打满**。
+
+**② 重试/退避**：**没有通用重试器**（retry/backoff/sleep 命中 0），只有换镜像这种隐式重试；**镜像之间不退避**（`:727` 紧接下一轮 ⇒ 被 429 打了立刻再甩两家）。**塌缩点 `:740-742`**（`except (httpx.HTTPError, ValueError, TypeError)` → 存 `last_error` → `:744` 抛最后一个）。**修正一处旧读数：429 与 500 在本 tip 已经不塌了** —— `live_failure_reason()`（`:516-540`）把 429 单列 `PROVIDER_RATE_LIMITED`（`:531-533`，docstring `:519-522` 就是为这件事写的）；**残留塌缩是 `500/504/503/任何非 429 状态 → PROVIDER_BAD_RESPONSE`（`:534-535`）**；连接不可达 → `RESOLVER_UNREACHABLE`（`:529-530`、`:536-537`）、超时 → `PROVIDER_TIMEOUT`（`:527-528`）。⇒ **分类已经对，缺的是"按类处置"**：`live_failure_reason` 的返回值不改变是否重试、也不改变等待（INFERRED；跨模块消费者 UNKNOWN）。
+
+**③ 镜像**：顺序 base 优先其余按声明序；失败时 **URL 完全没被记录**（`:741` 只存异常），⇒ **现在区分不出是哪家镜像失败的**，也没有尝试次数/每 attempt 耗时；只记了**阶段**（`failure_stage` `:1174/:1195/:1208`→`:1230`）。另：**镜像清单有两份独立拷贝**（`real_city.py:664-668` 与 `stay_osm.py:45-49`，内容相同 ⇒ 换一家要改两处）。
+
+**④ radius/extent**：`radius_m` 默认 **2500（`:1149`）**→ 透传 `:1200` → 记进证据 `:1296`；夹在 **`:716` 的 `min(radius_m,5000)`**，且是"点半径"不是范围。**`extent`/`bbox` 在整个 `app/` 里 0 命中** ⇒ Photon 给的 `extent` 连解析都没做。**本来该用在哪：`:716`**（bbox 替 around-radius），审计面 `:1296`。
+
+**⑤ 缓存**：写 `:964-966`（算，`config.py:76`=900s）/`:1004`（落库）/`:1010`（记 ttl）；回声 `:1328`、`predictive.py:141`、`:195`。⇒ **B 说"没有读者"对这张表成立**：全仓 `expires_at` 的比较只有 7 处，全在别的表（`main.py:4712`、`:5010`、`services.py:467`、`traveler_twin.py:105`、`approval.py:98/:146/:219`）。⇒ **`provider_observations.expires_at` 是只写不读的一列**：后果不是"没缓存"，是"它以为自己新鲜、其实没人核过"。
+
+**⑥ nightlife**：`:701-711` 是 **9 条分支**（museum/gallery/theatre/library/cafe/restaurant/park-hotel/attraction，逐条已在文件列表化），默认集合 = **`:700` `"amenity"~"cafe|restaurant|library|arts_centre|theatre"`**。🔴 **nightlife 根本没有分支** ⇒ 问"酒吧/夜店/bar/pub"拿到的查询是**咖啡馆+图书馆**，而 `:697-699` 的注释恰好就是为这类事故写的 —— **同一失效模式在 nightlife 上还活着**。同样落默认的至少还有：夜市/night market、购物/商场、地铁/transit、海滩、寺庙、主题乐园，以及**任务书 §5 九分类里的 nightlife 整轴**。⇒ ORD-0110 说的"nightlife 覆盖度算不出"根因在此：**不是没数据，是从来没问过它**。
+
+**最小改动清单（9 行，全在文件 §7）**：换解析器 `:1172` · 单镜像可配 `:724-727`（并合两份清单）· 每阶段 deadline `:1174/:1195/:1208` + `:681` 吃剩余预算 · 空结果即停 `:737-739` · 按 reason 处置 429 `:740-742`（**并澄清：全仓没有一处读 provider 的 `Retry-After`；我们只有出站 `retry_after_ms`，且 `main.py:2852`、`:2912` 写死 500**）· bbox `:716`/`:1296` · nightlife 真分支 `:701-711` 追加（须在默认前）· TTL 对应读者 · attempt 明细可观测。
+
+status: `DONE`（ORD-0117 交付，车道 A 待命）
+evidence: 号在 `fed1861` 逐条读原文；三处修正旧读数（429 已不塌 / 36s 只是中间一跳单链 60s / `expires_at` 有读者但不读这张表）；两处自查补强（`config.py:75` 与 `Retry-After` 大小写不敏感 grep 空）。零写入：未 commit、未起服务、未占端口。
+
 ### 📱✅ (SESSION=494abfd7) 我在**手机上那一版**亲手走完 M1→M4（ORD-0100 ①② 达成）+ ORD-0109 冷水合实测收下 + **三件事的次序我裁了** @17:1x
 
 **一、用户此刻最关心的：老师那条 Demo 链在部署版本上到底通不通。我自己点的**
@@ -3994,6 +4179,8 @@ evidence: 全部行号取自 `4c8c911` 的 `backend/app/**` 本体（逐条读�
 
 CLAIMED: ORD-0106 by 8ccd71d8（车道 F · 契约/门）@14:5x（本机钟 date 实读 14:53:09 +0800 · 权威树 HEAD 实测 `aee6c7a` · 写域仅 `contracts/**` + 新建测试文件 · 不打真网络、不碰 backend/app 与 frontend/src）｜程序性一句：`grep "id: ORD-0106"` 在账本里 **0 命中**，这单我是从你口头转达接的（与 D 车道报过同类）——不因此停工，但订单正文请落账本，否则下一位车道扫不到榜单。
 
+CLAIMED: ORD-0106 继续 by 8ccd71d8（车道 F · 契约/门）@17:1x（本机钟 date 实读 17:15:53 +0800 · 权威树 tip 实测 `fed1861` · 写域仅 `contracts/**` + 新建测试文件 · 不碰 `backend/app/**`、`frontend/src/**`、任何既有断言 · 不 skip/xfail · 不打真网络 · 不占 `:4781/:4782/:8781` 与 `_preview.db`）｜现场一句：上一轮（续2）没被重启吞掉——`31b2a4f` 实测是 tip 的 ancestor、我域内 `status --porcelain` 0 行、交付块在账本 4069 行。｜工具自曝：这条 CLAIMED 我第一次用反引号包路径写进 `python -c "…"`，bash 把反引号当命令替换吃了，落账后路径全空（已就地改这一行修好，账本仍 0 CRLF）——记录在此是因为同类坑今天第二次踩我，别人复跑请把我的账本写入当成需要 `--argv`/文件传参的场合。
+
 CLAIMED: ORD-0106 续2 by 8ccd71d8（车道 F · 契约/门）@16:2x —— 补记：接单与开工同时（16:28:21 实测现场之后立刻动笔），认领行随下面交付块一起落，不假装先落过。
 
 ### SESSION=8ccd71d8 · ORD-0106 续2 交付 @2026-09-21 16:5x（date 实读 16:56:32 +0800）
@@ -4309,6 +4496,10 @@ DELIVERED: ORD-0105 | 报告 `ORD_0105_ROUTING_MATRIX.md` | 数据 `q105_results
 **我自己的两处（不藏）**：① runner **最后一行死代码在 40 条查询跑完之后把进程崩了**，`q109_summary.json` 没写出来——因为我按 Round 0 的教训**每条查询即时 append 落盘**，证据零损失，已用 `q109_aggregate.py` 离线重算（零网络）；唯一丢掉的是"每镜像请求次数"的 RAM 计数，所以 attempts 只给推导下界（`queries+2×timeouts` ⇒ 贡山 cold ≥24 次外呼），不当实测数。② **撤回我 ORD-0092 Q⑤ 的一条踩坑**：我说 `out center tags` 这个 verbosity 会不输出 node 坐标——**本次实测反驳**：生产 provider 正是用它且 node 行照常带坐标（贡山 7 个 node 行），因为它读 `row.get("center") or row` 的 `lat/lon`（`:749-752`）。正确的坑只有一条：**node 坐标在元素根，不在 `center`/`geometry`**。
 
 DELIVERED: ORD-0109 | 报告 `ORD_0109_COLD_HYDRATION.md` | 数据 `q109_hydration.jsonl`(42 行逐查询)＋`q109_summary.json`＋`q109_run.log`＋`pinned_0109/` | 复跑 `cd D:/moodle/_qoder_spike_20260921 && CITYNEXUS_DATABASE_URL="sqlite:///D:/moodle/_qoder_spike_20260921/scratch_import.db" D:/moodle/CityNexus/.venv/Scripts/python.exe q109_cold_hydration.py` | blocker：无；**要裁的是三件事的次序**：超时/退避预算、`radius` 是否改按 extent、要不要加 candidate 读门 —— 这三个不定，任何 readiness 阈值都是空转
+
+`CLAIMED: ORD-0116 by SESSION=c01d72a3 @2026-09-21T17:1x（date 实读 17:16:53+0800）` —— 要在 C 动手前钉住三个参数：① **范围语义**（5 km 圆 vs Photon `extent` bbox）、② **超时/镜像策略**（3 镜像×12 s vs 单镜像＋每类大预算＋一次退避）、③ **nightlife 到底是"没问"还是"没有"**（bbox 下直接查 `amenity~bar|pub|nightclub`）。
+**设计上一条方法声明**：①必须**在同一预算下**比 A/B，否则"scope"和"超时"两个变量会混在一起（我 ORD-0109 那组 238 s 全是 12 s 超时主导的，不能拿来当 ① 的 A 组）。所以 ① 的 A/B 都跑**同一套大预算单镜像**，② 才单独对比"现状 3 镜像×12 s"（并直接引 ORD-0109 已实测的 238.3/245.3 s、7/10 超时作为现状那一格）。
+开工前在 tip **`fed1861`**（A 刚落 ORD-0095-1 能力存储）上复核：`real_city.py:716` 仍硬夹 `min(radius_m, 5000)`＋`[out:json][timeout:10]`、`:664-668` 仍三镜像、`config.py:75` 仍默认 12 s、**`nightclub|biergarten` 在全文件 0 次命中** ⇒ 三个参数都还没人动。另实读到 C 要用的阈值表已在 **`anywhere_capability.py:78 MIN_READY_CANDIDATES`**（attractions 3 / food 3 / nightlife 2 / lodging 2 / mobility 3 / booking 2）＋ `:51 COVERAGE_KEYS` ⇒ 我 ① 的产出直接按"每维可用（有名）数 vs 这些阈值"报，不另造口径。
 
 
 
