@@ -3354,7 +3354,50 @@ status: ORD-0095-1 PARTIAL（`fed1861` 半件已提交；六条收口门 + parit
 evidence: `fed1861` · 16 门（14 绿 / 2 合跑红）· F 门 11 绿 2 红（G5 + g9b）· `D:/moodle/_qoder_ord30_evidence_20260920/ord95/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 🔁 (SESSION=494abfd7) 两条持久车道正式入账：HARNESS_REVIVAL 与 HUMAN_JOURNEY_LAB（含会话血缘）@17:5x
+
+按总线 `5758293014` 的用户硬令执行，**两条线彼此独立、不互相替代**：
+
+| 线 | 会话 | 状态 | 单号 | 今天必须交 |
+|---|---|---|---|---|
+| **HARNESS_REVIVAL** | `d291c9dc`（历史"只读恢复 Harness EAC"会话，已唤醒；若不可用则新建并记录新 id） | opening | **ORD-0119** | `HARNESS_REVIVAL_REPORT.md`：本地取证产物清单（`D:\moodle\CityNexus-Tools\` 下的 V18/V18.2/V18.3/V19/V19.1/V19.2 zip 与目录）、时间线、**可执行入口**、依赖、隔离 workspace/branch、**一次真实 smoke 的证据**、下一个自主实验。**只有 zip 名字不算恢复**；它是自主工程线（能读代码、跑实验、在隔离分支打补丁、交证据），**不是只读人格测试器**，也不得与权威生产写域重叠 |
+| **HUMAN_JOURNEY_LAB** | P1 `1a986a24`（唤醒）· P2 `d4b04a0f`（**新建**）· P3 `aad2d1f2`（唤醒）· P4 `4e974ae5`（**新建**） | 全部已下发 | **ORD-0120** | 四个 persona 立刻用**当前预览真包**走真实路径，按八类分类交发现，**不许用 API 抄近路造成功**，修复由原代理复验 |
+
+**我的巡检义务（写死，防再次静默死亡）**：每一轮 patrol/checkpoint 必须各报一行
+`Harness: session | runtimeState | 恢复到的版本/产物 | 当前实验 | 最近证据 | blocker | 下一步` 与
+`HumanJourney: P1/P2/P3/P4 session | runtimeState | 走的行程 | 最新发现 | 复验状态 | 下一场景`；
+**任何会话 idle/cold 都不允许从控制面上消失**——由我叫醒，不等用户提醒。
+
+
+> **CLAIMED: ORD-0120 HJ-P3 by aad2d1f2**（@2026-09-21 17:5x+08 本机钟）
+> 说明：本单 `to:` 是 `1a986a24`，且 HJ-P1 已在下方先签了认领（**我不改它那块，也不夺单**）；
+> 我按订单正文"P1=1a986a24、**P3=aad2d1f2 先唤醒**"只认领 **P3（不耐烦的单手手机用户）那一半**，
+> 主场 = 地图手势 / 悬浮窗 / 单手可达性。
+> 边界自查：标签页指纹 `window.name = HJP3-aad2d1f2-ORD0120`；视口 **390×844 用 CDP 每页模拟**（不动整窗、不影响 HJ-P1 的 412×915）；
+> 只读——**不写生产码**（车道 D 正在 `frontend/src/features/simulation/**` 修窗体滚动，我只量现状）；不用 API 抄近路。
+>
+> ⚠ **环境阻断（不是产品缺陷，但会废掉所有人的公网读数）**：
+> 点名用的公网入口 `unexpected-somerset-seekers-neural.trycloudflare.com` 现在回 **HTTP 530**（`code=530 time=1.08s size=8355`，
+> Cloudflare 错误页，HTML 里**没有任何 `assets/…` 引用**）。
+> 我逐项分开了责任：本地源站 `127.0.0.1:4781` → **200**；鉴权反代 `127.0.0.1:4782` 无凭据 → **401**、带凭据 → **200 / 0.069 s**，
+> 且实到包正是点名的 **`index-AkCV4A2Q.js` + `index-Ch4H7PhQ.css`**；`cloudflared.exe` 进程仍在（PID 39764）但公网那条已不接源站
+> （`tunnel_live.log` 最后写入 14:30:18）。⇒ **源站与反代都活着，死的是公网那一段。**
+> 我**不新开隧道**（遵守 ORD-0045"公网入口恰好 1 条"），改走 ORD-0061 runbook 明确许可的 **`http://127.0.0.1:4782/`**（同一生产构建、同一鉴权反代、同一凭据）。
+> **代价我先说明**：本地入口 ~0.07 s，所以我**前几轮量到的公网链路耗时（48 KB/s、入口包 23.9 s、首屏 ≈46 s）在本轮一律不适用**，
+> 我不会把两边的数字混在一条结论里；需要公网读数的，请先把隧道那条修回来。
+> 权威树实读 `eef24d9`（17:46:24）≠ 本单 `if_head 4922f6f`，dist 构建 16:28:13 ⇒ **预览包早于当前 tip**，本轮读数归 `index-AkCV4A2Q.js`。
+
+> **CLAIMED: ORD-0120 HJ-P1 by 1a986a24**（@2026-09-21 17:5x+08，本机钟实读）
+> 边界自查：**标签页指纹钉住** `window.name === "HJP1-MINE"`（共享 Playwright 浏览器里我那一页，412×915 / dpr 2，用 CDP 每页模拟，不动整窗、不影响别人）；
+> 只读：不写生产码、不占预览台端口、只在界面上操作；**包名以我实测 `script[src]` 为准**（点名给的 `index-AkCV4A2Q.js` / `4922f6f` 若与实到不符，我按实到记录并单独标出差异）。
+> 卡住超 10 分钟就在本节发 BLOCKED。
+
 ### 📥 (SESSION=494abfd7) 仲裁一口气回了 **7 条**（R1~R8 全部冻结）+ 用户的硬令（恢复 Harness/EAC、重启四个人类测试代理）—— 新单 ORD-0118~0124 @17:4x
+
+> **CLAIMED: ORD-0119 by d291c9dc**（@2026-09-21 17:5x+08，本机钟实读）
+> 边界自查：恢复目标 = **隔离目录**（`D:\moodle\_qoder_harness_revival_20260921\`），
+> **不写** `_qoder_integration_20260919` 的 `backend/app/**` 与 `frontend/src/**`，**不碰** 预览台 `:4781/:4782/:8781` 与 `_preview.db`；
+> 我自己的端口段 **`:8501-8560`**，用哪个写进报告。复制 lab 时**不解 symlink、不新建 junction**（D-7）。
 
 **总线水位线**：`LAST_ARBITER_COMMENT_ID` 现在推进到 **5758293014**（17:28）。我按 sha 拉回并落盘了两份契约文件：
 - `raw/contracts_anywhere_v1.openapi.yaml`（**18,070 字符**，blob `6aa65eabf321`，tip `e49dfb1d`）——仲裁自己写的 OpenAPI；
@@ -4273,6 +4316,48 @@ status: `DONE`（ORD-0091 交付，车道 A 收工）
 evidence: 全部行号取自 `4c8c911` 的 `backend/app/**` 本体（逐条读原文，非转述；开工时该目录 git 干净）。零写入证明：本块与 MAP 是本次唯二产出，均在 `_qoder_anywhere_scout_20260921/`；未起服务未占端口，`:4781/:4782/:8781` 与 `_preview.db` 未碰。
 
 CLAIMED: ORD-0106 by 8ccd71d8（车道 F · 契约/门）@14:5x（本机钟 date 实读 14:53:09 +0800 · 权威树 HEAD 实测 `aee6c7a` · 写域仅 `contracts/**` + 新建测试文件 · 不打真网络、不碰 backend/app 与 frontend/src）｜程序性一句：`grep "id: ORD-0106"` 在账本里 **0 命中**，这单我是从你口头转达接的（与 D 车道报过同类）——不因此停工，但订单正文请落账本，否则下一位车道扫不到榜单。
+
+### SESSION=8ccd71d8 · ORD-0118 + ORD-0106 顺手两件 交付 @2026-09-21 17:47:43 +0800（date 实读）
+
+`DONE | 一笔提交 eef24d9（父 766932f，未 push）| 只含 2 条路径：backend/tests/test_qoder_anywhere_capability_from_store.py（新，196 行）、contracts/openapi-anywhere-draft.yaml（+139/-1，纯增补 .3 → .4）| 零新增 skip/xfail、未碰 backend/app、frontend/src、任何既有断言 | 未放宽 g8a`
+
+**ORD-0118 的点名答案 —— 默认套件里真有一处外呼，但不是 g8a 指的那一处。**
+
+我用一次性运行时绊线（httpx 传输层 + `getaddrinfo` + `socket.connect`，三层同时记、只记不断；仪器放在仓库外 `D:/moodle/_qoder_f_run/egress_tripwire.py`）跑了全量默认套件：**14 failed / 1062 passed / 15 skipped，131.21s**，全部出网记录只有 5 条，归两个节点：
+
+- **真出网的那个**：`tests/test_agent_mission_runtime.py::test_agent_runtime_uses_model_selected_tool_loop_and_reloadable_trace`
+  - 碰的 URL：**`POST https://api.deepseek.com/responses`**；DNS 解析到公网 IP（两次实测拿到不同 IP：`182.40.68.184` / `220.181.181.58`）⇒ TCP 连接真的建立了；
+  - 单独复跑加记状态的仪器：**对端回了 401 Authorization Required**，**该节点自己是绿的**（1 passed）—— 它把 `ai_api_key` 换成占位串，所以这趟没花钱，但一个来回确实走完了；
+  - 机制：`tests/test_agent_mission_runtime.py:106` 只 stub 了 chat-completions 那条客户端，**Responses API 那条腿自己建传输层**；产品栈：`app/main.py:1056 run_agent_command` → `app/main.py:10154 _copilot_fallback_or_ai` → `app/integrations/ai/semantic_compiler.py:315 compile_semantic_envelope` → `app/integrations/ai/responses.py:306 complete`；
+  - 修法归车道 C（我不碰生产码，也不 deselect）：在同一个测试里把 Responses 客户端也换成 `MockTransport`（或在 `responses.py` 那条构造上开一个注入位），补一条"这一腿也没出网"的断言。
+- **g8a 点名的那一处**：`tests/test_qoder_catalog_hydration.py:388`（photon 自证调用）在同一次带绊线的运行里 **零条运行时记录** ⇒ 今天确实不出网（他们的 spy 在 connect 之前抛），它红的是**形状**，不是"现在在打外呼"。
+- ⇒ 两条要分开修，且**g8a（静态字面量扫描）必要但不充分**：真凶的域名一个字都没出现在测试文件里。附件已落成 obligation `runtime-egress-tripwire-is-required-beyond-the-static-scan`，把"默认套件必须有运行时绊线"记在账上；绊线要放 conftest/plugin 槽位，那是测试基础设施、不在车道 F 写域，请 Commander 指定归属。**g8a 我没有动，也不动。**
+
+**顺手②（"golden fixture 城市的 coverage 不得为零"）—— 四条判据，三条红。** 我在 `4922f6f` 上量到的形状和您那条不一样，但同因，而且更常见：
+
+    query=北京   -> resolution=catalog,    place_count=8, capability=HYDRATABLE
+    query=北京市 -> resolution=unresolved, place_count=0, 六轴全 MISSING, capability=UNAVAILABLE,
+                    canonical_destination_id=unresolved:15ef4634d57e865f   ← 由查询文本 sha1 现造
+
+根因在 `anywhere_capability.py:186-194`：别名集合只有 {code、去掉 `CN-` 前缀、`_CITY_DISPLAY_NAMES` 里那个光杆名字}，`_normalise`（:143）不处理后缀，`_TRAVELER_FACING_LABELS`（:119）今天只有 CNX-DEMO 一条；未命中就走 :217-226 现造身份。三道红分别钉：**(a)** 有 8 行的城不得报零覆盖；**(b)** 两种写法必须是同一个 canonical id 与同一个 fingerprint（否则 §17D/G3 的"同指纹收敛同一操作"对同一座城失效——北京/北京市 会被当成两座城市去水合、去幂等、去缓存）；**(c)** 结构性 capability 不得随拼法变（把"没认出这个写法"洗成 UNAVAILABLE 正是 R1 禁的那类 laundering）。**(d)** 反向半边今天绿：库里真没行的上海 = `vocabulary / 0 / HYDRATABLE`，所以修法不能是"一律回 8 行"。
+
+**而且我按车道 C 刚落的 `766932f` 重跑了一遍**（"count a city the catalog already holds"）：`CN-BEIJING` 与 `北京` 现在都已经是 `catalog / 8 / HYDRATABLE` —— 您量到的那一半被那笔修掉了；**`北京市` 仍然 `unresolved / 0 / UNAVAILABLE`**，三条红不退。缺的是行政区后缀别名（市/区/县），不是"读不到目录"。这条要派给 C 补别名（或按后缀唯一匹配回落到已有 city_code，多义时报具名 reason，不许猜）。
+
+**顺手①（把红因写死，免得下一个人误读）**：附件新增 `x-red-doors` 红门台账，12 条红每条带 `kind / owner / cause / rerun`，四类分别是 `implementation-not-yet`、`product-defect-named`、`shared-infra-missing`、`suite-order-dependent`。您点名的两条写得很明白：
+- `g14b` → kind=**implementation-not-yet**、owner=车道 C，另加一行 `not-this-doors-fault`：门没有把 N 写死成 10、也没规定分片写法，红的是"没预检"这件事 —— **矩阵分片没做 ≠ 矩阵门错**；
+- `g13d` → kind=**product-defect-named**，一行参数：`valhalla_http.py:185-187` 没把 `distances` 传给 `_normalize_duration_matrix`（`:178` 那条嵌套分支传了）。
+
+**另报一条与红门台账同类的现场**：全量跑里车道 C 自己的 `test_qoder_catalog_hydration.py` 有 **3 条只在全量红、单跑绿**（`test_a_job_stopped_before_its_worker_starts_still_closes_itself`、`test_abandon_reports_a_request_not_a_death`、`test_nothing_leaves_the_process_while_the_deterministic_plane_answers`），三条都停在同一个 `:129` 的 `_wait_terminal`：操作卡在 `ABANDON_REQUESTED`，8.0 s / 15.0 s 内没进终态。按您在 CURRENT_GATES 11 的口径这属 `FULL_SUITE_ENVIRONMENT_SENSITIVITY` 家族（在飞作业的 drain × 共享 DB 写锁），我按 `suite-order-dependent` 记账并指名归 C，**不替它下产品结论，也不替它藏**。
+
+**我自己仪器的两个错，当场说**：① 第一版记响应状态的仪器里我读了 `response.content`，httpx 流式响应当时还没读体 ⇒ 抛 `ResponseNotRead` 且我把它重抛了出去，**把那条本来绿的节点跑成了红**。这条红是我造成的，不是产品的；修掉（只记 `status_code`）后同一条节点 1 passed + 401 读数。② 为此我对 `api.deepseek.com` 实际发了两次往返（占位 key，401，无费用、无真实凭据外泄；账本里也不写任何 key 字样）。仪器都不在仓库里，跑完不留副作用。
+
+**车道 F 门集合复跑 @766932f**（新 worktree `_qoder_f_o118b_20260921`，own `_runG21.db`，解释器 3.12.14，AI/provider key 全 unset，不起端口）：**14 failed / 31 passed，RC=1，4.98s**；日志 `D:/moodle/_qoder_f_run/gates_o118_766932f.log`（`4922f6f` 上同套是 11 failed / 30 passed，多的 3 条正是本轮 G19a/b/c）。
+
+**账本卫生**：本轮所有账本写入都用二进制 + 显式 `\n`（`open(path,'wb')` / `io.open(..., newline='\n')`），写前在同一脚本内重新量 `count(b'\r\n')` 与锚点行号（上一轮我量到 17:27 全文件 CRLF、17:29 又回到 LF，说明有人在整文件重写）；量到混合或 CRLF 就拒写、不规范化。
+
+status: `DONE`（ORD-0118 结论 + ORD-0106 顺手两件）
+evidence: `eef24d9`（父 `766932f`，未 push）+ `D:/moodle/_qoder_f_run/{egress_fullrun_4922f6f.log, egress_attempts.jsonl, egress_stacks.jsonl, egress_responses.jsonl, gates_o118_766932f.log}` + 仪器 `egress_tripwire.py`/`egress_response_probe.py`（均在仓库外）。未碰 `:4781/:4782/:8781` 与 `_preview.db`；报告内只有 RC 与 passed/failed 数字与状态码，无任何 key 前缀。
+
 
 CLAIMED: ORD-0106 继续 by 8ccd71d8（车道 F · 契约/门）@17:1x（本机钟 date 实读 17:15:53 +0800 · 权威树 tip 实测 `fed1861` · 写域仅 `contracts/**` + 新建测试文件 · 不碰 `backend/app/**`、`frontend/src/**`、任何既有断言 · 不 skip/xfail · 不打真网络 · 不占 `:4781/:4782/:8781` 与 `_preview.db`）｜现场一句：上一轮（续2）没被重启吞掉——`31b2a4f` 实测是 tip 的 ancestor、我域内 `status --porcelain` 0 行、交付块在账本 4069 行。｜工具自曝：这条 CLAIMED 我第一次用反引号包路径写进 `python -c "…"`，bash 把反引号当命令替换吃了，落账后路径全空（已就地改这一行修好，账本仍 0 CRLF）——记录在此是因为同类坑今天第二次踩我，别人复跑请把我的账本写入当成需要 `--argv`/文件传参的场合。
 
