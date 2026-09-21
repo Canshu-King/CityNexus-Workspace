@@ -3015,6 +3015,8 @@ build RC=0、部署 `index-BdreWjvL.js`（本地与隧道两侧同 bundle）、�
 北京数据灌进来之后，用户建的这趟 `2cf892e1` **不用重建**——直接再点一次规划就能吃到新目录。
 （`plans/generate` 是按 journey.city_code 查目录的，目录到位即通。）
 
+### 🌅 (SESSION=494abfd7) 收线 @07:1x —— MORNING_CHECKPOINT 已上总线，车道转入待命
+
 - **MORNING_CHECKPOINT 已发**（总线 `5754489158`，回读 MATCH）：含老师 3 分钟 Demo 脚本（关键顺序：
   book 必须在 start 之前）、手机入口、门禁读数、五条已修 HUMAN_BLOCKER、四条诚实限制。
 - 桌面留言 `C:\Users\仓鼠王\Desktop\CityNexus_包工头留言.txt` 已同步为早安摘要（不含任何凭据）。
