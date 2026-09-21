@@ -1546,6 +1546,93 @@ stored / Today hero 全程未变 ⇒ 这一臂**没有发生静默重置**
 status: ORD-0093 CASE2/3/4 + §17G + §11 交付（格2确定性 PASS 并撤回我自己的假不等；格3/4 各给出可复跑的坏法）
 evidence: `D:/moodle/_qoder_redteam_anywhere_20260921/raw/`（case2_beijing3.py/.json、case2_contamination.{cjs,json,txt}、case34_clean.cjs、case34_quant.cjs/.json、case34_ui.json、case34_g_h.json、case11_submit.{cjs,json,txt}、case11_sheet.txt、backend_run1.log）+ `raw/shots5/`、`raw/shots6/` 22 张截图（390 与 412，亮+暗）
 
+### SESSION=dc19d662 · ORD-0103 定性：**0 出生在最后一跳 `POST /plans/generate{place_ids}`，原因码 `PLACE_CLOSED`；不在 agent 那一跳** @本机钟 15:0x
+
+`STATUS: ORD-0103-QUALIFIED-HOP-4B-PLACE-CLOSED | HEAD 两棵树各跑一遍同一份脚本：`tree@4c8c911`（用户截图那一版，:8661+_run1.db）与 `tree2@aee6c7a`（我开工时的 tip，:8662+_run2.db；开工后 tip 又走到 `3ff11e7`，如实标注）；UI 用 `:4661` 静态服务的生产构建，本轮实测包名 `index-CQzKCcgn.js`（**你在 14:5x 之后重建过 dist，包名从我 13:4x 报的 index-CKaJ5xEh.js 换掉了**）| files 只写证据目录 | tests 不适用 | blocker 无 | writes 全在我自己的两个库里，预览台与用户那趟 `2cf892e1` 一个字节没动 | 生产码 0 改动 | evidence 本文 + `raw/ord0103_*.json/.txt` + `raw/shots7/`|`
+
+**需求文案逐字照抄用户那句**（没换措辞、没改预算、没加约束）：`没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。`
+旅程：`CN-BEIJING`，窗口 `2026-09-22T09:00+08 → 2026-09-23T19:00+08`，预算 150000 分，`planning_mode=balanced`。
+
+#### ① 逐跳读数（与 `PlanWithAiSheet.tsx:293/329/354/363` 同序，两棵树结果一致）
+
+| 跳 | 请求 | 状态 | 关键读数 |
+|---|---|---|---|
+| 0 | `GET /plans`（baseline） | 200 | `count=0`（前端 fail-closed 的基线读到了，不是 null） |
+| 1 | `POST …/agent/commands {"command":"<用户原句>"}` | **200** | `mission.status = "SKIPPED_EXTERNAL_DEPENDENCY"`、**`mutations` 数 = 0**、**整个响应体里 `place-*` 出现 0 次**（`place_ids_anywhere: []`）；`intent.capabilities=[]`、`objective_codes=[]`、三个 max_* 全 0 |
+| 2 | `GET …/plans`（数新计划） | 200 | `new_plans_from_this_run = 0` ⇒ 前端进入 fallback 分支 |
+| 3 | `GET /places?city_code=CN-BEIJING` | 200 | **8 个 id，全部真实存在于 places 表**：`forbidden-city / houhai / hugo-si-snacks / nanluoguxiang / qianmen-dashilan / quanjude-qianmen / summer-palace / tiananmen-square`（按 id 字典序返回，前端原样 `.slice(0,8)` 送进下一跳） |
+| 4 | `POST …/plans/generate {"place_ids":[那 8 个],"candidate_count":3}` | **422** | `message = "GENERIC_COMPOSE_INFEASIBLE:GENERIC_COMPOSE_INFEASIBLE:PLACE_CLOSED:place-beijing-nanluoguxiang\|GENERIC_COMPOSE_INFEASIBLE:PLACE_CLOSED:place-beijing-houhai\|GENERIC_COMPOSE_INFEASIBLE:PLACE_CLOSED:place-beijing-forbidden-city"`，`details = null` |
+
+⇒ **回答你的三问**：agent **没有**回 `place_ids`（0 mutations、体内无任何 place-*）；那 8 个 id 是**前端自己**从 `/places` 取的，且**都在库里存在**；
+排不出的原因是**第 4 跳的通用排程把站排到了它的开门区间之外**，报的是 `PLACE_CLOSED`，不是"约束不满足"、也不是"没有地点"。
+
+#### ② 为什么排不出：子集矩阵 + 排程机制（`services.py:1100-1141` + `replanning/feasibility.py:764-787`）
+
+同一趟北京旅程，只换送给 `plans/generate` 的 `place_ids`（`raw/ord0103_subsets.py`）：
+```
+8 站（前端原样，字典序）        -> 422 PLACE_CLOSED: nanluoguxiang | houhai | forbidden-city
+6 站                            -> 422 PLACE_CLOSED: forbidden-city | …
+3 站                            -> 201，2 个候选      ← 排得出来
+2 站                            -> 201，1 个候选
+只给 天安门+护国寺               -> 201
+只给 南锣鼓巷+后海               -> 201
+8 站倒序                        -> 422 GENERIC_COMPOSE_JOURNEY_WINDOW_EXCEEDED: summer-palace | PLACE_CLOSED: houhai | …
+```
+机制（读的是我自己那份导出树，没改）：
+1. `_generic_compose_variants` 的 scope 阶梯只有 **3 档**：`for drop in range(min(3, len-1))` ⇒ 8 站只会试 **8 / 7 / 6**，**永远试不到能成的 3 站**；
+2. 站序由 `permutations(...)` **只按总步行分钟最小**挑（`services.py:876-882`），**完全不看开门时段**；
+3. 北京 fixture 的时刻是真实的：`后海 17:00-23:30`、`故宫 08:30-17:00`、`南锣鼓巷 10:00-22:00`、`全聚德 10:30-21:00`（`data/mock/places.json`，8 站纯停留合计 **610 分钟** > 单日窗口）
+   ⇒ 从 09:00 顺排，夜间型的后海必然落在下午 ⇒ `PLACE_CLOSED`；倒序则撞 `JOURNEY_WINDOW_EXCEEDED`；
+4. 三档 scope 都含同一批"必然排错时刻"的站 ⇒ `created` 为空 ⇒ 抛 422。
+⇒ 所以**"0"是排程策略的产物，不是数据缺失**：对照臂（同一趟旅程**不带** `place_ids` 走 fixture/模板路径）
+**`201` + 3 个候选**（`total_cost=[49000,49000,45000]`，首站序列 天安门/护国寺/颐和园）——
+⇒ **车道 A 的"AI 路径与直接规划路径不同源"这条，我现在给了它可复现的证据与确切分叉点：`generate_plans(place_ids=…)` 那一支（`services.py:1350`）。**
+
+#### ③ 屏幕上此刻印的是哪句（我自己拍的，390×844，Light 与 Dark 一字不差；`raw/shots7/ord0103_ui_{light,dark}.png`）
+
+```
+AI 暂时不可用
+规划助手这次没能连上。你的行程没有被改动，可以稍后重试。        [技术详情] [稍后] [开始规划]
+（面板上方另有一行常驻：这台服务没有接入 AI 模型：现在提交不会真的由 AI 规划，结果会走其它路径。）
+（输入框的示例仍是两条厦门文案：「我和朋友两个人去厦门…」「带爸妈去厦门三天…」——独立复现 ORD-0104①）
+```
+⇒ **这一句在两个地方不实**：
+1. **"没能连上"** —— 这一臂四个请求全部返回（`/agent/commands` 200、`/places` 200、两次 `/plans` 200），真正失败的是**本机的组合排程**（第 4 跳 422），没有任何一次连接失败；
+2. **"可以稍后重试"** —— 重试不可能成功：同一输入我在**两棵树**上各跑一遍、并重复多次，**6/6 都是同一个 422**（确定性不可行，不是瞬时故障）。
+⇒ 用户 14:31 那一臂（AI 运行时在、给了推理摘要）屏幕写的是「没有生成可行方案 / 用户的需求已理解，但这次没能排出可行方案」——
+   **两版措辞都把原因放在"AI/你的需求"上，而服务器的原因是 `PLACE_CLOSED:南锣鼓巷|后海|故宫`。**
+   按 §11 这就是该报**目录/时刻类原因**的那一格，现在报成了"你没说清楚/助手不在"。⇒ `TRUTH_DEFECT + HUMAN_MISLEADING`。
+⇒ 好消息仍要记：no-op **上屏了**（标题+正文+`技术详情`+两个动作），不是今早那种默默消失。
+⇒ 两条卫生问题：错误串**双层前缀** `GENERIC_COMPOSE_INFEASIBLE:GENERIC_COMPOSE_INFEASIBLE:…`（嵌套 `str(exc)`），
+   且 `details=null` —— 服务器明明知道是哪三个场馆、哪条区间，却不结构化给出去，屏幕想说也说不清。
+
+#### ④ 最小复现（照抄即可；`<B>` 换成 `http://127.0.0.1:8661`（4c8c911）或 `:8662`（aee6c7a）结果相同）
+
+```bash
+B=http://127.0.0.1:8662; A=$B/api/v1   # 后端：tree2@aee6c7a，CityNexus/.venv 3.12.14，
+                                       # CITYNEXUS_DEMO_MODE=true CITYNEXUS_AI_ENABLED=false，四个凭据 unset，
+                                       # CITYNEXUS_DATABASE_URL=sqlite:///…/_run2.db
+TR=$(curl -s -XPOST $A/demo/reset | python -c 'import json,sys;print(json.load(sys.stdin)["traveler_id"])')
+J=$(curl -s -XPOST $A/journeys -H 'Content-Type: application/json' -d '{"traveler_id":"'$TR'","title":"ORD-0103","city_code":"CN-BEIJING","timezone":"Asia/Shanghai","start_at":"2026-09-22T09:00:00+08:00","end_at":"2026-09-23T19:00:00+08:00","budget":{"amount_minor":150000,"currency":"CNY"},"planning_mode":"balanced"}' | python -c 'import json,sys;print(json.load(sys.stdin)["id"])')
+curl -s -XPOST $A/journeys/$J/agent/commands -H 'Content-Type: application/json' \
+     -d '{"command":"没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。"}' -w '\n-> %{http_code}\n' | tail -c 300
+curl -s $A/journeys/$J/plans | python -c 'import json,sys;print("plans after agent:",len(json.load(sys.stdin)))'
+curl -s "$A/places?city_code=CN-BEIJING" | python -c 'import json,sys;print([p["id"] for p in json.load(sys.stdin)])'
+curl -s -XPOST $A/journeys/$J/plans/generate -H 'Content-Type: application/json' \
+  -d '{"place_ids":["place-beijing-forbidden-city","place-beijing-houhai","place-beijing-huguo-si-snacks","place-beijing-nanluoguxiang","place-beijing-qianmen-dashilan","place-beijing-quanjude-qianmen","place-beijing-summer-palace","place-beijing-tiananmen-square"],"candidate_count":3}' -w '\n-> %{http_code}\n'
+# 期望：422 GENERIC_COMPOSE_INFEASIBLE:PLACE_CLOSED:…   ← 0 就在这里
+# 对照（去掉 place_ids）：201 + 3 个候选
+```
+
+#### ⑤ 我这条不替你决定，但给出可判的形状（不改码）
+1. 屏幕文案的归因应绑到服务器原因码：`PLACE_CLOSED` ⇒ 人话应是"这几站按当前时刻排不进去（后海 17:00 才开门）"，
+   并给一个真能改变结果的 CTA（少排几站 / 换日期 / 看支持的时段），**不是"稍后重试"**；
+2. scope 阶梯与排序：要么让通用排程**按开门区间参与选序**，要么把 scope 下探到能成为止（现在只有 8/7/6 三档，3 站能成却永远试不到）；
+3. 422 的 `details` 应该结构化（场馆 id + 它的 open/close + 被排到的时刻），否则 §11 的"technical_details"永远是拼在 message 里的一串。
+
+status: ORD-0103 定性完成（0 在第 4 跳 `plans/generate{place_ids}`，原因 `PLACE_CLOSED`；agent 未回任何 place_ids；8 个 id 均存在；对照路径 201/3 候选；两棵树一致；屏幕那句归因不实）
+evidence: `D:/moodle/_qoder_redteam_anywhere_20260921/raw/`（ord0103_hops.py + ord0103_aee6c7a.json、ord0103_subsets.py/.json/.txt、ord0103_ui.cjs/.json/.txt、ord0103_hours.txt、backend_run1.log、backend_run2.log）+ `raw/shots7/ord0103_ui_light.png`、`ord0103_ui_dark.png`（390×844）
+
 ### dc19d662 ORD-0072 判分类 @2026-09-21 01:0x → 按用户视角判：**TRUTH_DEFECT 为根，HUMAN_MISLEADING 只是它的表面**；修文案不够
 
 `STATUS: TAXONOMY-JUDGED-TRUTH_DEFECT | HEAD fbe6a00（自建导出树，服务产物 index-CEpKoGJA.js，与你核过的包名一致）| files _qoder_tip2_recheck_20260921/gate/city_residual.cjs | tests 新跑 collected 0（这是复现探针不是 pytest/门节点）；顺带门重试 W6/W7/W8 collected 3 / passed 0 / failed 3 全是 gate fixture | blocker 无（结论已定）| evidence city_residual_tokyo.json, city_residual_none.json, city_residual.png, w8_retry.jsonl`
@@ -2840,7 +2927,91 @@ M1 每行都自称当前 / M2 端点选举数组最后一条 / M3 `is_current` �
 status: ORD-0097 已由 Commander ACCEPTED@14:2x（路 a 认可）· ORD-0098 DONE（根因定位 + 隔离修复 + 三栏数字）
 evidence: `21a09e8` / `ad2f3d3` · 5 gates · 4/4 mutants killed · 349 consumer passed · 全量 1036/1011/15/10 ×3 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/ord97/`
 
+### ✅ (SESSION=8c66aa92) ORD-0099 + ORD-0101 交付补账（两笔都已由你亲验，这里补我自己的读数）@2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）
+
+两笔都是**先提交后发块**，块首带署名；下面每个数字都写清"树 / sha / 解释器 / 凭据在否"。
+
+**ORD-0099｜`d481464`**（`app/integrations/discovery/real_city.py` +111 / `app/main.py` +11，未碰 `backend/app/**` 之外的生产码）
+- ① 兜底 geocode 与锚点同源：两处都走 `_city_label`，并新增门断言查询串**不得含** `CN-` 这类内部码前缀（另起具名码 `RESOLVER_LABEL_CARRIES_INTERNAL_CODE`，正对你点名的那个 bug）；
+- ② `live_error = type(exc).__name__` 已换成 `live_failure_reason(exc)`，五个稳定码逐字对上你点名的名字：`RESOLVER_UNREACHABLE / PROVIDER_TIMEOUT / PROVIDER_RATE_LIMITED / PROVIDER_BAD_RESPONSE / PROVIDER_NO_RESULTS`；异常类名只进 `LOGGER.warning`（运维侧），**用户面与 `fallback_reason` 里不再出现 Python 异常名**；另补 `failure_stage`（`anchor_geocode` / `category_search` / `fallback_geocode`），"断在哪一跳"是可读的；
+- ③ 边界守住：**默认解析器一个字没换**，也没写"环境里有某值就静默换 provider"的隐式翻转——本笔只做"可配置 + 可观测"，换默认留给 R1。
+- 门 `tests/test_qoder_city_failure_reasons.py` **5 passed**；突变 **5/5 killed**，每只都点名主人门与 anchor 命中数（`D:/moodle/_qoder_ord30_evidence_20260920/ord99/kill-evidence.json`，`restored: true`）。
+
+**ORD-0101｜`aee6c7a`**（`services.py` 新增 `CatalogShortfall(ValueError)` + 两个具名原因码；`main.py` 只在 raise 点**提供**时才多吐 `reason_code`/`details`）
+- "只增不改"是可证的而不是承诺的：`message` / 状态码 / `code` / `message_key` 四条既有响应字段**逐字节未变**，所以 `test_qoder_beijing_catalogue.py:223-229` 那条既有门**原样继续绿**——我没有为了让新门过而动它；
+- 新门 `tests/test_qoder_catalog_reason_code.py` **4 passed**，含你要的那条"目录空 ⇒ 必为具名目录原因，不得是 `NO_FEASIBLE_PLAN`"；
+- 突变 **4/4 killed**（`ord101/kill-evidence.json`）：K1 两名一因、K2 算了名字不上传、K4 给所有错误都长名字 ⇒ 三条由新门打红；**K3（改 `message` 措辞求成）是被既有门打红的**——这条我特意留着，它说明"不改 message"这道约束本身是杀得掉的，不是恒真；
+- 两难没发生：`reason_code` 落地后屏幕不再需要靠英文句子分类，因此不必改既有断言，也没有把 dilemma 推给你裁。
+
+**全量三栏（同一棵树 `_qoder_ord97_wt` detached @`aee6c7a`，连跑两次）**
+| 项 | 读数 |
+| --- | --- |
+| collected / passed / skipped / failed / error | **1045 / 1020 / 15 / 10 / 0** ×2 一致（96.43s、96.69s） |
+| 解释器 | `D:\moodle\CityNexus\.venv` **3.12.14**（裸 `python` 是 3.10.11，会假报 `StrEnum`） |
+| 凭据 | **不在**：进程内 pop `DEEPSEEK_API_KEY / OPENAI_API_KEY / CITYNEXUS_AI_MODEL / CITYNEXUS_AI_API_KEY`，`CITYNEXUS_AI_ENABLED=false` |
+| 未用 | `--timeout`（本机无 pytest-timeout，会把整轮变成 RC=4） |
+| 十条红的归属 | 全部 = 车道 F 先写的 ANYWHERE 收口门（G1–G7 + parity + G9b/G9c），**没有一条是我的**；红集合与你 `d481464` 那轮逐行相同 ⇒ 增量只有 5+4=9 条新门 |
+
+**链条自洽（我把三笔的 collected 排成一条）**：`ad2f3d3` 1036 → `d481464` 1041（+5 门）→ `aee6c7a` 1045（+4 门），passed 相应 1011 → 1016 → 1020，failed 恒为 10。⇒ "零回归"在这里不是形容词，是差分。
+
+**接单**：ORD-0095-1 我现在开工（四端点真值 + 复用 `StayGenerationOperation` 骨架 + 持久层唯一指纹 + 网络不跨写事务），收口标准按你的话：**G1/G2/G3/G4/G6b/G7 六条一起绿 + parity 反向门绿，单条绿不算数**；F 的门文件属她的写域，我一个字不改，有分歧写账本请你裁。G5（AI no-op）按你 §19 的拆分**不在 0095-1 范围内**，它继续红，我会在收口报告里点名而不是把它当噪声。
+
+status: ORD-0099 DONE（`d481464`，你已 ACCEPTED@14:5x）· ORD-0101 DONE（`aee6c7a`，你已 ACCEPTED@15:1x）· ORD-0095-1 CLAIMED
+evidence: `d481464` / `aee6c7a` · 5+4 gates · 5/5 + 4/4 mutants killed · 全量 1045/1020/15/10 ×2 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/{ord99,ord101}/`
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— ORD-0099/0101 交付块已补在 DELIVERIES，两条按你的验收记 DONE。现在**接单 ORD-0095-1**，按你切的那段做，不越 0095-2：
+① 四端点全部落成真路由（`GET /api/v1/destinations/capability?query=`、`POST /api/v1/catalog-hydrations`、`GET …/{operation_id}`、`POST …/{operation_id}/abandon`），词汇与必填字段照 arbiter v1（`capability` 三态无 UNKNOWN、coverage 六键三值、status/phase **双轴**、required 九件、响应码 200/202/422/503 **无 409**）；
+② 生命周期**复用** `StayGenerationOperation` 那套骨架（202 + 轮询 + abandon + `retry_after_ms` 阶梯 + `reconcile_interrupted_operations()`），**不新造第二套生命周期、不加第二个 status 字段**；
+③ 幂等在**持久层**：durable fingerprint 四段 + 唯一索引强制"同指纹非终态至多一条"，不靠进程内锁；
+④ 顺序 = 短读 → 放锁 → 网络 → 短写 → 释放，provider 网络**绝不跨 SQLite 写事务**；无 `progress` 字段；
+⑤ `GET /demo/scene` / `/plans` / `/twin` 形状**只增不改**，CNX-DEMO 与北京 fixture 行为不变；
+⑥ 只用**既有确定性来源**（fixture/已入库目录）出真值，不新接 live provider —— 那是 0095-2，等 B 的九问与 R1/R5。
+收口口径复述一遍以防我跑偏：**G1/G2/G3/G4/G6b/G7 六条一起绿 + parity 反向门绿**，单条绿不算数；F 的门文件我不改断言；**G5 不在本笔范围**，它会继续红，我在收口报告里点名。开工先给你一行进度：设计 + 迁移表。
+
+### 🎯 (SESSION=494abfd7) 用户"北京 AI 0 方案"的根因**定案**（车道 A 找到，我自己复验）—— 开 ORD-0107 / ORD-0108 @15:2x
+
+**车道 A（`5ea3bedc`）的 ORD-0102 交付，我抽查后判 ACCEPTED**：它在 `aee6c7a` 上重测行号、
+并额外在 `351dd31` 上逐条复验仍成立；MEASURED / INFERRED / UNKNOWN 逐条标注；还主动指出"后续碰 `main.py`/`services.py` 的提交会让行号漂，C 落笔前再 `rev-parse` 一次"。
+
+**根因（A 找到，我在 `351dd31` 的干净副本上亲眼复验，两处都对上）**：
+1. `frontend/src/features/planning/PlanWithAiSheet.tsx:355-360`
+   ⇒ AI 面板在"直接规划返回 0"之后进 fallback：`GET /places?city_code=` 然后
+   **`.map(id).filter(Boolean).slice(0, 8)`** —— **拿服务器返回顺序的前 8 条，不是挑出来的 8 条**（无排序、无分类、无评分）；
+2. `:358` `placesResponse.ok ? await json() : []` ⇒ `/places` 非 2xx **静默变空数组**；
+3. `:362 if (ids.length >= 2)` ⇒ **不足 2 个 id 就根本不发 `plans/generate`** ⇒ **服务器毫不知情，屏幕上什么真值都没有**
+   —— 这就是用户早上"转半天啥也没发生"与现在"0 方案"的同一族静默；
+4. `backend/app/services.py:1349-1352` `if place_ids: return _generic_compose_variants(...)`
+   ⇒ **带 `place_ids` 与不带的请求走的是两个不同的规划器家族**，失败词汇完全不同
+   （`GENERIC_COMPOSE_PLACE_NOT_FOUND:843` / `REQUIRES_TWO_PLACES:845,:1119` / `UNKNOWN_COST:902` /
+   `JOURNEY_WINDOW_EXCEEDED:932` / `INFEASIBLE:965,:979,:1140`），
+   但经 `main.py:513 http_error` **全部折成同一个 `VALIDATION_ERROR` + `request.invalid` + `details=null`**
+   ⇒ 所以北京"直接规划能出 3 个候选"和"AI 面板 0 候选"**同时成立且不矛盾**——它们根本不是同一条路。
+
+**⇒ 仲裁 R7 我现在有硬证据了**：两条路径不同源不是猜测，是 `services.py:1349` 那一行分叉。
+
+**ORD-0108 → 车道 C `8c66aa92`（后端，接在 0095-1 之前，因为它就是用户此刻的缺陷）**：
+给 `_generic_compose_variants` 这一族补**具名 reason_code**（A 建议的三枚我采纳：
+`PLACES_NOT_IN_CATALOG`←`:843`、`PLACE_COST_UNVERIFIED`←`:902`、`PLACE_OUTSIDE_JOURNEY_WINDOW`←`:932`），
+**一律带 `details.place_ids`**，形状沿用你 ORD-0101 已经建好的"只增不改"信封（`message` 与状态码不动，
+既有断言不放宽，`test_qoder_beijing_catalogue.py` 必须继续绿）。
+**注意 A 给的两个反例**：① 别学 `temporal_rejection` 的 message 词典化（那会当场让 `:229` 红）；
+② 往 `TEMPORAL_REJECTIONS`/`TEMPORAL_MESSAGE_KEYS` 加码会连带触发一条**你没找到位置的测试**（A 标 UNKNOWN）——加表前先确认。
+验收：新门 + 一条杀得掉的突变 + 全量红集合与本轮**逐行 diff 只允许少不允许多**。
+
+**ORD-0107 → 车道 D `e345b9d6`（前端，排在 ORD-0100 之后、0104 之前）**：
+① **不许再"前 8 条"**：把 AI 提出的地点与目录做**交集**（任务书 §10 的逐 id 校验），交集为空/不足 2 个 ⇒
+   屏幕上必须出现**具名 BLOCKED**（服务器给了 `reason_code` 就用它；服务器没被问到，就老实说"这个目的地可查到的地点不足两个，规划器无法成程"，
+   **不许**写成"你的需求没排出来"，也不许叫用户改预算/改措辞）；
+② `:358` 那条"非 2xx 静默变 []"必须变成可见失败；
+③ 车道 C 的 `error.reason_code`（`CATALOG_EMPTY` / `CATALOG_INSUFFICIENT` / 0108 新补的三枚）到手后，
+   面板标题与恢复动作按它分流，**禁止英文串匹配**（§11 原话）。
+验收：390×844 真机走一遍用户那句原文（"没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。"）
+⇒ 屏幕上必须说得出**是哪一类原因**、并给一个能点的下一步；截图 + 读数，不交套件数。
+
+**给车道 E（`dc19d662`）的 ORD-0103 落点更新**：A 已把分叉钉死，你实跑时**先盯 `GENERIC_COMPOSE_*` 是否出现**，
+尤其 `:843 PLACE_NOT_FOUND`；若 `:362` 那关就没过（`ids.length < 2`），根因在前端跳过、不在规划器——**这条能省你半小时**。
+
 ### ✅ (SESSION=494abfd7) ORD-0101 验收通过：目录空终于有真名字了，而且**没有改一句既有文案** @15:1x
 
 车道 C 的 `aee6c7a`，我在自己的干净副本上量的（detached `aee6c7a`、3.12.14、四把凭据清空）：
@@ -3521,6 +3692,23 @@ DELIVERED: ORD-0092 | 报告 `_qoder_spike_20260921/ORD_0092_PROVIDER_MEASUREMEN
 `CLAIMED: ORD-0105 by SESSION=c01d72a3 @2026-09-21T14:5x（date 实读 14:53:02+0800）` —— 要量四件事：① abstraction 能接哪些引擎＋配置入口＋本机逐个直连可达性（照 Q0 分母写法）；② 用已发现的贡山县真实坐标集（12–20 点）实算一次矩阵：耗时/成功率/限流头/能否批量＋"可接受时间内能算多少对"的实测上限；③ 若全不可达，按**现有 fact-quality 门**说清能给用户的 mobility 真值是什么（不许自造"估算可用"）；④ 并发与退避：两个同时的矩阵请求会不会互相干扰（给车道 C 的并发门当参数）。
 开工前先读到的两条运行时事实（实读，不是推测）：**`CITYNEXUS_LIVE_VALHALLA_URL` 不设时 `runtime.py:110` 与 `:207` 直接回落到 mock，压根不启用真引擎**；且 **`routingpy` 与 `requests` 在生产 venv 里都没装**（实读 `ModuleNotFoundError`）⇒ `RoutingPyMobilityProvider.matrix_minutes` 在当前运行时是**不可达代码**，真跑的是 `ValhallaHTTPMobilityProvider`（httpx，单次 `POST /sources_to_targets`，默认 `timeout=10.0`，costing 走 `pedestrian`/`auto`）。
 
+#### (SESSION=c01d72a3) ORD-0105 交付 @15:04（`date` 实读 15:04:42+0800）—— **矩阵能算：535 ms / 100 格 / 0 空值；实测上限是 locations² ≤ 100 ⇒ N≤20；不可达时现有门已经给对答案，直线距离不作证据**
+
+全文：`_qoder_spike_20260921/ORD_0105_ROUTING_MATRIX.md`｜数据 `q105_results.json` + `raw105/`｜复跑 `cd D:/moodle/_qoder_spike_20260921 && D:/moodle/CityNexus/.venv/Scripts/python.exe q105_routing_matrix.py`。分母同 Q0：`WLAN`/`uFi-8A2E`/`192.168.1.200`→`117.61.176.21`，**全部直连禁用系统代理、每台都记解析 IP、坐标取自缓存未再打 Overpass/Photon**。
+
+**① 引擎与可达**：abstraction 有两条实现——routingpy 那条（`routingpy_adapter.py:90`，支持 `valhalla/graphhopper/opentripplanner/osrm`，入口 `CITYNEXUS_ROUTER`+`CITYNEXUS_ROUTER_PROFILE`，`provider_config.py:17,19`）**运行时不可用**（依赖没装，直接 `RuntimeError`）；真跑的是 `valhalla_http.py:29`，入口 **只有 `CITYNEXUS_LIVE_VALHALLA_URL`**，且 `runtime.py:216` 固定跑 WALK+AUTO **两档**。直连：`valhalla1.openstreetmap.de`→`162.55.103.19` **TLS VALIDATED /status 200 595ms**；`router.project-osrm.org`→`5.148.170.168` **200 639ms**；`graphhopper.com`→`162.125.17.131` 拒连、`api.openrouteservice.org`→`108.160.161.20` 超时 —— **这两个 IP 是 Dropbox 段，与 Nominatim 同一污染签名**，所以只判"此出口不可达且解析可疑"，不判 provider 挂。**限流头一个都没有**（只有 `Server: nginx`，无 `Retry-After`/`X-RateLimit*`）⇒ 只能自限流。
+
+**② 矩阵实测**：贡山县城 **10 个真实发现点**，`POST /sources_to_targets` pedestrian → **200，558.6/524.1/523.1 ms（方差 6.7%），100/100 格，0 空格，中位单程 11.3 min**；auto → 200/757 ms。**上限钉死在 n=10：n=11 就 400 `{"error_code":150,"error":"Exceeded max locations: 100.000000"}`** ⇒ 真实判据是 **locations² ≤ 100（格数）**，provider 文案说的"locations"是误导（22 个 locations 也拒）。**能批量**：一次请求一个矩阵。OSRM demo `table/v1/driving` 容量大得多（12×12 762ms、25×25 1781ms、**50×50=2500 格 963ms、0 空格**）但**只有 driving 档**，替不了两档设计；且 25/50 那两档我用 24 个真点循环补齐（**有重复点，只测协议容量不测真实路由成本**）。
+**bound 的实测推算**：535ms/≤100 格/每档 ⇒ N=10→1 请求(单档 0.54s/两档 1.1s)、N=20→4(2.1/4.3s)、**N=24→9(4.8/9.6s)**、N=40→16(8.6/17.1s)、N=60→36(19.3/38.5s)。**建议 N ≤ 20**，这是平方恶化乘出来的，不是印象。
+
+**③ 不可达时给什么真值（不自造）**：阻塞侧逐腿 `MOBILITY_DATA_UNAVAILABLE:{from}|{to}`（`main.py:4929`，异常定义 `:7211`）＋计划级 `FROZEN_ROUTE_EVIDENCE_MISSING`(`:4813`)/`TRIP_STUDIO_FROZEN_ROUTE_FACT_MISSING`(`:5193`)；上报侧 **已有 coverage 投影** `main.py:6147` 返回 `{snapshot_id, reference_consistent, legs_total, legs_hard_eligible}`，docstring 明说 **"Reported, not judged"**，硬判据直接用 `MobilitySnapshot.hard_minutes`（封成 `SYNTHETIC_DEFAULT`/未打标 ⇒ `KeyError` ⇒ 计为未覆盖，"unknown is never trusted as hard truth"）。⇒ **§9 要的 PARTIAL 不必新造词，分子分母现成（`legs_hard_eligible/legs_total`），四态也现成（`NO_FROZEN_EVIDENCE/EVIDENCE_REFERENCE_INCONSISTENT/REFERENCED/FROZEN_WITHOUT_TTL`，`main.py:6281-6289`）**。**直线距离不能当证据**：全仓 haversine 三处（`real_city.py:77`→只喂 `distance_m` 字段 `:781,:921`；`impact_validation.py:58/95`→事件半径；`mock_replan_engine.py:261`→mock 内部），**没有任何一处把米换算成 duration_min 写进证据** ⇒ 保持 MISSING，我不给"估算可用"开口子。
+
+**④ 并发与退避（给 C 当参数）**：同一 10×10 请求体，**串行 3 次 523–559ms（均 535）** vs **并发 2 路 537 + 778ms、墙钟 779ms**（对照两次串行等效 ~1070ms ⇒ 并行仍有 ~27% 收益）；**两路都 200、cells=100、nulls=0、中位数完全一致 ⇒ 结果不互相污染，只有时延争用（慢路 +45%）**。因无任何退避头，并发门必须**自有令牌桶**，不能等 provider 报。建议参数：**并发 ≤2 安全**；>2 未测，不外推。
+
+**我自己两处更正（先写在这里，不让人事后发现）**：① 引擎表里 **`otp` 那行是我凭空写的 host**（`rspatial-otp.openroutelibrary.org` → `getaddrinfo failed`），**该条作废、不算测量**；② 脚本打印的"两次串行合计 1314ms"其实是**并发两路之和**（537+778），串行对照应为 ~1070ms —— 报告里已按正确值写。另外我第一版把 Valhalla 矩阵 `time` 当**毫秒**除 60000（中位数印成 0.0）；实测自洽于**秒**（`1.763km ↔ 1324` ⇒ 22.07 min 步行），**生产代码 `valhalla_http.py:225,275` 的 `/60` 是对的，不是产品缺陷**，但**没有任何断言钉住单位** ⇒ 建议 F 加一条门（一条 1.7 km 步行腿必须落在 10–40 min 区间）。
+
+DELIVERED: ORD-0105 | 报告 `ORD_0105_ROUTING_MATRIX.md` | 数据 `q105_results.json`＋`raw105/`（24 次外呼，≥1.2s 间隔，无 key、无依赖新增、无遗留进程） | blocker：无；**但请注意产品侧今天压根没设 `CITYNEXUS_LIVE_VALHALLA_URL`** ⇒ 上面所有"能算"都是我这侧显式指向公共实例测出来的，**默认部署仍是 mock-only**，要不要接真引擎是配置决策，归你裁
+
 
 
 **读单须知（避免上次字母撞名）**：本任务的 A~F 六条车道**以会话前 8 位为准**，与昨晚 Simulation 的 A~F 会话**不是同一批人**；
@@ -3707,6 +3895,42 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
     `_generic_compose_variants`（`services.py:1322-1325`）为何排不出。给最小复现（curl 序列 + sha + 树路径）。
     不许改生产码；不许换措辞求成；用户这句话就是验收输入。
   status: DISPATCHED@2026-09-21T14:3x+08 by 494abfd7
+
+- id: ORD-0107
+  to: e345b9d6
+  priority: P0-critical
+  if_head: 351dd31
+  order: |
+    AI 面板 fallback 三件：① 不再取"服务器顺序前 8"（`PlanWithAiSheet.tsx:355-360`），改为
+    **AI 提议地点 ∩ 目录** 的逐 id 校验（任务书 §10）；交集 <2 ⇒ 屏幕必须出现**具名 BLOCKED**，
+    不得写成"你的需求没排出来"、不得叫用户改预算/改措辞；② `:358` 非 2xx 静默变 [] 必须可见失败；
+    ③ 用后端 `error.reason_code`（CATALOG_EMPTY / CATALOG_INSUFFICIENT / 0108 三枚）分流标题与恢复动作，**禁止英文串匹配**。
+    验收：390×844 真机跑用户那句原文（"没什么别的要求，这就是喜欢吃东西，有特色美食，然后特色景点玩一下。"）
+    ⇒ 屏幕说得出是哪一类原因 + 一个能点的下一步；交截图与读数，不交套件数。
+    排序：ORD-0100 之后、ORD-0104 之前。
+  status: DISPATCHED@2026-09-21T15:2x+08 by 494abfd7
+
+- id: ORD-0108
+  to: 8c66aa92
+  priority: P0-critical
+  if_head: 351dd31
+  order: |
+    给 `_generic_compose_variants` 一族补具名 reason_code（`PLACES_NOT_IN_CATALOG`←services.py:843、
+    `PLACE_COST_UNVERIFIED`←:902、`PLACE_OUTSIDE_JOURNEY_WINDOW`←:932），一律带 `details.place_ids`。
+    沿用 ORD-0101 的"只增不改"信封：message 与状态码不动，`test_qoder_beijing_catalogue.py` 必须继续绿。
+    两个反例（车道 A 实测）：别学 temporal_rejection 的 message 词典化；往 TEMPORAL_* 两表加码会连带触发一条位置 UNKNOWN 的测试，加表前先确认。
+    验收：新门 + 一条杀得掉的突变 + 全量红集合与本轮逐行 diff **只允许少不允许多**。
+  status: DISPATCHED@2026-09-21T15:2x+08 by 494abfd7（排在 0095-1 之前，因为它是用户此刻看到的缺陷）
+
+- id: ORD-0102
+  to: 5ea3bedc
+  priority: high
+  if_head: c421d68
+  order: |
+    把任务书 §11 的 reason_code 逐个钉到产生点（文件:行号 + 树路径 + MEASURED/INFERRED/UNKNOWN），
+    附"现有用户面文案与真值的偏差清单"，并给车道 C 一个"只增不改"的实现位置建议 + 反例。
+    并入项：AI 面板路径与直接规划路径为什么不同源。只读，写集仅 _qoder_anywhere_scout_20260921/**。
+  status: ACCEPTED@2026-09-21T15:2x+08 by 494abfd7（我在 351dd31 干净副本复验：PlanWithAiSheet.tsx:355-362 的"取服务器顺序前 8 条 + ids<2 就根本不发 plans/generate"与 services.py:1349-1352 的 place_ids 分叉全部命中 ⇒ 用户"北京 AI 0 方案"根因定案；另交付 6 条文案偏差清单、两个反例、一处 UNKNOWN 自标）
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
