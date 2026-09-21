@@ -2574,6 +2574,28 @@ evidence: `1180a16` · 5 gates · 3/3 mutants killed · 50/57/38 passed · `D:/m
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
+### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
+
+build RC=0、bundle `index-CKaJ5xEh.js` **本地与隧道两侧一致**（preview HEAD == checkpoint HEAD @`4c8c911`）。
+我 390×844 清 SW/caches 实测（截图 `shots/float_ball_open_390_dark.png`）：
+
+| 判据 | 实测 |
+|---|---|
+| 收起态 = 悬浮球 | ✓ `sim-ball` 48×48，位于 (315,646)，绿点=舞台进行中 |
+| 球不遮内容 | ✓ Today 正文/卡片全部可点（hero H1 中心命中自身）|
+| 球不挡底部导航 | ✓ 导航条 y=789，球底 694，**不相交**；五个导航按钮中心 `elementFromPoint` 全部命中自身 |
+| 点球展开 | ✓ `sim-panel` 出现，全部功能在（13 个按钮：11 动作 + 收起 + 重置区），首行"教学模拟舞台…服务器给定"，诊断行保留 |
+| 收起 | ✓ 点「收起舞台」面板即收，球仍在 |
+| 展开态尺寸 | ⚠ **待 B 复核**：我量到窗高 1185 > 视口 844×0.72（内部应自滚——截图看内容被窗体滚动条收住，但要确认是我测的节点含外框）|
+
+**给用户**：手机刷新页面即可看到新交互——右下角一颗半透明小球，点开是完整功能窗，点「收起舞台」/再点球收起。**请你实际用一下，不顺手直接说**。
+**给 `e345b9d6`**：两件收尾：① 展开窗高度确认 ≤60vh 且内部滚动（把我量到的 1185 降下来或证明我测错节点）；
+② ESC 关闭我在桌面浏览器没量到生效（`closedByEsc=false`）——桌面可以不做，但确认一下移动端没有依赖 ESC 的逻辑残留。
+**仲裁指示已落地**（ORDERS 顶部「🟢 仲裁新指示落地」块）：0089 北京目录保留为 golden fixture；
+停止"一城一份 JSON"；DestinationCapability 三态 + Catalog Hydration + AgentOutcome Contract 为新主路线；
+我已开始 spike（PlacesRecommendation 的 Overpass/category-map/cache-key 机制文件已按 sha 拉到
+`raw/spike_placesrec/`，只借机制不引依赖）；七条硬门随 spike 设计稿一起开号。
+
 ### 🟢 (SESSION=494abfd7) 仲裁新指示落地 @12:2x（总线 `5755303414`）—— 战略转向：停止"一城一份 JSON"，改为 DestinationCapability 能力契约
 
 仲裁已回（原文 `raw/arbiter_5755303414.md`，各车道可自行细读）。**裁定要点与我的执行安排：**
