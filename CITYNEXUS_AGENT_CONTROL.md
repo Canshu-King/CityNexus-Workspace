@@ -2475,15 +2475,15 @@ evidence: `review/ORD-0082-work-in-progress.diff`(105,846 B/sha256 b665b3edae5fe
 - 突变表备好未跑：`review/ord0082_0087_kill_drivers.py` 8 个变异体，其中 `killC1`（把面板的顶部安全区选择器改成不匹配）专门用来判 ORD-0085 那条门会不会"只在摆好的姿势下过"。
 - 一条脏账如实报：`V8Experience.tsx` 对 HEAD 的 diff 有 ~1095 行，**真实改动是 19 个 hunk / 471 行**（`review/V8Experience.semantic.diff`，先把 HEAD 过一遍 prettier 再对齐算出来的）。多出来的是 04:4x 我那次 `npx prettier --write` 的整档重排，还在盘上。我试过把 19 个 hunk 贴回未格式化的 HEAD 副本：18/19 上了、**英雄区选站那一块没上**，所以我没有拿它替换正在被门验证的那份内容。要零 churn 我可以再做一轮，代价是门要重跑 —— **请裁要不要**。
 
-### e345b9d6（SESSION=e345b9d6）ORD-0082（含并入的 0088）+ 0085 + 0086 + 0087/0084 + 舞台端点接线 交付 @2026-09-21 09:3x → 补交 @10:0x（本机钟 `date`=09:32:58 +0800 起算）→ **四张单在真机门与生产构建链上都绿（最终一轮 run955305：33/0）；两笔提交 `94aee5d` + `ca91716`；突变 14 个：12 个被杀，2 个活着的我照实报名字与各自含义**
+### e345b9d6（SESSION=e345b9d6）ORD-0082（含并入的 0088）+ 0085 + 0086 + 0087/0084 + 舞台端点接线 交付 @2026-09-21 09:3x ＋ 补交 @09:5x（本机钟：`date`=09:32:58 +0800 起算；两笔 commit 自身时间戳 `git log --date` 实测 **09:33:41** 与 **09:50:10**）→ **四张单在真机门与生产构建链上都绿（最终一轮 run955305：33/0）；两笔提交 `94aee5d` + `ca91716`；突变 14 个：12 个被杀，2 个活着的我照实报名字与各自含义**
 
 **权威树（N-4 直读）**：开工前 `git -C D:/moodle/_qoder_integration_20260919 rev-parse --short HEAD` = **`e07f903`**；该 HEAD 里 `grep -c today-clock-source` = **0**、`tripHasNoCoordinates` = **0**（`git show HEAD:frontend/src/app/V8Experience.tsx`）。另外两棵可量树 `_qoder_sim_component_20260921`@`dff9744`、`_qoder_ui_overnight_20260920`@`39cccfd` 同样 **0** ⇒ ①④ 的唯一副本在我工作区，这笔提交把它落进权威树。提交 = **`94aee5d`** / 完整 **`94aee5d6bbfa778d30992022e546b67161dda039`**（`git log` 实测 09:33，**17 files changed, 3732 insertions(+), 327 deletions(-)**；只 add 我的前端路径与两份测量工具）。**回读验收**：`git show 94aee5d:frontend/src/app/V8Experience.tsx` 里 `today-clock-source` **2**、`tripHasNoCoordinates` **2**（HEAD 时两个都是 0），`git show 94aee5d:frontend/src/features/simulation/SimulationPanel.css` 里 `cn-sim-entry:not([open])` **0**（死规则没被带进树）。提交后 `git status --porcelain -- frontend/` **空**；别人那三处脏文件（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`、`reports/e2e-provenance/authoritative.json`、`tools/verification/mutation_campaign.py`）一个都没 add。**第二笔（补交）= `ca91716` / 完整 `ca91716d6db307c912577cefe8cdf7be57792ab9`**（**3 files changed, 130 insertions(+), 1 deletion(-)**：`V8Experience.tsx` +6/−1、hero spec +93、突变脚本 +31；同样 pathspec 限定，回读 `git show ca91716:frontend/src/app/V8Experience.tsx | grep -c SCENE_WINDOW` = **1**）。
 
 **ORD-0082 ②（判据=推进后"接下来"真变且与服务器一致，不是搬字）——绿**
-- `sim-today-hero-follows-the-stage` **zh/en × 390/412 = 4/4 绿**（开发链与生产构建链都 4/4）。最终一轮（生产链 run954135）四臂各读到**不同的游标位**，且每臂都等于它那一次服务器读数：zh@390 `effective_now=09:00` → `heroNow="现在 Riverside Museum"`、`serverNext="Central Food Hall"` ⊂ `heroNext="接下来 12:00 Central Food Hall 今天还有 6 项安排"`；zh@412 `12:00` → `现在 Tech Art Center` / `接下来 15:30 Nexus River Cruise Pier`（serverNext `Nexus River Cruise Pier`）；en@390 `10:30` → `NOW Central Food Hall` / `NEXT 13:20 Tech Art Center`；en@412 `13:20` → `NOW Nexus River Cruise Pier` / `NEXT 17:00 Skyline Dinner House`；四臂 `cursorMoved: true`（`review/evidence/ui-overnight/hero-follows-*.json`）。
+- `sim-today-hero-follows-the-stage` **zh/en × 390/412 = 4/4 绿**（开发链与生产构建链都 4/4）。最终一轮（生产链 run955305，证据文件 mtime 09:49 实测）四臂各读到**不同的游标位**，且每臂都等于它那一次服务器读数：zh@390 `effective_now=09:00` → `heroNow="现在 Riverside Museum"`、`serverNext="Central Food Hall"` ⊂ `heroNext="接下来 12:00 Central Food Hall 今天还有 6 项安排"`；zh@412 `12:00` → `现在 Tech Art Center` / `接下来 15:30 Nexus River Cruise Pier`（serverNext `Nexus River Cruise Pier`）；en@390 `10:30` → `NOW Central Food Hall` / `NEXT 13:20 Tech Art Center`；en@412 `13:20` → `NOW Nexus River Cruise Pier` / `NEXT 17:00 Skyline Dinner House`；四臂 `cursorMoved: true`（`review/evidence/ui-overnight/hero-follows-*.json`）。
 - **承重的是哪一件，由突变说，不由我说**：`killA1`（把 `useProjection` 关掉）→ **KILLED**；`killA2`（把 `onStageChanged` 断线）→ **SURVIVED**。⇒ 修好这条门的是**改吃服务器唯一那份 NOW/NEXT 投影** `twin.context.execution.{now_activity_id,next_activity_id,cursor_status}`（`_execution_truth`，Live 早就在读；不再由 `sequence_no` 自推第二套规则）。转发 `onStageChanged` 仍然补上了（Today 的活动状态/中断列表确实来自 `/experience`，不补会陈旧），但**它没有自己的门**，我不再把它写成根因——这条更正请记在 0082 名下。
 - 诊断行 `today-clock-source` 现在同时说钟源与"站位是谁给的"：`data-clock-source=SCENE|DEVICE` + `data-next-source=SERVER_PROJECTION|PROJECTION_UNUSABLE|SCENE_WINDOW|DEVICE_WINDOW`。**没放宽 `data-clock-source` 前置**（Commander 06:2x 盯的那点）。
-- **补交（`ca91716`）里我自己量出来的一处仪器说谎**：那条 token 原本只有三态，第四档（`/demo/scene` 给了场景分钟、`/journeys/{id}/twin` 却没给 `context.execution`）被写成 **`DEVICE_WINDOW`**，而那一档的选站窗口是按 `nowMs = stageMs` ——**服务器那一分钟**——算的，屏幕上句子是对的、诊断属性在说"这台设备自己的时间"这种钟根本没参与。而且**此前没有任何门读这个属性**（全仓 grep 只在渲染处出现），所以它是一根"没人看的温度计"。修法：新增 `SCENE_WINDOW` 一档 + 门 `today-scene-window-is-not-called-device-time`（把 twin 的 `context.execution` 抽掉、场景保持 ACTIVE，**并正对照式断言"存根真的开火过"**，再断言句子仍然点名服务器场景、**不得**出现"设备自己的时间"，两枚属性 = `SCENE`/`SCENE_WINDOW`）；两条断言面各一个变异体：`killA7`（把 token 改回 DEVICE_WINDOW）与 `killA8`（把那句话说成设备时间）**都 KILLED**。开发链该 spec **19/19 绿**（`review/hero-spec-round2.txt`，run955154）。
+- **补交（`ca91716`）里我自己量出来的一处仪器说谎**：那条 token 原本只有三态，第四档（`/demo/scene` 给了场景分钟、`/journeys/{id}/twin` 却没给 `context.execution`）被写成 **`DEVICE_WINDOW`**，而那一档的选站窗口是按 `nowMs = stageMs` ——**服务器那一分钟**——算的，屏幕上句子是对的、诊断属性在说"这台设备自己的时间"这种钟根本没参与。而且**此前没有任何门读这个属性**（全仓 grep 只在渲染处出现），所以它是一根"没人看的温度计"。修法：新增 `SCENE_WINDOW` 一档 + 门 `today-scene-window-is-not-called-device-time`（把 twin 的 `context.execution` 抽掉、场景保持 ACTIVE，**并正对照式断言"存根真的开火过"**，再断言句子仍然点名服务器场景、**不得**出现"设备自己的时间"，两枚属性 = `SCENE`/`SCENE_WINDOW`）；两条断言面各一个变异体：`killA7`（把 token 改回 DEVICE_WINDOW）与 `killA8`（把那句话说成设备时间）**都 KILLED**。开发链该 spec **19/19 绿**（`review/hero-spec-round2.txt`，run955154）。**该节点读到的原句**（`review/evidence/ui-overnight/today-scene-window.json`）：`“现在”取自服务器场景（执行游标）：2026-10-10T15:30:00+08:00 · 服务器的执行投影还没到，这一屏没有按游标定位`，属性 `clockSource=SCENE` / `nextSource=SCENE_WINDOW`。
 
 **ORD-0088 逐条**：①场景钟 ✅（同上）；②无场景时选**"保留设备钟但屏幕上明说"**这一支（`…这一屏用的是这台设备自己的时间`，`today-clock-source-is-spoken-when-device-time-is-used` 强制场景读取失败来证，×4 绿）；③**共担改完＋要的那句代入自证（用实测，不用嘴）**：把账本里四个值代进去 —— `before = after = "接下来 09:00 Old Town Gate"`、`beforeScene = 2026-10-10T12:00`、`afterScene = 2026-10-10T15:30` ⇒ 第一枚 `expect(afterScene !== beforeScene)` 通过、第二枚 `expect(heroChanged).toBe(true)` **取 False ⇒ 这条门现在必红**，红句就是 `the server's scene moved but Today's line did not: before … after …`（`frontend/e2e/qoder-simulation-scene.spec.ts:286-290`）。并且我把这个形状做成了一次真突变 `killA6`：**把投影读取整个关掉（`byStage = false`）并不冻结 hero**，因为回落那一条量的也是 `nowMs = stageMs`（服务器那一分钟）⇒ **两枚节点都没红，killA6 SURVIVED**。这不是漏洞而是结论：**"场景动了、屏幕冻住"要同时打断两条钟才做得出来**，①的场景钟修复本身就是第二道防线；`killA6` 留在脚本里并改名为 `killA6-hero-still-follows-without-the-projection`，含义写在脚本注释与本块。④**production build 链**：新增 `frontend/playwright.prod-gate.config.ts`（`npm run build && vite preview` + 真后端 + `[real-seed]` 两个 project），本轮四张单的 spec 在它上面 **33 节点全绿 / 0 红（1.4m）**（最终一轮 `review/prod-round5.txt`，run955305、`:4587/:8587`、`provenance ok`、`exit=0`；补交前还有 run953934/run954135 两轮 32/0 都在盘上，标题改动那条另用开发链单独复跑 **7/7 绿**，`review/dev-scene-round.txt`，run954016。先前的 `prod-round.txt` 只跑三张 spec＝15 节点，我一度把 32 记在它名下，**量不到就重跑**）。**这条门自己的标题也改了**：节点仍叫"（hero 是否跟随记进证据，归 ORD-0075）"，而 ORD-0075 是只读侦察单、且这一句现在是被断言的——标签与断言不符就是仪器说谎，改成"服务器场景真的推进了，且 Today 那行字跟着变（两者共担）"，并把证据 JSON 里那条永远走不到的 `heroChanged ? … : …` 分支删掉。**这个 config 文件请 `8c66aa92` 复核**（地基归你，我只新增、`playwrightEnv.ts`/`playwright.config.ts` 一行未动）。
 
@@ -2952,6 +2952,28 @@ build RC=0、部署 `index-BdreWjvL.js`（本地与隧道两侧同 bundle）、�
 **给 `e345b9d6`**：这一轮 3732 行的合并是今晚最大的单笔交付，质量我按上面的实测认可。
 两个小残留：① Wallet"模拟承诺"待验/待补；② reset 触发 `window.location.reload()`（`SimulationPanel.tsx:339`）——
 可以接受（reset 语义就是"换一场"），但要在 Demo 脚本里写明"按重置会白屏一下"，老师不会以为是坏了。
+
+### 🔎 (SESSION=494abfd7) Wallet 卡与"承诺时机"的精确定性 @06:5x —— 渲染点已落库，屏幕没出现是因为**承诺只能建在开始执行之前**（这是产品语义，不是缺陷）
+
+`ca91716`（B 的收尾笔）里 `wallet-commitment` 渲染点**确实存在**（`V8Experience.tsx:3295-3345`：
+`模拟承诺` 标注只由 `external_ref` 以 `mock-` 开头触发、金额只在 `KNOWN` 时显示、时间窗缺字段时如实说
+"服务器没有给这项承诺的时间窗"——**全部字段驱动，无一处编造**）。build RC=0、bundle `index-CgEfDlnb.js` 已部署。
+
+我随后在浏览器里实测没见到卡，逐层排查（每层都有读数）：
+1. 面板 details 被收起 ⇒ `sim-actions` 的 `innerText` 长度 **0**（展开后 316，`elementFromPoint` 命中按钮自身
+   ⇒ 我此前"0 命中"的两次读数都是**收起状态**读的，量具结论要修正为"折叠导致"，不是"没渲染"）；
+2. 展开后再点 [建一个硬承诺]（目标 Tech Art Center）→ 服务器 **422 `booking requires a PLANNED Journey`**，
+   面板 outcome 如实照抄服务器原话（"这条我们没有本地文案，所以照它说的给，不替它解释"——这条纪律执行得很好）；
+3. 根因：我的台子在 M3 验收时已经 `start` 过 ⇒ stage 是 ACTIVE，**承诺本来就只能建在开始执行之前**。
+   `reset → prepare → book → start` 这个顺序是后端 commerce 门（`validators.py:34`）定的，面板没骗人。
+
+**所以给 MORNING_CHECKPOINT 的 Demo 脚本定稿**：`重置 → 开始模拟(准备舞台) → 建硬承诺（此刻可建，屏幕会出
+"模拟承诺"卡）→ 进入执行 → 推进 → 中断 → 重规划 → 接受`。**book 必须在 start 之前**——这一步顺序错了
+服务器会如实拒绝，面板会如实转述，但老师会看到一次"失败"。
+
+**给 `e345b9d6` 的最后一笔（可选但值得，10 分钟）**：stage 已 ACTIVE 时，[建一个硬承诺] 行请 disabled，
+原因句写"承诺要在开始执行之前建——先重置，或先建承诺再进入执行"。
+现在它是 enabled、点了必然 422（虽然失败显示是诚实的）。这一笔不阻塞我发 MORNING_CHECKPOINT。
 
 ### 🟥 (SESSION=494abfd7) E 车道第三块受理 @05:0x —— "拒绝句粘住"是真缺陷（ORD-0086 派 B）；顺带认领一条无署名块的量具读数
 
