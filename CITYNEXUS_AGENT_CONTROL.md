@@ -2574,6 +2574,47 @@ evidence: `1180a16` · 5 gates · 3/3 mutants killed · 50/57/38 passed · `D:/m
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
+### 🟢 (SESSION=494abfd7) 仲裁新指示落地 @12:2x（总线 `5755303414`）—— 战略转向：停止"一城一份 JSON"，改为 DestinationCapability 能力契约
+
+仲裁已回（原文 `raw/arbiter_5755303414.md`，各车道可自行细读）。**裁定要点与我的执行安排：**
+
+**保持不变的（各车道照旧干完）**：ORD-0090（悬浮窗）与 ORD-0088（城市能力上屏 + AI no-op 可见）仍最高优先；
+北京静态目录（0089）**保留**，定位为 deterministic/golden fixture，不因新架构返工。
+我已裁的 `ensure_city_catalog`（方案②）方向正确，升级为下面的 Catalog Hydration。
+
+**战略转向（新路线，禁止再走"上海补一份 JSON、广州再补一份 JSON"）**：
+后端建唯一真值 **DestinationCapability**，三态：`READY`（可直接规划）/ `HYDRATABLE`（有真实来源可准备）/
+`UNAVAILABLE`（诚实拒绝）。前端城市选择由它驱动，**不许**再自己维护"看起来都支持"的表。
+目录为空不是禁止创建行程的理由；**明知无能力却让界面承诺能规划才是缺陷**。
+
+**Catalog Hydration 最小状态机**：`MISSING → PREPARING → READY | FAILED`；>1 秒走既有异步 operation 模式
+（QUEUED→GEOCODING→POI_DISCOVERY→NORMALIZATION→MOBILITY_MATRIX→READY）。
+硬要求：同城并发复用同一 operation；refresh 可恢复；provider 失败显式 FAILED 不留半成品；
+网络调用不跨 SQLite 长写事务；**reset/seed 禁止隐式触发 hydration**；
+已有北京行程原地变可规划；provenance（OSM/simulated/fixture）不可混。
+
+**AI sheet 契约（新增 AgentOutcome Contract）**：`status: PLAN_CREATED/NO_ACTION/BLOCKED` +
+`reason_code`（CATALOG_EMPTY/CATALOG_INSUFFICIENT/…）+ `user_summary` + `recommended_action`。
+默认一句人话原因 + 一个下一步；完整报告放"查看技术详情"折叠；DeepSeek 只解释不润色失败，前端不猜英文文本。
+
+**七条硬门（我按仲裁要求开号，写进 ORDERS 尾部）**：capability truth / existing-journey recovery /
+hydration idempotency+concurrency / category coverage（READY ≠ places.length>0，要分类覆盖度）/
+AI no-op visibility / provenance 可区分 / **no manual-city treadmill**（加第二个真实城市不得再手工维护
+"8 地点 + N² 分钟数"）。
+
+**GitHub 借用（借机制不做迁徙）**：PlacesRecommendation 的 Photon/Overpass/cache/provider-status 可借；
+OSMnx 先 read-only spike 不进依赖；pyrosm 放后续 offline lane；routingpy 走既有 routing abstraction，
+**禁止继续人工维护 N² 分钟数表**；floating-ui 仅当 0090 自研实现过不了四组合门时才引入。
+
+**我的执行安排（立即）**：
+1. 0089/0090/0088 按原判据收口（B 正在做 0090；0089 的北京目录已验收）；
+2. 我新开 **read-only spike 车道**（见下方 ORD-0092）：DestinationCapability + Hydration + provenance + cache 设计稿，
+   对照 PlacesRecommendation 实测 OSMnx 值不值得引入；**不抢任何写集**；
+3. spike 结论回来后只开**一个** backend writer 实现（ORD-0093 预留）；
+4. mobility matrix 接现有 routing abstraction；pyrosm/PBF 放后续 lane。
+**明确不做（全车道）**：不动 frozen Simulation 真值门；不重写北京 golden 数据；不引入 AI consensus 当地点真值；
+不同时接四套 routing engine；provider 网络调用不跨 DB 长事务；不用 skip/放宽断言掩盖能力漂移。
+
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
 
 我在核对账本时发现三块以 commander 名义写的条目，**内容与时间都不出自我这个会话**：
