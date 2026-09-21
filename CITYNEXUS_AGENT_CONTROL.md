@@ -3199,6 +3199,42 @@ READY 只能由带版本的服务端评估器判、mobility 分片按 `⌈N/10�
 status: ORD-0108 DONE@2026-09-21T16:2x+08 by 8c66aa92（提交 `5e14f90`，两文件；8 门 + 6/6 突变 killed；红集合与父提交 `351dd31` 逐行相同 13 条 ⇒ grown=0；另报一条属我写域的 F 新门 G11 塌缩读数待你裁）
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 🧯 (SESSION=494abfd7) 泉州那一臂的 `POST /travelers` 500：**我的第一个假设被我自己证伪**，现在指向"被中断的请求留下写锁" @17:0x
+
+车道 E 的 CASE3/4 里有一条硬读数（它自己的 `raw/case34_quant.json`，逐次列了 6 次尝试）：
+```
+ctrl_beijing   i=0..5 :  /travelers 201 → /journeys 201 → stay-options 200     全绿
+quanzhou       i=0    :  /travelers 201 → /journeys 201 → **之后再无任何请求**   today=0
+quanzhou       i=1..3 :  /travelers **500**（屏幕文案「这一步没有成功，行程还没有创建。 Request failed (500)」）
+```
+⇒ 不是"这个城市不支持"，是**第一趟之后，同一个库里所有后续写入都 500**。
+
+**我先试了自己的假设，然后当场证伪它**（这一步不做就是猜）：
+- 假设 A：**空/非法 timezone**。向导发的是 `{display_name, locale, timezone}`（`V8Experience.tsx:789-797`），
+  而未预录城市的 `draft.timezone` 可能为空。实测（干净副本 `68d5474`、TestClient、自己的库）：
+  `timezone=""`、`"Asia/Chengdu"`、`"Not/AZone"` **全部 201** ⇒ **假设 A 不成立**，撤回。
+- 假设 B：**顺序重放就能复现**。实测同一棵树上连做 `CN-BEIJING → CN-QUANZHOU → 泉州再来两次`：
+  **travelers/journeys 全 201** ⇒ **TestClient 路径复现不出来**，E 的现象需要**真 uvicorn + 被中断的请求**才出现。
+
+**现在最像的解释（待证，不当结论用）**：向导用 `AbortController`（`createAbortRef.current = controller`，`:772`），
+客户端在请求中途 abort ⇒ 真 uvicorn 下 handler 可能死在一个**开着的事务**里 ⇒ SQLite 写锁没释放 ⇒
+之后每个写入 500。这与我们已经记过两次的教训同族（"后台任务把写锁搬走而不是移除"、"读端点写库 ⇒ 锁上 500"）。
+**这条如果成立，就是用户"建完行程啥也没发生、再点就报错"的最坏一条**：一次中断会毒化整个库。
+
+**ORD-0112 → 车道 C `8c66aa92`（后端，P0，排在 0111 之后）**：
+① 在**真 uvicorn + 自有库**上复现"客户端中途 abort ⇒ 后续写入 500"（curl `--limit-rate`/`-m` 或 python 提前关 socket 都行，要给出 abort 的确切时刻与请求体）；
+② 若成立：让 abort **不毒化库**（请求结束必须回滚/关闭 session；`get_session` 的 finally 是否真跑到，给我证据）；
+③ 无论成不成立，**500 不得把 HTTP 状态码原文当文案**递到屏幕上（现在屏幕印 `Request failed (500)`），必须换成具名 reason_code + 一句人话 + 下一步；
+④ 若你复现不出来，**如实写"复现不出 + 我的分母"**（树 sha、端口、解释器、库、abort 手法），不要猜一个修了了事。
+
+**ORD-0113 → 车道 E `dc19d662`（红队，只读）**：把这条做成**可稳定复现的最小实验**——
+同一棵树上跑两组：一组正常走完（不 abort）、一组在 `POST /journeys` 在飞时 abort，然后**各自再发一次 `POST /travelers`**，
+比较两组的状态码；把 500 的**响应体原文**与后端日志那一行的 traceback 一起交（你上次只交了 UI 文案，缺 API 体，所以我和不出机制）。
+**不要改生产码**，也不要与 C 同时占同一端口。
+
+**给车道 D 的一条并行项（不新增单号，归 ORD-0104 同一族）**：屏幕那句 `Request failed (500)` 是**把状态码当文案**，
+按 §14「不许把 provider/HTTP 原文当用户消息」——失败时至少要给"这一步没成功，行程状态未知，点这里核对"这种可动作句子。
+
 ### ⚠️ (SESSION=494abfd7) 账本被某条车道**整文件改成了 CRLF**，我已归回 LF；从现在起这是硬规矩 @16:5x
 
 **实测**：16:4x 我读 `CITYNEXUS_AGENT_CONTROL.md`，**9561 行里 9561 行都以 `\r` 结尾**（之前我 13:4x 量过 CR 计数 = 0），
@@ -3890,6 +3926,49 @@ evidence: 全部行号取自 `4c8c911` 的 `backend/app/**` 本体（逐条读�
 
 CLAIMED: ORD-0106 by 8ccd71d8（车道 F · 契约/门）@14:5x（本机钟 date 实读 14:53:09 +0800 · 权威树 HEAD 实测 `aee6c7a` · 写域仅 `contracts/**` + 新建测试文件 · 不打真网络、不碰 backend/app 与 frontend/src）｜程序性一句：`grep "id: ORD-0106"` 在账本里 **0 命中**，这单我是从你口头转达接的（与 D 车道报过同类）——不因此停工，但订单正文请落账本，否则下一位车道扫不到榜单。
 
+CLAIMED: ORD-0106 续2 by 8ccd71d8（车道 F · 契约/门）@16:2x —— 补记：接单与开工同时（16:28:21 实测现场之后立刻动笔），认领行随下面交付块一起落，不假装先落过。
+
+### SESSION=8ccd71d8 · ORD-0106 续2 交付 @2026-09-21 16:5x（date 实读 16:56:32 +0800）
+
+`DONE（三枚新门 + §9 上界 + 六门复跑）| 一笔提交 31b2a4f（父 tip 68d5474，未 push）| 只含 2 条路径：backend/tests/test_qoder_anywhere_matrix_truth.py（新，877 行）、contracts/openapi-anywhere-draft.yaml（+69/-1，纯增补）| 零出网、无 skip/xfail、未碰任何既有断言`
+
+**0) 现场回报（你问有没有丢东西）**：16:28:21 实测 `git rev-parse --short HEAD = d8b5800`（= 你给的 tip），我写域三条路径（`contracts/**`、`backend/tests/test_qoder_anywhere_*.py`、`backend/live_checks/**`）`status --porcelain` **0 行**，且 `3ff11e7 / 351dd31 / c421d68 / 9283195` 四条 `merge-base --is-ancestor` 全 ancestor ⇒ **上一轮没有未提交改动，重启没吞东西**。开工后权威树被别的车道推进到 `68d5474`（多 3 笔：`5e14f90` 与两笔前端），所以我按 **68d5474** 量而不是接单的 sha，并当场核差集：`git diff --stat 351dd31..68d5474 -- backend/app/integrations/ backend/app/replanning/` = **0 文件** ⇒ 本轮三条门的被测面（`valhalla_http.py` / `runtime.py` / `provider_snapshots.py` / `feasibility.py`）自我上次读数以来一个字没动，红绿变化不可能来自它们。
+
+**1) 三枚新门（都在新文件 `backend/tests/test_qoder_anywhere_matrix_truth.py`）**
+
+- **G13 矩阵单位** —— Valhalla 的 `time` 是**秒**、`length`/`distance` 是**公里**；产品在 `valhalla_http.py:99 / :225 / :275` 三处各除一次 60，仓库里**没有任何东西钉住单位**：漏除 ⇒ 20 分钟报成 1200 分钟，多除 ⇒ 报成 1 分钟，两个都是一个看着正常的数字。判据不是"我们也除了一遍"（那只是自证），而是**步行速度带 1.5–9.0 km/h**：1.5 km / 20 分钟 = 4.5 km/h，单位一错必然出带（270 或 0.05 km/h）。三处换算点各自测（`/route`、cells 形状、durations 方阵形状），`time: -5` 必须被拒而不是被修成顺眼的数。
+- **G14 分片预检（cells，不是 locations）** —— 实测锚点：N=10 ⇒ 100 cells / 200 / **1018 ms**；N=11 ⇒ 121 cells / **400 / error_code 150**。今天 `runtime.py:232` 把全部节点一次发出（N=20 ⇒ **400 cells**），整次捕获 FAILED。三条：(a) 被拒时**不许留下任何事实**（半张矩阵比没有矩阵更危险）—— 绿；(b) 出网前每个请求 ≤ 100 cells，且**有序成对事实必须全覆盖** —— **红（应然）**，"只切第一片"骗得过上限、骗不过全覆盖；(c) 判定不得依赖 provider 的措辞 —— 两份 400 只差文字（一份含 "locations"、一份不含），逐字段必须一致 —— 绿。**为什么不按文案字面**：今天调用形状是方阵，cells 规则与 locations 规则恰好同解；换 4×20=80 cells 这块合法矩形，"locations ≤ 10" 就误拒 —— 这条推理已写进附件，作为给后端的口径而不是我的偏好。
+- **G15 直线距离不得冒充 travel_minutes** —— 三扇门一起钉：`MobilitySnapshot.hard_minutes` 的 allowlist（None / `SYNTHETIC_DEFAULT` / `LEGACY_UNTAGGED` 一律拒，`LIVE_PROVIDER_CAPTURE` 与 `EXPLICIT_FROZEN_FIXTURE` 放行）、`_replan_estimate` 缺腿必须抛 `MOBILITY_DATA_UNAVAILABLE:stop-a|stop-b`（逐腿点名，且**不返回 int**）、`evaluate_feasibility` 缺腿只报缺、**不得**冒出需要先有数字才成立的 `INSUFFICIENT_TRAVEL_GAP`。投影侧用现造密封证据量：把某条腿的值写成 6（800 m 直线 ÷ 4.7 km/h 正是这个数）、标签换成 `SYNTHETIC_DEFAULT` ⇒ `legs_hard_eligible` 恰好掉 1 而 `legs_total` 不动；整趟全部不合格 ⇒ eligible 归 0；缺腿与来源不合格**等价**。再加一根绊线：`app/**` 的调用图里，任何名字含 travel/duration/minute 的函数都不许（含传递地）够到持有地球半径常数的函数 —— 今天实测持有者只有 `real_city._distance_m` 与 `impact_validation._haversine_meters`，两者返回米。`GET /demo/scene` 的 `mobility_legs_total / hard_eligible` 与投影逐字段相等（且 scene 说的是同一个 `plan_version_id`，防张冠李戴）。
+
+**2) 六门（含车道 C 的 `5e14f90`）复跑读数** —— worktree `D:/moodle/_qoder_f_o106b_20260921`（detached @ `68d5474`）、own `D:/moodle/_qoder_f_run/_runFC.db`、解释器 `D:/moodle/CityNexus/.venv/Scripts/python.exe`（3.12.14）、`DEEPSEEK_API_KEY/OPENAI_API_KEY/CITYNEXUS_AI_MODEL/CITYNEXUS_AI_API_KEY` 全 unset、未起任何端口。
+
+| 门 | 文件 | 读数 | 红的原因是不是新账 |
+| --- | --- | --- | --- |
+| ① provider 独立性 G8a-d | `..._provider_independence.py` | **4 passed** | — |
+| ② 坐标完整性 G10 | `..._provider_truth.py` | **红** | 老账：`POST /catalog-hydrations` 路由级 404 |
+| ③ 失败码不塌缩 G11（+G11b 绿） | `..._provider_truth.py` | **红** | 老账：`{'PROVIDER_BAD_RESPONSE': ['5xx 服务器错误','结构非法']}` |
+| ④ 矩阵单位 G13/G13b/G13c + **G13d** | `..._matrix_truth.py` | 3 绿 / **1 红** | **新账**，见下 |
+| ⑤ cells 预检 G14a/G14c + **G14b** | `..._matrix_truth.py` | 2 绿 / **1 红** | 红=应然（分片未做） |
+| ⑥ 直线 ≠ travel_minutes G15a-d | `..._matrix_truth.py` | **4 passed** | — |
+| （另）数量≠能力 G12 | `..._provider_truth.py` | 红 | 老账：`/destinations/capability` 404 |
+| （另）锁时长 G9a/b/c | `..._lock_duration.py` | 1 绿 / 2 红 | 老账：端点 404 + 环境前置 |
+| （另）§17 七门 G1-G7 | `..._gates.py` | 1 绿 / 7 红 | 老账：四条 anywhere 端点未落地 |
+| （另）双向 parity | `..._contract_parity.py` | 3 绿 / 1 红 | 老账：4/4 仍 404 |
+
+**矩阵这一族自己：9 passed / 2 failed。车道 F 全套六份门：15 failed / 19 passed，RC=1，4.26s**（日志 `D:/moodle/_qoder_f_run/gates_o106b_68d5474.log`）。
+
+**给 `5e14f90` 的当场结论**：它动的是 `_generic_compose_plans` 那三枚具名码（`services.py`），**没有碰 provider 侧的 `live_failure_reason`** ⇒ G11 红得和上一轮一模一样，不是被 0108 弄坏的，也不是环境噪声。**这条门我不放宽**，最小改法仍写在附件 `failure-codes-must-not-collapse.finding`（加 `PROVIDER_SERVER_ERROR` 接 5xx；零结果按响应形状判定，不要靠异常字符串里的哨兵）。
+
+**新增一条实测缺陷（不在 5e14f90 范围，当场报）**：G13d。`valhalla_http.py:185-187` 这条分支调 `_normalize_duration_matrix` 时没把 payload 里的 `distances` 传下去（:178 那条嵌套分支传了）⇒ 同一格 provider 给了 0.75 公里，规范化之后 `distance_m=None`、`raw` 里也只剩 `{"time": 900}`。**时长活着、距离死了**：速度带判据、里程口径与"这条腿走了多远"全部失去来源。一行参数的事，落在 `backend/app/integrations/**`（8c66aa92 的写域），我一个字节没碰。
+
+**§9 上界已写进附件**：`x-matrix-bound.max-routable-nodes-per-journey: 20`。依据：⌈N/10⌉² × 2 costing × 实测单次 1018 ms ⇒ N=20 共 8 次 ≈ 4.3 s；N=24 ⇒ 9 × 2 = 18 次 ≈ 9.6 s，已越过本附件 `x-latency-budget`；且今天是**一把捕获**（`runtime.py:255`），任何一片失败整趟机动事实全丢。文件里同时写明：要把 20 往上抬，必须先做**片间并发 + 失败局部化**并回来改这段依据，不许只在代码里把常数改大。版本 `0.94-annex.1 → .2`，**纯增补**：未改任何已定枚举、未删任何既有键（改动清单就是 `x-matrix-bound` + 三条 obligations，留痕按你 09-21 那条规矩）。
+
+**六门一起绿的前置（不替你排序）**：G13d 与 G14b 这两条新红**不依赖**四条 anywhere 端点，范围在 `backend/app/integrations/mobility/**` 一到两行；其余 13 条红的共同前置是 `/destinations/capability` 与 `/catalog-hydrations` 落地。要一组能独立先绿的门，就是矩阵这三枚。
+
+status: `DONE`（ORD-0106 续2 交付）
+evidence: `31b2a4f`（父 `68d5474`，未 push）+ `D:/moodle/_qoder_f_run/gates_o106b_68d5474.log` + worktree 路径在上。未碰 `:4781/:4782/:8781` 与 `_preview.db`；未碰 `backend/app/**`、`frontend/src/**`、任何既有测试断言；报告内只有 RC 与 passed/failed 数字，无任何 key 前缀。
+
+
 ### SESSION=8ccd71d8 · ORD-0106 交付 @2026-09-21 15:0x（date 实读 14:59:10 +0800）
 
 `DONE | 两笔提交 3ff11e7（+228：新门文件 201 行 + 附件 27 行）与 351dd31（我自己踩的 §17C 修一笔），父 aee6c7a，未 push | 只含 2 条路径：backend/tests/test_qoder_anywhere_provider_truth.py、contracts/openapi-anywhere-draft.yaml | 计数：本文件 3 failed / 1 passed；车道 F 全量五份门合计 **13 failed / 10 passed，RC=1，3.26s** | blocker：无 | evidence：D:/moodle/_qoder_f_run/{gates_addendum2_21a09e8.log,arbiter_anywhere_capability.md} + 本轮读数在下文`
@@ -4440,6 +4519,29 @@ ACK: 8c66aa92 back @2026-09-21 15:0x（本机钟 `date`=15:05:55 +0800）—— 
     ② 先红后绿（贴红读数）；③ 一条杀得掉的突变（把阶梯改回 `min(3,…)` 必须让门红）；
     ④ 全量红集合与本轮**逐行 diff 只允许少不允许多**；⑤ 报出新增降档搜索的**耗时实测**（8 站最坏情况），别把延迟藏在门后面。
   status: DISPATCHED@2026-09-21T16:5x+08 by 494abfd7（排在 0095-1 之前：这是用户此刻的缺陷）
+
+- id: ORD-0113
+  to: dc19d662
+  priority: P0-critical
+  if_head: 68d5474
+  order: |
+    把 500 做成可稳定复现的最小实验：同一棵树两组（正常走完 / 在 POST /journeys 在飞时 abort），
+    各自再发一次 POST /travelers，比较状态码；**必须交 500 的响应体原文 + 后端日志里的 traceback 行**
+    （上一轮只交了 UI 文案，缺 API 体，Commander 用 TestClient 复现不出：travelers/journeys 全 201）。
+    不改生产码；不与 C 抢端口。
+  status: DISPATCHED@2026-09-21T17:0x+08 by 494abfd7
+
+- id: ORD-0112
+  to: 8c66aa92
+  priority: P0-critical
+  if_head: 68d5474
+  order: |
+    复现并修掉"一次中断毒化整库"：① 真 uvicorn + 自有库上让客户端在 POST /journeys 在飞时 abort，
+    随后再发 POST /travelers，看是否 500（给 abort 时刻与请求体）；② 成立则保证请求结束必回滚/关 session，
+    给出 get_session finally 真跑到的证据；③ 500 不得把状态码原文当文案（屏幕现在印 `Request failed (500)`），
+    必须具名 reason_code + 人话 + 下一步；④ 复现不出就如实写"复现不出 + 分母（sha/端口/解释器/库/abort 手法）"，不许猜修。
+    排在 ORD-0111 之后。
+  status: DISPATCHED@2026-09-21T17:0x+08 by 494abfd7
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
