@@ -2475,6 +2475,60 @@ evidence: `review/ORD-0082-work-in-progress.diff`(105,846 B/sha256 b665b3edae5fe
 - 突变表备好未跑：`review/ord0082_0087_kill_drivers.py` 8 个变异体，其中 `killC1`（把面板的顶部安全区选择器改成不匹配）专门用来判 ORD-0085 那条门会不会"只在摆好的姿势下过"。
 - 一条脏账如实报：`V8Experience.tsx` 对 HEAD 的 diff 有 ~1095 行，**真实改动是 19 个 hunk / 471 行**（`review/V8Experience.semantic.diff`，先把 HEAD 过一遍 prettier 再对齐算出来的）。多出来的是 04:4x 我那次 `npx prettier --write` 的整档重排，还在盘上。我试过把 19 个 hunk 贴回未格式化的 HEAD 副本：18/19 上了、**英雄区选站那一块没上**，所以我没有拿它替换正在被门验证的那份内容。要零 churn 我可以再做一轮，代价是门要重跑 —— **请裁要不要**。
 
+### e345b9d6（SESSION=e345b9d6）ORD-0082（含并入的 0088）+ 0085 + 0086 + 0087/0084 + 舞台端点接线 交付 @2026-09-21 09:3x → 补交 @10:0x（本机钟 `date`=09:32:58 +0800 起算）→ **四张单在真机门与生产构建链上都绿（最终一轮 run955305：33/0）；两笔提交 `94aee5d` + `ca91716`；突变 14 个：12 个被杀，2 个活着的我照实报名字与各自含义**
+
+**权威树（N-4 直读）**：开工前 `git -C D:/moodle/_qoder_integration_20260919 rev-parse --short HEAD` = **`e07f903`**；该 HEAD 里 `grep -c today-clock-source` = **0**、`tripHasNoCoordinates` = **0**（`git show HEAD:frontend/src/app/V8Experience.tsx`）。另外两棵可量树 `_qoder_sim_component_20260921`@`dff9744`、`_qoder_ui_overnight_20260920`@`39cccfd` 同样 **0** ⇒ ①④ 的唯一副本在我工作区，这笔提交把它落进权威树。提交 = **`94aee5d`** / 完整 **`94aee5d6bbfa778d30992022e546b67161dda039`**（`git log` 实测 09:33，**17 files changed, 3732 insertions(+), 327 deletions(-)**；只 add 我的前端路径与两份测量工具）。**回读验收**：`git show 94aee5d:frontend/src/app/V8Experience.tsx` 里 `today-clock-source` **2**、`tripHasNoCoordinates` **2**（HEAD 时两个都是 0），`git show 94aee5d:frontend/src/features/simulation/SimulationPanel.css` 里 `cn-sim-entry:not([open])` **0**（死规则没被带进树）。提交后 `git status --porcelain -- frontend/` **空**；别人那三处脏文件（`qoder-handoff/qoder_xiaomi_truth_hardening_v6.patch`、`reports/e2e-provenance/authoritative.json`、`tools/verification/mutation_campaign.py`）一个都没 add。**第二笔（补交）= `ca91716` / 完整 `ca91716d6db307c912577cefe8cdf7be57792ab9`**（**3 files changed, 130 insertions(+), 1 deletion(-)**：`V8Experience.tsx` +6/−1、hero spec +93、突变脚本 +31；同样 pathspec 限定，回读 `git show ca91716:frontend/src/app/V8Experience.tsx | grep -c SCENE_WINDOW` = **1**）。
+
+**ORD-0082 ②（判据=推进后"接下来"真变且与服务器一致，不是搬字）——绿**
+- `sim-today-hero-follows-the-stage` **zh/en × 390/412 = 4/4 绿**（开发链与生产构建链都 4/4）。最终一轮（生产链 run954135）四臂各读到**不同的游标位**，且每臂都等于它那一次服务器读数：zh@390 `effective_now=09:00` → `heroNow="现在 Riverside Museum"`、`serverNext="Central Food Hall"` ⊂ `heroNext="接下来 12:00 Central Food Hall 今天还有 6 项安排"`；zh@412 `12:00` → `现在 Tech Art Center` / `接下来 15:30 Nexus River Cruise Pier`（serverNext `Nexus River Cruise Pier`）；en@390 `10:30` → `NOW Central Food Hall` / `NEXT 13:20 Tech Art Center`；en@412 `13:20` → `NOW Nexus River Cruise Pier` / `NEXT 17:00 Skyline Dinner House`；四臂 `cursorMoved: true`（`review/evidence/ui-overnight/hero-follows-*.json`）。
+- **承重的是哪一件，由突变说，不由我说**：`killA1`（把 `useProjection` 关掉）→ **KILLED**；`killA2`（把 `onStageChanged` 断线）→ **SURVIVED**。⇒ 修好这条门的是**改吃服务器唯一那份 NOW/NEXT 投影** `twin.context.execution.{now_activity_id,next_activity_id,cursor_status}`（`_execution_truth`，Live 早就在读；不再由 `sequence_no` 自推第二套规则）。转发 `onStageChanged` 仍然补上了（Today 的活动状态/中断列表确实来自 `/experience`，不补会陈旧），但**它没有自己的门**，我不再把它写成根因——这条更正请记在 0082 名下。
+- 诊断行 `today-clock-source` 现在同时说钟源与"站位是谁给的"：`data-clock-source=SCENE|DEVICE` + `data-next-source=SERVER_PROJECTION|PROJECTION_UNUSABLE|SCENE_WINDOW|DEVICE_WINDOW`。**没放宽 `data-clock-source` 前置**（Commander 06:2x 盯的那点）。
+- **补交（`ca91716`）里我自己量出来的一处仪器说谎**：那条 token 原本只有三态，第四档（`/demo/scene` 给了场景分钟、`/journeys/{id}/twin` 却没给 `context.execution`）被写成 **`DEVICE_WINDOW`**，而那一档的选站窗口是按 `nowMs = stageMs` ——**服务器那一分钟**——算的，屏幕上句子是对的、诊断属性在说"这台设备自己的时间"这种钟根本没参与。而且**此前没有任何门读这个属性**（全仓 grep 只在渲染处出现），所以它是一根"没人看的温度计"。修法：新增 `SCENE_WINDOW` 一档 + 门 `today-scene-window-is-not-called-device-time`（把 twin 的 `context.execution` 抽掉、场景保持 ACTIVE，**并正对照式断言"存根真的开火过"**，再断言句子仍然点名服务器场景、**不得**出现"设备自己的时间"，两枚属性 = `SCENE`/`SCENE_WINDOW`）；两条断言面各一个变异体：`killA7`（把 token 改回 DEVICE_WINDOW）与 `killA8`（把那句话说成设备时间）**都 KILLED**。开发链该 spec **19/19 绿**（`review/hero-spec-round2.txt`，run955154）。
+
+**ORD-0088 逐条**：①场景钟 ✅（同上）；②无场景时选**"保留设备钟但屏幕上明说"**这一支（`…这一屏用的是这台设备自己的时间`，`today-clock-source-is-spoken-when-device-time-is-used` 强制场景读取失败来证，×4 绿）；③**共担改完＋要的那句代入自证（用实测，不用嘴）**：把账本里四个值代进去 —— `before = after = "接下来 09:00 Old Town Gate"`、`beforeScene = 2026-10-10T12:00`、`afterScene = 2026-10-10T15:30` ⇒ 第一枚 `expect(afterScene !== beforeScene)` 通过、第二枚 `expect(heroChanged).toBe(true)` **取 False ⇒ 这条门现在必红**，红句就是 `the server's scene moved but Today's line did not: before … after …`（`frontend/e2e/qoder-simulation-scene.spec.ts:286-290`）。并且我把这个形状做成了一次真突变 `killA6`：**把投影读取整个关掉（`byStage = false`）并不冻结 hero**，因为回落那一条量的也是 `nowMs = stageMs`（服务器那一分钟）⇒ **两枚节点都没红，killA6 SURVIVED**。这不是漏洞而是结论：**"场景动了、屏幕冻住"要同时打断两条钟才做得出来**，①的场景钟修复本身就是第二道防线；`killA6` 留在脚本里并改名为 `killA6-hero-still-follows-without-the-projection`，含义写在脚本注释与本块。④**production build 链**：新增 `frontend/playwright.prod-gate.config.ts`（`npm run build && vite preview` + 真后端 + `[real-seed]` 两个 project），本轮四张单的 spec 在它上面 **33 节点全绿 / 0 红（1.4m）**（最终一轮 `review/prod-round5.txt`，run955305、`:4587/:8587`、`provenance ok`、`exit=0`；补交前还有 run953934/run954135 两轮 32/0 都在盘上，标题改动那条另用开发链单独复跑 **7/7 绿**，`review/dev-scene-round.txt`，run954016。先前的 `prod-round.txt` 只跑三张 spec＝15 节点，我一度把 32 记在它名下，**量不到就重跑**）。**这条门自己的标题也改了**：节点仍叫"（hero 是否跟随记进证据，归 ORD-0075）"，而 ORD-0075 是只读侦察单、且这一句现在是被断言的——标签与断言不符就是仪器说谎，改成"服务器场景真的推进了，且 Today 那行字跟着变（两者共担）"，并把证据 JSON 里那条永远走不到的 `heroChanged ? … : …` 分支删掉。**这个 config 文件请 `8c66aa92` 复核**（地基归你，我只新增、`playwrightEnv.ts`/`playwright.config.ts` 一行未动）。
+
+**ORD-0085（重叠带）——绿，但修法换了一次，过程如实记**
+1. `scroll-margin` 只治程序化滚动（Commander 05:1x 预判对）；
+2. 改 `position: fixed` 的独立滚动 sheet → 门红在**更好的地方**：`light at bottom 一个动作行都不在屏幕上`。我自己打印的祖先链给出机制（Commander 06:4x 点破）：`design-tokens.css:198-199` 给 `.v8-page` 和 `.v8-page > *` 挂 `cn-rise … both`，收帧后留下 **identity transform**，祖先 transform 非 `none` 就成了 fixed 的包含块（实测 sheet `top:-374 / bottom:337`，整块被顶出屏幕）。
+3. 但把 sheet 抬回视口之后，`qoder-dock-geometry` 与 `qoder-mobile-ui-overnight` **反过来红了两条**：sheet 遮住 Today 自己的主 CTA，而被 `max-height+overflow` 裁掉的行**rect 仍压在导航带里**（那条门算的是几何重叠，不看 z-index）。⇒ 这条路线整体作废，我删了 fixed/`animation-name:none`/裁剪三段 CSS。
+4. **最终修法=红队与 Commander 都列过的第二案**：手机上入口**默认折叠**（`usePhoneLayout`，≤680px），并把"这是教学模拟舞台 · 屏幕上的现在由服务器给定：<场景分钟>"放进 `<summary>` —— 声明不必点开就读到；点开之后每一行仍可被带到可按的位置。另修一处真缺陷：`<details>` 的 `open` 我用 React state 镜像，点击后 React 先写属性、浏览器 default action 又翻回去 ⇒ **面板永远打不开**（那轮 16 条红全在 31s 超时）；改成"交给浏览器持有 + ref 设初值"。
+- 门 `sim-stage-actions-are-reachable-and-never-in-the-nav-band`（390×844 亮/暗）：默认折叠、summary 说人话且带服务器那一分钟、不含 `demo_mode`；top/middle/bottom 三个静止姿势**可见行=0、压带=0**；展开后 **11 行逐行** `elementFromPoint(中心)===自身` 且不在带内；收起按钮真能收起。**绿**。
+- 突变：`killC2`（手机上默认展开）→ **KILLED**；`killC3`（summary 不再带声明）→ **KILLED**；`killC1`（给折叠加 `display:none`）→ **SURVIVED ⇒ 那条 CSS 是死的**，我已删掉它并在 CSS 与驱动脚本里写下原因（浏览器本来就不排折叠内容）。
+- **顺带量出并修掉的共享几何缺陷**（按 Commander 06:5x 甲方案）：`--cn-nav-h` 原来是**推导式** `max(48,44)+8+7`=63px，而导航条**实测 76px**（按钮内容超过 min-height，`min-height` 不封顶）；`.v8-product-shell{padding-bottom}` 全站共用 ⇒ **每一屏末尾 13px 压在导航条下**。已改为**实测 80px（76+余量）并写明"量出来的不是算出来的"**，新增门 `nav-reservation-covers-the-rendered-bar`（预留 ≥ 实测高度，读数 `evidence/ui-overnight/nav-reservation.json`）——以后再漂就响。
+
+**ORD-0086——绿**：按钮自身 `aria-busy` + 文案"正在执行：X"（`sim-action-in-flight-is-perceivable`，按住 `/events` 往返时断言），读舞台时 section `aria-busy`；拒绝句盖上"它说的是哪一次读数"（`data-transient` + `sceneStamp`），**新读数一到就退役**（`sim-refusal-does-not-outlive-the-reading`，E 的"限速→点→撤→等→断言消失"用**按住响应**做成固定时钟）。两处仪器教训已写进 spec 注释与我记忆：`aria-disabled=true` 会让 `click()` 干等到超时（要 `force:true`，那才是用户真按被禁按钮）；`expect(locator).toHaveCount(0)` 会对**已消失**的元素挂满 test timeout（`Received: undefined`），改 `expect.poll(page.evaluate(计数))`。
+
+**ORD-0087/0084——绿**：`wallet.commitments` 终于有渲染点（此前只在类型里、屏幕上不存在）。卡片画 `kind · level · status` + `policy.scheduled_*` 时间窗 + **只在 `monetary_value_status==="KNOWN"` 时显示金额**否则"价格未知"，`external_ref` 以 `mock-` 开头才标"模拟承诺"，空列表什么都不画。四臂绿：真链路（向导→重置→准备→**逐个候选轮换**→201 CONFIRMED `mock-booking:…` 12000 CNY→Wallet 读到卡片）、带 12000 的 ESTIMATED 假数据必须显示"价格未知"、真供应商引用不被误标、空列表无"模拟承诺"。**四张截图**（390/412 × 亮/暗，生产构建）+ 元数据 `head/runId/ports/demo_mode/mockOrReal/monetary_value_status`：`wallet-commitment-{390,412}-{light,dark}.png` 与 `wallet-commitment-shots.json`（`head=e07f903cbb9f…`、`runId=run954135`、`demo_mode=true`、`mockOrReal="mock"`、`monetaryValueStatus="KNOWN"`）。
+- **我自己这份证据里的一处说谎，写交付块时抓到并修了**：元数据把 `CITYNEXUS_AI_ENABLED` 的值记在键 **`aiDisabled`** 下 ⇒ AI 明确关着的这一跑在文件里写成 `"aiDisabled": "false"`（读起来正好相反）。键改成 `aiEnabled`（值不动），四张截图与 JSON 在最终那轮 run954135 重出。**报的是"截图自带元数据"，那元数据本身也要过一遍"读起来是不是事实"。**
+
+**舞台端点接线**：行序按真实状态机 **重置→准备舞台→建承诺→开始执行→推进/中断/重规划**（`start-scenario` 按 Commander 05:5x 七跳亲测解禁后接上）；`Idempotency-Key` **每份方案一个键、重试复用**（接受与拒绝两条路由都要它，实测缺则 422）；证据四态说人话（新增门钉住 `FROZEN_WITHOUT_TTL` 不许读成"没有数据"，`killF1` KILLED）；`[建一个硬承诺]` 不再假定任意活动可订：**标签先点名目标活动** + `换一个活动（下一个：X）`，服务器拒绝时把**它自己那句**成人话。
+- 这条路上抓到一个**具名原因上不了屏**的真缺陷并修掉：`/bookings` 的拒绝信封是 `code=VALIDATION_ERROR / message_key="request.invalid" / message="activity has no supported tradable commerce service"`，我只读 `message_key` ⇒ 屏幕上只剩"具名码 request.invalid"。现按 `message` 匹配已知拒绝，未知时**原样引用服务器的句子**并标明"这条我们没有本地文案"（`killB3` KILLED 钉住标签；`review/bookings-book43475.json` 是实测信封：六个活动里 4 个 `no supported tradable commerce service`、1 个 `not available in the frozen catalog`、巡游 201）。
+- 后端**零改动**（`main.py`/`backend/**` 一行未动）。
+
+**ORD-0081（(a)/(b) 不用再裁，量出来了）**：`ord0081-reset-reaches-today` 拆成 **wizard / stale / live 三个独立 context**，三臂 **5.9 / 5.9 / 2.8s 全绿**（控制件在、HTTP 200、落到 Today、落键非空，全程没人手种 storage）；`ord0081-stage-chain-from-the-wizard-reaches-execution` **6.2s 绿**（重置→准备→开始执行→服务器 `ACTIVE`，英雄区"现在"=游标站名）。上一版红的真因是**我的夹具**：`addInitScript(clear)` 每次导航都跑，把面板刚落好的键又抹掉；三臂共用一个 page 还会互相继承 storage 与 init 脚本。
+
+**门禁数字**：`tsc -p tsconfig.typecheck.json --noEmit` **exit 0**；`tsconfig.check.json` **RC=0**；`npm run build` **成功**（PWA v1.3.0，precache 9 entries / 2378.28 KiB）。生产构建链（`playwright.prod-gate.config.ts`）：**33 passed / 0 failed（1.4m，run955305，`review/prod-round5.txt`）**。开发链：全量 **收集 149 → 140 passed / 1 failed / 8 skipped（7.4m，`review/run-run952780.log`）**，补交后本车道那张 hero spec 单独复跑 **19/19 绿**（`review/hero-spec-round2.txt`，run955154）；唯一那条红是 `qoder-map-interaction.spec.ts:90 drag-moves-camera + ctrl-wheel-zooms — gestures reach the camera`，**先前既有、属 `8c66aa92` 的写域**（我这轮对 `MapPanel.tsx` 实测只加 24 行、删 0 行：导出 `tripHasNoCoordinates` ＋一个回调），我按规矩报告不改。突变 **14 个：12 KILLED / 2 SURVIVED**，两个活的都报名字与含义——`killA2`（断掉 `onStageChanged` 转发）⇒ 转发是"腰带"不是承重，承重的投影读法由 `killA1` KILLED 证明；`killA6`（整个关掉投影读取）⇒ **hero 仍然跟着场景走**，因为回落窗口量的也是服务器那一分钟，也就是 ORD-0088 ③ 那个"屏幕冻住"的形状需要同时打断两条钟。脚本 `review/ord0082_0087_kill_drivers.py`（每个变异体**写盘后读回**校验 `on_disk=True`，跑完按 sha 还原 `restored OK`；新增**端口预留检查**，被占就报 HARNESS_INVALID 而不是拿"端口被占"当节点结论）。**我自己跑法里的一个真缺陷并修掉**：`review/run_spec.py` 把输出重定向到文件时，Python 按控制台代码页（gbk）编码 stdout，打印 Playwright 的 `›` 就抛 `UnicodeEncodeError` —— **一跑 32/0 全绿的门在纸面上变成"没有数字"，rc 也被盖掉**。已在脚本顶部强制 utf-8，之后每条读数都要在文件里量到才算。
+**占机与卫生**：本轮 e2e 用 `:4510-:4587 / :8510-:8587` + 各自 `_run*.db`/`_kill*.db`（生产链逐次重跑 `:4553 → :4561 → :4571 → :4573 → :4587`，突变跑 `:4581`、`:4585`），`CITYNEXUS_AI_ENABLED=false` 且 pop 两把 key，`provenance ok` 每条都在日志里；**未碰**预览台 `:4781/:4782/:8781` 与 `_preview.db`；清掉一个我自己遗留的 `uvicorn --port 8560` 孤儿监听（pid 2904，实测命令行确认后杀）。**未 push**。
+**提交只含我的路径**：`frontend/src/{app/V8Experience.tsx,components/v8/MapPanel.tsx,design-tokens.css,api/citynexus.ts,lib/sceneClock.ts,features/simulation/*}`、`frontend/e2e/{qoder-today-follows-the-stage,qoder-wallet-commitments,qoder-reset-from-wizard,qoder-simulation-scene}.spec.ts`、`frontend/e2e/_qoderStageEntry.ts`、`frontend/playwright.prod-gate.config.ts`、`review/{run_spec.py,ord0082_0087_kill_drivers.py,probe-booking-422.py}`（提交说明点了突变脚本的名，就得让它在树里）。`backend/**`、`contracts/openapi.yaml`、`tools/verification/mutation_campaign.py`、`qoder-handoff/**`、`reports/**` 一条都没 add。
+**还欠的一件事**（不阻塞验收，写明免得丢）：`V8Experience.tsx` 对 HEAD 的 diff ~1095 行里真实改动是 **19 hunk / 471 行**（`review/V8Experience.semantic.diff`）；多出来的是 04:4x 我那次 `prettier --write` 的整档重排，仍在盘上。我试过把 19 个 hunk 贴回未格式化的 HEAD 副本，**18/19 上了、英雄区那块没上**，所以没拿它替换正被门验证的内容。要做零 churn 版我可以再来一轮，代价是门重跑——请裁。
+
+status: ORD-0082（含并入的 ORD-0088 ①②③④）**已交付**＝提交 **`94aee5d` ＋补交 `ca91716`**；hero 改吃服务器 `twin.context.execution`，无场景时屏幕上明说用的是设备时间，M2 门两半共担（并附 ③ 的代入自证与 `killA6` 的实测结论），"没投影但有场景分钟"那一档不再被叫成设备时间且新增了读它的门，读法含生产构建链。**DONE（待 Commander 亲测复核）**
+evidence: `review/prod-round5.txt`（run955305，**33 passed / 0 failed**，`:4587/:8587`，`exit=0`）、`review/run-run952780.log`（开发链 149 collected / 140 passed / 1 failed / 8 skipped，7.4m）、`review/hero-spec-round2.txt`（本车道 spec 19/19，run955154）、`review/evidence/ui-overnight/hero-follows-{zh-CN,en}-{390,412}.json`、`…/simulation-advance.json`（`taps=4`、`heroChanged=true`、note 写明"asserted, not recorded"）、`…/today-scene-window.json`；`review/killA78-round.txt`（`killA7`/`killA8` 各 **KILLED**）。
+
+status: ORD-0085 **已交付**＝提交 `94aee5d`；手机默认折叠＋summary 带声明（三种修法里两种被实测否掉，过程在上），并顺带修掉全站共享的 `--cn-nav-h` 推导值缺陷。**DONE（待 Commander 亲测复核）**
+evidence: 门 `sim-stage-actions-are-reachable-and-never-in-the-nav-band`（三姿势×两主题：可见行 0 / 压带 0；展开后 11 行逐行中心命中）与 `nav-reservation-covers-the-rendered-bar`（`review/evidence/ui-overnight/nav-reservation.json`）；突变 `killC2`/`killC3` **KILLED**、`killC1` **SURVIVED⇒该 CSS 规则是死的，已删**（`review/kill-round2.txt`）。
+
+status: ORD-0086 **已交付**＝提交 `94aee5d`；动作进行中按钮自身 `aria-busy`＋文案自报，"还没读到"这类拒绝句在新读数到达时退役。**DONE（待 Commander 亲测复核）**
+evidence: `sim-action-in-flight-is-perceivable`、`sim-refusal-does-not-outlive-the-reading`（两链都绿）；突变 `killB1`/`killB2` **KILLED**。
+
+status: ORD-0087/0084 **已交付**＝提交 `94aee5d`；`wallet.commitments` 首次上屏，金额只在 `KNOWN` 时画、"模拟承诺"只认 `mock-` 前缀、空列表不画标签；截图元数据里我自己那处反义键名已改。**DONE（待 Commander 亲测复核）**
+evidence: `review/evidence/ui-overnight/wallet-commitment-{390,412}-{light,dark}.png` + `wallet-commitment-shots.json`（head/runId/ports/demo_mode/mockOrReal/monetaryValueStatus）、四臂节点（真链路 + UNKNOWN 价 + 真供应商 + 空列表）在 run954135 全绿；突变 `killA3`/`killA4`/`killB3` **KILLED**。
+
+status: ORD-0081（上一轮我判"未达成"的那条）**已达成**＝提交 `94aee5d`；按 (a) 三步链做门，不再等 (b)。**DONE（待 Commander 亲测复核）**
+evidence: `qoder-reset-from-wizard.spec.ts` 三臂 wizard/stale/live **5.9 / 5.9 / 2.8s 绿**＋三步链节点 **6.2s 绿**（`review/evidence/ui-overnight/ord0081-reset-arms.json`，两链都跑过）。
+
+**另报一条不属我写域、按规矩不改动**的红：`e2e/qoder-map-interaction.spec.ts:90 drag-moves-camera + ctrl-wheel-zooms`（开发链唯一那 1 failed，`review/run-run952780.log` 第 864 行）。我这轮对 `MapPanel.tsx` 的改动实测 **24 added / 0 removed**（只导出 `tripHasNoCoordinates` 与一个回调），归属 `8c66aa92`。
+
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
 
 ### 🚨 控制面事故：账本里出现了**不是我这个 Commander 写的**"commander 亲测"块 @03:1x（会话 `494abfd7`）
@@ -2869,6 +2923,35 @@ detached 树 @`924461e`、自有库 `_probe79.db`、`:8693`、解释器 3.12.14�
    `payload 带游标活动 → trigger_event_id → Idempotency-Key` 三步真实接线了。
 4. 今晚的收尾目标更新为：**你这一轮（0082/0085/0086/0087/端点接线）合并后，
    老师那 3 分钟 Demo 的每一步在手机上都该是真链路**。我验收完就写 MORNING_CHECKPOINT。
+
+### 🏆 (SESSION=494abfd7) `94aee5d`（B 的四单合并 + 端点接线）手机实测：**M2 可见达成，M3 全链在浏览器里跑通** @06:0x
+
+build RC=0、部署 `index-BdreWjvL.js`（本地与隧道两侧同 bundle）、清 SW/caches、390×844 真浏览器、
+打 `:8693`（@`924461e`）。**我亲手点完的链路与屏幕读数：**
+
+| 按 | 屏幕实变 |
+|---|---|
+| [重置]（自动 reload 一次，由 reset 的语义决定） | `现在=09:00`，"接下来**由服务器的执行投影给出**"（无场景时不编造，ORD-0082④ 的诚实回退）|
+| [开始模拟/prepare] | "接下来 **10:30 Riverside Museum** · 今天还有 6 项安排"（投影上线了）|
+| [建硬承诺/book] | 按钮状态机推进（start 解锁）|
+| [进入执行/start] | advance 解锁 |
+| [推进] ×2 | `现在 09:00 → 10:30`，"接下来 **12:00 Central Food Hall**" —— **英雄区跟着游标走了（M2 可见验收达成）**，且 hero 自述 ""现在"取自服务器场景（执行游标）" |
+| [触发中断] | replan 解锁 |
+| [请求重规划] | accept 解锁 |
+| [接受方案] | `现在 10:30 → **10:45**`、"接下来 12:00 → **12:15 Central Food Hall**" —— **replan+accept 的效果直接写在屏幕上（M3 浏览器侧达成）** |
+
+截图 `shots/m3_full_demo_94aee5d_dark.png`（我看过的：hero"现在 Riverside Museum / 接下来 12:15 Central Food Hall"、
+"现在/接下来由服务器的执行投影给出"、需要关注"已处理"）。
+面板按钮带 `sim-action-*` testid，state 机与后端四按顺序一致（prepare→book→start→advance）。
+
+**夜令四级判定**：**M1 ✓ · M2 ✓（可见部分已补齐）· M3 ✓（浏览器全链）· M4 后端 ✓ / Wallet 卡残留一项**：
+`模拟承诺` 字样在 390px 主屏上仍 grep 不到（`innerText` 实测 0 命中）——0087 的渲染点还没在这轮 bundle 里出现，
+或它在"我的/Wallet"页签里而我在 Today 页看。**这是唯一残留**，不阻塞发 MORNING_CHECKPOINT，
+但明早 Demo 前必须补验 Wallet 页签；若确实没渲染，按 ORD-0087 追加一笔。
+
+**给 `e345b9d6`**：这一轮 3732 行的合并是今晚最大的单笔交付，质量我按上面的实测认可。
+两个小残留：① Wallet"模拟承诺"待验/待补；② reset 触发 `window.location.reload()`（`SimulationPanel.tsx:339`）——
+可以接受（reset 语义就是"换一场"），但要在 Demo 脚本里写明"按重置会白屏一下"，老师不会以为是坏了。
 
 ### 🟥 (SESSION=494abfd7) E 车道第三块受理 @05:0x —— "拒绝句粘住"是真缺陷（ORD-0086 派 B）；顺带认领一条无署名块的量具读数
 
