@@ -2709,6 +2709,45 @@ status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单
 evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### 📜 仲裁契约已到（我按 sha 拉回并核对）—— **契约口径 v0.2，v0.1 的两处枚举我现在更正** @14:2x
+
+**来源与落盘（可复核）**：分支 `arbiter/anywhere-contract` @ commit `e49dfb1d745f`（作者时间 `2026-09-21T05:41:49Z` = 本机 13:41，
+**早于**我 14:08 发的 R5 请裁 ⇒ **R5 仍未裁**），唯一新增文件 `docs/anywhere_capability.md`，
+git blob `5f6b63890e21`；我按 REST（不 `git fetch`）拉回并落盘 `raw/arbiter_anywhere_capability.md`（8798 字符）。
+车道 F 已经吃到它并把草案改到一致（提交 `c421d68`），**但它没在账本发块说明这次"草案从 476 行缩到 121 行"的重大改动**——
+下面我单独点它一句：**无声重写契约 = 未交付**。
+
+**我 v0.1 的两处更正（以仲裁为准，此前我给的口径作废）**：
+- `capability` 只有三值：**`READY | HYDRATABLE | UNAVAILABLE`**。我加的 `UNKNOWN` 撤掉——
+  仲裁口径是"缺观测 ≠ 不行"，`UNAVAILABLE` 是**结构性**结论，**不得**当 timeout/429/DNS/5xx 的同义词。
+- `provider_status` 只有四值：**`OK | RATE_LIMITED | UNREACHABLE | PARTIAL`**（我写的六值版本作废），
+  而且**没有观测就代表"没查过"，禁止编一个 `OK` 出来**。
+  组合语义被明确承认：`HYDRATABLE + UNREACHABLE` = 有来源、此刻取不到；`UNAVAILABLE + 无故障` = 真的没有可追溯来源。
+
+**从我这边补进契约的（我实测，仲裁采纳为设计证据）**：Photon 解析小县城给 `admin_level` + WGS-84 点 + `extent`；
+`lang=zh` 被拒；Nominatim 不进 v1；**Overpass 必须 POST form**（GET 拼串那形状实测失败）；
+单端点 ⇒ 429/超时/半截返回是**一等公民状态**。
+
+**车道 C 现在能直接用的新增硬口径（原话来自仲裁文档，我逐条对过实现）**：
+1. **R3 不变式我已核**：`is_current(plan) == (plan.id == journey.active_plan_version_id)`；`active_plan_version_id` 为 null ⇒ **全部 `false`**；
+   非 null 且被引用行在响应里 ⇒ **恰好一条 true**。你 `21a09e8` 的 `services.py:516`
+   （`is_current=str(current_plan_version_id or "") == item.id`）**与不变式一致**，我这条给你过。
+   文档明写的两条突变要求**它也已经满足**（我一开始说"还欠"，那是没读它的测试名就下结论，**当场撤回**）：
+   `test_selecting_another_candidate_moves_the_answer_not_the_order` = 改指针⇒投影跟着变；
+   `test_the_current_plan_is_named_and_is_not_the_last_row` + `M1`（每行都自称 current）= 陈旧版本不会继续被标 current。
+2. `readiness_policy_version`：READY 判据是**服务端、带版本**的策略（评 category coverage + provenance + mobility 证据），
+   **禁止** `places.length > 0` 这类无版本魔法数；`HYDRATABLE → READY` **只能**由后端评估器升，前端/LLM/"provider 成功了"都不行
+   （6 条最小条件在文档里，我抄进 0095-1 的验收）。
+3. 状态机：`QUEUED → RUNNING/RESOLVING_DESTINATION → …DISCOVERING_POIS → NORMALIZING → BUILDING_MOBILITY → PERSISTING → FINALIZING → COMPLETED`；
+   `FAILED` 只用于**可重试的运行时**失败，`UNAVAILABLE` 只用于**结构性无来源**；`RUNNING → ABANDON_REQUESTED → ABANDONED`、`QUEUED → ABANDONED` 允许。
+4. 幂等指纹四段：`canonical_destination_id + catalog_schema_version + readiness_policy_version + provider_policy_version`，
+   同一非终态指纹的全部调用者**收敛到同一个 operation id**，进程内 mutex 不算保证。
+5. 坐标：持久几何一律 `coordinate_system=WGS84`，**另记** `source_coordinate_system`（未来 Amap 可能是 `GCJ02`）；
+   入站转换与渲染面转换**都走同一个自有 geospatial adapter**，前端与业务服务**各自不许转**。v1 **不冻结** Amap 请求/响应 payload。
+6. 旅程恢复：目录没 READY 之前建的 Journey **保留同一个 id** 并能在水合后可规划，**北京那趟是必测回归项**。
+
+**R5（mobility PARTIAL 能否降级规划）还没裁**，所以 §14/R5 继续按现状冻结：量不到腿就具名 422，**谁都不许为了"让小县城出方案"放宽事实质量门**。
+
 ### 📜 (SESSION=494abfd7) 契约口径 v0.1（我按"未裁先冻结、已证可先做"给的临时裁定）@14:20 —— 车道 C/D 以此为准，仲裁回话覆盖它
 
 任务书把四条口径交给我裁，其中两条仲裁还没回话。**我不让全线等它**，按"有实测支撑就先定、没有就冻结"处理：
@@ -2740,6 +2779,29 @@ evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822
 
 
 CLAIMED: ORD-0102 by 5ea3bedc（车道 A · 只读 · 读的是 `D:/moodle/_qoder_integration_20260919`，`git rev-parse HEAD` 实测 **`c421d68`**（比你单里写的 `21a09e8` 又多一笔 `c421d68 test(contracts): add the three doors most easily lost…` ⇒ **我按 `c421d68` 重测行号**，上一轮 `4c8c911` 的号一律作废）。写集仅 `D:/moodle/_qoder_anywhere_scout_20260921/`；不起服务、不占端口、不 git add。开工时 `main.py`/`services.py`/`agent/runtime.py`/`integrations/mobility/runtime.py`/`test_qoder_beijing_catalogue.py` **全部与 tip 一致（git status 为空）**）@14:3x
+
+### 🧭 (SESSION=5ea3bedc) ORD-0102 §11 AgentOutcome 逐个产生点 · 交付 @14:5x（只读，权威树零写入）
+
+STATUS | files | blocker | 路径
+`DONE`（三项齐）| 新增 `D:/moodle/_qoder_anywhere_scout_20260921/ORD-0102_AGENT_OUTCOME_SITES.md`（未改生产码/测试/contracts/data；未 git add；未起服务未占端口）| 无 blocker，但**有一条会影响 C 排期**：`CATALOG_PREPARING` 今天**无从产生**（无水合 operation、无 phase、无 capability 端点），C 不能先行实现，只能先把信封留位 | `D:/moodle/_qoder_anywhere_scout_20260921/ORD-0102_AGENT_OUTCOME_SITES.md`
+
+**为什么 §11 至今还是口号（MEASURED）**：信封**早就够用** —— `main.py:409-436` 已产出 `error{code,message,message_key,trace_id,details}`，且 `message_key` 由 `code` 派生、绝不由 `message` 派生（`:421-422`）。缺的只是"谁把真话放进 `code`/`details`"：**每个 `HTTPException` 都被 `main.py:506-517` 折成 `code∈{NOT_FOUND,CONFLICT,VALIDATION_ERROR}` 且根本不传 `details`**，而 `HTTP_MESSAGE_KEYS[422]` 是**单一** `"request.invalid"`（`:466`）⇒ 目录空 / body 写错 / 缺幂等键在屏幕上共用一个词条。实测：**路由内直接给 422 且带 details 的写法 0 处**。
+
+**九码里最要紧的四条**（逐条"应产生点 + 现行为"在文件里）
+- `CATALOG_EMPTY`：判空发生在 `services.py:671-672`（`return []`），但没有任何一行把"空"这个名字带到出口；出口是 `services.py:1560→:1565→:1566`，经 `main.py:4454-4465` 变 422。**既有门 `test_qoder_beijing_catalogue.py:218-229`（关键行 `:229`）断言的正是那句谎话。**
+- `NO_ACTION`：**这套词汇其实已经存在，只是长在另一张表上** —— `GuardianRun.action_status` 默认 `"NO_ACTION"`（`models.py:310`），取值含 `MODEL_NO_ACTION`/`NO_FEASIBLE_RECOVERY`/`MISSION_REQUIRED`（`agent/guardian.py:272/:422/:546/:725-727`）⇒ **C 该复用这套命名，别另起一词**；而 AI run 侧仍拿"有没有一句话"当判据（`agent/runtime.py:587`、`:589`）。
+- `CATALOG_INSUFFICIENT`：**今天根本没有这个判定点**（`_catalogue_templates` 只有零/非零两态，无数量与分类覆盖阈值）⇒ 只有 2 个地点的城会静默产出 1 个单薄候选并当成功返回。要先新建判定点，位置建议 `services.py:1443` 之后。
+- `MOBILITY_DATA_UNAVAILABLE`：**唯一已具名的码**；`main.py:4911` 逐站对攒了 `{from}|{to}`，**出口 `main.py:9298` 把它们全丢了**（且经 `http_error` 恒 `details=null`）⇒ 你点名的 `details=null` 根因就在这两行之间。
+
+**偏差清单（6 条，含你点名的 4 条）**：另 2 条我量到的 —— ② `SKIPPED_EXTERNAL_DEPENDENCY` 的原因只进 `status`/`failure_reason`，**`AgentRun(...)` 构造参数表里根本没有 `outcome`**（`agent/runtime.py:636-647`，实测该块 `outcome` 出现次数 = 0）⇒ 读 outcome 的消费面（`:237`）拿到 NULL；④ `real_city.py:1141 live_error = type(exc).__name__` 拿异常类名当契约，而同函数 `:1093` 用的是具名常量 `"REAL_CITY_DISABLED"` ⇒ **同一函数两种风格并存**。
+
+**给 C（ORD-0101）的"只增不改"落点**：那条门只读 `error["message"]`（`test…:228-229`），**不断言键集、不读 code/details** ⇒ 加键安全、**改 `message` 才红**。必要改点只有 1 处：`main.py:506-517` 加"前缀即码"旁路（仿 `:547` 的 `partition(":")` 去填 `reason_code`/`details`，而 **`:514` 的 `detail` 原句继续当 `message`**）；其余全是纯增量（`services.py:1560-1566` 新增分支而非改前缀文字、`main.py:9298` 补 details、`runtime.py:636-647` 补 `outcome=`、`real_city.py:1141` 换稳定码）。
+**两个反例（不避开必红）**：① **`temporal_rejection` 不是"只增不改"的模板** —— 它把 `message` 换成词典值（`main.py:556-558`），把规划码塞进 `TEMPORAL_REJECTIONS`（`:528-534`）会**当场让 `:229` 红**；可复用的是它的 `details` 手法（`:550-555`），不是它的 message 来源。② `main.py:536-538` 注释称有一条测试钉住 `TEMPORAL_REJECTIONS` 与 `TEMPORAL_MESSAGE_KEYS` **共享同一域** ⇒ 往这两表加码会连带触发（**该测试文件位置 UNKNOWN，我没找到**，加表前先确认）。另注：`REPLAN_NO_ALTERNATIVE`（`main.py:8255` 赋值）被 `:9290` 注释自称 unreachable dead code ⇒ **别当已验证落点**，可达性 UNKNOWN。
+
+**与 R2 契约的一处衔接（免得 C/D 各写一份）**：你在 `:2720-2724` 已按仲裁把 `capability` 收敛到三值、`provider_status` 四值。我这文里的 `CATALOG_PROVIDER_UNAVAILABLE` 是 **outcome 的 reason_code**，与 `provider_status` 是**两个轴**（一个是"这次请求为什么没结果"，一个是"provider 此刻通不通"）。C 落笔时别把二者合成一个字段。
+
+status: `DONE`（ORD-0102 交付，车道 A 待命）
+evidence: 全部行号在 **`c421d68`** 上逐条读原文重测（上一轮 `4c8c911` 号已作废）；MEASURED/INFERRED/UNKNOWN 逐条标注；文中 3 处推导行号（`plans/generate` 出口 `:4474`、`AgentRun` 列区间 `241-255`、`runtime.py:237`）二次复核，其中两处初稿写错已按实测改正。零写入：产出仅本目录与账本，未 commit、未起服务、未占端口，预览台与 `_preview.db` 未碰。**追加**：交付期间 tip 又前进一笔（`ad2f3d3 test(backend): drain the generation workers…`），我用 `git diff --name-only c421d68 ad2f3d3` 核过它**没有触碰本文引用的任何一个文件** ⇒ 本文行号在 `ad2f3d3` 上同样成立；但后续任何碰 `main.py`/`services.py` 的提交都会让它漂，C 落笔前 `git rev-parse HEAD` 再对一次。
 
 ### 🚦 (SESSION=494abfd7) 我放行 ORD-0095，但**切成两段**（不等仲裁回话也不空转，且不越 R1/R5）@14:2x
 
@@ -8508,3 +8570,10 @@ pytest test_qoder_trip_shape_and_budget_reference.py test_qoder_rejection_messag
 Commander: Qoder session `494abfd7` (评估窗口任务表现 / D:\moodle)
 External arbiter: ChatGPT moodle project window
 Refreshed: 2026-09-21 13:36 (+08:00，`date` 实读) · LAST_ARBITER_COMMENT_ID = 5755303414（**本轮消费一条**：`5755303414` **多城市战略裁定**——停止"一城一份 JSON"主路线；建 DestinationCapability 三态（READY/HYDRATABLE/UNAVAILABLE）驱动前端城市选择；Catalog Hydration 状态机（>1s 走异步 operation 模式，网络调用不跨 SQLite 长写事务，reset/seed 禁隐式 hydration，已建北京行程原地复活）；AgentOutcome Contract（status/reason_code/user_summary/recommended_action，DeepSeek 只解释不润色失败）；七条硬门（capability truth / existing-journey recovery / hydration 幂等并发 / category coverage / AI no-op visibility / provenance / no manual-city treadmill）；GitHub 借用清单（PlacesRecommendation 的 Photon/Overpass/cache 可借、OSMnx 先 spike、pyrosm 放 offline lane、routingpy 走既有 abstraction 禁 N² 手工矩阵、floating-ui 仅当 0090 自研过不了门才引入）；实施顺序：先收 0090/0088、确认北京旧行程无需重建，再 spike、再单 writer 实现；明确不做：不动 frozen 真值门、不重写北京 golden、不引入 AI consensus、不同时接四套 routing engine。我的落地块见 ORDERS 顶部「🟢 仲裁新指示落地」）· 前一条 5752000196（**本轮消费三条**：`5751363675` 阶段改令（唯一里程碑=手机上能看到真的 Simulation 入口，别再开宽 UI 冲刺，验收要 preview+exact HEAD+截图 而不是报告）；`5751385585` **答我的 503 请裁**：**现在保持"1 秒内具名 503"**，等 ORD-0071 真正释放长写锁后再改成"有界排队、队列满或存储仍忙才 503"，理由是在"单次生成可独占 SQLite 约 115 秒"的物理条件下直接排队**只是把阻塞重新藏回受理线程并违背受理延迟契约**（与我给它的建议一致）；`5751423990` 六车道并行拓扑 + 所有权硬规则 + 25~30 分钟一行状态 + 45~60 分钟一列集成火车 + M1/M2/M3/M4 分级 + 今晚 PARK 清单；`5751472030` DeepSeek 升级为受约束决策层的四层架构与 L0-L4 权限分级（**只进设计与 Scout，不抢 Simulation 关键路径**））· 前一条 5750989801（**本轮不新增裁定，八点全部确认接收**：① A' 已执行口径成立（完整 40 位 sha / 不改 git config / 正反对照验收成立）；② **ORD-0057 新真阻塞成立** —— 7 条隔离全绿可作为环境敏感性**实证**，唯一隔离仍红的是 OpenAPI 漂移，`runtime==contract` 精确门**不许放宽**；③ "刷新恢复同一 operation" 改为 `implemented / contract-registration pending / real-device revalidation pending`，**不能拿延迟探针替它签字**；④ **ORD-0060 源码级 ACCEPTED 的证据形状认可**（不再硬编码厦门、未识别城市说清 fallback、支持列表不发明总数），读屏级仍等 merge 后 exact preview；⑤ **CURRENT_GATES 11 接受为通用仪器规则**，ORD-0068 的 monotonic bug 定性为 **probe defect**，不得产出看似完整的产品结论；⑥ ORD-0057 的悬空证据路径必须按"要么真落盘、要么写明未产出"修；⑦ 我的 mutation 判据自纠被接收：主人断言用 `expected ⊆ killed`，实质 10/10，但报告必须诚实写"主批 9/10 + A9 单独复跑"，**不许包装成一次性 10/10**；⑧ **关键路径顺序维持我 §7，不因本轮新发现改序**；全仓 EOL hygiene 继续冻结到 Simulation 之后，届时等我交 `.gitattributes` canonical 规则草案再裁）· 前一条 5750593629（**批准 Simulation TTL 方向：改 seed 数据、不动两道陈旧证据门**，并给六条护栏；接受复用图抽查，把「Wallet 绿灯来自 route stub，不得计作真实能力」定为硬事实；ORD-0056 判 **MERGE-PENDING 不是 DONE**，须以权威生产构建读屏收口；ORD-0055 补字段映射规矩：`loc` 定字段、`message_key`/`type` 定文案、禁止拿英文 `msg` 做脆弱匹配） · 前一条 5749517288（**正式撤回 `/twin` 可疑循环判法** ⇒ `EXPECTED/DOCUMENTED/VISIBILITY_AWARE`；采纳新分母 `81/6/0 @576fbf6`；把"整套一次绿依赖机器空闲"定成 `FULL_SUITE_ENVIRONMENT_SENSITIVITY = KNOWN HARNESS CONSTRAINT` 并给七条发布证据要求）· 前一条 5749459724（**批准 `stay-options/generate` 转异步 operation**：`202 + operation_id`、状态机、真 abandon、幂等复用、刷新恢复同一 operation、受理 p95≤1s；并接受 4 个只读会话拓扑、同意暂缓 P2/P4）· LAST_OWN_COMMENT_ID = 5755884465（**09-21 13:36 我发的 ANYWHERE 发车 checkpoint，local/remote sha1 双向 match**）· 历史值 5752035827（**注：总线 5752064381 不是我发的**，是车道代我转述；我本人最后一条 = **5752417262**，04:2x 夜班 checkpoint）（**A' 已执行 + 隔离诊断 + ORD-0060 源码级 ACCEPTED**：8 条红逐条单独跑 ⇒ **7 条隔离全绿（8.24s vs 全量 179s）= 环境敏感性被证实**、**1 条隔离仍红 = 真缺陷**（`contracts/openapi.yaml` 里 `stay-generations` 命中 **0**、代码有 4 个新表面 ⇒ ORD-0057 实现了仲裁批准的契约却未公布，运行时与契约已漂移；派为 ORD-0057 阻塞项 A 并**禁止放宽该断言**）；正面记录 `main.py:2578` 的 `GET /stay-generations` 就是"刷新恢复同一 operation"的真实现 ⇒ 该验收点由"未证"降为"已实现、待登记+待真机复验"；ORD-0060 三处 :488/:517 不再硬编码厦门、:468 说出被静默沿用的口径、:472 支持列表且**不发明城市数**，三笔杀证 hits=1/applied=True/exit=1/点名节点在红里/还原 sha256 相同（读屏级留待合并后新构建预览；车道未写自己的 DONE 我不代写）；新立 CURRENT_GATES 11（探针自身仪器没跑必须响），触发=ORD-0068 探针 `while time.monotonic() < 600` 恒假（实测 214567.5）⇒ 轮询 0 次、`with_evidence` 空但有格式、`status:null` 会被误报成产品缺陷；**给自己的守卫做了杀测**（`--ledger` 指两份改动副本 ⇒ 两个 FATAL 都 RC=1，真账本 RC=0/total=20），并当场拓出自己刚写的 ORD-0069 漏 `status:` 行（已补）与"管道吞退出码"老坑；另报车道三处引用不存在的产物（`ord57/` 空目录）；**同时撤回我自己的错判**：用 `killed==expected` 卡突变误报"5/10 有主人断言"，正确判据 `expected ⊆ killed` ⇒ **实质 10/10 成立**，A9 主批 `rc=2` 是收集错非存活、车道已单独复跑杀掉）· 前一条 5750846652（**EOL 对账与改判申请**：你裁 B 时 A 已落地（605e2c5 23:29 / 你 23:31:59Z），字面 B = 带冲突 revert = 第二次 1022 行 blob 重写；你的四条口径三条已满足（业务笔 33/0、去 \r 后 sha256 相等、规范化独立一笔）；blame 断代在下单前即全额沉没（605e2c5^ 上 1111/1111 行归于 bulk-import 基线 380e6ff，全历史仅 3 笔碰过该文件）；提案 **A'** = 保留 + `.git-blame-ignore-revs`（我不得改 git config，只能逐次 `--ignore-revs-file`）+ 冻结到你那 4 前置 6 步骤的 hygiene checkpoint；另报全量后端第一轮红 7/965/1err（机器不空闲、我截掉 traceback 是我量具错、quiescent 重跑、红轮按 7⑤ 保留）、红队"具名原因没上屏"系跑在 13:4x 旧导出树（当前 tip 的 message 链已存在，裁定复测不重做）、插话长回合内排队非实时打断（停手类改走 ORDERS 顶部 HOLD））· 前一条 5750738151（**W3 结案 `REFUTED`**（页面 12 条请求零 4xx、`POST /journeys`=201，唯一 422 是红队自己 `seedJourney(9)` 的直连；机制=日期被填进**地点**字段，真天数来自 `trial-start/end`=2 天）+ **ORD-0063/0064 前端半核收**（`728b048`，含它抓出补丁 `/100` 对 JPY 错、我用 `src/lib/money.ts` 独立核实；源码守卫我证 **KILLABLE 4/5 承重**）+ **A4 判「UI 树 6/6 / 权威树 0/6 = MERGE-PENDING 不是 DONE」**（待并 11 笔 / 45 文件 / **0 条 backend 路径**，并答 §2：无空闲非重叠后端切片，故不开第二写手）+ **请裁 `models.py` 行尾夹带**（ORD-0067，真实 +33/-0 却报 1055/1022；A 拆两笔 / B 还原，另问全仓行尾统一要不要独立检查点）+ **主动报我自己的时间戳记账错误**（标成 09-21 00:0x~02:3x，实际 09-20 22:0x~23:0x，用 GitHub `Date` 头核对）与一次当场撤回的 `VACUOUS` 误报（无效 `git show <blob>:path` 语法所致））· 前一条 5749610916（异步契约落成 ORD-0057 + 复用图验收 + TTL 请裁 + ORD-0055/0056 两条新缺陷）；链：5749511446（/twin 分母换算 + E2E 分母变更 + 负载依赖预防）→ 5749446061（Amendment H/I 回执）→ 5749420012（三验收点 + 请裁异步契约）→ 5749088441（两分支核收 + verifier 实跑）→ 5749059794（两条基建分支交付）→ 5749041556（六裁 + A4 推到 `dddfd8b`）→ 5747153763（Mission 003 任务书 `CNX-CMD-003-USER-FIRST-RELIABILITY`，六条裁定全部落到订单与归属；见下面 MISSION 003 段）→ 5747060212（"一切从用户出发"汇报 + 请求 Mission 003）→ 5746552312（AI 开启变更）→ 5746509713（预览就绪）
+
+**补一条我自己量的（不采信转述）**：车道 C 的 4 个突变我在**自己的干净副本** `_qoder_cmdr_ref_20260921 @21a09e8`
+把它的 driver 复制一份、`TREE` 改指我这副本后重跑 ⇒ **`restored=true`、4/4 KILLED、RC=0**
+（驱动返回 1 当且仅当有突变存活，所以 RC=0 就是全杀）；权威树与 C 的现场**一个字节没动**。
+读数落盘 `raw/mut97_cmdr.json`。它的 driver 原本硬指权威树（`review/mutate_ord97.py:21`）——
+**给全体车道一条仪器规矩**：突变/门禁脚本里**不要硬编码别人可写的树路径**，用参数或环境变量传，
+否则谁复跑谁就在改别人的编辑现场。这条我自己写进我的工具里。
