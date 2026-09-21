@@ -2841,6 +2841,29 @@ status: ORD-0097 已由 Commander ACCEPTED@14:2x（路 a 认可）· ORD-0098 DO
 evidence: `21a09e8` / `ad2f3d3` · 5 gates · 4/4 mutants killed · 349 consumer passed · 全量 1036/1011/15/10 ×3 一致 · `D:/moodle/_qoder_ord30_evidence_20260920/ord97/`
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### ✅ (SESSION=494abfd7) ORD-0101 验收通过：目录空终于有真名字了，而且**没有改一句既有文案** @15:1x
+
+车道 C 的 `aee6c7a`，我在自己的干净副本上量的（detached `aee6c7a`、3.12.14、四把凭据清空）：
+
+- 新门 `tests/test_qoder_catalog_reason_code.py` + **既有的** `tests/test_qoder_beijing_catalogue.py` 一起跑 ⇒ **9 passed / 1.81s**
+  ⇒ 我那条"只增不改"的要求成立：**断言谎话的既有门没有被放宽，它继续绿**；
+- 全量 **`10 failed, 1020 passed, 15 skipped / 91.37s`**，且**红集合与上一轮 `d481464` 逐行 diff 完全相同**
+  （7 条 `test_qoder_anywhere_gates` + 1 条 parity + 2 条 lock_duration，全是车道 F 先写的 ANYWHERE 门）
+  ⇒ **这一笔零回归**。"红集合逐行 diff"这个办法我记进仪器，以后回归面都这么判，不靠"看起来差不多"。
+
+**实现形状（我读了 diff，不是听转述）**：
+`services.py` 新增 `CatalogShortfall(ValueError)`，`reason_code = CATALOG_EMPTY if not places else CATALOG_INSUFFICIENT` + `details`；
+因为它**是** `ValueError` 的子类，`main.py:4454` 那个 `except ValueError` 照旧接住，
+`message` 与状态码**一字未动**；错误信封只在 raise 点**提供**时才多吐 `reason_code` / `details`
+⇒ 所有既有响应体保持原样。这正是任务书 §11 与 §14 要的"稳定原因码"，也正是用户 14:31 那张截图缺的东西。
+
+**这条一旦上到前端，用户看到的句子就会变**：北京那种"AI 说没方案、还怪你需求"的现场，
+今后可以从 `error.reason_code` 分得清是 **`CATALOG_EMPTY`（这个城市我们没有可追溯地点）**
+还是 **`CATALOG_INSUFFICIENT`（有地点但不够满足条件）**——**不许**再用英文串或"约束不满足"糊过去。
+
+**下一步（车道 C）**：ORD-0101 关闭，接 **0095-1**（四端点真值 + 复用 `StayGenerationOperation` 骨架 + 持久层幂等指纹四段 +
+网络不跨写事务），收口标准仍是车道 F 那**六条一起绿**。
+
 
 CLAIMED: ORD-0103 by dc19d662（车道 E · 只读定性 · 本机钟 14:5x · 权威树 tip 实测 `aee6c7a`；我在**两棵树**上各跑一遍同一份脚本做对照：`tree@4c8c911`（用户截图那一版，:8661 + `_run1.db`）与 `tree2@aee6c7a`（当前 tip，:8662 + `_run2.db`），前端 :4661 服务 tip 生产构建 · 写集仅 `D:/moodle/_qoder_redteam_anywhere_20260921/`）
 ：需求文案**逐字**用用户那句，不换措辞；预览库与用户那趟 `2cf892e1` 不碰；生产码 0 改动。
@@ -2998,7 +3021,7 @@ STATUS | files | blocker | 路径
 status: `DONE`（ORD-0102 交付，车道 A 待命）
 evidence: 全部行号在 **`c421d68`** 上逐条读原文重测（上一轮 `4c8c911` 号已作废）；MEASURED/INFERRED/UNKNOWN 逐条标注；文中 3 处推导行号（`plans/generate` 出口 `:4474`、`AgentRun` 列区间 `241-255`、`runtime.py:237`）二次复核，其中两处初稿写错已按实测改正。零写入：产出仅本目录与账本，未 commit、未起服务、未占端口，预览台与 `_preview.db` 未碰。**追加**：交付期间 tip 又前进一笔（`ad2f3d3 test(backend): drain the generation workers…`），我用 `git diff --name-only c421d68 ad2f3d3` 核过它**没有触碰本文引用的任何一个文件** ⇒ 本文行号在 `ad2f3d3` 上同样成立；但后续任何碰 `main.py`/`services.py` 的提交都会让它漂，C 落笔前 `git rev-parse HEAD` 再对一次。
 
-**➕ 并入项已补（账本 `:2798-2800`，写在文件新 §4）：AI 面板路径与直接规划路径为什么不同源。** 本节行号实测于 **`aee6c7a`**（tip 又前进两笔，主表换算附在 §4 末）。
+**➕ 并入项已补（账本 `:2798-2800`，写在文件新 §4）：AI 面板路径与直接规划路径为什么不同源。** 本节行号实测于 **`aee6c7a`**（tip 又前进两笔，主表换算附在 §4 末），**并已在其后的 `351dd31` 上逐条复验仍成立**（`:1349` / `:1100` / `:843` / `:902` / `:932` / `:1599` / `main.py:513` / `:472` / 面板 `:360`、`:362`）。
 分叉只有一个字段：`place_ids` 有没有值。
 - **AI 面板永远带** `place_ids`：`PlanWithAiSheet.tsx:355` 先 `GET /places?city_code=`，`:360` `.map(id).filter(Boolean).slice(0, 8)` ⇒ **取服务端返回顺序的前 8 条，不是挑出来的 8 条**（无任何排序/分类/评分），`:368` 发给 `plans/generate` ⇒ 必进 `services.py:1349 if place_ids:` → **`:1350 _generic_compose_variants`（def `:1100`）**。
 - **直接规划永远不带** ⇒ 走 `services.py:1467` → `:1470 _catalogue_templates`（整目录参与、按分类配平）⇒ 这就是 ORD-0089 北京能出 3 候选、而 AI 面板 0 候选**不矛盾**的原因。
@@ -3264,6 +3287,29 @@ status: `DONE`（ORD-0091 交付，车道 A 收工）
 evidence: 全部行号取自 `4c8c911` 的 `backend/app/**` 本体（逐条读原文，非转述；开工时该目录 git 干净）。零写入证明：本块与 MAP 是本次唯二产出，均在 `_qoder_anywhere_scout_20260921/`；未起服务未占端口，`:4781/:4782/:8781` 与 `_preview.db` 未碰。
 
 CLAIMED: ORD-0106 by 8ccd71d8（车道 F · 契约/门）@14:5x（本机钟 date 实读 14:53:09 +0800 · 权威树 HEAD 实测 `aee6c7a` · 写域仅 `contracts/**` + 新建测试文件 · 不打真网络、不碰 backend/app 与 frontend/src）｜程序性一句：`grep "id: ORD-0106"` 在账本里 **0 命中**，这单我是从你口头转达接的（与 D 车道报过同类）——不因此停工，但订单正文请落账本，否则下一位车道扫不到榜单。
+
+### SESSION=8ccd71d8 · ORD-0106 交付 @2026-09-21 15:0x（date 实读 14:59:10 +0800）
+
+`DONE | 两笔提交 3ff11e7（+228：新门文件 201 行 + 附件 27 行）与 351dd31（我自己踩的 §17C 修一笔），父 aee6c7a，未 push | 只含 2 条路径：backend/tests/test_qoder_anywhere_provider_truth.py、contracts/openapi-anywhere-draft.yaml | 计数：本文件 3 failed / 1 passed；车道 F 全量五份门合计 **13 failed / 10 passed，RC=1，3.26s** | blocker：无 | evidence：D:/moodle/_qoder_f_run/{gates_addendum2_21a09e8.log,arbiter_anywhere_capability.md} + 本轮读数在下文`
+
+**我读的树与 sha（你要的写明）**：树 `D:/moodle/_qoder_integration_20260919`，接单时 `git rev-parse --short HEAD` = **`aee6c7a`**（父链含我的 `9283195`，tip 又被 A/C 推进过一次，所以我所有读数都在 `aee6c7a` 上重跑）；跑门在**自建 detached worktree @`aee6c7a`** + 自有 `_runO106*.db`，跑完已 `git worktree remove`（只剩一个被 Windows 句柄占着的空壳目录，`git worktree list` 里已经没有它）。②的实现我按你给的 sha 读：`d481464`（ORD-0099）落在 `app/integrations/discovery/real_city.py` —— 常量在 `:495-502`、集合 `LIVE_FAILURE_REASONS` 在 `:504-513`、函数 `live_failure_reason` 在 `:516-543`（行号是 `aee6c7a` 上实测）。B 的 `255 要素 / 72% natural=peak / BAR=0` 与 `24→11 行静默丢 13 行 node` 我按 B 的读数引用，不重测出网（§17C）。
+
+**① 坐标完整性门**（G10，今天红）：`test_g10_every_normalised_place_carries_a_usable_coordinate_including_nodes` ⇒ 要求 node/way/relation **三类各自都有可用坐标**、声明的 `discovered_count` 必须等于实到条数（进多少行出多少行）。今天红在端点缺失（路由级 404），消息里写死了 B 的形状（24 行只回 11 行、缺的全是 node、无报错），这样它将来不会因为"只回 way/relation 就不红"而放过去 —— **少一行就红，不许默默少一行**这条是靠 kinds 分布 + 计数相等两条一起钉的。
+
+**② 失败码不塌缩门（咬到了，当场报你）**（G11 + G11b）：`test_g11_six_provider_shapes_must_not_collapse_into_one_reason_code` 用六种构造形状（429 / 503 / `ReadTimeout` / `RemoteProtocolError` / 非法结构 / 零结果）打**车道 C 已实现的** `live_failure_reason`。读数：**429 → `PROVIDER_RATE_LIMITED`、超时 → `PROVIDER_TIMEOUT`、连接重置 → `RESOLVER_UNREACHABLE` 三条已经是分的（ORD-0099 做对了）**，但：
+- **5xx 与『结构非法』同落 `PROVIDER_BAD_RESPONSE`** ⇒ 6 形状只得 5 码，红。原因在 `real_city.py:530-532`：`status` 是整数就一律 BAD_RESPONSE，而词表里没有服务错误的位（`LIVE_FAILURE_REASONS` 六个成员里没有 `PROVIDER_SERVER_ERROR`）。
+- **零结果只能靠异常文本里的哨兵 `NO_JOURNEY_DERIVED_CITY_ANCHOR`**（`:541`）才拿到 `PROVIDER_NO_RESULTS` —— 真的"200 且 elements 为空"不是异常，走不到这条码，等于该形状今天**没有可分支代码**。
+- G11b（用户面不得出现异常类名）**今天绿**：`live_failure_reason` 的六个返回值都不含类名。
+**给 C 的最小改法（门不放宽）**：词表加 `PROVIDER_SERVER_ERROR` 接 5xx（保持 429 先判，别把限流卷进服务错误）；零结果改成按**响应形状**判定而不是按异常字符串判定；两者都别用"把 5xx 也当 BAD_RESPONSE"来让门变绿。
+
+**③ 数量不能当能力门**（G12，今天红）：`test_g12_a_large_element_count_cannot_promote_a_destination_to_ready` ⇒ 任一分类非 READY 就整体不得 READY；READY 必须带 `readiness_policy_version`；`element_count` 只做诊断。红在端点缺失，消息里钉着塔县那组数（255 要素 / 72% peak / BAR=0）。
+
+**契约侧**：附件按你 ①的留痕要求只做了**纯新增 27 行** —— 三条义务（`geometry-completeness` / `failure-codes-must-not-collapse` / `count-is-not-capability`）各带 `gate:` 指到具体用例名，外加 `measured-on: aee6c7a` + 上面那条 finding 原文。仲裁口径一个字没动：`capability` 三值无 UNKNOWN、`provider_status` 四值、READY 必须由带版本策略判定、指纹四段（`canonical_destination_id + catalog_schema_version + readiness_policy_version + provider_policy_version`）都还在。
+
+**又用同一把尺量到自己一次**：新门最初用 `httpx.Request("GET", "https://overpass-api.de/...")` 构造异常（只是造对象、不发请求），被我自己写的 §17C 护栏 G8a 点名成红。我**没有去放宽 G8a**，而是把构造换成 `http://provider-shape.local/...`（映射只读 `status_code`），单独一笔 `351dd31`。护栏要为例外开口子，就守不住下次。
+
+**程序性**：`grep "id: ORD-0106"` 在账本里 0 命中，这单也是口头转达接的（我在 CLAIMED 行里记了同样一句，和 D 车道报的同类）；`live_checks/` 的落点仍等你一句认可。写域守住：`backend/app/**`、`frontend/src/**` 一个字没改，既有断言没动、没加 skip/xfail。
+
 
 CLAIMED: ORD-0094 by 8ccd71d8（车道 F · 契约/门）@13:2x（本机钟 date=13:23:28 +0800 · 权威树 HEAD 实测 `4c8c911` · 写集仅 `contracts/**` + 新建测试文件 · 自占 :8652-8660 与各自 `_run*.db`，不碰预览台）
 
@@ -3633,7 +3679,7 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
     ③ 给这条门一条杀得掉的突变证据。
     若"不改 message"会让屏幕继续说错话，把两难写进账本由我请仲裁裁，**不许自己改既有断言**。
     排在你手上 ORD-0099 之后；报告要绑 sha。
-  status: CLAIMED@2026-09-21T15:0x+08 by 8c66aa92（已实做并提交 `aee6c7a`：只增 `reason_code`+`details`，message/code/message_key 一字未动；4 门 + 4/4 突变 killed，其中"改 message"那条是被**既有门**打红的）
+  status: ACCEPTED@2026-09-21T15:1x+08 by 494abfd7（干净副本 aee6c7a：新门+既有北京门 9 passed；全量 10 failed / 1020 passed / 15 skipped，红集合与 d481464 逐行 diff 相同 ⇒ 零回归；只增不改成立，既有断言未被放宽）
 
 - id: ORD-0104
   to: e345b9d6
