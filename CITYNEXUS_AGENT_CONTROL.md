@@ -2709,6 +2709,40 @@ status: 悬浮窗版模拟舞台（用户当面令，优先于城市可得性单
 evidence: `review/prod-round9.txt`（run965723，33/0）、`review/run-run965822.log`（开发链 150 collected / 141 / 1 / 8）、`review/float-round6.txt`（几何门 2/2）、`review/killD-round.txt` + `review/killD6-rerun.txt`（6/6 KILLED，含 A5 式复跑）、`review/evidence/ui-overnight/sim-action-hittest.json`（每臂 rect/命中/导航可点读数）、`stage-float-{390,412}-{light,dark}-{open,closed}.png` 八张、`review/mobile-ui-round.txt`（4/4 回绿）。
 
 ## ORDERS（收件箱：worker 每完成一个动作、每开始下一个动作之前先读这里）
+### ✅ (SESSION=494abfd7) ORD-0094（车道 F）与 ORD-0097（车道 C）我用自己的干净副本验收通过 @14:2x + 新开 ORD-0101（把"目录空"起真名）
+
+**我这轮的读数（不是我转述车道）**：我自己另开了干净 detached 副本 `D:/moodle/_qoder_cmdr_ref_20260921`，
+`git checkout 21a09e8`，`git status --porcelain` 为空，解释器 `CityNexus/.venv` = 3.12.14，四把 provider 凭据全清空。
+
+1. **C 的 `21a09e8`（ORD-0097）通过**：新门 `tests/test_qoder_current_plan_is_named.py` 在我这里 **5 passed / 2.02s**；
+   更关键的是回归面 —— 全量 **`8 failed, 1006 passed, 15 skipped`（90.66s）**，
+   而那 8 条红**一条不剩全是 F 新写的 ANYWHERE 门**（G1-G5、G6b、G7、parity，逐条名字对上）。
+   ⇒ 改 `list_plans` / `plan_schema` 没有碰坏任何既有测试；"当前是哪一条计划"从"读数组下标"变成服务端点名的字段，
+   这正是任务书 §13/G2 与昨晚那 33 条红的共同根因。ORD-0097 **ACCEPTED**。
+2. **F 的 `be834d4`（ORD-0094）通过**：它交的就是红，而我独立复现了同样的 **8 failed / 4 passed**，
+   红因与它写的一致（四个端点路由级 404，我用 `GET /api/v1/health` 对照过不是连不上）。
+   三点我特别认可：① 契约草案单独放 `contracts/openapi-anywhere-draft.yaml` 并挂 `x-status: draft-unimplemented`，
+   **没有**把未实现条目混进 `contracts/openapi.yaml`；② 它自己抓出并修了两处会让门"以我的错为由红"的仪器 bug（未定义 `path_item`、G5 层级取错）；
+   ③ **G6a 绿了它也不领功**，在 docstring 里写明"只证明词表存在、不是行为证明"——这正是防 vacuous 门的好习惯。ORD-0094 **ACCEPTED**。
+3. **它给我的定稿口径我收下**：G1-G4+G6b+G7 六条同根因（四端点不存在），**任何一条单独绿都不算数**；
+   G2/G3 必须"同 `operation_id` + `reused` + 同 `journey_id`"三件事同时成立；G5 与端点无关，是填 `run.outcome` 的独立切片。
+
+**新发现（我自己量的，给 F 的 G5 补一条形状）**：`run.outcome` 现在确实是 null，
+而同一响应里 `run.status` / `mission.status` = `SKIPPED_EXTERNAL_DEPENDENCY`、`failure_reason="DeepSeek API key is not configured"`
+⇒ **真话已经在字段里躺着，只是没进 `outcome`**。所以 §11 那件事的**最小实现**是"把已有真值搬进结构化 outcome"，
+不是新造一套状态机——C/D 谁做都很小，别把它做大。
+
+**ORD-0101 → 车道 C `8c66aa92`（排在 0099 之后，不需要等契约，与 0097 同一只手）**：
+把"目录为空/不足"起成真名字。车道 A 已实测短路链：`services.py:649-650 return []` → `:1538 if not created:` →
+`:1544-1545` 抛 `No feasible plan candidates satisfy the journey constraints` → `main.py:4454-4465` 原样透出 422。
+**判据（关键在"只增不改"）**：
+① 在 422 的 `error` 里**增加**稳定字段（如 `reason_code: CATALOG_EMPTY` / `CATALOG_INSUFFICIENT`，以及 `details` 带缺什么），
+   **保持 `message` 原文不变** —— 这样 `backend/tests/test_qoder_beijing_catalogue.py:223-229` 那条
+   "断言谎话"的既有门**继续绿**，不需要任何人放宽或改写它；
+② 新写一条门断言"目录为空 ⇒ `reason_code` 必为具名的目录原因，不得是 `NO_FEASIBLE_PLAN`"；
+③ 给这条门一条**杀得掉的突变**证据（A 的预测"它先红"因此不成立也如实记录，不许为了证实预测去改既有断言）。
+若你判断"保持 message 不变"会让屏幕继续说错话，那就在账本写清两难，**由我拿去请仲裁裁**，不要自己改既有断言。
+
 ### 🙍 (SESSION=494abfd7) 我自己把单号叫错了：**ORD-0088 是"场景钟"那张单，不是"城市能力"** —— 车道 D 的 DONE 我核对后认可 @14:0x
 
 我正准备退回一张"没做完"的单，读到 `ORD-0088` 的原文才发现**错的是我的账本，不是车道的交付**：
@@ -3043,7 +3077,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     不改生产码、不 commit、不开服务器。交付 MAP.md：city_code 来源 / 目录与地点抽象 /
     plans/generate 短路点 / routing abstraction / provenance / provider 超时缓存设施 /
     既有异步 operation 骨架 / AI outcome 落点 / TARGET 设计 / 最小迁移步。每条带 `文件:行号`。
-  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（会话已 opening；我随机抽 5 条行号复验，对不上整单退回）
+  status: ACCEPTED@2026-09-21T14:2x+08 by 494abfd7（我在干净副本上抽查 12 条 文件:行号 全命中；交付物 _qoder_anywhere_scout_20260921/MAP.md；我自己那次"行号偏 22 行"的怀疑是在 C 的编辑现场量的，已撤回并记进账本）
 
 - id: ORD-0092
   to: c01d72a3
@@ -3055,7 +3089,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     备用 Overpass 镜像 25s recv_timeout（单端点）。B 须复跑 ≥5 次给方差并落盘原始响应，复现不出就当场纠正 Commander。
     随后答任务书九问，每条要数字+可复跑命令+落盘路径；≤1 req/s；不引入依赖；不带 key。
     写集只有 `_qoder_spike_20260921/**`。
-  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（会话 running，等 round0 复跑证据）
+  status: PARTIAL@2026-09-21T14:2x+08 by 494abfd7（Q0 已答且与 Commander 独立读数一致：Photon 718-1444ms / Overpass 200 / Nominatim 直连 TCP 不通、仅 Clash 代理出口可通；出口=WLAN uFi-8A2E，TLS 链 VALIDATED 无中间设备）①~⑨ 进行中
 
 - id: ORD-0093
   to: dc19d662
@@ -3067,7 +3101,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     CASE3 **必须**一个从未预录的小县城（贡山/塔什库尔干/崇礼 三选一）；CASE4 中等城市（泉州或芜湖）。
     每例给 390×844 截图 + 请求原文 + 状态码 + 界面停点 + **哪句文案在撒谎** + 最小复现。
     可占 `:8661-8670/:4661-4670` 与自有 `_run*.db`；不碰预览台；只写证据目录，不改生产码。
-  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（CASE1 是其它一切的前置，先单独回报）
+  status: PARTIAL@2026-09-21T14:2x+08 by 494abfd7（CASE1 已交：后端八跳逐项对上昨晚验收表、无退化；三条面板缺陷我已复现机制并派 ORD-0100。CASE2/3/4 继续）
 
 - id: ORD-0094
   to: 8ccd71d8
@@ -3079,7 +3113,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     ② 任务书 §5 七条硬门各一个 focused test 骨架（允许红，但每条红写明文件/用例名/期望/实际）；
     ③ 每门附两行"今天凭什么通不过"。写集 = `contracts/**` + 新建测试文件；
     不许碰 `backend/app/**`、`frontend/src/**`、既有断言；不许 skip/放宽。可占 `:8652-8660/:4652-4660`。
-  status: DISPATCHED@2026-09-21T13:3x+08 by 494abfd7（先提交再发块，未提交=未交付）
+  status: ACCEPTED@2026-09-21T14:2x+08 by 494abfd7（我在 21a09e8 干净副本独立复现同样 8 failed / 4 passed，红因=四端点路由级 404；全量 1006 passed 证明这 8 条红不牵连既有门）
 
 - id: ORD-0095
   to: 8c66aa92
@@ -3121,7 +3155,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
     **验收**：① 新增 focused test：同一 journey 里同时存在 SELECTED 演示计划与另一版本时，
     "当前计划"的判定**不再依赖数组下标**（给一条杀得掉的突变证据）；② 全量后端在**清空四把 provider 凭据**下
     `passed/skipped/failed + collected` 三个数字，写明解释器与树 sha；③ 顺序耦合若有变化，报**隔离/合跑两栏**对比。
-  status: CLAIMED@2026-09-21T13:3x+08 by 8c66aa92（选路 a，理由见 ACK）
+  status: ACCEPTED@2026-09-21T14:2x+08 by 494abfd7（提交 21a09e8；我的干净副本：新门 5 passed / 2.02s，全量 8 failed / 1006 passed / 15 skipped @90.66s，8 条红全是 F 的新门 ⇒ 无回归。路 a（只增 is_current）我认可）
 
 - id: ORD-0098
   to: 8c66aa92
@@ -3150,7 +3184,7 @@ category coverage / AI no-op visibility / provenance 可区分 / no manual-city 
        用户面与 `fallback_reason` 里**不得出现 Python 异常类名**；
     ③ **不许**在这一笔里把默认解析器换成 Photon——换默认属契约决定（总线 R1 待裁），本笔只做"可配置 + 可观测"，
        且禁止"环境里存在某值就静默换 provider"的隐式翻转。
-  status: DISPATCHED@2026-09-21T13:5x+08 by 494abfd7
+  status: ACKED@2026-09-21T13:3x+08 by 8c66aa92（见其 ACK 块）；排在已验收的 0097 之后，0101 再排其后
 
 ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 三件事按你说的顺序做：**1)** 0082/0084/0086/0087/0088 五张单逐条对着**已提交代码的实测行为**写状态（本条下面就是，全部 DONE，没有一条为了清看板被写成 DONE：每条都给了 HEAD 里的行号/门读数/突变判定，对不上你当场退回）；**2)** ORD-0090 残项三件：① 你量到的 1185 我会把**四个节点的 rect 一起贴出来**（我怀疑测的是滚动容器里的内容盒，那正是我自己记过的 `getBoundingClientRect` 不被裁剪这一坑），并给窗口的**画下沿必须在视口内**加一条断言，这样即使测错节点也藏不住真溢出；② ESC 我改成**不依赖焦点**（文档级监听），桌面也生效、移动端零 ESC 依赖；③ ACTIVE 阶段把 [建一个硬承诺] 置灰 + 一句人话原因（10 分钟那条，做）。**3)** 0088 照旧推进（不依赖新契约），**0096 保持 HELD 不动城市能力代码**。
 边界收到：写集只 `frontend/src/**` + 我自己的 e2e/review；不碰 `backend/app/**`、`contracts/**`、新测试；不碰预览台 `:4781/:4782/:8781` 与 `_preview.db`；不削弱既有门；CNX-DEMO 与 M1–M4 只能变好。
@@ -3172,6 +3206,21 @@ ACK: e345b9d6 back @2026-09-21 13:4x（本机钟 `date`=13:37:33 +0800）—— 
        11 枚按钮只有 2 枚手指可达）。判据：`max-scroll>0` + 11 枚按钮逐个 `elementFromPoint` 命中自身 + **真滚轮手势**验证。
     验收：390/412 × 亮/暗 四组合，亲手从「重置」走到「钱包里有承诺」，交截图与读数，不交绿灯套件数。
   status: DISPATCHED@2026-09-21T13:5x+08 by 494abfd7（优先级高于 ORD-0096）
+
+- id: ORD-0101
+  to: 8c66aa92
+  priority: high
+  if_head: 21a09e8
+  order: |
+    把"目录为空/不足"起成真名字（车道 A 实测短路链：`services.py:649-650` → `:1538` → `:1544-1545`
+    抛 `No feasible plan candidates satisfy the journey constraints` → `main.py:4454-4465` 原样透出 422）。
+    **只增不改**：① 422 的 `error` 里**新增** `reason_code`（`CATALOG_EMPTY` / `CATALOG_INSUFFICIENT`）与 `details`（缺什么），
+    **`message` 原文一字不动**，让 `backend/tests/test_qoder_beijing_catalogue.py:223-229` 那条既有门继续绿；
+    ② 新增一条门："目录为空 ⇒ reason_code 必为具名目录原因，不得是 `NO_FEASIBLE_PLAN`"；
+    ③ 给这条门一条杀得掉的突变证据。
+    若"不改 message"会让屏幕继续说错话，把两难写进账本由我请仲裁裁，**不许自己改既有断言**。
+    排在你手上 ORD-0099 之后；报告要绑 sha。
+  status: DISPATCHED@2026-09-21T14:2x+08 by 494abfd7
 
 ### 🎈✅ (SESSION=494abfd7) ORD-0090 初验：悬浮球**真的不挡屏了** @12:5x —— 请用户当面验（`4c8c911` 已部署）
 
@@ -6534,7 +6583,7 @@ hygiene: forbidden-path hits = 0  |  real-key hits in stage = 0
 
     顺手把这条立成通用口径（我已写进 CURRENT_GATES 11）：**任何探针在自己的仪器没跑时，必须响，不能产出可信外观的 JSON。**
     这一轮我先把 ORD-0068 保持 `DISPATCHED` 不动（你没标 CLAIMED，我不替你标）。
-  status: CLAIMED@2026-09-21T00:2x+08 by 8c66aa92（你点名的 :204 缺陷已修：真 deadline + polls 计数 + 仪器没跑就 return 3 并写 report[fatal]，no_option_produced 单列；修在 `cd7f1ac`。**测量还没跑**，所以本单没有任何数字）
+  status: UNPARKED@2026-09-21T14:2x+08 by 494abfd7（00:2x 我下的 PARK 现解除，但排在 0099+0101 之后；那两个端点的冷城市读数正是本任务契约要用的证据）
 
 
 - id: ORD-0069
